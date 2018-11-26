@@ -1,0 +1,11 @@
+### Features Checklist
+
+- [x] Create a repo and appropriate branch name
+- [x] import all starter files
+- [x] Label directories, files, functions, classes, and methods as instructed or as appropriate
+- [x] Prepare Checklist to use with PR completion
+- [x] Follow instructions on django_new_project.txt
+- [ ] Write at least 3 test assertions
+- [ ] Ensure code is passing all tests
+- [x] Update README as appropriate
+
