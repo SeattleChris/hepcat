@@ -9,10 +9,9 @@
 - [x] Update README as appropriate
 - [ ] Write at least 3 test assertions
 - [ ] Ensure code is passing all tests
-- [ ] in templates write up text file for goal links/routes
-- [ ] Scaffold some initial simple models
-- [ ] Scaffold urls, views, templates
-- [ ] Test proof of life
+- [x] Scaffold some initial simple models
+- [x] Scaffold urls, views, templates
+- [x] Test proof of life
 - [ ]
 - [ ]
 - [ ]
