@@ -1,0 +1,20 @@
+body {
+    background-color: #9b9;
+}
+
+header nav a {
+    text-decoration: none;
+}
+
+header nav li {
+    display: inline-block;
+}
+
+header nav li:after {
+    content: ' |';
+}
+
+header nav ul:before {
+    content: url('/static/assets/money.png');
+}
+

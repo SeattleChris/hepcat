@@ -1,0 +1,48 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="stylesheet" href="{% static 'css/../../static/css/normalize.css' %}">
+  <link rel="stylesheet" href="{% static 'css/../../static/css/skeleton.css' %}">
+  <link rel="stylesheet" href="{% static 'css/../../static/css/style.css' %}">
+  <title>Swing Dance - Lindy Hop Classes!</title>
+</head>
+<body>
+  <header>
+    <nav>
+      <ul>
+        <li><a href="{% url 'home' %}">home</a></li>
+        <li><a href="{% url 'class_list' %}">Swing Dance Classes</a></li>
+        <li><a href="{% url 'class_register' %}">Sign Up Now!</a></li>
+        <li><a href="{% url 'dance_info' %}">Weekly Swing Dance</a></li>
+        <li><a href="{% url 'event_services' %}">At Your Event</a></li>
+        <li><a href="{% url 'general_resources' %}">General Resources</a></li>
+        <li><a href="{% url 'about' %}">About Us</a></li>
+        {% if user.is_authenticated %}
+        <li><a href="{% url 'user_resources' %}">Your Resources</a></li>
+        <li><a href="{% url 'logout' %}">Logout</a></li>
+        {% else %}
+        <li><a href="{% url 'django_registration_register' %}"> Create Login Account</a></li>
+        <li><a href="{% url 'login' %}">Login</a></li>
+        {% endif %}
+        {% if user.is_superuser %}
+        <li><a href="{% url 'admin:index' %}" >admin</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+    {%if user.is_authenticated %}
+    <p>Welcome {{ user.username }}</p>
+    {% endif %}
+</header>
+  <main>
+    {% block content %}
+    <h3>No Content</h3>
+    {% endblock %}
+  </main>
+  <footer></footer>
+</body>
+</html>

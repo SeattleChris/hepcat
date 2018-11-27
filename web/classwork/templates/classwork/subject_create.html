@@ -1,0 +1,13 @@
+{% extends "generic/base.html" %}
+
+{% block content %}
+<h2> Create a Subject </h2>
+<p>
+  This is the general information and resources for a class. A subject can be offered many different times with different details, where each of these is a 'ClassOffer'
+</p>
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <input type="submit" value="save">
+</form>
+{% endblock content %}

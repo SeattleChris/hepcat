@@ -29,6 +29,19 @@ postgres
 
 ## API
 
+The following routes have been made or scaffolled:
+
+/                       home_view [defined in hepcat]
+/admin/                 admin.site.urls
+/user/register/         django_registration one_step.urls
+/user/                  django.contrib.auth.urls
+/classes/subject/       subject_list    SubjectListView     classwork/subject_list.html
+/classes/subject/new/   subject_create  SubjectCreateView   classwork/subject_create.html
+/classes/session/       session_list    SessionListView     classwork/session_list.html
+/classes/session/new/   session_create  SessionCreateView   classwork/session_create.html
+<!-- /classes/               published       PublishedListView   classwork/published.html -->
+
+
 <!-- Provide detailed instructions for your applications usage. This should include any methods or endpoints available to the user/client/developer. Each section should be formatted to provide clear syntax for usage, example calls including input data requirements and options, and example responses or return values. -->
 
 ## Change Log
