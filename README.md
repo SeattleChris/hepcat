@@ -48,4 +48,5 @@ The following routes have been made or scaffolled:
 
 <!-- Ctrl+Shift+I (on Win & Linux) Inserts current DateTime, -->
 2018-11-25 20:16:59  Docker rocket live. Just the hepcat project setup with nginx, static, db, web
+2018-11-27 00:05:15  Scaffold routes. Session & Subject have models, list, create. Superuser added
 
