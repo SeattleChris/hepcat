@@ -1,0 +1,16 @@
+{% extends "generic/base.html" %}
+
+
+{% block content %}
+<h2>Established Sessions</h2>
+<p><a href="{% url 'session_create' %}">Create a new session dates</a></p>
+  {% for session in sessions %}
+    <h3>{{ session }}</h3>
+    <ul>
+      <li>{{ session.num_weeks }} weeks | {{ session.key_day_date }} </li>
+      <li>First to Last Class: {{ session.start_date }} | {{ session.end_date }} </li>
+      <li>Published: {{ session.publish_date }} | {{ session.expire_date }} </li>
+    </ul>
+  {% endfor %}
+<p>End list of Sessions</p>
+{% endblock content %}

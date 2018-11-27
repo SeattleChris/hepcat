@@ -1,0 +1,45 @@
+{% extends "generic/base.html" %}
+
+
+{% block content %}
+<h2>Established Subject Options</h2>
+<p><a href="{% url 'subject_create' %}">Create a new class subject</a></p>
+  {% for subject in subjects %}
+    <h3>{{ subject }}</h3>
+    <ul>
+    {% if subject.num_weeks == 1 %}
+      <li>One day workshop | {{ subject.num_minutes }} minutes | {{ subject.level }} -- {{ subject.version }} </li>
+    {% else %}
+      <li>{{ subject.num_weeks }} weeks | {{ subject.num_minutes }} min/wk | {{ subject.level }} -- {{ subject.version }} </li>
+    {% endif %}
+    </ul>
+    <p class="short_desc"> {{ subject.short_desc }}</p>
+    <p class="description"> {{ subject.description }}</p>
+    <h4>Teacher Resources<h4>
+    <p>{{ subject.teacher_plan }} </p>
+    <aside>
+      <h5>Emails</h5>
+      <ul>
+        <li> {{ subject.email_wk1 }} </li>
+        <li> {{ subject.email_wk2 }} </li>
+        <li> {{ subject.email_wk3 }} </li>
+        <li> {{ subject.email_wk4 }} </li>
+        <li> {{ subject.email_wk5 }} </li>
+      </ul>
+    </aside>
+    <h4>Student Resources</h4>
+    <p> {{ subject.syllabus }} </p>
+    <aside>
+      <h5>Videos</h5>
+      <ul>
+        <li> {{ subject.video_wk1 }} </li>
+        <li> {{ subject.video_wk2 }} </li>
+        <li> {{ subject.video_wk3 }} </li>
+        <li> {{ subject.video_wk4 }} </li>
+        <li> {{ subject.video_wk5 }} </li>
+      </ul>
+      </aside>
+      <hr />
+  {% endfor %}
+  <p>End of list of Subjects</p>
+{% endblock content %}

@@ -1,0 +1,13 @@
+{% extends "generic/base.html" %}
+
+{% block content %}
+<h2> Create a Session </h2>
+<p>
+  These are the settings for the dates and the group of classes that are all published at the same time
+</p>
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <input type="submit" value="save">
+</form>
+{% endblock content %}
