@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # 'rest_framework',
     # 'rest_framework.authtoken',
+    # 'bootstrap4',  # CUSTOM
+    'bootstrap_datepicker_plus',  # CUSTOM
     'django_registration',  # CUSTOM
     'hepcat',  # CUSTOM: Project name
     'classwork',  # CUSTOM: App name
