@@ -1,0 +1,18 @@
+{% extends "generic/base.html" %}
+
+
+{% block content %}
+<h2>Scheduled Class Offers</h2>
+<p><a href="{% url 'classoffer_create' %}">Create a new class offer</a></p>
+  {% for classoffer in classoffers %}
+    <h3>{{ classoffer }}</h3>
+    <p>{{ classoffer.subject.title }}</p>
+    <ul>
+      <li>{{ classoffer.class_day }} | {{ classoffer.start_time }} - {{ classoffer.end_time }} </li>
+      <li>{{ classoffer.start_date }} - {{ classoffer.end_date }}</li>
+      <li>Taught by: {{ classoffer.teachers }} </li>
+    </ul>
+    <hr />
+  {% endfor %}
+  <p>End of list of Class Offers</p>
+{% endblock content %}

@@ -2,8 +2,8 @@ from django.views.generic import ListView, CreateView
 # from django.contrib.auth.mixins import LoginRequiredMixin
 # from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
-from .models import Subject, Session
-from .forms import SubjectForm, SessionForm
+from .models import Subject, Session, ClassOffer
+from .forms import SubjectForm, SessionForm, ClassOfferForm
 # Create your views here.
 
 
@@ -67,68 +67,64 @@ class SessionCreateView(CreateView):
     # Inherits .as_view(self):
 
 
-# class ClassOfferListView(ListView):
-#     """ We will want to list the classes that are currently offered
-#     """
-#     template_name = 'class_info/list.html'
-#     model = ClassOffer
-#     context_object_name = 'classes'
+class ClassOfferListView(ListView):
+    """ We will want to list the classes that are scheduled to be offered.
+    """
+    template_name = 'classwork/classoffer_list.html'
+    model = ClassOffer
+    context_object_name = 'classoffers'
 
-#     # def decide_session(self, sess=None):
-#     #     """ Typically we want to see the current session.
-#     #         Sometimes we want to see a future sesion.
-#     #     """
-#     #     sess_data = []
-#     #     if sess is None:
-#     #         today = datetime.now()
-#     #         sess_data = Session.objects.filter(publiish_date__lte=today, expire_date__gte=today)
-#     #     else:
-#     #         # TODO: need to work the logic to grab info sessions
-#     #         pass
-#     #     return [ea.name for ea in sess_data]
+    # def decide_session(self, sess=None):
+    #     """ Typically we want to see the current session.
+    #         Sometimes we want to see a future sesion.
+    #     """
+    #     sess_data = []
+    #     if sess is None:
+    #         today = datetime.now()
+    #         sess_data = Session.objects.filter(publiish_date__lte=today, expire_date__gte=today)
+    #     else:
+    #         # TODO: need to work the logic to grab info sessions
+    #         pass
+    #     return [ea.name for ea in sess_data]
 
-#     def get_context_data(self, **kwargs):
-#         """ Get the context of the current published classes from Session table
-#         """
-#         today = datetime.now()
-#         context = super().get_context_data(**kwargs)
-#         context['current_session'] = Session.objects.filter(
-#             publiish_date__lte=today,
-#             expire_date__gt=today
-#         ).values('id')[0]['id']  # Only gets the first valid session it finds
-#         return context
+    # def get_context_data(self, **kwargs):
+    #     """ Get the context of the current published classes from Session table
+    #     """
+    #     today = datetime.now()
+    #     context = super().get_context_data(**kwargs)
+    #     context['current_session'] = Session.objects.filter(
+    #         publiish_date__lte=today,
+    #         expire_date__gt=today
+    #     ).values('id')[0]['id']  # Only gets the first valid session it finds
+    #     return context
 
-#     def get_queryset(self):
-#         """ We can limit the classes list by publish date
-#         """
-#         # today = datetime.now()
-#         # sess_id = Session.objects.filter(
-#         #     publiish_date__lte=today,
-#         #     expire_date__gte=today
-#         # ).values('id')[0]['id']
-#         sess_id = self.context.current_session
+    # def get_queryset(self):
+    #     """ We can limit the classes list by publish date
+    #     """
+    #     # today = datetime.now()
+    #     # sess_id = Session.objects.filter(
+    #     #     publiish_date__lte=today,
+    #     #     expire_date__gte=today
+    #     # ).values('id')[0]['id']
+    #     sess_id = self.context.current_session
 
-#         return ClassOffer.objects.filter(session=sess_id)
-
-
-# class ClassOfferCreateView(CreateView):
-#     """ Only appropriate admin level users can create new classes
-#     """
-#     template_name = 'class_info/create.html'
-#     model = ClassOffer
-#     # form_class = ClassForm
-#     # success_url = reverse_lazy('class_list')
-#     # login_url = reverse_lazy('login')
-
-#     # def form_valid(self, form):
-#     #     """ Associate the admin user for this class
-#     #     """
-#     #     form.instance.user = self.request.user
-#     #     return super().form_valid(form)
+    #     return ClassOffer.objects.filter(session=sess_id)
 
 
+class ClassOfferCreateView(CreateView):
+    """ Only appropriate admin level users can create new classes
+    """
+    template_name = 'classwork/classoffer_create.html'
+    model = ClassOffer
+    form_class = ClassOfferForm
+    success_url = reverse_lazy('classoffer_list')
+    # login_url = reverse_lazy('login')
 
-
+    # def form_valid(self, form):
+    #     """ Associate the admin user for this class
+    #     """
+    #     form.instance.user = self.request.user
+    #     return super().form_valid(form)
 
 
 # class ClassOfferDetailView(DetailView):

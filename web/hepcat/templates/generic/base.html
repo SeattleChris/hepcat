@@ -7,7 +7,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <link rel="stylesheet" href="{% static 'css/../../static/css/normalize.css' %}">
+  {% block head %}
   <title>Swing Dance - Lindy Hop Classes!</title>
+  {% endblock %}
 </head>
 <body>
   <header>
@@ -20,10 +22,12 @@
         <li><a href="{% url 'django_registration_register' %}"> Create Login Account</a></li>
         <li><a href="{% url 'login' %}">Login</a></li>
         {% endif %}
+        <li><a href="{% url 'classoffer_list' %}">ClassOffer List</a></li>
         <li><a href="{% url 'subject_list' %}">Subject List</a></li>
         <li><a href="{% url 'session_list' %}">Session List</a></li>
         {% if user.is_superuser %}
         <li><a href="{% url 'admin:index' %}" >admin</a></li>
+        <li><a href="{% url 'classoffer_create' %}">ClassOffer Create</a></li>
         <li><a href="{% url 'subject_create' %}">Subject Create</a></li>
         <li><a href="{% url 'session_create' %}">Session Create</a></li>
         {% endif %}
