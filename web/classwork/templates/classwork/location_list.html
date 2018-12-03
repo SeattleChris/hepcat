@@ -1,0 +1,18 @@
+{% extends "generic/base.html" %}
+
+
+{% block content %}
+<h2>Established Locations</h2>
+  {% for location in locations %}
+    <h3>{{ location }}</h3>
+    <p>
+      {{ location.address }} <br \>
+      {{location.city}}, {{location.state}} {{location.zipcode}} <br \>
+    </p>
+    <p>
+      | By Bus | Google Maps |
+    </p>
+    <hr />
+  {% endfor %}
+<p>End list of Locations</p>
+{% endblock content %}

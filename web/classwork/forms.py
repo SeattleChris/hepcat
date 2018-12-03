@@ -42,6 +42,6 @@ class ClassOfferForm(forms.ModelForm):
         fields = ['subject', 'session', 'teachers', 'class_day', 'start_time']
         # https://github.com/monim67/django-bootstrap-datepicker-plus
         widgets = {
-            'start_time': TimePickerInput(),
+            'start_time': TimePickerInput()
             # options={"stepping": 5}
         }

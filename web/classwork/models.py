@@ -184,24 +184,25 @@ class ClassOffer(models.Model):
         return f'<Class Id: {self.id} | Subject: {self.subject} | Session: {self.session}>'
 
 
-# class Location(models.Model):
-#     """ ClassOffers may be at various locations.
-#         This stores information about each location.
-#     """
-#     # id = auto-created
-#     name = models.CharField(max_length=120)
-#     address = models.CharField(max_length=255)
-#     zipcode = models.CharField(max_length=15)
-#     city = models.CharField(max_length=120, default='Seattle')
-#     state = models.CharField(max_length=63, default='WA')
-#     map_google = models.URLField(verbose_name="Google Maps Link")
+class Location(models.Model):
+    """ ClassOffers may be at various locations.
+        This stores information about each location.
+    """
+    # id = auto-created
+    name = models.CharField(max_length=120)
+    code = models.CharField(max_length=120)
+    address = models.CharField(max_length=255)
+    city = models.CharField(max_length=120, default='Seattle')
+    state = models.CharField(max_length=63, default='WA')
+    zipcode = models.CharField(max_length=15)
+    map_google = models.URLField(verbose_name="Google Maps Link")
 
-#     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='locations')
-#     date_added = models.DateField(auto_now_add=True)
-#     date_modified = models.DateField(auto_now=True)
+    # created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='locations')
+    date_added = models.DateField(auto_now_add=True)
+    date_modified = models.DateField(auto_now=True)
 
-#     def __str__(self):
-#         return f'{self.name}'
+    def __str__(self):
+        return f'{self.name}'
 
-#     def __repr__(self):
-#         return f'<Location: {self.name} | Link: {self.map_google} >'
+    def __repr__(self):
+        return f'<Location: {self.name} | Link: {self.map_google} >'
