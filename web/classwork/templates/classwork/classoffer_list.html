@@ -3,7 +3,6 @@
 
 {% block content %}
 <h2>Scheduled Class Offers</h2>
-<p><a href="{% url 'classoffer_create' %}">Create a new class offer</a></p>
   {% for classoffer in classoffers %}
     <h3>{{ classoffer }}</h3>
     <p>{{ classoffer.subject.title }}</p>

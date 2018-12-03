@@ -22,6 +22,7 @@ django-registration 3.0
 django-sass-processor 0.7.2
 libsass 0.16.1
 django-compressor 2.2
+django-bootstrap-datepicker-plus
 nginx
 postgres
 

@@ -3,7 +3,6 @@
 
 {% block content %}
 <h2>Established Subject Options</h2>
-<p><a href="{% url 'subject_create' %}">Create a new class subject</a></p>
   {% for subject in subjects %}
     <h3>{{ subject }}</h3>
     <ul>
