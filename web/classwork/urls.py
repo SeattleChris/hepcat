@@ -12,7 +12,6 @@ urlpatterns = [
     # path('session/new/', SessionCreateView.as_view(), name='session_create'),
     # path('classoffer/new/<int:id>', ClassOfferCreateView.as_view(), name='classoffer_create'),
     # above is correct to create on budget of id?
-    path('location/<location_code>', LocationDetailView.as_view(), name='location_detail'),
+    path('location/<int:id>', LocationDetailView.as_view(), name='location_detail'),
     path('location/', LocationListView.as_view(), name='location_list'),
-
 ]
