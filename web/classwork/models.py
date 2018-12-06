@@ -152,7 +152,7 @@ class Subject(models.Model):
     image = models.URLField(blank=True)
     # image = models.ImageField(upload_to=MEDIA_ROOT)
 
-    # created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='subjects')
+    # created_by = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='subjects')
     date_added = models.DateField(auto_now_add=True)
     date_modified = models.DateField(auto_now=True)
 
@@ -202,7 +202,7 @@ class Session(models.Model):
         """
         pass
 
-    # created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='subjects')
+    # created_by = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='subjects')
     date_added = models.DateField(auto_now_add=True)
     date_modified = models.DateField(auto_now=True)
 
@@ -276,7 +276,7 @@ class ClassOffer(models.Model):
         return self.start_date() + timedelta(days=7*self.subject.num_weeks)
 
     # slug = models.SlugField(editable=False, default=get_slug())
-    # created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='classoffers')
+    # created_by = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='classoffers')
     date_added = models.DateField(auto_now_add=True)
     date_modified = models.DateField(auto_now=True)
 

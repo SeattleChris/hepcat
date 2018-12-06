@@ -15,7 +15,7 @@ from bootstrap_datepicker_plus import DatePickerInput, TimePickerInput
 #     email = forms.EmailField(max_length=254, help_text='Required. Inform a valid email address.')
 
 #     class Meta:
-#         model = User
+#         model = get_user_model()
 #         fields = ('username', 'first_name', 'last_name', 'email', 'password1', 'password2', )
 
 
@@ -24,7 +24,6 @@ from bootstrap_datepicker_plus import DatePickerInput, TimePickerInput
 
 class SubjectForm(forms.ModelForm):
     """ Will generate a form for input on whichever fields we include.
-        Using Transaction model, since we are adding a withdraw or deposit
     """
     class Meta:
         model = Subject
