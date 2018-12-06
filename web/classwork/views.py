@@ -141,7 +141,7 @@ class LocationDetailView(DetailView):
     template_name = 'classwork/location_detail.html'
     model = Location
     context_object_name = 'location'
-    # pk_url_kwarg = 'id'
+    pk_url_kwarg = 'id'
 
     # def get_context_data(self, **kwargs):
     #     """ Modify the context
@@ -150,11 +150,11 @@ class LocationDetailView(DetailView):
     #     context['add_info'] = 'new info'
     #     return context
 
-    def get_queryset(self):
-        """ We want to limit what location info we get
-        """
-        self.location_code = get_object_or_404(Location, name=self.kwargs['location_code'])
-        return Location.objects.filter(code=self.location_code)
+    # def get_queryset(self):
+    #     """ We want to limit what location info we get
+    #     """
+    #     location_code = get_object_or_404(Location, code=self.kwargs['code'])
+    #     return Location.objects.filter(code=location_code)
 
 
 

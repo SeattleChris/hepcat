@@ -1,7 +1,110 @@
+# from __future__ import unicode_literals
+
 # from django.contrib.auth.models import User
 from django.db import models
+# from django.contrib.auth.models import BaseUserManager, AbstractBaseUser, PermissionsMixin
+# from django.utils.translation import ugettext_lazy as _
 from datetime import datetime, timedelta
 # Create your models here.
+
+
+# class MyUserManager(BaseUserManager):
+#     """ Custom user manager to allow emails as default unique identifiers for auth.
+#         We will need a backup for email to allow a user to sign-up a "friend".
+#         We also may need a backup username when a student does not want to give
+#         an email address, but still joins and pays for a class or service.
+#     """
+
+#     def normalize_email(self):
+#         """ We want to lowercase the user part of the email.
+#             By default (super) lowercases the domain name.
+#         """
+#         email = super().normalize_email()  # In case in the future it does more
+#         try:
+#             email_name, domain_part = email.strip().rsplit('@', 1)
+#         except ValueError:
+#             pass
+#         else:
+#             email = email_name.casefold() + '@' + domain_part.lower()
+#         return email
+
+#     def _create_user(self, email, password, **extra_fields):
+#         """ Creates and saves a User with the given email and password.
+#         """
+#         all_users = []
+#         username = ''
+#         uses_alt_username = False
+
+#         # populate all_users with the usernames in the db
+#         # if email not in all_usernames:
+#         if not email or self.email is None or self.email in all_users:
+#             username = self.first_name + '_' + self.last_name
+#             # normalize username, or first_name and last_name before username created
+#             uses_alt_username = True
+
+#         else:
+#             username = self.normalize_username(self.email)
+#         username = self.normalize_username(username)
+
+#         email = self.normalize_email(email)
+#         user = self.model(email=email, **extra_fields)
+#         user.set_password(password)
+#         user.save()
+#         return user
+
+#     def create_superuser(self, email, password, **extra_fields):
+#         extra_fields.setdefault('is_staff', True)
+#         extra_fields.setdefault('is_superuser', True)
+#         extra_fields.setdefault('is_active', True)
+
+#         if extra_fields.get('is_staff') is not True:
+#             raise ValueError('Superuser must have is_staff=True.')
+#         if extra_fields.get('is_superuser') is not True:
+#             raise ValueError('Superuser must have is_superuser=True.')
+#         return self._create_user(email, password, **extra_fields)
+
+
+# class MyUser(AbstractBaseUser, PermissionsMixin):
+#     """ We modify the default user to allow the email to be the default username.
+
+#     """
+#     is_staff = models.BooleanField(
+#         _('staff status'),
+#         default=False,
+#         help_text=_('Designates whether the user can login to admin.'),
+#     )
+#     is_active = models.BooleanField(
+#         _('active'),
+#         default=True,
+#         help_text=_(
+#             'Designates whether this user should be treated as active. '
+#             'Unselect this instead of deleting accounts.'
+#         ),
+#     )
+#     first_name = models.CharField(max_length=125)
+#     last_name = models.CharField(max_length=125)
+#     email = models.EmailField(max_length=255, unique=False, blank=True)
+#     username = models.CharField(max_length=255, blank=True, unique=True)
+#     uses_alt_username = models.BooleanField(default=False)
+#     objects = MyUserManager()
+#     USERNAME_FIELD = 'username'
+#     REQUIRED_FIELDS = ['first_name', 'last_name']
+
+#     def set_username(self, parameter_list):
+#         """ Check to see if this email is already used as a username
+#             If available, set the username to the email value
+#             If not available, user 'first_name' + '_' + 'last_name'
+#         """
+#         pass
+
+#     def __str__(self):
+#         return self.email
+
+#     def get_full_name(self):
+#         return self.email
+
+#     def get_short_name(self):
+#         return self.email
 
 
 class Subject(models.Model):
