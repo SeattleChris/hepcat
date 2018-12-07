@@ -7,6 +7,9 @@ from django.db import models
 from datetime import datetime, timedelta
 # Create your models here.
 
+# TODO: Use ForeignKey.limit_choices_to where appropriate.
+# TODO: Update to appropriatly use ForiegnKey.related_name
+# TODO: Decide if any ForiegnKey should actually be ManytoManyField (incl above)
 
 # class MyUserManager(BaseUserManager):
 #     """ Custom user manager to allow emails as default unique identifiers for auth.

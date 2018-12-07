@@ -29,6 +29,7 @@ ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split()
 # Application definition
 
 INSTALLED_APPS = [
+    'users',  # CUSTOM: App name
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -42,7 +43,6 @@ INSTALLED_APPS = [
     'django_registration',  # CUSTOM
     'hepcat',  # CUSTOM: Project name
     'classwork',  # CUSTOM: App name
-    'users',  # CUSTOM: App name
 ]
 
 MIDDLEWARE = [
@@ -60,8 +60,8 @@ ROOT_URLCONF = 'hepcat.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        # 'DIRS': [],
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],  # CUSTOM: Added when adding users model app
+        'DIRS': [],
+        # 'DIRS': [os.path.join(BASE_DIR, 'templates')],  # CUSTOM: Added when adding users model app
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
