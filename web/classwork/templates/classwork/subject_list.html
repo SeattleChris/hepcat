@@ -4,7 +4,7 @@
 {% block content %}
 <h2>Established Subject Options</h2>
   {% for subject in subjects %}
-    <h3>{{ subject }}</h3>
+    <h3>{{ subject|title }}</h3>
     <ul>
     {% if subject.num_weeks == 1 %}
       <li>One day workshop | {{ subject.num_minutes }} minutes | {{ subject.level }} -- {{ subject.version }} </li>
@@ -13,9 +13,9 @@
     {% endif %}
     </ul>
     <p class="short_desc"> {{ subject.short_desc }}</p>
-    <p class="description"> {{ subject.description }}</p>
+    <p class="description"> {{ subject.description|linebreaks }}</p>
     <h4>Teacher Resources<h4>
-    <p>{{ subject.teacher_plan }} </p>
+    <p>{{ subject.teacher_plan|linebreaks }} </p>
     <aside>
       <h5>Emails</h5>
       <ul>
@@ -27,15 +27,15 @@
       </ul>
     </aside>
     <h4>Student Resources</h4>
-    <p> {{ subject.syllabus }} </p>
+    <p> {{ subject.syllabus|linebreaks }} </p>
     <aside>
       <h5>Videos</h5>
       <ul>
-        <li> {{ subject.video_wk1 }} </li>
-        <li> {{ subject.video_wk2 }} </li>
-        <li> {{ subject.video_wk3 }} </li>
-        <li> {{ subject.video_wk4 }} </li>
-        <li> {{ subject.video_wk5 }} </li>
+        <li> {{ subject.video_wk1|urlize }} </li>
+        <li> {{ subject.video_wk2|urlize }} </li>
+        <li> {{ subject.video_wk3|urlize }} </li>
+        <li> {{ subject.video_wk4|urlize }} </li>
+        <li> {{ subject.video_wk5|urlize }} </li>
       </ul>
       </aside>
       <hr />

@@ -7,6 +7,11 @@ from django.db import models
 from datetime import datetime, timedelta
 # Create your models here.
 
+# TODO: Use ForeignKey.limit_choices_to where appropriate.
+# TODO: Update to appropriatly use ForiegnKey.related_name
+# TODO: Decide if any ForiegnKey should actually be ManytoManyField (incl above)
+# TODO: Add a field for "draft" vs. ready to publish for ClassOffer, Subject, Session?
+# TODO: Add @staff_member_required decorator to admin views?
 
 # class MyUserManager(BaseUserManager):
 #     """ Custom user manager to allow emails as default unique identifiers for auth.
@@ -152,7 +157,7 @@ class Subject(models.Model):
     image = models.URLField(blank=True)
     # image = models.ImageField(upload_to=MEDIA_ROOT)
 
-    # created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='subjects')
+    # created_by = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='subjects')
     date_added = models.DateField(auto_now_add=True)
     date_modified = models.DateField(auto_now=True)
 
@@ -202,7 +207,7 @@ class Session(models.Model):
         """
         pass
 
-    # created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='subjects')
+    # created_by = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='subjects')
     date_added = models.DateField(auto_now_add=True)
     date_modified = models.DateField(auto_now=True)
 
@@ -276,7 +281,7 @@ class ClassOffer(models.Model):
         return self.start_date() + timedelta(days=7*self.subject.num_weeks)
 
     # slug = models.SlugField(editable=False, default=get_slug())
-    # created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='classoffers')
+    # created_by = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='classoffers')
     date_added = models.DateField(auto_now_add=True)
     date_modified = models.DateField(auto_now=True)
 
@@ -309,3 +314,4 @@ class Location(models.Model):
 
     def __repr__(self):
         return f'<Location: {self.name} | Link: {self.map_google} >'
+
