@@ -10,6 +10,8 @@ from datetime import datetime, timedelta
 # TODO: Use ForeignKey.limit_choices_to where appropriate.
 # TODO: Update to appropriatly use ForiegnKey.related_name
 # TODO: Decide if any ForiegnKey should actually be ManytoManyField (incl above)
+# TODO: Add a field for "draft" vs. ready to publish for ClassOffer, Subject, Session?
+# TODO: Add @staff_member_required decorator to admin views?
 
 # class MyUserManager(BaseUserManager):
 #     """ Custom user manager to allow emails as default unique identifiers for auth.
@@ -312,3 +314,4 @@ class Location(models.Model):
 
     def __repr__(self):
         return f'<Location: {self.name} | Link: {self.map_google} >'
+

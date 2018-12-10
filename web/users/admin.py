@@ -7,11 +7,14 @@ from .models import UserHC
 
 
 class CustomUserAdmin(UserAdmin):
+    # TODO: On build it errors out with looking for an attribute of _meta
     add_form = CustomUserCreationForm
     form = CustomUserChangeForm
     model = UserHC
     list_display = ['first_name', 'last_name', 'uses_email_username', 'username', 'email', ]
     # list_display = ['username', 'email', ]
+    # fields = ('first_name', 'last_name', 'uses_email_username', 'username', 'email', )
 
 
 admin.site.register(UserHC, CustomUserAdmin)
+# admin.site.register((UserHC, CustomUserAdmin, CustomUserCreationForm, CustomUserChangeForm))

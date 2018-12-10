@@ -27,8 +27,8 @@ urlpatterns = [
     # path('user/register/',
     #      RegistrationView.as_view(success_url='/profile/'),
     #      name='django_registration_register'),
-    path('user/', include('users.urls')),
     path('user/', include('django.contrib.auth.urls')),
+    path('user/', include('users.urls')),
     path('classes/', include('classwork.urls')),
 ]
 
