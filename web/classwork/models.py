@@ -118,6 +118,8 @@ class Subject(models.Model):
         instances of when it is offered, which will be in the Classes model.
     """
     # id = auto-created
+    # studentprofile_set exists 
+
     LEVEL_CHOICES = (
         ('Beg', 'Beginning'),
         ('L2', 'Lindy 2'),

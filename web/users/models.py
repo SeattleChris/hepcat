@@ -34,13 +34,7 @@ class UserHC(AbstractUser):
         return self.email
 
 
-# class Profile(UserHC):
-#     """ We seperate some of the User info into the Profile
-#     """
-#     user = models.ForeignKey(UserHC, on_delete=models.CASCADE)
-
-
-class StaffProfile(models.Model):
+class Staff(models.Model):
     """ Extending user model to have the fields unique to on staff Teachers
         We want an image, a bio, and a connection to classes they taught
     """
@@ -49,17 +43,22 @@ class StaffProfile(models.Model):
     # headshot = models.ImageField()
     # set is_staff to True
 
+    def __str__(self):
+        return self.user.first_name + self.user.last_name
 
-class StudentProfile(models.Model):
+
+class Student(models.Model):
     """ Extending user model for students to track what classes they have
         taken, and associate resources they have access to view.
     """
     user = models.OneToOneField(UserHC, on_delete=models.CASCADE, primary_key=True)
     level = models.IntegerField(verbose_name='Student Skill Level Number', default=0)
+    taken = models.ManyToManyField(Subject)
     # taken = models.ManyToManyField(Subject, through=TakenSubject)
+    # interest = models.ManyToManyField(Subject, related_names='interests')
     # interest = models.ManyToManyField(Subject, through=InterestSubject)
     credit = models.FloatField(verbose_name='Class Payment Credit', default=0)
-    # refer = models.ForeignKey(UserHC, on_delete=models.SET_NULL, null=True, blank=True, related_names='referred')
+    # refer = models.ForeignKey(UserHC, symmetrical=False, on_delete=models.SET_NULL, null=True, blank=True, related_names='referred')
 
     def highest_subject(self):
         """ We will want to know what is the student's class level
@@ -70,11 +69,15 @@ class StudentProfile(models.Model):
         """
         pass
 
+    def __str__(self):
+        return self.user.first_name + self.user.last_name
+
 
 # class TakenSubject(models.Model):
 #     """ This table associates users with which class Subjects they
 #         have already had
 #     """
 #     # TODO: Make this association table?
-#     user = models.ForeignKey(StudentProfile, on_delete=models.CASCADE)
+#     student = models.ForeignKey(Student, on_delete=models.CASCADE)
 #     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
+#     date_added = models.DateField(auto_now_add=True)
