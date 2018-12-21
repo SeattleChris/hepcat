@@ -7,10 +7,10 @@ from classwork.models import Subject
 class UserHC(AbstractUser):
     """ This will be the custom Users model for the site
     """
-    is_student = models.BooleanField('student status', default=True)
-    is_teacher = models.BooleanField('teacher status', default=False)
-    is_admin = models.BooleanField('admin status', default=False)
-    uses_email_username = models.BooleanField(default=True)
+    is_student = models.BooleanField('student', default=True)
+    is_teacher = models.BooleanField('teacher', default=False)
+    is_admin = models.BooleanField('admin', default=False)
+    uses_email_username = models.BooleanField('Using Email', default=True)
 
     def make_username(self):
         """ Instead of user selecting a username, we will generate it from their
