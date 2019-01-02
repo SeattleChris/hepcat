@@ -1,6 +1,8 @@
 from django.contrib.auth.models import AbstractUser, Group
 from django.db import models
 from classwork.models import Subject
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 # Create your models here.
 
 
@@ -11,6 +13,19 @@ class UserHC(AbstractUser):
     is_teacher = models.BooleanField('teacher', default=False)
     is_admin = models.BooleanField('admin', default=False)
     uses_email_username = models.BooleanField('Using Email', default=True)
+
+    def get_short_name(self):
+        """ Replaces the username in greetings to the user in the header of admin
+        """
+        return self.first_name.capitalize()
+
+    def get_full_name(self):
+        """ Formal identifier for user, appears alongside username in object history
+        """
+        return self.first_name.capitalize() + ' ' + self.last_name.capitalize()
+
+    def __str__(self):
+        return self.email
 
     def make_username(self):
         """ Instead of user selecting a username, we will generate it from their
@@ -24,14 +39,13 @@ class UserHC(AbstractUser):
         return temp.casefold()
 
     def save(self, *args, **kwargs):
-        # Probably should change this to pre_save signal
+        """ Take some actions before the actual saving of the instance
+            is called with super().save(*args, **kwargs)
+        """
         self.username = self.make_username()
-        # if self.is_teacher or self.is_admin:
-        #     self.is_staff = True
+        if self.is_teacher or self.is_admin:
+            self.is_staff = True
         super().save(*args, **kwargs)
-
-    def __str__(self):
-        return self.email
 
 
 class Staff(models.Model):
@@ -44,7 +58,7 @@ class Staff(models.Model):
     # set is_staff to True
 
     def __str__(self):
-        return self.user.first_name + self.user.last_name
+        return self.user.get_full_name()
 
 
 class Student(models.Model):
@@ -71,6 +85,22 @@ class Student(models.Model):
 
     def __str__(self):
         return self.user.first_name + self.user.last_name
+
+
+@receiver(post_save, sender=UserHC)
+def create_or_update_user_profile(sender, instance, created, **kwargs):
+    if instance.is_student:
+        if created:
+            Student.objects.create(user=instance)
+        instance.Student.save()
+    if instance.is_teacher or instance.is_admin:
+        if created:
+            Staff.objects.create(user=instance)
+        instance.Staff.save()
+
+
+
+
 
 
 # class TakenSubject(models.Model):

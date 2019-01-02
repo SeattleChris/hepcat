@@ -6,16 +6,33 @@ from .models import UserHC, Staff, Student
 # Register your models here.
 
 
+class StaffInline(admin.StackedInline):
+    """ How to add a profile to a user model according to:
+        https://docs.djangoproject.com/en/2.1/topics/auth/customizing/
+    """
+    model = Staff
+    can_delete = False
+    verbose_name_plural = 'staff'
+
+
+class StudentInline(admin.StackedInline):
+    """ How to add a profile to a user model according to:
+        https://docs.djangoproject.com/en/2.1/topics/auth/customizing/
+    """
+    model = Student
+    can_delete = False
+
+
 class CustomUserAdmin(admin.ModelAdmin):
     add_form = CustomUserCreationForm
     form = CustomUserChangeForm
-    model = UserHC
+    model = get_user_model()  # UserHC
     list_display = ['first_name', 'last_name', 'uses_email_username', 'username', 'is_student', 'is_teacher', 'is_admin']
-    # list_display = ['username', 'email', ]
+    empty_value_display = '-empty-'
+    inlines = (StaffInline, StudentInline,)
+
     # fields = ('first_name', 'last_name', 'uses_email_username', 'username', 'email', )
 
 
 admin.site.register(UserHC, CustomUserAdmin)
 admin.site.register((Staff, Student))
-# admin.site.register((CustomUserCreationForm, CustomUserChangeForm))
-# admin.site.register((UserHC, CustomUserAdmin, CustomUserCreationForm, CustomUserChangeForm))
