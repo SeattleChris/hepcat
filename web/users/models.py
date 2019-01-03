@@ -48,6 +48,40 @@ class UserHC(AbstractUser):
         super().save(*args, **kwargs)
 
 
+class Profile(models.Model):
+    """ Extending user model to have profile fields as appropriate as either a
+        student or a staff member.
+    """
+    user = models.OneToOneField(UserHC, on_delete=models.CASCADE, primary_key=True)
+    bio = models.TextField(max_length=500, blank=True)
+    level = models.IntegerField(verbose_name='Student Skill Level Number', default=0)
+    taken = models.ManyToManyField(Subject)
+    # taken = models.ManyToManyField(Subject, through=TakenSubject)
+    # interest = models.ManyToManyField(Subject, related_names='interests')
+    # interest = models.ManyToManyField(Subject, through=InterestSubject)
+    credit = models.FloatField(verbose_name='Class Payment Credit', default=0)
+    # refer = models.ForeignKey(UserHC, symmetrical=False, on_delete=models.SET_NULL, null=True, blank=True, related_names='referred')
+
+    def highest_subject(self):
+        """ We will want to know what is the student's class level
+            which by default will be the highest class level they
+            have taken. We also want to be able to override this
+            from a teacher or admin input to deal with students
+            who have had instruction or progress elsewhere.
+        """
+        pass
+
+    def __str__(self):
+        return self.user.first_name + self.user.last_name
+
+
+# @receiver(post_save, sender=UserHC)
+# def create_or_update_user_profile(sender, instance, created, **kwargs):
+#     if created:
+#         Profile.objects.create(user=instance)
+#     instance.profile.save()
+
+
 class Staff(models.Model):
     """ Extending user model to have the fields unique to on staff Teachers
         We want an image, a bio, and a connection to classes they taught
@@ -87,16 +121,16 @@ class Student(models.Model):
         return self.user.first_name + self.user.last_name
 
 
-@receiver(post_save, sender=UserHC)
-def create_or_update_user_profile(sender, instance, created, **kwargs):
-    if instance.is_student:
-        if created:
-            Student.objects.create(user=instance)
-        instance.Student.save()
-    if instance.is_teacher or instance.is_admin:
-        if created:
-            Staff.objects.create(user=instance)
-        instance.Staff.save()
+# @receiver(post_save, sender=UserHC)
+# def create_or_update_user_profile(sender, instance, created, **kwargs):
+#     if instance.is_student:
+#         if created:
+#             Student.objects.create(user=instance)
+#         instance.Student.save()
+#     if instance.is_teacher or instance.is_admin:
+#         if created:
+#             Staff.objects.create(user=instance)
+#         instance.Staff.save()
 
 
 
