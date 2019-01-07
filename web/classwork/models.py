@@ -118,7 +118,7 @@ class Subject(models.Model):
         instances of when it is offered, which will be in the Classes model.
     """
     # id = auto-created
-    # studentprofile_set exists 
+    # studentprofile_set exists
 
     LEVEL_CHOICES = (
         ('Beg', 'Beginning'),
@@ -162,6 +162,13 @@ class Subject(models.Model):
     # created_by = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='subjects')
     date_added = models.DateField(auto_now_add=True)
     date_modified = models.DateField(auto_now=True)
+
+    def num_level(self):
+        """ When we want a sortable level number
+        """
+        level_dict = {'Beg': 1, 'L2': 2, 'L3': 3, 'Spec': 3, 'L4': 4}
+        num = level_dict[self.level] if self.level in level_dict else 0
+        return num
 
     def __str__(self):
         slug = f'{self.level}{self.version}'
