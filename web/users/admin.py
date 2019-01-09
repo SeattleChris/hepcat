@@ -85,7 +85,7 @@ class CustomUserAdmin(UserAdmin):
 
 class ProfileAdmin(admin.ModelAdmin):
     model = Profile
-    list_display = ['__str__', 'username', 'highest_subject']
+    list_display = ['__str__', 'username', 'highest_subject', 'level']
 
 
 admin.site.register(UserHC, CustomUserAdmin)

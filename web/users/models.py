@@ -114,14 +114,15 @@ class Profile(models.Model):
     """
     user = models.OneToOneField(UserHC, on_delete=models.CASCADE, primary_key=True)
     bio = models.TextField(max_length=500, blank=True)
-    level = models.IntegerField(verbose_name='Student Skill Level Number', default=0)
-    taken = models.ManyToManyField(Subject)
+    level = models.IntegerField(verbose_name='skill level', default=0)
+    taken = models.ManyToManyField(Subject)  # TODO: ADD related_name='students'
     # taken = models.ManyToManyField(Subject, through=TakenSubject)
     # interest = models.ManyToManyField(Subject, related_names='interests')
     # interest = models.ManyToManyField(Subject, through=InterestSubject)
     credit = models.FloatField(verbose_name='Class Payment Credit', default=0)
     # refer = models.ForeignKey(UserHC, symmetrical=False, on_delete=models.SET_NULL, null=True, blank=True, related_names='referred')
 
+    @property
     def highest_subject(self):
         """ We will want to know what is the student's class level
             which by default will be the highest class level they
@@ -132,9 +133,9 @@ class Profile(models.Model):
         # Query all taken subjects for this student
         # Subject.num_level is the level for each of these, find the max.
         # return the Subject.level of this max Subject.num_level
-        # have = [subj.num_level for subj in self.taken]
-        temp = self.taken.level
-        return temp
+        # taken_subjects = self.taken.all()
+        have = [subj.num_level for subj in self.taken.all()]
+        return max(have) if len(have) > 0 else 0
 
     def username(self):
         return self.user.username

@@ -130,6 +130,13 @@ class Subject(models.Model):
         ('PrivSet', 'Private - Multiple Lessons'),
         ('Other', 'Other')
     )
+    LEVEL_ORDER = {
+        'Beg': 1,
+        'L2': 2,
+        'L3': 3,
+        'Spec': 3,
+        'L4': 4,
+    }
     VERSION_CHOICES = (
         ('A', 'A'),
         ('B', 'B'),
@@ -163,6 +170,7 @@ class Subject(models.Model):
     date_added = models.DateField(auto_now_add=True)
     date_modified = models.DateField(auto_now=True)
 
+    @property
     def num_level(self):
         """ When we want a sortable level number
         """
