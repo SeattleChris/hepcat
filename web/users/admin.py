@@ -56,8 +56,8 @@ class CustomUserAdmin(UserAdmin):
     empty_value_display = '-empty-'
     # TODO: Can we change to show only 1 and the correct profile inline?
     # inlines = (StaffInline, StudentInline, ProfileInline,)  # All three are just for testing
-    inlines = (StaffInline, StudentInline,)
-    # inlines = (ProfileInline,)
+    # inlines = (StaffInline, StudentInline,)
+    inlines = (ProfileInline,)
 
     # def get_formsets_with_inlines(self, request, obj=None):
     #     """ Return no inlines when obj is being created. Using super to use

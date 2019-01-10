@@ -42,20 +42,29 @@ class UserManagerHC(UserManager):
     #     return user
 
     def create_user(self, username=None, email=None, password=None, **extra_fields):
+        from django.db.utils import IntegrityError
+
         extra_fields.setdefault('is_superuser', False)
         if extra_fields.get('is_teacher') is True or extra_fields.get('is_admin') is True:
             extra_fields.setdefault('is_staff', True)
         else:
             extra_fields.setdefault('is_staff', False)
+        user = ''
         if extra_fields.get('uses_email_username') is True:
             if email is None:
                 raise ValueError('You must either have a unique email address, or set a username')
             username = email
-        else:
+            try:
+                user = self._create_user(username, email, password, **extra_fields)
+            except IntegrityError:
+                # extra_fields.setdefault('uses_email_username', False)
+                user = self._create_user('fakeout', email, password, **extra_fields)
+        if extra_fields.get('uses_email_username') is False:
             temp = extra_fields.get('first_name') + '_' + extra_fields.get('last_name')
             username = temp.casefold()
-
-        return self._create_user(username, email, password, **extra_fields)
+            user = self._create_user(username, email, password, **extra_fields)
+        return user
+        # return self._create_user(username, email, password, **extra_fields)
 
     # def create_superuser(self, username, email, password, **extra_fields):
     #     extra_fields.setdefault('is_staff', True)
@@ -105,6 +114,7 @@ class UserHC(AbstractUser):
             self.is_staff = True
         else:
             self.is_staff = False
+        # TODO: Deal with username (email) being checked as existing even when we want a new user
         super().save(*args, **kwargs)
 
 
