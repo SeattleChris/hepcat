@@ -8,6 +8,7 @@ from django.dispatch import receiver
 
 class UserManagerHC(UserManager):
     """ Adding & Modifying some features to the default UserManager
+        Inherits from: UserManager, BaseUserManager, models.Manager, ...
     """
 
     def normalize_email(cls, email):
@@ -57,8 +58,8 @@ class UserManagerHC(UserManager):
             try:
                 user = self._create_user(username, email, password, **extra_fields)
             except IntegrityError:
-                # extra_fields.setdefault('uses_email_username', False)
-                user = self._create_user('fakeout', email, password, **extra_fields)
+                extra_fields.setdefault('uses_email_username', False)
+                # user = self._create_user('fakeout', email, password, **extra_fields)
         if extra_fields.get('uses_email_username') is False:
             temp = extra_fields.get('first_name') + '_' + extra_fields.get('last_name')
             username = temp.casefold()
@@ -80,6 +81,7 @@ class UserManagerHC(UserManager):
 
 class UserHC(AbstractUser):
     """ This will be the custom Users model for the site
+        Inherits from: AbstractUser, AbstractBaseUser, models.Model, ModelBase, ...
     """
     is_student = models.BooleanField('student', default=True)
     is_teacher = models.BooleanField('teacher', default=False)

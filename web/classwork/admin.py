@@ -3,8 +3,9 @@ from .models import Subject, Session, ClassOffer, Location
 
 # Register your models here.
 
+
 class SubjectAdmin(admin.ModelAdmin):
-    """
+    """ 
     """
 
     def get_queryset(self, request):
