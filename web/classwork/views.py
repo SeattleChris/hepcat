@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from .models import Subject, Session, ClassOffer, Location
 from .forms import SubjectForm, SessionForm, ClassOfferForm
+from datetime import datetime
 # Create your views here.
 
 
@@ -74,41 +75,50 @@ class ClassOfferListView(ListView):
     model = ClassOffer
     context_object_name = 'classoffers'
 
-    # def decide_session(self, sess=None):
-    #     """ Typically we want to see the current session.
-    #         Sometimes we want to see a future sesion.
-    #     """
-    #     sess_data = []
-    #     if sess is None:
-    #         today = datetime.now()
-    #         sess_data = Session.objects.filter(publiish_date__lte=today, expire_date__gte=today)
-    #     else:
-    #         # TODO: need to work the logic to grab info sessions
-    #         pass
-    #     return [ea.name for ea in sess_data]
+    def decide_session(self, sess=None, display_date=None):
+        """ Typically we want to see the current session.
+            Sometimes we want to see a future sesion.
+        """
+        sess_data = []
+        # TODO: Deal with appropriate date input data and test it
+        if sess is None:
+            target = display_date or datetime.now()
+            sess_data = Session.objects.filter(publish_date__lte=target, expire_date__gte=target)
+        else:
+            if display_date:
+                raise SyntaxError("You can't filter by both Session and Date")
+            if sess == 'all':
+                return Session.objects.all()
+            if not isinstance(sess, list):
+                sess = [].append(sess)
+            try:
+                sess_data = Session.objects.filter(name__in=sess)
+            except TypeError:
+                sess_data = []
+        return sess_data  # a list of Session records, even if only 0-1 session
 
-    # def get_context_data(self, **kwargs):
-    #     """ Get the context of the current published classes from Session table
-    #     """
-    #     today = datetime.now()
-    #     context = super().get_context_data(**kwargs)
-    #     context['current_session'] = Session.objects.filter(
-    #         publiish_date__lte=today,
-    #         expire_date__gt=today
-    #     ).values('id')[0]['id']  # Only gets the first valid session it finds
-    #     return context
+    def get_queryset(self):
+        """ We can limit the classes list by publish date
+        """
+        display_session = None
+        if 'display_session' in self.kwargs:
+            display_session = self.kwargs['display_session']
+        sess_id = [ea.id for ea in self.decide_session(sess=display_session)]
+        return ClassOffer.objects.filter(session__in=sess_id).order_by('num_level')
 
-    # def get_queryset(self):
-    #     """ We can limit the classes list by publish date
-    #     """
-    #     # today = datetime.now()
-    #     # sess_id = Session.objects.filter(
-    #     #     publiish_date__lte=today,
-    #     #     expire_date__gte=today
-    #     # ).values('id')[0]['id']
-    #     sess_id = self.context.current_session
-
-    #     return ClassOffer.objects.filter(session=sess_id)
+    def get_context_data(self, **kwargs):
+        """ Get the context of the current published classes from Session table
+        """
+        context = super().get_context_data(**kwargs)
+        # print(context)
+        # print('-----------------')
+        # print(kwargs)
+        display_session = None
+        if 'display_session' in kwargs:
+            display_session = context['display_session']
+        sess_names = [ea.name for ea in self.decide_session(display_session)]
+        context['display_session'] = ', '.join(sess_names)
+        return context
 
 
 class ClassOfferCreateView(CreateView):
