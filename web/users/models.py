@@ -1,6 +1,6 @@
 from django.contrib.auth.models import AbstractUser, UserManager  # , Group
 from django.db import models
-from classwork.models import Subject
+from classwork.models import Subject, ClassOffer
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 # Create your models here.
@@ -128,6 +128,7 @@ class Profile(models.Model):
     bio = models.TextField(max_length=500, blank=True)
     level = models.IntegerField(verbose_name='skill level', default=0)
     taken = models.ManyToManyField(Subject)  # TODO: ADD related_name='students'
+    taken_classes = models.ManyToManyField(ClassOffer, related_name='students')
     # taken = models.ManyToManyField(Subject, through=TakenSubject)
     # interest = models.ManyToManyField(Subject, related_names='interests')
     # interest = models.ManyToManyField(Subject, through=InterestSubject)
@@ -146,8 +147,43 @@ class Profile(models.Model):
         # Subject.num_level is the level for each of these, find the max.
         # return the Subject.level of this max Subject.num_level
         # taken_subjects = self.taken.all()
-        have = [subj.num_level for subj in self.taken.all()]
+        have = [a.num_level for a in self.taken_classes.all()]
         return max(have) if len(have) > 0 else 0
+
+    @property
+    def taken_subjects(self):
+        """ Since all taken subjects are related through ClassOffer
+            We will query taken_classes to populate taken_subjects
+        """
+        subjs = [c.subject for c in self.taken_classes.all()]
+        # subjs = {a.subject for a in ClassOffer.objects.filter(id__in=class_ids)}
+        print(subjs)
+        return subjs
+
+    @property
+    def beg_finished(self):
+        version_translate = {'A': 'A', 'B': 'B', 'C': 'A', 'D': 'B'}
+        set_count = {'A': 0, 'B': 0}
+        subjs = self.taken_subjects
+        for subj in subjs:
+            if subj.level == 'Beg':
+                ver = version_translate[subj.version]
+                set_count[ver] += 1
+        if set_count['A'] > 0 and set_count['B'] > 0:
+            return True
+        return False
+
+    @property
+    def l2_finished(self):
+        set_count = {'A': 0, 'B': 0, 'C': 0, 'D': 0}
+        subjs = self.taken_subjects
+        for subj in subjs:
+            if subj.level == 'L2':
+                ver = subj.version
+                set_count[ver] += 1
+        if set_count['A'] > 0 and set_count['B'] > 0 and set_count['C'] > 0 and set_count['D'] > 0:
+            return True
+        return False
 
     def username(self):
         return self.user.username

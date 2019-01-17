@@ -178,12 +178,12 @@ class Subject(models.Model):
     def __repr__(self):
         return f'<Subject: {self.title} | Level: {self.level} | Version: {self.version} >'
 
-    # def set_num_level(self):
-    #     """ When we want a sortable level number
-    #     """
-    #     level_dict = self.LEVEL_ORDER
-    #     num = level_dict[self.level] if self.level in level_dict else 0
-    #     return num
+    def num_level(self):
+        """ When we want a sortable level number
+        """
+        level_dict = self.LEVEL_ORDER
+        num = level_dict[self.level] if self.level in level_dict else 0
+        return num
 
     # def save(self, *args, **kwargs):
     #     self.num_level = self.set_num_level()
