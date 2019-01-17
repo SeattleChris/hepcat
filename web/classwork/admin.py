@@ -5,14 +5,33 @@ from .models import Subject, Session, ClassOffer, Location
 
 
 class SubjectAdmin(admin.ModelAdmin):
-    """ 
     """
+    """
+    model = Subject
 
-    def get_queryset(self, request):
-        queryset = super().get_queryset(request)
+    # def get_queryset(self, request):
+    #     queryset = super().get_queryset(request)
 
-        return queryset
+    #     return queryset
+
+# class ProfileAdmin(admin.ModelAdmin):
+#     model = Profile
+#     list_display = ['__str__', 'username', 'highest_subject', 'level']
+#     list_display_links = ('__str__', 'username')
+
+
+class SessiontAdmin(admin.ModelAdmin):
+    """
+    """
+    model = Session
+    ordering = ('expire_date',)
+
+    # def get_queryset(self, request):
+    #     queryset = super().get_queryset(request)
+
+    #     return queryset
 
 
 admin.site.register(Subject, SubjectAdmin)
-admin.site.register((Session, ClassOffer, Location))
+admin.site.register(Session, SessiontAdmin)
+admin.site.register((ClassOffer, Location))

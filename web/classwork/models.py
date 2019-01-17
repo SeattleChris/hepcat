@@ -118,7 +118,6 @@ class Subject(models.Model):
         instances of when it is offered, which will be in the Classes model.
     """
     # id = auto-created
-    # studentprofile_set exists
 
     LEVEL_CHOICES = (
         ('Beg', 'Beginning'),
@@ -145,6 +144,7 @@ class Subject(models.Model):
         ('N', 'NA'),
     )
     level = models.CharField(max_length=8, choices=LEVEL_CHOICES, default='Spec')
+    # num_level = models.IntegerField(default=0, editable=False)
     version = models.CharField(max_length=1, choices=VERSION_CHOICES)
     title = models.CharField(max_length=125, default='Untitled')
     short_desc = models.CharField(max_length=100)
@@ -166,17 +166,8 @@ class Subject(models.Model):
     image = models.URLField(blank=True)
     # image = models.ImageField(upload_to=MEDIA_ROOT)
 
-    # created_by = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='subjects')
     date_added = models.DateField(auto_now_add=True)
     date_modified = models.DateField(auto_now=True)
-
-    @property
-    def num_level(self):
-        """ When we want a sortable level number
-        """
-        level_dict = {'Beg': 1, 'L2': 2, 'L3': 3, 'Spec': 3, 'L4': 4}
-        num = level_dict[self.level] if self.level in level_dict else 0
-        return num
 
     def __str__(self):
         slug = f'{self.level}{self.version}'
@@ -186,6 +177,17 @@ class Subject(models.Model):
 
     def __repr__(self):
         return f'<Subject: {self.title} | Level: {self.level} | Version: {self.version} >'
+
+    # def set_num_level(self):
+    #     """ When we want a sortable level number
+    #     """
+    #     level_dict = self.LEVEL_ORDER
+    #     num = level_dict[self.level] if self.level in level_dict else 0
+    #     return num
+
+    # def save(self, *args, **kwargs):
+    #     self.num_level = self.set_num_level()
+    #     super().save(*args, **kwargs)
 
 
 class Session(models.Model):
@@ -241,8 +243,10 @@ class ClassOffer(models.Model):
             Subject, Session, Teachers, Location
     """
     # id = auto-created
+    # studentprofile_set exists
     subject = models.ForeignKey('Subject', on_delete=models.CASCADE)
     session = models.ForeignKey('Session', on_delete=models.CASCADE)
+    num_level = models.IntegerField(default=0, editable=False)
     # TODO: later on location will be selected from Location model
     # location = models.ForeignKey('Location', on_delete=models.CASCADE)
     # TODO: later on teachers will selected from users - teachers.
@@ -297,8 +301,14 @@ class ClassOffer(models.Model):
         """
         return self.start_date() + timedelta(days=7*self.subject.num_weeks)
 
+    def set_num_level(self):
+        """ When we want a sortable level number
+        """
+        level_dict = Subject.LEVEL_ORDER
+        num = level_dict[self.subject.level] if self.subject.level in level_dict else 999
+        return num
+
     # slug = models.SlugField(editable=False, default=get_slug())
-    # created_by = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='classoffers')
     date_added = models.DateField(auto_now_add=True)
     date_modified = models.DateField(auto_now=True)
 
@@ -307,6 +317,10 @@ class ClassOffer(models.Model):
 
     def __repr__(self):
         return f'<Class Id: {self.id} | Subject: {self.subject} | Session: {self.session}>'
+
+    def save(self, *args, **kwargs):
+        self.num_level = self.set_num_level()
+        super().save(*args, **kwargs)
 
 
 class Location(models.Model):
