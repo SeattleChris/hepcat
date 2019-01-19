@@ -1,4 +1,5 @@
 from django.contrib import admin
+# from django.db import models
 from .models import Subject, Session, ClassOffer, Location
 
 # Register your models here.

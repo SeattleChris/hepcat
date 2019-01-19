@@ -121,6 +121,32 @@ class ClassOfferListView(ListView):
         return context
 
 
+class Checkin(ClassOfferListView):
+    """ This is a report for which students are in which classes.
+    """
+    template_name = 'classwork/checkin.html'
+    context_object_name = 'class_checkin'
+
+    def get_all_sessions(self):
+        sess_list = [a.title for a in Session.objects.all()]
+        return sess_list
+
+    def get_queryset(self):
+        result = super().get_queryset()
+
+        return result
+
+    def get_context_data(self, **kwargs):
+        kwargs['session_list'] = self.get_all_sessions()
+        for ea in kwargs['session_list']:
+            kwargs[ea] 
+        context = super().get_context_data(**kwargs)
+        context["added"] = 'added info'
+        return context
+
+    # end class Checkin
+
+
 class ClassOfferCreateView(CreateView):
     """ Only appropriate admin level users can create new classes
     """
