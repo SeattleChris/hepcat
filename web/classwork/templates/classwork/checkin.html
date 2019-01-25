@@ -1,0 +1,11 @@
+{% extends "generic/base.html" %}
+
+
+{% block content %}
+<h2>{{ display_session }}</h2>
+  {% for student in student_list %}
+    <p>{{ student }}</p>
+  {% endfor %}
+  <hr />
+  <p>End of list of Students</p>
+{% endblock content %}

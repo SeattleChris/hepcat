@@ -144,6 +144,7 @@ class Subject(models.Model):
         ('N', 'NA'),
     )
     level = models.CharField(max_length=8, choices=LEVEL_CHOICES, default='Spec')
+    # level_group = models.ManyToManyField('self')
     # num_level = models.IntegerField(default=0, editable=False)
     version = models.CharField(max_length=1, choices=VERSION_CHOICES)
     title = models.CharField(max_length=125, default='Untitled')
@@ -188,6 +189,17 @@ class Subject(models.Model):
     # def save(self, *args, **kwargs):
     #     self.num_level = self.set_num_level()
     #     super().save(*args, **kwargs)
+
+
+# class LevelGroup(models.Model):
+#     """ Sometimes there will be multiple Subjects (classes)
+#         that, as a group, are meant to be taken before
+#         a student has completed that Subject.
+#     """
+#     # id = auto-created
+#     title = models.CharField(max_length=8, choices=Subject.LEVEL_CHOICES, default='Spec')
+#     # collection = models.ManyToManyField('Subject', symmetrical=True)
+#     collection = models.ForeignKey('Subject', on_delete=models.CASCADE)
 
 
 class Session(models.Model):
@@ -243,7 +255,7 @@ class ClassOffer(models.Model):
             Subject, Session, Teachers, Location
     """
     # id = auto-created
-    # studentprofile_set exists
+    # self.students exists as the students signed up for this ClassOffer
     subject = models.ForeignKey('Subject', on_delete=models.CASCADE)
     session = models.ForeignKey('Session', on_delete=models.CASCADE)
     num_level = models.IntegerField(default=0, editable=False)

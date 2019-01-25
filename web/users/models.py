@@ -191,6 +191,9 @@ class Profile(models.Model):
     def __str__(self):
         return self.user.get_full_name()
 
+    def __repr__(self):
+        return self.user.get_full_name()
+
 
 @receiver(post_save, sender=UserHC)
 def create_or_update_user_profile(sender, instance, created, **kwargs):
