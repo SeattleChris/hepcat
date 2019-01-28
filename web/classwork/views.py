@@ -161,8 +161,15 @@ class Checkin(ListView):
         sess_id = [ea.id for ea in self.decide_session(sess=display_session)]
         selected_classes = ClassOffer.objects.filter(session__in=sess_id).order_by('num_level')
         class_list = [ea.students for ea in selected_classes]
-        print(class_list)
-        print('----------------')
+        print('===================')
+        for ea in selected_classes:
+            print(ea)
+            print('----------------')
+            print(ea.students.all())
+            print('----------------')
+            print(ea.profile_set.all())
+            print('+++++++++++++++++++')
+        print('===================')
         print(class_list)
         # student_list = [student for student in ea.students for ea in class_list]
         # student_list.order_by('first_name')
