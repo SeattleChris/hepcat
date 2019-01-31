@@ -2,18 +2,11 @@ from django.views.generic import ListView, CreateView, DetailView
 # from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
-from .models import Subject, Session, ClassOffer, Location
+from django.contrib.auth import get_user_model
+from .models import Subject, Session, ClassOffer, Profile, Registration, Location
 from .forms import SubjectForm, SessionForm, ClassOfferForm
 from datetime import datetime
 # Create your views here.
-
-
-# class PublishedListView(ListView):
-#     """ Placeholder for currently live classes on the site
-#     """
-#     template_name = 'classwork/published.html'
-#     model = ClassOffer
-#     context_object_name = 'classoffers'
 
 
 class SubjectListView(ListView):
@@ -75,6 +68,8 @@ class ClassOfferListView(ListView):
     model = ClassOffer
     context_object_name = 'classoffers'
 
+    # TODO: make decide_session a method that can be imported to various models
+    # Unless all places that need this are a model that inhirit from this model.
     def decide_session(self, sess=None, display_date=None):
         """ Typically we want to see the current session.
             Sometimes we want to see a future sesion.
@@ -98,7 +93,7 @@ class ClassOfferListView(ListView):
         return sess_data  # a list of Session records, even if only 0-1 session
 
     def get_queryset(self):
-        """ We can limit the classes list by publish date
+        """ We can limit the classes list by class level
         """
         display_session = None
         if 'display_session' in self.kwargs:
@@ -119,6 +114,90 @@ class ClassOfferListView(ListView):
         sess_names = [ea.name for ea in self.decide_session(display_session)]
         context['display_session'] = ', '.join(sess_names)
         return context
+
+
+class Checkin(ListView):
+    """ This is a report for which students are in which classes.
+    """
+    model = ClassOffer
+    template_name = 'classwork/checkin.html'
+    context_object_name = 'student_list'
+
+    # TODO: make decide_session a method that can be imported to various models
+    # Unless all places that need this are a model that inhirit from this model
+    def decide_session(self, sess=None, display_date=None):
+        """ Typically we want to see the current session.
+            Sometimes we want to see a future sesion.
+        """
+        sess_data = []
+        # TODO: Deal with appropriate date input data and test it
+        if sess is None:
+            target = display_date or datetime.now()
+            sess_data = Session.objects.filter(publish_date__lte=target, expire_date__gte=target)
+        else:
+            if display_date:
+                raise SyntaxError("You can't filter by both Session and Date")
+            if sess == 'all':
+                return Session.objects.all()
+            if not isinstance(sess, list):
+                sess = [].append(sess)
+            try:
+                sess_data = Session.objects.filter(name__in=sess)
+            except TypeError:
+                sess_data = []
+        return sess_data  # a list of Session records, even if only 0-1 session
+
+    def get_all_sessions(self):
+        sess_list = [a.title for a in Session.objects.all()]
+        return sess_list
+
+    def get_queryset(self):
+        """ List all the students from all the classes (in order of ClassOffer
+            and then alphabetical first name)
+        """
+        # users = get_user_model()
+        # current_classes = super().get_queryset()
+        display_session = None
+        if 'display_session' in self.kwargs:
+            display_session = self.kwargs['display_session']
+        sess_id = [ea.id for ea in self.decide_session(sess=display_session)]
+        selected_classes = ClassOffer.objects.filter(session__in=sess_id).order_by('num_level')
+        class_ids = [ea.id for ea in selected_classes]
+        class_list = [ea.students.all() for ea in selected_classes if hasattr(ea, 'students')]
+        people = Profile.objects.filter(taken__in=class_ids)
+        registered = Registration.objects.filter(classoffer__in=class_ids)
+        # selected_students = Profile.objects.filter()
+        print('===================')
+        print(people)
+        print(registered)
+        print('===================')
+        print(class_ids)
+        print(class_list)
+        # print(selected_students)
+        print('===================')
+        for ea in selected_classes:
+            print(ea)
+            print(ea.id)
+            print('----------------')
+            print(ea.students.all())
+            print('----------------')
+            print('+++++++++++++++++++')
+        print('===================')
+        print(class_list)
+        return people
+
+    def get_context_data(self, **kwargs):
+        """ Get the context of the current displayed class registration student list
+        """
+        context = super().get_context_data(**kwargs)
+        display_session = None
+        if 'display_session' in kwargs:
+            display_session = context['display_session']
+        sess_names = [ea.name for ea in self.decide_session(display_session)]
+        context['display_session'] = ', '.join(sess_names)
+        return context
+
+    # end class Checkin
 
 
 class ClassOfferCreateView(CreateView):

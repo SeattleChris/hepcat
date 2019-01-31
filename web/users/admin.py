@@ -2,36 +2,36 @@ from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 from .forms import CustomUserCreationForm, CustomUserChangeForm
-from .models import UserHC, Staff, Student, Profile
+from .models import UserHC  # Staff, Student, Profile
 from django.utils.translation import gettext_lazy as _
 # Register your models here.
 
 
-class StaffInline(admin.StackedInline):
-    """ How to add a profile to a user model according to:
-        https://docs.djangoproject.com/en/2.1/topics/auth/customizing/
-    """
-    model = Staff
-    can_delete = False
-    verbose_name_plural = 'staff profile'
+# class StaffInline(admin.StackedInline):
+#     """ How to add a profile to a user model according to:
+#         https://docs.djangoproject.com/en/2.1/topics/auth/customizing/
+#     """
+#     model = Staff
+#     can_delete = False
+#     verbose_name_plural = 'staff profile'
 
 
-class StudentInline(admin.StackedInline):
-    """ How to add a profile to a user model according to:
-        https://docs.djangoproject.com/en/2.1/topics/auth/customizing/
-    """
-    model = Student
-    can_delete = False
-    verbose_name_plural = 'student profile'
+# class StudentInline(admin.StackedInline):
+#     """ How to add a profile to a user model according to:
+#         https://docs.djangoproject.com/en/2.1/topics/auth/customizing/
+#     """
+#     model = Student
+#     can_delete = False
+#     verbose_name_plural = 'student profile'
 
 
-class ProfileInline(admin.StackedInline):
-    """ How to add a profile to a user model according to:
-        https://docs.djangoproject.com/en/2.1/topics/auth/customizing/
-    """
-    model = Profile
-    can_delete = False
-    verbose_name_plural = 'user profile'
+# class ProfileInline(admin.StackedInline):
+#     """ How to add a profile to a user model according to:
+#         https://docs.djangoproject.com/en/2.1/topics/auth/customizing/
+#     """
+#     model = Profile
+#     can_delete = False
+#     verbose_name_plural = 'user profile'
 
 
 class CustomUserAdmin(UserAdmin):
@@ -57,7 +57,7 @@ class CustomUserAdmin(UserAdmin):
     # TODO: Can we change to show only 1 and the correct profile inline?
     # inlines = (StaffInline, StudentInline, ProfileInline,)  # All three are just for testing
     # inlines = (StaffInline, StudentInline,)
-    inlines = (ProfileInline,)
+    # inlines = (ProfileInline,)
 
     # def get_formsets_with_inlines(self, request, obj=None):
     #     """ Return no inlines when obj is being created. Using super to use
@@ -83,13 +83,6 @@ class CustomUserAdmin(UserAdmin):
     #     return inline_list
 
 
-class ProfileAdmin(admin.ModelAdmin):
-    model = Profile
-    list_display = ['__str__', 'username', 'highest_subject', 'level']
-    list_display_links = ('__str__', 'username')
-
-
 admin.site.register(UserHC, CustomUserAdmin)
-admin.site.register(Profile, ProfileAdmin)
 # admin.site.register((Staff, Student, Profile))
 # admin.site.register((Staff, Student))

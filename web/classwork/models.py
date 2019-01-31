@@ -1,10 +1,16 @@
 # from __future__ import unicode_literals
-
-# from django.contrib.auth.models import User
 from django.db import models
 # from django.contrib.auth.models import BaseUserManager, AbstractBaseUser, PermissionsMixin
 # from django.utils.translation import ugettext_lazy as _
 from datetime import datetime, timedelta
+# from django.contrib.auth.models import User
+# from django.contrib.auth import get_user_model
+# User = get_user_model()
+from django.conf import settings
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+
 # Create your models here.
 
 # TODO: Use ForeignKey.limit_choices_to where appropriate.
@@ -12,104 +18,6 @@ from datetime import datetime, timedelta
 # TODO: Decide if any ForiegnKey should actually be ManytoManyField (incl above)
 # TODO: Add a field for "draft" vs. ready to publish for ClassOffer, Subject, Session?
 # TODO: Add @staff_member_required decorator to admin views?
-
-# class MyUserManager(BaseUserManager):
-#     """ Custom user manager to allow emails as default unique identifiers for auth.
-#         We will need a backup for email to allow a user to sign-up a "friend".
-#         We also may need a backup username when a student does not want to give
-#         an email address, but still joins and pays for a class or service.
-#     """
-
-#     def normalize_email(self):
-#         """ We want to lowercase the user part of the email.
-#             By default (super) lowercases the domain name.
-#         """
-#         email = super().normalize_email()  # In case in the future it does more
-#         try:
-#             email_name, domain_part = email.strip().rsplit('@', 1)
-#         except ValueError:
-#             pass
-#         else:
-#             email = email_name.casefold() + '@' + domain_part.lower()
-#         return email
-
-#     def _create_user(self, email, password, **extra_fields):
-#         """ Creates and saves a User with the given email and password.
-#         """
-#         all_users = []
-#         username = ''
-#         uses_alt_username = False
-
-#         # populate all_users with the usernames in the db
-#         # if email not in all_usernames:
-#         if not email or self.email is None or self.email in all_users:
-#             username = self.first_name + '_' + self.last_name
-#             # normalize username, or first_name and last_name before username created
-#             uses_alt_username = True
-
-#         else:
-#             username = self.normalize_username(self.email)
-#         username = self.normalize_username(username)
-
-#         email = self.normalize_email(email)
-#         user = self.model(email=email, **extra_fields)
-#         user.set_password(password)
-#         user.save()
-#         return user
-
-#     def create_superuser(self, email, password, **extra_fields):
-#         extra_fields.setdefault('is_staff', True)
-#         extra_fields.setdefault('is_superuser', True)
-#         extra_fields.setdefault('is_active', True)
-
-#         if extra_fields.get('is_staff') is not True:
-#             raise ValueError('Superuser must have is_staff=True.')
-#         if extra_fields.get('is_superuser') is not True:
-#             raise ValueError('Superuser must have is_superuser=True.')
-#         return self._create_user(email, password, **extra_fields)
-
-
-# class MyUser(AbstractBaseUser, PermissionsMixin):
-#     """ We modify the default user to allow the email to be the default username.
-
-#     """
-#     is_staff = models.BooleanField(
-#         _('staff status'),
-#         default=False,
-#         help_text=_('Designates whether the user can login to admin.'),
-#     )
-#     is_active = models.BooleanField(
-#         _('active'),
-#         default=True,
-#         help_text=_(
-#             'Designates whether this user should be treated as active. '
-#             'Unselect this instead of deleting accounts.'
-#         ),
-#     )
-#     first_name = models.CharField(max_length=125)
-#     last_name = models.CharField(max_length=125)
-#     email = models.EmailField(max_length=255, unique=False, blank=True)
-#     username = models.CharField(max_length=255, blank=True, unique=True)
-#     uses_alt_username = models.BooleanField(default=False)
-#     objects = MyUserManager()
-#     USERNAME_FIELD = 'username'
-#     REQUIRED_FIELDS = ['first_name', 'last_name']
-
-#     def set_username(self, parameter_list):
-#         """ Check to see if this email is already used as a username
-#             If available, set the username to the email value
-#             If not available, user 'first_name' + '_' + 'last_name'
-#         """
-#         pass
-
-#     def __str__(self):
-#         return self.email
-
-#     def get_full_name(self):
-#         return self.email
-
-#     def get_short_name(self):
-#         return self.email
 
 
 class Subject(models.Model):
@@ -122,6 +30,8 @@ class Subject(models.Model):
     LEVEL_CHOICES = (
         ('Beg', 'Beginning'),
         ('L2', 'Lindy 2'),
+        # Elsewhere our code expects the first 2 elements to be however we
+        # represent our Beginning and Level 2 class series
         ('L3', 'Lindy 3'),
         ('Spec', 'Special Focus'),
         ('WS', 'Workshop'),
@@ -144,6 +54,7 @@ class Subject(models.Model):
         ('N', 'NA'),
     )
     level = models.CharField(max_length=8, choices=LEVEL_CHOICES, default='Spec')
+    # level_group = models.ManyToManyField('self')
     # num_level = models.IntegerField(default=0, editable=False)
     version = models.CharField(max_length=1, choices=VERSION_CHOICES)
     title = models.CharField(max_length=125, default='Untitled')
@@ -178,16 +89,27 @@ class Subject(models.Model):
     def __repr__(self):
         return f'<Subject: {self.title} | Level: {self.level} | Version: {self.version} >'
 
-    # def set_num_level(self):
-    #     """ When we want a sortable level number
-    #     """
-    #     level_dict = self.LEVEL_ORDER
-    #     num = level_dict[self.level] if self.level in level_dict else 0
-    #     return num
+    def num_level(self):
+        """ When we want a sortable level number
+        """
+        level_dict = self.LEVEL_ORDER
+        num = level_dict[self.level] if self.level in level_dict else 0
+        return num
 
     # def save(self, *args, **kwargs):
     #     self.num_level = self.set_num_level()
     #     super().save(*args, **kwargs)
+
+
+# class LevelGroup(models.Model):
+#     """ Sometimes there will be multiple Subjects (classes)
+#         that, as a group, are meant to be taken before
+#         a student has completed that Subject.
+#     """
+#     # id = auto-created
+#     title = models.CharField(max_length=8, choices=Subject.LEVEL_CHOICES, default='Spec')
+#     # collection = models.ManyToManyField('Subject', symmetrical=True)
+#     collection = models.ForeignKey('Subject', on_delete=models.CASCADE)
 
 
 class Session(models.Model):
@@ -243,7 +165,7 @@ class ClassOffer(models.Model):
             Subject, Session, Teachers, Location
     """
     # id = auto-created
-    # studentprofile_set exists
+    # self.students exists as the students signed up for this ClassOffer
     subject = models.ForeignKey('Subject', on_delete=models.CASCADE)
     session = models.ForeignKey('Session', on_delete=models.CASCADE)
     num_level = models.IntegerField(default=0, editable=False)
@@ -262,6 +184,9 @@ class ClassOffer(models.Model):
     )
     class_day = models.SmallIntegerField(choices=DOW_CHOICES, default=3)
     start_time = models.TimeField()
+
+    date_added = models.DateField(auto_now_add=True)
+    date_modified = models.DateField(auto_now=True)
 
     def end_time(self):
         """ For a given subject, the time duration is set. So now this
@@ -305,12 +230,13 @@ class ClassOffer(models.Model):
         """ When we want a sortable level number
         """
         level_dict = Subject.LEVEL_ORDER
-        num = level_dict[self.subject.level] if self.subject.level in level_dict else 999
+        higher = 100 + max(level_dict.values)
+        num = 0
+        try:
+            num = level_dict[self.subject.level]
+        except KeyError:
+            num = higher
         return num
-
-    # slug = models.SlugField(editable=False, default=get_slug())
-    date_added = models.DateField(auto_now_add=True)
-    date_modified = models.DateField(auto_now=True)
 
     def __str__(self):
         return f'{self.subject} - {self.session}'
@@ -321,6 +247,100 @@ class ClassOffer(models.Model):
     def save(self, *args, **kwargs):
         self.num_level = self.set_num_level()
         super().save(*args, **kwargs)
+
+
+class Profile(models.Model):
+    """ Extending user model to have profile fields as appropriate as either a
+        student or a staff member.
+    """
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True)
+    bio = models.TextField(max_length=500, blank=True)
+    level = models.IntegerField(verbose_name='skill level', default=0)
+    taken = models.ManyToManyField(ClassOffer, related_name='students', through='Registration')
+    # interest = models.ManyToManyField(Subject, related_names='interests', through='Requests')
+    credit = models.FloatField(verbose_name='Class Payment Credit', default=0)
+    # refer = models.ForeignKey(UserHC, symmetrical=False, on_delete=models.SET_NULL, null=True, blank=True, related_names='referred')
+    date_added = models.DateField(auto_now_add=True)
+    date_modified = models.DateField(auto_now=True)
+
+    # TODO: The following properties could be extracted further to allow the
+    # program admin user to set their own rules for number of versions needed
+    # and other version translation decisions.
+
+    @property
+    def highest_subject(self):
+        """ We will want to know what is the student's class level
+            which by default will be the highest class level they
+            have taken. We also want to be able to override this
+            from a teacher or admin input to deal with students
+            who have had instruction or progress elsewhere.
+        """
+        # Query all taken ClassOffers for this student
+        # ClassOffer.num_level is the level for each of these, find the max.
+        # Currently returns max, Do we want LEVEL_CHOICES name of this max?
+        have = [a.num_level for a in self.taken.all()]
+        return max(have) if len(have) > 0 else 0
+
+    @property
+    def taken_subjects(self):
+        """ Since all taken subjects are related through ClassOffer
+            We will query taken classes to report taken subjects
+        """
+        subjs = [c.subject for c in self.taken.all()]
+        # TODO: remove following print line once confirmed.
+        print(subjs)
+        return subjs
+
+    @property
+    def beg_finished(self):
+        version_translate = {'A': 'A', 'B': 'B', 'C': 'A', 'D': 'B'}
+        set_count = {'A': 0, 'B': 0}
+        subjs = self.taken_subjects
+        for subj in subjs:
+            if subj.level == Subject.LEVEL_CHOICES[0][0]:  # 'Beg'
+                ver = version_translate[subj.version]
+                set_count[ver] += 1
+        if set_count['A'] > 0 and set_count['B'] > 0:
+            return True
+        return False
+
+    @property
+    def l2_finished(self):
+        set_count = {'A': 0, 'B': 0, 'C': 0, 'D': 0}
+        subjs = self.taken_subjects
+        for subj in subjs:
+            if subj.level == Subject.LEVEL_CHOICES[1][0]:  # 'L2'
+                ver = subj.version
+                set_count[ver] += 1
+        if set_count['A'] > 0 and set_count['B'] > 0 and set_count['C'] > 0 and set_count['D'] > 0:
+            return True
+        return False
+
+    def username(self):
+        return self.user.username
+
+    def __str__(self):
+        return self.user.get_full_name()
+
+    def __repr__(self):
+        return self.user.get_full_name()
+
+
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def create_or_update_user_profile(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)
+    instance.profile.save()
+
+
+class Registration(models.Model):
+    """ This is an intermediary model refrienced by a user profile model
+        so that we can see which students are enrolled in a ClassOffer
+    """
+    student = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    classoffer = models.ForeignKey(ClassOffer, on_delete=models.CASCADE)
+
+    # end class Registration
 
 
 class Location(models.Model):
