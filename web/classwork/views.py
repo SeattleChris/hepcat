@@ -2,7 +2,8 @@ from django.views.generic import ListView, CreateView, DetailView
 # from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
-from .models import Subject, Session, ClassOffer, Location
+from django.contrib.auth import get_user_model
+from .models import Subject, Session, ClassOffer, Profile, Registration, Location
 from .forms import SubjectForm, SessionForm, ClassOfferForm
 from datetime import datetime
 # Create your views here.
@@ -154,53 +155,47 @@ class Checkin(ListView):
         """ List all the students from all the classes (in order of ClassOffer
             and then alphabetical first name)
         """
+        # users = get_user_model()
         # current_classes = super().get_queryset()
         display_session = None
         if 'display_session' in self.kwargs:
             display_session = self.kwargs['display_session']
         sess_id = [ea.id for ea in self.decide_session(sess=display_session)]
         selected_classes = ClassOffer.objects.filter(session__in=sess_id).order_by('num_level')
-        class_list = [ea.students for ea in selected_classes]
+        class_ids = [ea.id for ea in selected_classes]
+        class_list = [ea.students.all() for ea in selected_classes if hasattr(ea, 'students')]
+        people = Profile.objects.filter(taken__in=class_ids)
+        registered = Registration.objects.filter(classoffer__in=class_ids)
+        # selected_students = Profile.objects.filter()
+        print('===================')
+        print(people)
+        print(registered)
+        print('===================')
+        print(class_ids)
+        print(class_list)
+        # print(selected_students)
         print('===================')
         for ea in selected_classes:
             print(ea)
+            print(ea.id)
             print('----------------')
             print(ea.students.all())
             print('----------------')
-            print(ea.profile_set.all())
             print('+++++++++++++++++++')
         print('===================')
         print(class_list)
-        # student_list = [student for student in ea.students for ea in class_list]
-        # student_list.order_by('first_name')
-        # return student_list
-        return class_list
+        return people
 
     def get_context_data(self, **kwargs):
         """ Get the context of the current displayed class registration student list
         """
         context = super().get_context_data(**kwargs)
-        # print(context)
-        # print('-----------------')
-        # print(kwargs)
         display_session = None
         if 'display_session' in kwargs:
             display_session = context['display_session']
         sess_names = [ea.name for ea in self.decide_session(display_session)]
         context['display_session'] = ', '.join(sess_names)
         return context
-
-        # class_list = self.get_queryset()
-        # # context['student_list'] = ClassOffer.students.filter(
-        # #     budget__user__username=self.request.user.username)
-        # student_list = []
-        # for ea in class_list:
-        #     # context[ea.title] = ea.students.order_by('first_name')
-        #     student_list.append(ea.students.order_by('user__first_name'))
-        # context['student_list'] = student_list
-        # # context['students'] = self.students.order_by('first_name')
-        # # context['students'] = ['bob', 'joe', 'susan']
-        # return context
 
     # end class Checkin
 

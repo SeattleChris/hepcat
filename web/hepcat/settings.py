@@ -29,7 +29,6 @@ ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split()
 # Application definition
 
 INSTALLED_APPS = [
-    'users',  # CUSTOM: App name
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -43,6 +42,7 @@ INSTALLED_APPS = [
     'django_registration',  # CUSTOM
     'hepcat',  # CUSTOM: Project name
     'classwork',  # CUSTOM: App name
+    'users',  # CUSTOM: App name
 ]
 
 MIDDLEWARE = [

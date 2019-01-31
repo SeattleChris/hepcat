@@ -4,7 +4,7 @@
 {% block content %}
 <h2>{{ display_session }}</h2>
   {% for student in student_list %}
-    <p>{{ student }}</p>
+    <p>{{ student }} {{student.beg_finished}} {{student.l2_finished}}</p>
   {% endfor %}
   <hr />
   <p>End of list of Students</p>
