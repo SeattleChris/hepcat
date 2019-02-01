@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import SubjectListView, SessionListView, ClassOfferListView, LocationDetailView, LocationListView, Checkin
+from .views import SubjectListView, SessionListView, ClassOfferListView, LocationDetailView, LocationListView, Checkin, TableCheckin
 # SubjectCreateView, SessionCreateView, ClassOfferCreateView,
 urlpatterns = [  # All following are in /classes/
     path('', ClassOfferListView.as_view(), name='classoffer_list'),  # Display current published ClassOffers
@@ -12,6 +12,7 @@ urlpatterns = [  # All following are in /classes/
     # path('classoffer/new/<int:id>', ClassOfferCreateView.as_view(), name='classoffer_create'),
     # above is correct to create on budget of id?
     path('checkin/', Checkin.as_view(), name='checkin'),
+    path('table/', TableCheckin.as_view(), name='table'),
     path('location/<int:id>', LocationDetailView.as_view(), name='location_detail'),
     path('location/', LocationListView.as_view(), name='location_list'),
 ]

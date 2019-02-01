@@ -25,13 +25,14 @@
         <li><a href="{% url 'classoffer_list' %}">ClassOffer List</a></li>
         <li><a href="{% url 'subject_list' %}">Subject List</a></li>
         <li><a href="{% url 'session_list' %}">Session List</a></li>
+        <li><a href="{% url 'location_list' %}">Location List</a></li>
         {% if user.is_staff %}
         <li><a href="{% url 'admin:index' %}" >admin</a></li>
         <li><a href="{% url 'checkin' %}">Checkin Sheet</a></li>
+        <li><a href="{% url 'table' %}">Checkin Table</a></li>
+        {% endif %}
         {% if user.is_superuser %}
         <li>Super User is Here</li>
-        <li><a href="{% url 'location_list' %}">Location List</a></li>
-        {% endif %}
         {% endif %}
       </ul>
     </nav>
