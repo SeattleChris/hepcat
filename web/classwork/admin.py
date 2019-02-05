@@ -42,7 +42,21 @@ class ProfileAdmin(admin.ModelAdmin):
     inlines = (StudentClassInline, )
 
 
+class RegistrationAdmin(admin.ModelAdmin):
+    model = Registration
+    list_display = ['first_name', 'last_name', 'credit', 'reg_class']
+    list_display_links = ['first_name', 'last_name']
+    list_filter = ('classoffer__session', 'classoffer__class_day')
+    # TODO: add ability to only display the class_day that exist in qs
+    # https://docs.djangoproject.com/en/2.1/ref/contrib/admin/ see list_filter
+    # TODO: modify so by default it shows current session filter
+    ordering = ('-classoffer__class_day', 'classoffer__start_time', 'student__user__first_name')
+
+    # ordering = ('reg_class', )
+
+
 admin.site.register(Subject, SubjectAdmin)
 admin.site.register(Session, SessiontAdmin)
 admin.site.register(Profile, ProfileAdmin)
+admin.site.register(Registration, RegistrationAdmin)
 admin.site.register((ClassOffer, Location))

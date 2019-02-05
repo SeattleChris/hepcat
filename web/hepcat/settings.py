@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     # 'bootstrap4',  # CUSTOM
     'bootstrap_datepicker_plus',  # CUSTOM
     'django_registration',  # CUSTOM
+    'django_tables2',  # CUSTOM
     'hepcat',  # CUSTOM: Project name
     'classwork',  # CUSTOM: App name
     'users',  # CUSTOM: App name

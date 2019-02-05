@@ -1,21 +1,22 @@
 {% extends "generic/base.html" %}
-
+{% load django_tables2 %}
 
 {% block content %}
+{% for table in tables %}
+  {% render_table table %}
+{% endfor %}
+
 <h2>{{ display_session }}</h2>
   {% for ea in class_list %}
     <h3>{{ ea.subject }}: {{ ea.subject.title }} </h3>
     <ul>
     {% for student in ea.students.all %}
-      <li>{{ student }} | {{ ea.subject }} | {{ student.credit }}</li>
-      <li>
-        {% for dt in student.checkin_list %}
-          {{ dt }} |
-        {% endfor %}
-      </li>
+      <li>{{ student }} {{student.beg_finished}} {{student.l2_finished}}</li>
     {% endfor %}
     </ul>
   {% endfor %}
   <hr />
   <p>End of list of Students</p>
 {% endblock content %}
+
+
