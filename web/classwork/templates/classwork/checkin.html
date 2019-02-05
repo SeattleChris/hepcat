@@ -7,7 +7,12 @@
     <h3>{{ ea.subject }}: {{ ea.subject.title }} </h3>
     <ul>
     {% for student in ea.students.all %}
-      <li>{{ student }} {{student.beg_finished}} {{student.l2_finished}}</li>
+      <li>{{ student }} | {{ ea.subject }} | {{ student.credit }}</li>
+      <li>
+        {% for dt in student.checkin_list %}
+          {{ dt }} |
+        {% endfor %}
+      </li>
     {% endfor %}
     </ul>
   {% endfor %}

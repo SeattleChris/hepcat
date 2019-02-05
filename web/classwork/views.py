@@ -121,38 +121,70 @@ class ClassOfferListView(ListView):
 class StudentTable(tables.Table):
     """ Used to display student class check-in info
     """
+    from django_tables2 import A
+
+    subj = tables.Column(A('self.taken.all()'))
+    pay_type = tables.Column()
+    pay_owed = tables.Column()
+
     class Meta:
         model = Profile
 
 
 class TableCheckin(MultiTableMixin, ListView):
+    table_class = StudentTable
     model = Profile
     template_name = "profile_list.html"
-    queryset = ClassOffer.objects.all()
-    tables = [StudentTable(qs.students.all()) for qs in queryset]
-    # table_class = StudentTable
 
-    # def decide_session(self, sess=None, display_date=None):
-    #     """ Typically we want to see the current session.
-    #         Sometimes we want to see a future sesion.
-    #     """
-    #     sess_data = []
-    #     # TODO: Deal with appropriate date input data and test it
-    #     if sess is None:
-    #         target = display_date or datetime.now()
-    #         sess_data = Session.objects.filter(publish_date__lte=target, expire_date__gte=target)
-    #     else:
-    #         if display_date:
-    #             raise SyntaxError("You can't filter by both Session and Date")
-    #         if sess == 'all':
-    #             return Session.objects.all()
-    #         if not isinstance(sess, list):
-    #             sess = [].append(sess)
-    #         try:
-    #             sess_data = Session.objects.filter(name__in=sess)
-    #         except TypeError:
-    #             sess_data = []
-    #     return sess_data  # a list of Session records, even if only 0-1 session
+    def decide_session(self, sess=None, display_date=None):
+        """ Typically we want to see the current session.
+            Sometimes we want to see a future sesion.
+        """
+        sess_data = []
+        # TODO: Deal with appropriate date input data and test it
+        if sess is None:
+            target = display_date or datetime.now()
+            sess_data = Session.objects.filter(publish_date__lte=target, expire_date__gte=target)
+        else:
+            if display_date:
+                raise SyntaxError("You can't filter by both Session and Date")
+            if sess == 'all':
+                return Session.objects.all()
+            if not isinstance(sess, list):
+                sess = [].append(sess)
+            try:
+                sess_data = Session.objects.filter(name__in=sess)
+            except TypeError:
+                sess_data = []
+        return sess_data  # a list of Session records, even if only 0-1 session
+
+    def temp_get_table_data(self):
+        """ django_tables2 looks for this to populate the table data.
+        """
+        # display_session = None
+        #     if 'display_session' in self.kwargs:
+        #         display_session = self.kwargs['display_session']
+        #     session = self.decide_session(sess=display_session)
+        #     selected_classes = ClassOffer.objects.filter(session__in=session).order_by('-class_day', 'start_time')
+        #     # class_list = [ea.students.all() for ea in selected_classes if hasattr(ea, 'students')]
+        #     people = Profile.objects.filter(taken__in=selected_classes)
+        #     print('===================')
+        #     print(people)
+        #     # print(registered)
+        #     print('===================')
+        #     print(selected_classes)
+        #     # print(selected_students)
+        #     print('===================')
+        #     for ea in selected_classes:
+        #         print(ea)
+        #         for student in ea.students.all():
+        #             print('----------------')
+        #             print(student)
+        #         print('+++++++++++++++++++')
+        #     print('===================')
+        #     print(class_list)
+        #     return selected_classes
+        pass
 
     # def get_queryset(self):
     #     """ List all the students from all the classes (in order of ClassOffer
@@ -167,14 +199,10 @@ class TableCheckin(MultiTableMixin, ListView):
     #     selected_classes = ClassOffer.objects.filter(session__in=session).order_by('-class_day', 'start_time')
     #     class_list = [ea.students.all() for ea in selected_classes if hasattr(ea, 'students')]
     #     people = Profile.objects.filter(taken__in=selected_classes)
-    #     # registered = Registration.objects.filter(classoffer__in=selected_classes)
-    #     # selected_students = Profile.objects.filter()
     #     print('===================')
     #     print(people)
-    #     # print(registered)
     #     print('===================')
     #     print(selected_classes)
-    #     # print(selected_students)
     #     print('===================')
     #     for ea in selected_classes:
     #         print(ea)
@@ -185,6 +213,16 @@ class TableCheckin(MultiTableMixin, ListView):
     #     print('===================')
     #     print(class_list)
     #     return selected_classes
+
+    # for MultiTableMixin
+    tables = [
+        StudentTable(ea.students.all(), exclude=('date_added', 'date_modified',))
+        for ea in ClassOffer.objects.all()
+    ]
+    # tables = [
+    #     StudentTable(ea.students.all(), fields=('date_added', 'date_modified',))
+    #     for ea in ClassOffer.objects.all()
+    # ]
 
     # def get_context_data(self, **kwargs):
     #     """ Get the context of the current, or selected, class session student list
@@ -236,8 +274,8 @@ class Checkin(ListView):
     #     return sess_list
 
     def get_queryset(self):
-        """ List all the students from all the classes (in order of ClassOffer
-            and then alphabetical first name)
+        """ List all the students from all the classes (grouped in days, then
+            in start_time order, and then alphabetical first name)
         """
         # users = get_user_model()
         # current_classes = super().get_queryset()

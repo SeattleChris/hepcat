@@ -325,6 +325,15 @@ class Profile(models.Model):
     def __repr__(self):
         return self.user.get_full_name()
 
+    @property
+    def checkin_list(self):
+        return [
+            self.user.first_name,
+            self.user.last_name,
+            self.taken,
+            self.credit,
+        ]
+
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_or_update_user_profile(sender, instance, created, **kwargs):
@@ -339,6 +348,32 @@ class Registration(models.Model):
     """
     student = models.ForeignKey(Profile, on_delete=models.CASCADE)
     classoffer = models.ForeignKey(ClassOffer, on_delete=models.CASCADE)
+
+    @property
+    def first_name(self):
+        return self.student.user.first_name
+
+    @property
+    def last_name(self):
+        return self.student.user.last_name
+
+    @property
+    def credit(self):
+        return self.student.credit
+
+    @property
+    def reg_class(self):
+        return self.classoffer.subject.level
+    # reg_class.admin_order_field = 'classoffer__subject__level'
+
+    @property
+    def reg_session(self):
+        return self.classoffer.session.name
+    # reg_session.admin_order_field = 'classoffer__session__key_day_date'
+
+    # class Meta:
+    #     order_with_respect_to = 'classoffer'
+    #     pass
 
     # end class Registration
 
