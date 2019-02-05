@@ -12,6 +12,7 @@ libsass = "*"
 django-compressor = "*"
 django-bootstrap-datepicker-plus = "*"
 "django-tables2" = "*"
+django-paypal = "*"
 
 [dev-packages]
 
