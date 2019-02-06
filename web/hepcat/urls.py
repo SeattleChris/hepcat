@@ -30,6 +30,7 @@ urlpatterns = [
     path('user/', include('django.contrib.auth.urls')),
     path('user/', include('users.urls')),
     path('classes/', include('classwork.urls')),
+    path('payments/', include('payments.urls')),
 ]
 
 # Thanks to django.contrib.auth.urls The following paths are set:
