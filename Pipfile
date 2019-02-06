@@ -7,14 +7,14 @@ name = "pypi"
 django = "*"
 "psycopg2-binary" = "*"
 django-registration = "*"
-django-sass-processor = "*"
-libsass = "*"
 django-compressor = "*"
 django-bootstrap-datepicker-plus = "*"
 "django-tables2" = "*"
 django-paypal = "*"
 
 [dev-packages]
+django-sass-processor = "*"
+libsass = "*"
 
 [requires]
 python_version = "3.6"
