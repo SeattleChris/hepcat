@@ -10,7 +10,7 @@ django-registration = "*"
 django-compressor = "*"
 django-bootstrap-datepicker-plus = "*"
 "django-tables2" = "*"
-django-paypal = "*"
+django-payments = "*"
 
 [dev-packages]
 django-sass-processor = "*"
