@@ -1,9 +1,9 @@
 from django import forms
 # from django.contrib.auth.forms import UserCreationForm
 # from django.contrib.auth.models import User
-from .models import Subject, Session, ClassOffer
+from .models import Subject, Session, ClassOffer, Payment
 from bootstrap_datepicker_plus import DatePickerInput, TimePickerInput
-
+from django.contrib.auth import get_user_model
 
 # class SignUpForm(UserCreationForm):
 #     """ Building on top of the defaul UserCreationForm, we'll make a user
@@ -63,3 +63,28 @@ class ClassOfferForm(forms.ModelForm):
             'start_time': TimePickerInput()
             # options={"stepping": 5}
         }
+
+
+class RegisterForm(forms.ModelForm):
+    """ This is where exisiting and even new users/students can sign up for
+        a ClassOffer
+    """
+    # TODO: If user is logged in, pre-populate or modify register form to use
+    # their existing details. Also allow a method to update their details.
+    # TODO: Create the workflow for when (if) the user wants to fill out the
+    # registeration form for someone else,
+
+    class Meta:
+        model = get_user_model()  # users.UserHC
+        fields = ['first_name', 'last_name', 'email', ]
+
+
+class PaymentForm(forms.ModelForm):
+    """ This is where a user inputs their payment data
+        and it is processed.
+    """
+
+    class Meta:
+        model = Payment
+        fields = ['variant', 'description', 'total', ]
+

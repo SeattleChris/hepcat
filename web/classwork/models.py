@@ -9,6 +9,9 @@ from datetime import datetime, timedelta
 from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from decimal import Decimal  # used for Payments model
+from payments import PurchasedItem
+from payments.models import BasePayment
 
 
 # Create your models here.
@@ -18,6 +21,30 @@ from django.dispatch import receiver
 # TODO: Decide if any ForiegnKey should actually be ManytoManyField (incl above)
 # TODO: Add a field for "draft" vs. ready to publish for ClassOffer, Subject, Session?
 # TODO: Add @staff_member_required decorator to admin views?
+
+
+class Location(models.Model):
+    """ ClassOffers may be at various locations.
+        This stores information about each location.
+    """
+    # id = auto-created
+    name = models.CharField(max_length=120)
+    code = models.CharField(max_length=120)
+    address = models.CharField(max_length=255)
+    city = models.CharField(max_length=120, default='Seattle')
+    state = models.CharField(max_length=63, default='WA')
+    zipcode = models.CharField(max_length=15)
+    map_google = models.URLField(verbose_name="Google Maps Link")
+
+    # created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='locations')
+    date_added = models.DateField(auto_now_add=True)
+    date_modified = models.DateField(auto_now=True)
+
+    def __str__(self):
+        return f'{self.name}'
+
+    def __repr__(self):
+        return f'<Location: {self.name} | Link: {self.map_google} >'
 
 
 class Subject(models.Model):
@@ -378,26 +405,60 @@ class Registration(models.Model):
     # end class Registration
 
 
-class Location(models.Model):
-    """ ClassOffers may be at various locations.
-        This stores information about each location.
+class Payment(BasePayment):
+    """ Payment Processing
     """
-    # id = auto-created
-    name = models.CharField(max_length=120)
-    code = models.CharField(max_length=120)
-    address = models.CharField(max_length=255)
-    city = models.CharField(max_length=120, default='Seattle')
-    state = models.CharField(max_length=63, default='WA')
-    zipcode = models.CharField(max_length=15)
-    map_google = models.URLField(verbose_name="Google Maps Link")
+    # variant = models.CharField(max_length=255)
+    #: Transaction status
+    # status = models.CharField(
+    #     max_length=10, choices=PaymentStatus.CHOICES,
+    #     default=PaymentStatus.WAITING)
+    # fraud_status = models.CharField(
+    #     _('fraud check'), max_length=10, choices=FraudStatus.CHOICES,
+    #     default=FraudStatus.UNKNOWN)
+    # fraud_message = models.TextField(blank=True, default='')
+    # #: Creation date and time
+    # created = models.DateTimeField(auto_now_add=True)
+    # #: Date and time of last modification
+    # modified = models.DateTimeField(auto_now=True)
+    # #: Transaction ID (if applicable)
+    # transaction_id = models.CharField(max_length=255, blank=True)
+    # #: Currency code (may be provider-specific)
+    # currency = models.CharField(max_length=10)
+    # #: Total amount (gross)
+    # total = models.DecimalField(max_digits=9, decimal_places=2, default='0.0')
+    # delivery = models.DecimalField(
+    #     max_digits=9, decimal_places=2, default='0.0')
+    # tax = models.DecimalField(max_digits=9, decimal_places=2, default='0.0')
+    # description = models.TextField(blank=True, default='')
+    # billing_first_name = models.CharField(max_length=256, blank=True)
+    # billing_last_name = models.CharField(max_length=256, blank=True)
+    # billing_address_1 = models.CharField(max_length=256, blank=True)
+    # billing_address_2 = models.CharField(max_length=256, blank=True)
+    # billing_city = models.CharField(max_length=256, blank=True)
+    # billing_postcode = models.CharField(max_length=256, blank=True)
+    # billing_country_code = models.CharField(max_length=2, blank=True)
+    # billing_country_area = models.CharField(max_length=256, blank=True)
+    # billing_email = models.EmailField(blank=True)
+    # customer_ip_address = models.GenericIPAddressField(blank=True, null=True)
+    # extra_data = models.TextField(blank=True, default='')
+    # message = models.TextField(blank=True, default='')
+    # token = models.CharField(max_length=36, blank=True, default='')
+    # captured_amount = models.DecimalField(
+    #     max_digits=9, decimal_places=2, default='0.0')
 
-    # created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='locations')
-    date_added = models.DateField(auto_now_add=True)
-    date_modified = models.DateField(auto_now=True)
+    def get_failure_url(self):
+        return 'http://example.com/failure/'
 
-    def __str__(self):
-        return f'{self.name}'
+    def get_success_url(self):
+        return 'http://example.com/success/'
 
-    def __repr__(self):
-        return f'<Location: {self.name} | Link: {self.map_google} >'
+    def get_purchased_items(self):
+        # you'll probably want to retrieve these from an associated order
+        yield PurchasedItem(name='The Hound of the Baskervilles', sku='BSKV',
+                            quantity=9, price=Decimal(10), currency='USD')
 
+    # end class Payment
+
+
+# end models.py

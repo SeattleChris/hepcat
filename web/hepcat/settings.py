@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     # 'bootstrap4',  # CUSTOM
     'bootstrap_datepicker_plus',  # CUSTOM
     'django_registration',  # CUSTOM
-    '',
+    'payments',  # CUSTOM for payment processing
     'django_tables2',  # CUSTOM
     'hepcat',  # CUSTOM: Project name
     'classwork',  # CUSTOM: App name
@@ -149,3 +149,11 @@ if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # else:
 #     Handle all of the configs for a real email SMTPBackend
+
+# CUSTOM Settings for Payment Processings
+
+PAYMENT_HOST = 'localhost:8000'
+PAYMENT_USES_SSL = False
+PAYMENT_MODEL = 'classwork.Payment'
+PAYMENT_VARIANTS = {
+    'default': ('payments.dummy.DummyProvider', {})}

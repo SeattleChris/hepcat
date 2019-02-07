@@ -1,14 +1,46 @@
 from django.views.generic import ListView, CreateView, DetailView
 # from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
-from .models import Subject, Session, ClassOffer, Profile, Registration, Location
-from .forms import SubjectForm, SessionForm, ClassOfferForm
+from .models import Location, Subject, Session, ClassOffer, Profile, Registration, Payment
+from .forms import SubjectForm, SessionForm, ClassOfferForm, RegisterForm, PaymentForm
 import django_tables2 as tables
 from django_tables2 import MultiTableMixin
 from datetime import datetime
+from django.template.response import TemplateResponse  # used for Payments
+from payments import get_payment_model, RedirectNeeded  # used for Payments
 # Create your views here.
+
+
+class LocationListView(ListView):
+    """ Display all the Locations that we have stored
+    """
+    template_name = 'classwork/location_list.html'
+    model = Location
+    context_object_name = 'locations'
+
+
+class LocationDetailView(DetailView):
+    """ Display information for a location
+    """
+    template_name = 'classwork/location_detail.html'
+    model = Location
+    context_object_name = 'location'
+    pk_url_kwarg = 'id'
+
+    # def get_context_data(self, **kwargs):
+    #     """ Modify the context
+    #     """
+    #     context = super().get_context_data(**kwargs)
+    #     context['add_info'] = 'new info'
+    #     return context
+
+    # def get_queryset(self):
+    #     """ We want to limit what location info we get
+    #     """
+    #     location_code = get_object_or_404(Location, code=self.kwargs['code'])
+    #     return Location.objects.filter(code=location_code)
 
 
 class SubjectListView(ListView):
@@ -116,6 +148,43 @@ class ClassOfferListView(ListView):
         sess_names = [ea.name for ea in self.decide_session(display_session)]
         context['display_session'] = ', '.join(sess_names)
         return context
+
+
+class ClassOfferDetailView(DetailView):
+    """ Sometimes we want to show more details for a given class offering
+    """
+    template_name = 'class_info/detail.html'
+    model = ClassOffer
+    context_object_name = 'class'
+    pk_url_kwarg = 'id'
+
+    def get_context_data(self, **kwargs):
+        """ Modify the context
+        """
+        context = super().get_context_data(**kwargs)
+        # context['added_info'] =
+        return context
+
+    # def get_queryset(self):
+    #     """ We can limit the classes list by publish date
+    #     """
+    #     return Classes.objects.filter()
+
+
+class ClassOfferCreateView(CreateView):
+    """ Only appropriate admin level users can create new classes
+    """
+    template_name = 'classwork/classoffer_create.html'
+    model = ClassOffer
+    form_class = ClassOfferForm
+    success_url = reverse_lazy('classoffer_list')
+    # login_url = reverse_lazy('login')
+
+    # def form_valid(self, form):
+    #     """ Associate the admin user for this class
+    #     """
+    #     form.instance.user = self.request.user
+    #     return super().form_valid(form)
 
 
 class StudentTable(tables.Table):
@@ -319,79 +388,55 @@ class Checkin(ListView):
     # end class Checkin
 
 
-class ClassOfferCreateView(CreateView):
-    """ Only appropriate admin level users can create new classes
+class RegisterView(CreateView):
+    """ Allows a user/student to sign up for a ClassOffer.
+        We also want to allow anonymousUser to sign up.
+        We want to auto-create a user (and profile) account
+        if one does not exist.
     """
-    template_name = 'classwork/classoffer_create.html'
-    model = ClassOffer
-    form_class = ClassOfferForm
-    success_url = reverse_lazy('classoffer_list')
-    # login_url = reverse_lazy('login')
-
-    # def form_valid(self, form):
-    #     """ Associate the admin user for this class
-    #     """
-    #     form.instance.user = self.request.user
-    #     return super().form_valid(form)
+    template_name = 'classwork/register.html'
+    model = get_user_model()
+    form_class = RegisterForm
+    success_url = reverse_lazy('payment')
 
 
-class LocationListView(ListView):
-    """ Display all the Locations that we have stored
+class PaymentProcessView(CreateView):
+    """ Payment Processing
     """
-    template_name = 'classwork/location_list.html'
-    model = Location
-    context_object_name = 'locations'
+    template_name = 'payment/payment.html'
+    model = Payment
+    form_class = PaymentForm
+    success_url = reverse_lazy('payment_success')
 
 
-class LocationDetailView(DetailView):
-    """ Display information for a location
+class PaymentResultView(DetailView):
+    """ After a payment attempt, we can have success or failure
     """
-    template_name = 'classwork/location_detail.html'
-    model = Location
-    context_object_name = 'location'
+    result = ''
+    model = Payment
+    context_object_name = 'payment'
     pk_url_kwarg = 'id'
 
-    # def get_context_data(self, **kwargs):
-    #     """ Modify the context
-    #     """
-    #     context = super().get_context_data(**kwargs)
-    #     context['add_info'] = 'new info'
-    #     return context
+    def success_or_fail(result):
+        success_template = 'payment/success.html'
+        failure_template = 'payment/fail.html'
+        incomplete_template = 'payment/incomplete.html'
+        if result == 'success':
+            return success_template
+        elif result == 'fail':
+            return failure_template
+        else:
+            return incomplete_template
 
-    # def get_queryset(self):
-    #     """ We want to limit what location info we get
-    #     """
-    #     location_code = get_object_or_404(Location, code=self.kwargs['code'])
-    #     return Location.objects.filter(code=location_code)
-
-
+    template_name = success_or_fail(result)
 
 
-# class ClassOfferDetailView(DetailView):
-#     """ Sometimes we want to show more details for a given class offering
-#     """
-#     template_name = 'class_info/detail.html'
-#     model = ClassOffer
-#     context_object_name = 'class'
-#     pk_url_kwarg = 'id'
-
-#     def get_context_data(self, **kwargs):
-#         """ Modify the context
-#         """
-#         context = super().get_context_data(**kwargs)
-#         # context['added_info'] =
-#         return context
-
-#     # def get_queryset(self):
-#     #     """ We can limit the classes list by publish date
-#     #     """
-#     #     return Classes.objects.filter()
-
-
-
-
-
-
-
-
+def payment_details(request, payment_id):
+    payment = get_object_or_404(get_payment_model(), id=payment_id)
+    try:
+        form = payment.get_form(data=request.POST or None)
+    except RedirectNeeded as redirect_to:
+        return redirect(str(redirect_to))
+    return TemplateResponse(request, 'payment.html',
+                            {'form': form, 'payment': payment})
 
