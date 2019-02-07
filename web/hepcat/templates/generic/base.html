@@ -26,6 +26,7 @@
         <li><a href="{% url 'subject_list' %}">Subject List</a></li>
         <li><a href="{% url 'session_list' %}">Session List</a></li>
         <li><a href="{% url 'location_list' %}">Location List</a></li>
+        <li><a href="{% url 'register' %}">Sign Up for Classes</a></li>
         {% if user.is_staff %}
         <li><a href="{% url 'admin:index' %}" >admin</a></li>
         <li><a href="{% url 'checkin' %}">Checkin Sheet</a></li>

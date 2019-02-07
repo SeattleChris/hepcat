@@ -13,6 +13,31 @@ from payments import get_payment_model, RedirectNeeded  # used for Payments
 # Create your views here.
 
 
+def decide_session(sess=None, display_date=None):
+    """ Typically we want to see the current session (returned if no params set)
+        Sometimes we want to see a future sesion.
+        Used by many views, generally those that need a list of ClassOffers
+        that a user can view, sign up for, get a check-in sheet, pay for, etc.
+    """
+    sess_data = []
+    # TODO: Deal with appropriate date input data and test it
+    if sess is None:
+        target = display_date or datetime.now()
+        sess_data = Session.objects.filter(publish_date__lte=target, expire_date__gte=target)
+    else:
+        if display_date:
+            raise SyntaxError("You can't filter by both Session and Date")
+        if sess == 'all':
+            return Session.objects.all()
+        if not isinstance(sess, list):
+            sess = [].append(sess)
+        try:
+            sess_data = Session.objects.filter(name__in=sess)
+        except TypeError:
+            sess_data = []
+    return sess_data  # a list of Session records, even if only 0-1 session
+
+
 class LocationListView(ListView):
     """ Display all the Locations that we have stored
     """
@@ -255,54 +280,54 @@ class TableCheckin(MultiTableMixin, ListView):
         #     return selected_classes
         pass
 
-    # def get_queryset(self):
-    #     """ List all the students from all the classes (in order of ClassOffer
-    #         and then alphabetical first name)
-    #     """
-    #     # users = get_user_model()
-    #     # current_classes = super().get_queryset()
-    #     display_session = None
-    #     if 'display_session' in self.kwargs:
-    #         display_session = self.kwargs['display_session']
-    #     session = self.decide_session(sess=display_session)
-    #     selected_classes = ClassOffer.objects.filter(session__in=session).order_by('-class_day', 'start_time')
-    #     class_list = [ea.students.all() for ea in selected_classes if hasattr(ea, 'students')]
-    #     people = Profile.objects.filter(taken__in=selected_classes)
-    #     print('===================')
-    #     print(people)
-    #     print('===================')
-    #     print(selected_classes)
-    #     print('===================')
-    #     for ea in selected_classes:
-    #         print(ea)
-    #         for student in ea.students.all():
-    #             print('----------------')
-    #             print(student)
-    #         print('+++++++++++++++++++')
-    #     print('===================')
-    #     print(class_list)
-    #     return selected_classes
+        # def get_queryset(self):
+        #     """ List all the students from all the classes (in order of ClassOffer
+        #         and then alphabetical first name)
+        #     """
+        #     # users = get_user_model()
+        #     # current_classes = super().get_queryset()
+        #     display_session = None
+        #     if 'display_session' in self.kwargs:
+        #         display_session = self.kwargs['display_session']
+        #     session = self.decide_session(sess=display_session)
+        #     selected_classes = ClassOffer.objects.filter(session__in=session).order_by('-class_day', 'start_time')
+        #     class_list = [ea.students.all() for ea in selected_classes if hasattr(ea, 'students')]
+        #     people = Profile.objects.filter(taken__in=selected_classes)
+        #     print('===================')
+        #     print(people)
+        #     print('===================')
+        #     print(selected_classes)
+        #     print('===================')
+        #     for ea in selected_classes:
+        #         print(ea)
+        #         for student in ea.students.all():
+        #             print('----------------')
+        #             print(student)
+        #         print('+++++++++++++++++++')
+        #     print('===================')
+        #     print(class_list)
+        #     return selected_classes
 
-    # for MultiTableMixin
-    tables = [
-        StudentTable(ea.students.all(), exclude=('date_added', 'date_modified',))
-        for ea in ClassOffer.objects.all()
-    ]
-    # tables = [
-    #     StudentTable(ea.students.all(), fields=('date_added', 'date_modified',))
-    #     for ea in ClassOffer.objects.all()
-    # ]
+        # for MultiTableMixin
+        tables = [
+            StudentTable(ea.students.all(), exclude=('date_added', 'date_modified',))
+            for ea in ClassOffer.objects.all()
+        ]
+        # tables = [
+        #     StudentTable(ea.students.all(), fields=('date_added', 'date_modified',))
+        #     for ea in ClassOffer.objects.all()
+        # ]
 
-    # def get_context_data(self, **kwargs):
-    #     """ Get the context of the current, or selected, class session student list
-    #     """
-    #     context = super().get_context_data(**kwargs)
-    #     display_session = None
-    #     if 'display_session' in kwargs:
-    #         display_session = context['display_session']
-    #     sess_names = [ea.name for ea in self.decide_session(display_session)]
-    #     context['display_session'] = ', '.join(sess_names)
-    #     return context
+        # def get_context_data(self, **kwargs):
+        #     """ Get the context of the current, or selected, class session student list
+        #     """
+        #     context = super().get_context_data(**kwargs)
+        #     display_session = None
+        #     if 'display_session' in kwargs:
+        #         display_session = context['display_session']
+        #     sess_names = [ea.name for ea in self.decide_session(display_session)]
+        #     context['display_session'] = ', '.join(sess_names)
+        #     return context
 
     # end class TableCheckin
 
