@@ -280,6 +280,7 @@ class Profile(models.Model):
     """ Extending user model to have profile fields as appropriate as either a
         student or a staff member.
     """
+    # TODO: Do we want different Profile models for staff vs. students?
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True)
     bio = models.TextField(max_length=500, blank=True)
     level = models.IntegerField(verbose_name='skill level', default=0)
@@ -388,6 +389,8 @@ class Registration(models.Model):
     def credit(self):
         return self.student.credit
 
+    # TODO: If the following (or above) properties are not used, remove them.
+
     @property
     def reg_class(self):
         return self.classoffer.subject.level
@@ -409,7 +412,7 @@ class Payment(BasePayment):
     """ Payment Processing
     """
     # variant = models.CharField(max_length=255)
-    #: Transaction status
+    # # : Transaction status
     # status = models.CharField(
     #     max_length=10, choices=PaymentStatus.CHOICES,
     #     default=PaymentStatus.WAITING)

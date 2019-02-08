@@ -424,6 +424,8 @@ class RegisterView(CreateView):
     form_class = RegisterForm
     success_url = reverse_lazy('payment')
 
+    # end class REgisterView
+
 
 class PaymentProcessView(CreateView):
     """ Payment Processing

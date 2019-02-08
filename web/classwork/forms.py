@@ -65,6 +65,32 @@ class ClassOfferForm(forms.ModelForm):
         }
 
 
+# User = get_user_model()
+
+
+class UserForm(forms.ModelForm):
+
+    class Meta:
+        model = get_user_model()
+        fields = ['first_name', 'last_name', 'email']
+
+    # end class UserForm
+
+
+class ClassRegisterUserForm(UserForm):
+
+    # Find the acceptable ClassOffers to show
+    class_list = []
+
+    class Meta(UserForm.Meta):
+        fields = UserForm.Meta.fields + ('class_list', )
+
+    # Give the user the option to select these ClassOffers
+    # Save the user, make a profile, attach the selected ClassOffers
+
+    # end class ClassRegisterUser
+
+
 class RegisterForm(forms.ModelForm):
     """ This is where exisiting and even new users/students can sign up for
         a ClassOffer
@@ -75,7 +101,7 @@ class RegisterForm(forms.ModelForm):
     # registeration form for someone else,
 
     class Meta:
-        model = get_user_model()  # users.UserHC
+        model = ClassRegisterUser  # users.UserHC with extra fields
         fields = ['first_name', 'last_name', 'email', ]
 
 
