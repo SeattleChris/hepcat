@@ -123,10 +123,6 @@ class Subject(models.Model):
         num = level_dict[self.level] if self.level in level_dict else 0
         return num
 
-    # def save(self, *args, **kwargs):
-    #     self.num_level = self.set_num_level()
-    #     super().save(*args, **kwargs)
-
 
 # class LevelGroup(models.Model):
 #     """ Sometimes there will be multiple Subjects (classes)
@@ -211,6 +207,9 @@ class ClassOffer(models.Model):
     )
     class_day = models.SmallIntegerField(choices=DOW_CHOICES, default=3)
     start_time = models.TimeField()
+    # TODO: Add field for total_price (does not include pre-pay discount)
+    # TODO: Add field for pre_pay_discount (to be subtracted from total_price)
+    # TODO: Add boolean field to indicate if this ClassOffer qualifies for multi-discount
 
     date_added = models.DateField(auto_now_add=True)
     date_modified = models.DateField(auto_now=True)
@@ -287,6 +286,7 @@ class Profile(models.Model):
     taken = models.ManyToManyField(ClassOffer, related_name='students', through='Registration')
     # interest = models.ManyToManyField(Subject, related_names='interests', through='Requests')
     credit = models.FloatField(verbose_name='Class Payment Credit', default=0)
+    # TODO: Impliment self-refrencing key for a 'refer-a-friend' discount.
     # refer = models.ForeignKey(UserHC, symmetrical=False, on_delete=models.SET_NULL, null=True, blank=True, related_names='referred')
     date_added = models.DateField(auto_now_add=True)
     date_modified = models.DateField(auto_now=True)
@@ -370,47 +370,136 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
     instance.profile.save()
 
 
-class Registration(models.Model):
-    """ This is an intermediary model refrienced by a user profile model
-        so that we can see which students are enrolled in a ClassOffer
-    """
-    student = models.ForeignKey(Profile, on_delete=models.CASCADE)
-    classoffer = models.ForeignKey(ClassOffer, on_delete=models.CASCADE)
+class PaymentManager(models.Manager):
 
-    @property
-    def first_name(self):
-        return self.student.user.first_name
+    def classReg(self, register=None, student=None, paid_by=None, **extra_fields):
+        """ This is used to set the defaults for when a user
+            is registering for classoffers, which is the most
+            common usage of our payments
+        """
+        student = student if student else Profile.objects.get(user=self.instance)
 
-    @property
-    def last_name(self):
-        return self.student.user.last_name
+        full_p, pre_pay_d, credit = 0, 0, 0
+        multiple_discount_count = 0
+        desc = ''
+        register = register if register else []
+        for item in register:
+            # TODO: Change to look up the actual class prices & discount
+            # This could be stored in Registration, or get from ClassOffer
+            desc = desc + ' ' + item.__str__
+            full_p += 65.0
+            pre_pay_d += 5.0
+            multiple_discount_count += 1
+        multiple_discount = 10.0 if multiple_discount_count > 1 else 0.0
+        # TODO: Change multiple_discount amount to not be hard-coded.
+        if student.credit > 0:
+            credit = student.credit
+            # student.credit = 0
+            # student.save()
+        full_total = full_p - multiple_discount - credit
+        pre_total = full_total - pre_pay_d
+        extra_fields.setdefault('full_price', full_p)
+        extra_fields.setdefault('pre_pay_discount', pre_pay_d)
+        extra_fields.setdefault('multiple_purchase_discount', multiple_discount)
+        extra_fields.setdefault('credit_applied', credit)
+        extra_fields.setdefault('description', desc)
+        extra_fields.setdefault('total', pre_total)
 
-    @property
-    def credit(self):
-        return self.student.credit
+        paid_by = paid_by if paid_by else student
+        user = paid_by.user
+        extra_fields.setdefault('billing_first_name', user.first_name)
+        extra_fields.setdefault('billing_last_name', user.last_name)
+        extra_fields.setdefault('billing_country_code', 'US')
+        extra_fields.setdefault('billing_email', user.email)
 
-    # TODO: If the following (or above) properties are not used, remove them.
+    def classRegister(self, register=None, student=None, paid_by=None, **extra_fields):
+        """ This is used to set the defaults for when a user
+            is registering for classoffers, which is the most
+            common usage of our payments
+        """
+        from decimal import Decimal
 
-    @property
-    def reg_class(self):
-        return self.classoffer.subject.level
-    # reg_class.admin_order_field = 'classoffer__subject__level'
+        print("===== PaymentManager.classRegister ======")
+        if not isinstance(student, Profile):
+            raise TypeError('We need a user Profile passed here.')
+        print(student)
 
-    @property
-    def reg_session(self):
-        return self.classoffer.session.name
-    # reg_session.admin_order_field = 'classoffer__session__key_day_date'
+        full_price, pre_pay_discount, credit_applied = 0, 0, 0
+        multiple_discount_count = 0
+        description = ''
+        register = register if isinstance(register, list) else list(register)
+        for item in register:
+            # TODO: Change to look up the actual class prices & discount
+            # This could be stored in Registration, or get from ClassOffer
+            description = description + str(item) + ', '
+            full_price += 65.0
+            pre_pay_discount += 5.0
+            multiple_discount_count += 1
+        multiple_purchase_discount = 10.0 if multiple_discount_count > 1 else 0.0
+        # TODO: Change multiple_discount amount to not be hard-coded.
+        if student.credit > 0:
+            credit_applied = student.credit
+            # TODO: Remove the used credit from the student profile
+            # student.credit_applied = 0
+            # student.save()
+        full_total = full_price - multiple_purchase_discount - credit_applied
+        pre_total = full_total - pre_pay_discount
+        # TODO: Insert logic to determine if they owe full_total or pre_total
+        paid_by = paid_by if paid_by else student
+        user = paid_by.user
+        # TODO: If billing address info added to user Profile, let
+        # Payment.objects.classRegister get that info from user profile
 
-    # class Meta:
-    #     order_with_respect_to = 'classoffer'
-    #     pass
-
-    # end class Registration
+        payment = self.create(
+            student=student,
+            paid_by=paid_by,
+            description=description,
+            full_price=full_price,
+            pre_pay_discount=pre_pay_discount,
+            multiple_purchase_discount=multiple_purchase_discount,
+            credit_applied=credit_applied,
+            total=Decimal(pre_total),
+            tax=Decimal(0),
+            billing_first_name=user.first_name,
+            billing_last_name=user.last_name,
+            billing_country_code='US',
+            billing_email=user.email,
+            customer_ip_address='127.0.0.1',
+            **extra_fields
+            )
+        # TODO; Do we really feel safe passing forward the extra_fields?
+        # TODO: Do we need customer_ip_address, and if yes, need to populate now?
+        print(payment)
+        print("==============----------===========")
+        return payment
+    # end class PaymentManager
 
 
 class Payment(BasePayment):
     """ Payment Processing
     """
+    objects = PaymentManager()
+    student = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True, related_name='payment')
+    paid_by = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True, related_name='paid_for')
+
+    full_price = models.DecimalField(max_digits=9, decimal_places=2, default='0.0')
+    pre_pay_discount = models.DecimalField(max_digits=9, decimal_places=2, default='0.0')
+    multiple_purchase_discount = models.DecimalField(max_digits=9, decimal_places=2, default='0.0')
+    credit_applied = models.DecimalField(max_digits=9, decimal_places=2, default='0.0')
+
+    @property
+    def full_total(self):
+        """ This is the amount owed if they do not pay before
+            the pre-paid discount deadline
+        """
+        return self.full_price - self.multiple_purchase_discount - self.credit_applied
+
+    def pre_total(self):
+        """ This is the computed total if they pay before
+            the pre-paid deadline
+        """
+        return self.full_total - self.pre_pay_discount
+
     # variant = models.CharField(max_length=255)
     # # : Transaction status
     # status = models.CharField(
@@ -458,10 +547,54 @@ class Payment(BasePayment):
 
     def get_purchased_items(self):
         # you'll probably want to retrieve these from an associated order
+        print('====== Payment.get_purchased_items ===========')
         yield PurchasedItem(name='The Hound of the Baskervilles', sku='BSKV',
                             quantity=9, price=Decimal(10), currency='USD')
 
+    # def __str__(self):
+    #     return 'payment by ' + str(self.paid_by) + 'for ' + str(self.student) + 'attending ' + self.description
+
     # end class Payment
+
+
+class Registration(models.Model):
+    """ This is an intermediary model refrienced by a user profile model
+        so that we can see which students are enrolled in a ClassOffer
+    """
+    student = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    classoffer = models.ForeignKey(ClassOffer, on_delete=models.CASCADE)
+    payment = models.ForeignKey(Payment, on_delete=models.SET_NULL, null=True)
+    paid = models.BooleanField(default=False)
+
+    @property
+    def first_name(self):
+        return self.student.user.first_name
+
+    @property
+    def last_name(self):
+        return self.student.user.last_name
+
+    @property
+    def credit(self):
+        return self.student.credit
+
+    # TODO: If the following (or above) properties are not used, remove them.
+
+    @property
+    def reg_class(self):
+        return self.classoffer.subject.level
+    # reg_class.admin_order_field = 'classoffer__subject__level'
+
+    @property
+    def reg_session(self):
+        return self.classoffer.session.name
+    # reg_session.admin_order_field = 'classoffer__session__key_day_date'
+
+    # class Meta:
+    #     order_with_respect_to = 'classoffer'
+    #     pass
+
+    # end class Registration
 
 
 # end models.py

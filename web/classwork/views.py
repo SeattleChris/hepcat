@@ -1,10 +1,11 @@
-from django.views.generic import ListView, CreateView, DetailView
+from django.views.generic import ListView, FormView, CreateView, DetailView, UpdateView
+
 # from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
 from .models import Location, Subject, Session, ClassOffer, Profile, Registration, Payment
-from .forms import SubjectForm, SessionForm, ClassOfferForm, RegisterForm, PaymentForm
+from .forms import SubjectForm, SessionForm, ClassOfferForm, RegisterForm, PaymentForm, ProfileForm, UserForm
 import django_tables2 as tables
 from django_tables2 import MultiTableMixin
 from datetime import datetime
@@ -35,6 +36,7 @@ def decide_session(sess=None, display_date=None):
             sess_data = Session.objects.filter(name__in=sess)
         except TypeError:
             sess_data = []
+    print(sess_data)
     return sess_data  # a list of Session records, even if only 0-1 session
 
 
@@ -120,6 +122,43 @@ class SessionCreateView(CreateView):
     # Inherits .as_view(self):
 
 
+class ClassOfferDetailView(DetailView):
+    """ Sometimes we want to show more details for a given class offering
+    """
+    template_name = 'class_info/detail.html'
+    model = ClassOffer
+    context_object_name = 'class'
+    pk_url_kwarg = 'id'
+
+    def get_context_data(self, **kwargs):
+        """ Modify the context
+        """
+        context = super().get_context_data(**kwargs)
+        # context['added_info'] =
+        return context
+
+    # def get_queryset(self):
+    #     """ We can limit the classes list by publish date
+    #     """
+    #     return Classes.objects.filter()
+
+
+class ClassOfferCreateView(CreateView):
+    """ Only appropriate admin level users can create new classes
+    """
+    template_name = 'classwork/classoffer_create.html'
+    model = ClassOffer
+    form_class = ClassOfferForm
+    success_url = reverse_lazy('classoffer_list')
+    # login_url = reverse_lazy('login')
+
+    # def form_valid(self, form):
+    #     """ Associate the admin user for this class
+    #     """
+    #     form.instance.user = self.request.user
+    #     return super().form_valid(form)
+
+
 class ClassOfferListView(ListView):
     """ We will want to list the classes that are scheduled to be offered.
     """
@@ -157,6 +196,7 @@ class ClassOfferListView(ListView):
         display_session = None
         if 'display_session' in self.kwargs:
             display_session = self.kwargs['display_session']
+        # TODO: Change to use the general function instead of self method.
         sess_id = [ea.id for ea in self.decide_session(sess=display_session)]
         return ClassOffer.objects.filter(session__in=sess_id).order_by('num_level')
 
@@ -170,46 +210,10 @@ class ClassOfferListView(ListView):
         display_session = None
         if 'display_session' in kwargs:
             display_session = context['display_session']
+        # TODO: Change to use the general function instead of self method.
         sess_names = [ea.name for ea in self.decide_session(display_session)]
         context['display_session'] = ', '.join(sess_names)
         return context
-
-
-class ClassOfferDetailView(DetailView):
-    """ Sometimes we want to show more details for a given class offering
-    """
-    template_name = 'class_info/detail.html'
-    model = ClassOffer
-    context_object_name = 'class'
-    pk_url_kwarg = 'id'
-
-    def get_context_data(self, **kwargs):
-        """ Modify the context
-        """
-        context = super().get_context_data(**kwargs)
-        # context['added_info'] =
-        return context
-
-    # def get_queryset(self):
-    #     """ We can limit the classes list by publish date
-    #     """
-    #     return Classes.objects.filter()
-
-
-class ClassOfferCreateView(CreateView):
-    """ Only appropriate admin level users can create new classes
-    """
-    template_name = 'classwork/classoffer_create.html'
-    model = ClassOffer
-    form_class = ClassOfferForm
-    success_url = reverse_lazy('classoffer_list')
-    # login_url = reverse_lazy('login')
-
-    # def form_valid(self, form):
-    #     """ Associate the admin user for this class
-    #     """
-    #     form.instance.user = self.request.user
-    #     return super().form_valid(form)
 
 
 class StudentTable(tables.Table):
@@ -413,21 +417,175 @@ class Checkin(ListView):
     # end class Checkin
 
 
+User = get_user_model()
+
+
 class RegisterView(CreateView):
     """ Allows a user/student to sign up for a ClassOffer.
         We also want to allow anonymousUser to sign up.
         We want to auto-create a user (and profile) account
         if one does not exist.
+
+        We are using the UpdateView to easily populate the user fields.
     """
+    # object_list = ''
     template_name = 'classwork/register.html'
-    model = get_user_model()
+    model = Payment
     form_class = RegisterForm
-    success_url = reverse_lazy('payment')
+    # TODO: Can success_url take in payment/registration details?
+    # success_url = reverse_lazy('payment_done')
+    # finish_url = reverse_lazy('payment_success')
+    # failure_url = reverse_lazy('payment_fail')
+    test_url = '../payment/done/'
+    # TODO: We will need to adjust the payment url stuff later.
 
-    # end class REgisterView
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        print('========== RegisterView.get_context_data =============')
+        # context['user'] = self.request.user
+        # sess = context['session'] if context['session'] else None
+        # date = context['display_date'] if context['display_date'] else None
+        # context['class_choices'] = ClassOffer.objects.filter(session__in=decide_session(sess=sess, display_date=date))
+        return context
+
+    # unsure how to accuratly call this one
+    # def as_view(**initkwargs):
+    #     print('================ as_view =================')
+    #     return super().as_view(**initkwargs)
+
+    def dispatch(request, *args, **kwargs):
+        print('================ dispatch =================')
+        return super(RegisterView, request).dispatch(*args, **kwargs)
+
+    def get(request, *args, **kwargs):
+        print('================ get =================')
+        return super(RegisterView, request).get(*args, **kwargs)
+
+    def post(request, *args, **kwargs):
+        print('================ post =================')
+        return super(RegisterView, request).post(*args, **kwargs)
+
+    def put(self, *args, **kwargs):
+        print('================ put =================')
+        return super().put(*args, **kwargs)
+
+    def get_form(self, form_class=None):
+        print('================ get_form =================')
+        return super().get_form(form_class)
+
+    def get_form_class(self):
+        print('================ get_form_class =================')
+        return super().get_form_class()
+
+    def get_form_kwargs(self):
+        print('================ get_form_kwargs =================')
+        return super(RegisterView, self).get_form_kwargs()
+
+    def get_initial(self):
+        print('================ get_initial ====================')
+        initial = super().get_initial()
+        sess = self.kwargs['session'] if hasattr(self.kwargs, 'session') else None
+        date = self.kwargs['display_date'] if hasattr(self.kwargs, 'display_date') else None
+        class_choices = ClassOffer.objects.filter(session__in=decide_session(sess=sess, display_date=date))
+        initial['class_choices'] = class_choices
+        user = self.request.user
+        initial['user'] = user
+        initial['first_name'] = user.first_name
+        initial['last_name'] = user.last_name
+        initial['email'] = user.email
+        return initial
+
+    def get_prefix(self):
+        print('================ get_prefix =================')
+        return super().get_prefix()
+
+    # def get_context_data(self, **kwargs):
+    #     print('================ get_context_data =================')
+    #     return super().get_context_data(**kwargs)
+
+    def render_to_response(self, context, **response_kwargs):
+        print('================ render_to_response =================')
+        return super(RegisterView, self).render_to_response(context, **response_kwargs)
+
+    def get_template_names(self):
+        print('================ get_template_names =================')
+        return super().get_template_names()
+
+    # def form_valid(self, form):
+    #     # Inside the following is when the form is called
+    #     # to be verified.
+    #     # if successful, will return a self.get_success_url
+    #     return super(RegisterView, self).form_valid(form)
+
+    def get_success_url(self):
+        print('================ get_success_url =================')
+        # TODO: We will need to adjust this later.
+        url = self.test_url + str(self.object.id)
+        print(url)
+        return url
+
+    # Unsure after this one.
+
+    def form_invalid(form):
+        print('================ form_invalid =================')
+        return super().form_invalid(form)
+
+    def get_object(queryset=None):
+        print('================ get_object =================')
+        return super().get_object(queryset)
+
+    # def head():
+    #     print('================ head =================')
+    #     return super().head(**initkwargs)
+
+    def http_method_not_allowed(request, *args, **kwargs):
+        print('================ http_method_not_allowed =================')
+        return super(RegisterView, request).http_method_not_allowed(*args, **kwargs)
+
+    def setup(request, *args, **kwargs):
+        print('================ setup =================')
+        return super(RegisterView, request).setup(*args, **kwargs)
+
+    def get_context_object_name(self, obj):
+        print('================ get_context_object_name =================')
+        return super().get_context_object_name(obj)
+
+    def get_queryset(self):
+        print('================ get_queryset =================')
+        return super().get_queryset()
+
+    def get_slug_field(self):
+        print('================ get_slug_field =================')
+        return super().get_slug_field()
+
+    def form_valid(self, form):
+        # TODO: Extra logic steps done here for our modificaitons.
+        print('======== RegisterView.form_valid ========')
+        # print('-------- self --------------')
+        # print(self)
+        # print('------ Self has: ------')
+        # for ea in dir(self):
+        #     print(ea)
+        # print('----------- form ---------------')
+        # print(form)
+
+        print('---- Docs say handle unauthorized users in this form_valid ----')
+        print('unknown')
+        print('------- calling super form_valid ----- ')
+        fv = super(RegisterView, self).form_valid(form)
+        print('------- printing super RegisterView.form_valid -------')
+        print(fv)
+        print('==== End RegisterView.form_valid =======')
+        return fv
+
+    # end class RegisterView
 
 
-class PaymentProcessView(CreateView):
+def payment_done(request):
+    return TemplateResponse(request, 'payment/success.html', None)
+
+
+class PaymentProcessView(UpdateView):
     """ Payment Processing
     """
     template_name = 'payment/payment.html'
@@ -439,31 +597,44 @@ class PaymentProcessView(CreateView):
 class PaymentResultView(DetailView):
     """ After a payment attempt, we can have success or failure
     """
-    result = ''
+    template_name = 'payment/incomplete.html'
     model = Payment
     context_object_name = 'payment'
     pk_url_kwarg = 'id'
 
-    def success_or_fail(result):
-        success_template = 'payment/success.html'
-        failure_template = 'payment/fail.html'
-        incomplete_template = 'payment/incomplete.html'
-        if result == 'success':
-            return success_template
-        elif result == 'fail':
-            return failure_template
-        else:
-            return incomplete_template
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        print('========== PaymentResultView.get_context_data =============')
+        print(kwargs)
+        for each in context:
+            print(each)
+        # payment = context['object']  # for some reason, context['payment'] would also work
+        # context['student_name'] = f'{payment.student.first_name} {payment.student.last_name}'
+        # if payment.student is not payment.paid_by:
+        #     context['paid_by_other'] = True
+        #     context['paid_by_name'] = f'{payment.paid_by.first_name} {payment.paid_by.last_name}'
+        # context['class_selected'] = payment.description
+        # for ea in dir(self):
+        #     print(ea)
+        # context['user'] = self.request.user
+        # sess = context['session'] if context['session'] else None
+        # date = context['display_date'] if context['display_date'] else None
+        # context['class_choices'] = ClassOffer.objects.filter(session__in=decide_session(sess=sess, display_date=date))
+        return context
 
-    template_name = success_or_fail(result)
+    def render_to_response(self, context, **response_kwargs):
+        print('========= PaymentResultView.render_to_request ========')
+        print(context)
+        print(response_kwargs)
+        return super().render_to_response(context, **response_kwargs)
 
 
-def payment_details(request, payment_id):
-    payment = get_object_or_404(get_payment_model(), id=payment_id)
-    try:
-        form = payment.get_form(data=request.POST or None)
-    except RedirectNeeded as redirect_to:
-        return redirect(str(redirect_to))
-    return TemplateResponse(request, 'payment.html',
-                            {'form': form, 'payment': payment})
+# def payment_details(request, payment_id):
+#     payment = get_object_or_404(get_payment_model(), id=payment_id)
+#     try:
+#         form = payment.get_form(data=request.POST or None)
+#     except RedirectNeeded as redirect_to:
+#         return redirect(str(redirect_to))
+#     return TemplateResponse(request, 'payment.html',
+#                             {'form': form, 'payment': payment})
 
