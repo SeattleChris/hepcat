@@ -1,9 +1,19 @@
 from django.contrib.auth.models import AbstractUser, UserManager  # , Group
 from django.db import models
-from classwork.models import Subject, ClassOffer
-from django.db.models.signals import post_save
-from django.dispatch import receiver
+
+
+def get_if_only_one(q, **kwargs):
+    """ If it does not exist, or if there are many that match, return none """
+    search = None
+    if isinstance(q, models.QuerySet):
+        search = q.filter(**kwargs)
+    elif isinstance(q, models.Model):
+        search = q.objects.filter(**kwargs)
+    obj = search[0] if search and len(search) == 1 else None
+    return obj
+
 # Create your models here.
+# TODO: Move some of the student vs staff logic to Group
 
 
 class UserManagerHC(UserManager):
@@ -63,7 +73,7 @@ class UserManagerHC(UserManager):
             extra_fields.setdefault('is_staff', True)
         else:
             extra_fields.setdefault('is_staff', False)
-        return self.set_username(self, username, email, password, **extra_fields)
+        return self.set_username(username, email, password, **extra_fields)
 
     def create_superuser(self, username, email, password, **extra_fields):
         extra_fields.setdefault('is_staff', True)
@@ -73,6 +83,42 @@ class UserManagerHC(UserManager):
         if extra_fields.get('is_superuser') is not True:
             raise ValueError('Superuser must have is_superuser=True.')
         return self.set_username(self, username, email, password, **extra_fields)
+
+    def find_or_create_by_name(self, first_name=None, last_name=None, email=None, possible_users=None, **kwargs):
+        """ This is called when a user signs up someone else """
+        # first_name = kwargs.get('first_name')
+        # last_name = kwargs.get('last_name')
+        # is_student = kwargs.get('is_student')
+        print("======== UserHC.objects.find_or_create_by_name =====")
+        if not possible_users:
+            raise TypeError('We must have a possible_users list, even if empty')
+        if not isinstance(possible_users, models.QuerySet):
+            print('possible_users is not a QuerySet')
+        print(possible_users)
+        if len(possible_users) == 0:
+            possible_users = None
+        if possible_users:
+            friend = get_if_only_one(possible_users, first_name=first_name, last_name=last_name) \
+                or get_if_only_one(possible_users, first_name__icontains=first_name, last_name__icontains=last_name) \
+                or get_if_only_one(possible_users, last_name__icontains=last_name) \
+                or get_if_only_one(possible_users, first_name__icontains=first_name) \
+                or get_if_only_one(UserHC, first_name=first_name, last_name=last_name) \
+                or get_if_only_one(UserHC, first_name__icontains=first_name, last_name__icontains=last_name) \
+                or None
+            if friend:
+                return friend
+        # Otherwise we create a new user and profile
+        extra_fields = {}
+        # for kw in kwargs:
+        #     if hasattr(self.model, kw):
+        #         extra_fields.push(kw)
+        extra_fields = kwargs  # TODO: This is a refrence, but we want a copy?
+        extra_fields['first_name'] = first_name
+        extra_fields['last_name'] = last_name
+
+        return self.create_user(self, email=email, **extra_fields)
+
+    # end class UserManagerHC
 
 
 class UserHC(AbstractUser):
@@ -117,150 +163,4 @@ class UserHC(AbstractUser):
         # TODO: Deal with username (email) being checked as existing even when we want a new user
         super().save(*args, **kwargs)
 
-
-# class Profile(models.Model):
-#     """ Extending user model to have profile fields as appropriate as either a
-#         student or a staff member.
-#     """
-#     user = models.OneToOneField(UserHC, on_delete=models.CASCADE, primary_key=True)
-#     bio = models.TextField(max_length=500, blank=True)
-#     level = models.IntegerField(verbose_name='skill level', default=0)
-#     enrolled = models.ManyToManyField(ClassOffer, through='Registration')
-#     taken = models.ManyToManyField(Subject)  # TODO: ADD related_name='students'
-#     taken_classes = models.ManyToManyField(ClassOffer, related_name='students')
-#     # taken = models.ManyToManyField(Subject, through=TakenSubject)
-#     # interest = models.ManyToManyField(Subject, related_names='interests')
-#     # interest = models.ManyToManyField(Subject, through=InterestSubject)
-#     credit = models.FloatField(verbose_name='Class Payment Credit', default=0)
-#     # refer = models.ForeignKey(UserHC, symmetrical=False, on_delete=models.SET_NULL, null=True, blank=True, related_names='referred')
-
-#     @property
-#     def highest_subject(self):
-#         """ We will want to know what is the student's class level
-#             which by default will be the highest class level they
-#             have taken. We also want to be able to override this
-#             from a teacher or admin input to deal with students
-#             who have had instruction or progress elsewhere.
-#         """
-#         # Query all taken subjects for this student
-#         # Subject.num_level is the level for each of these, find the max.
-#         # return the Subject.level of this max Subject.num_level
-#         # taken_subjects = self.taken.all()
-#         have = [a.num_level for a in self.taken_classes.all()]
-#         return max(have) if len(have) > 0 else 0
-
-#     @property
-#     def taken_subjects(self):
-#         """ Since all taken subjects are related through ClassOffer
-#             We will query taken_classes to populate taken_subjects
-#         """
-#         subjs = [c.subject for c in self.taken_classes.all()]
-#         # subjs = {a.subject for a in ClassOffer.objects.filter(id__in=class_ids)}
-#         print(subjs)
-#         return subjs
-
-#     @property
-#     def beg_finished(self):
-#         version_translate = {'A': 'A', 'B': 'B', 'C': 'A', 'D': 'B'}
-#         set_count = {'A': 0, 'B': 0}
-#         subjs = self.taken_subjects
-#         for subj in subjs:
-#             if subj.level == 'Beg':
-#                 ver = version_translate[subj.version]
-#                 set_count[ver] += 1
-#         if set_count['A'] > 0 and set_count['B'] > 0:
-#             return True
-#         return False
-
-#     @property
-#     def l2_finished(self):
-#         set_count = {'A': 0, 'B': 0, 'C': 0, 'D': 0}
-#         subjs = self.taken_subjects
-#         for subj in subjs:
-#             if subj.level == 'L2':
-#                 ver = subj.version
-#                 set_count[ver] += 1
-#         if set_count['A'] > 0 and set_count['B'] > 0 and set_count['C'] > 0 and set_count['D'] > 0:
-#             return True
-#         return False
-
-#     def username(self):
-#         return self.user.username
-
-#     def __str__(self):
-#         return self.user.get_full_name()
-
-#     def __repr__(self):
-#         return self.user.get_full_name()
-
-
-# @receiver(post_save, sender=UserHC)
-# def create_or_update_user_profile(sender, instance, created, **kwargs):
-#     if created:
-#         Profile.objects.create(user=instance)
-#     instance.profile.save()
-
-
-# class Staff(models.Model):
-#     """ Extending user model to have the fields unique to on staff Teachers
-#         We want an image, a bio, and a connection to classes they taught
-#     """
-#     user = models.OneToOneField(UserHC, on_delete=models.CASCADE, primary_key=True)
-#     bio = models.TextField(max_length=500, blank=True)
-#     # headshot = models.ImageField()
-#     # set is_staff to True
-
-#     def __str__(self):
-#         return self.user.get_full_name()
-
-
-# class Student(models.Model):
-#     """ Extending user model for students to track what classes they have
-#         taken, and associate resources they have access to view.
-#     """
-#     user = models.OneToOneField(UserHC, on_delete=models.CASCADE, primary_key=True)
-#     level = models.IntegerField(verbose_name='Student Skill Level Number', default=0)
-#     taken = models.ManyToManyField(Subject)
-#     # taken = models.ManyToManyField(Subject, through=TakenSubject)
-#     # interest = models.ManyToManyField(Subject, related_names='interests')
-#     # interest = models.ManyToManyField(Subject, through=InterestSubject)
-#     credit = models.FloatField(verbose_name='Class Payment Credit', default=0)
-#     # refer = models.ForeignKey(UserHC, symmetrical=False, on_delete=models.SET_NULL, null=True, blank=True, related_names='referred')
-
-#     def highest_subject(self):
-#         """ We will want to know what is the student's class level
-#             which by default will be the highest class level they
-#             have taken. We also want to be able to override this
-#             from a teacher or admin input to deal with students
-#             who have had instruction or progress elsewhere.
-#         """
-#         pass
-
-#     def __str__(self):
-#         return self.user.first_name + self.user.last_name
-
-
-# @receiver(post_save, sender=UserHC)
-# def create_or_update_user_profile(sender, instance, created, **kwargs):
-#     if instance.is_student:
-#         if created:
-#             Student.objects.create(user=instance)
-#         instance.Student.save()
-#     if instance.is_teacher or instance.is_admin:
-#         if created:
-#             Staff.objects.create(user=instance)
-#         instance.Staff.save()
-
-
-
-
-
-
-# class TakenSubject(models.Model):
-#     """ This table associates users with which class Subjects they
-#         have already had
-#     """
-#     # TODO: Make this association table?
-#     student = models.ForeignKey(Student, on_delete=models.CASCADE)
-#     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
-#     date_added = models.DateField(auto_now_add=True)
+    # end class UserHC

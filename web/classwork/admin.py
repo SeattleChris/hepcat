@@ -44,7 +44,7 @@ class ProfileAdmin(admin.ModelAdmin):
 
 class RegistrationAdmin(admin.ModelAdmin):
     model = Registration
-    list_display = ['first_name', 'last_name', 'credit', 'reg_class']
+    list_display = ['first_name', 'last_name', 'credit', 'reg_class', 'paid']
     list_display_links = ['first_name', 'last_name']
     list_filter = ('classoffer__session', 'classoffer__class_day')
     # TODO: add ability to only display the class_day that exist in qs
