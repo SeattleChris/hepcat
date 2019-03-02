@@ -174,8 +174,21 @@ class RegisterForm(forms.ModelForm):
     def clean(self):
         print('======== RegisterForm.clean =========')
         cleaned_data = super().clean()
+        input_email = cleaned_data.get('email')
+        first_name = cleaned_data.get('first_name')
+        last_name = cleaned_data.get('last_name')
+        if input_email is None:
+            raise forms.ValidationError("Email is required")
+        if first_name is None:
+            raise forms.ValidationError("First Name is required")
+        if last_name is None:
+            raise forms.ValidationError("Last Name is required")
+        # TODO: Above 3 could/should be done in respective clean_<field>
         # there is no user inside the cleaned_data
         user = self.initial['user']  # TODO: Test when user login changes after form load
+        if user.is_anonymous:  # create a new user account
+            user = User.objects.create(email=input_email, first_name=first_name, last_name=last_name)
+            # TODO: What if a non-user is paying for a friend (established or new user)
         if cleaned_data.get('paid_by_other'):
             # We need to now get the billing info for user who is paying
             # Assign the logged in user name & email to paid_by
@@ -191,16 +204,6 @@ class RegisterForm(forms.ModelForm):
             #   -  maybe email is friend user that needs to be created
 
             # if email does not match paid_by.email then we know the other user
-            input_email = cleaned_data.get('email')
-            first_name = cleaned_data.get('first_name')
-            last_name = cleaned_data.get('last_name')
-            if input_email is None:
-                raise forms.ValidationError("Email is required")
-            if first_name is None:
-                raise forms.ValidationError("First Name is required")
-            if last_name is None:
-                raise forms.ValidationError("Last Name is required")
-            # TODO: Above 3 could/should be done in respective clean_<field>
             possible_friends = User.objects.filter(email=input_email).exclude(id=user.id)
             uses_email_username = False if user.email == input_email or len(possible_friends) > 1 else True
             friend = possible_friends[0] if len(possible_friends) == 1 else None
@@ -219,6 +222,7 @@ class RegisterForm(forms.ModelForm):
             else:
                 print('friend found without using find_or_create_by_name')
             user = friend
+
         cleaned_data['student'] = Profile.objects.get(user=user)
         return cleaned_data
 

@@ -490,9 +490,11 @@ class RegisterView(CreateView):
         initial['class_choices'] = class_choices
         user = self.request.user
         initial['user'] = user
-        initial['first_name'] = user.first_name
-        initial['last_name'] = user.last_name
-        initial['email'] = user.email
+        print(user)
+        if not user.is_anonymous:
+            initial['first_name'] = user.first_name
+            initial['last_name'] = user.last_name
+            initial['email'] = user.email
         return initial
 
     def get_prefix(self):
