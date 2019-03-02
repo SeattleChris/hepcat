@@ -114,25 +114,6 @@ class ProfileForm(forms.ModelForm):
     # end class ProfileForm
 
 
-class RegForm(forms.ModelForm):
-    """ Existing and new user/students can sign up for a ClassOffer.
-        This is the keep it simple version.
-    """
-    # class_choices = context['class_choices']
-
-    # first_name = forms.CharField(max_length=User._meta.get_field('first_name').max_length)
-    # last_name = forms.CharField(max_length=User._meta.get_field('last_name').max_length)
-    # email = forms.CharField(max_length=User._meta.get_field('email').max_length, widget=forms.EmailInput())
-    # # password = forms.CharField(min_length=6, max_length=16, widget=forms.PasswordInput())
-    # class_selected = forms.ModelMultipleChoiceField(queryset=class_choices)
-
-    class Meta:
-        model = Registration
-        exclude = ['student', 'classoffer', 'payment', 'paid', ]
-
-    # end class RegForm
-
-
 class RegisterFriendForm(forms.ModelForm):
     """ If a user indicates that the student and the paying person are not the
         same, then this view will be called, while taking in the data they
@@ -223,6 +204,8 @@ class RegisterForm(forms.ModelForm):
             possible_friends = User.objects.filter(email=input_email).exclude(id=user.id)
             uses_email_username = False if user.email == input_email or len(possible_friends) > 1 else True
             friend = possible_friends[0] if len(possible_friends) == 1 else None
+            # if len(possible_friends) == 0:
+            #     possible_friends = []
             if not friend:  # could be none in list, could have matching emails, could be many to choose from
                 friend = User.objects.find_or_create_by_name(
                     first_name=first_name,
