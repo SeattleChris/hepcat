@@ -84,19 +84,21 @@ class UserManagerHC(UserManager):
             raise ValueError('Superuser must have is_superuser=True.')
         return self.set_username(self, username, email, password, **extra_fields)
 
-    def find_or_create_by_name(self, first_name=None, last_name=None, email=None, possible_users=None, **kwargs):
+    def find_or_create_by_name(self, email=None, possible_users=None, **kwargs):
         """ This is called when a user signs up someone else """
-        # first_name = kwargs.get('first_name')
-        # last_name = kwargs.get('last_name')
+        first_name = kwargs.get('first_name')
+        last_name = kwargs.get('last_name')
         # is_student = kwargs.get('is_student')
         print("======== UserHC.objects.find_or_create_by_name =====")
         if not possible_users:
-            raise TypeError('We must have a possible_users list, even if empty')
+            # assume we want to query all users
+            possible_users = UserHC.objects.all()
         if not isinstance(possible_users, models.QuerySet):
             print('possible_users is not a QuerySet')
         print(possible_users)
         if len(possible_users) == 0:
             possible_users = None
+        # TODO: Is this how we want to find matching or near matches? 
         if possible_users:
             friend = get_if_only_one(possible_users, first_name=first_name, last_name=last_name) \
                 or get_if_only_one(possible_users, first_name__icontains=first_name, last_name__icontains=last_name) \
@@ -108,15 +110,7 @@ class UserManagerHC(UserManager):
             if friend:
                 return friend
         # Otherwise we create a new user and profile
-        extra_fields = {}
-        # for kw in kwargs:
-        #     if hasattr(self.model, kw):
-        #         extra_fields.push(kw)
-        extra_fields = kwargs  # TODO: This is a refrence, but we want a copy?
-        extra_fields['first_name'] = first_name
-        extra_fields['last_name'] = last_name
-
-        return self.create_user(self, email=email, **extra_fields)
+        return self.create_user(self, email=email, **kwargs)
 
     # end class UserManagerHC
 

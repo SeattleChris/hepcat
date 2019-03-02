@@ -204,6 +204,8 @@ class RegisterForm(forms.ModelForm):
             possible_friends = User.objects.filter(email=input_email).exclude(id=user.id)
             uses_email_username = False if user.email == input_email or len(possible_friends) > 1 else True
             friend = possible_friends[0] if len(possible_friends) == 1 else None
+            # if len(possible_friends) == 0:
+            #     possible_friends = []
             if not friend:  # could be none in list, could have matching emails, could be many to choose from
                 friend = User.objects.find_or_create_by_name(
                     first_name=first_name,
