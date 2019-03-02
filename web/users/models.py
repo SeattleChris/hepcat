@@ -67,7 +67,7 @@ class UserManagerHC(UserManager):
 
     def create_user(self, username=None, email=None, password=None, **extra_fields):
         print('================================')
-        print('UserNamgerHC method create_user method was called')
+        print('UserManagerHC method create_user method was called')
         extra_fields.setdefault('is_superuser', False)
         if extra_fields.get('is_teacher') is True or extra_fields.get('is_admin') is True:
             extra_fields.setdefault('is_staff', True)
@@ -84,6 +84,34 @@ class UserManagerHC(UserManager):
             raise ValueError('Superuser must have is_superuser=True.')
         return self.set_username(self, username, email, password, **extra_fields)
 
+    def find_or_create_for_anon(self, email=None, possible_users=None, **kwargs):
+        """ This is called when someone registers when they are not logged in.
+            If they are a new customer, we want no friction, just create a
+            user account. If they might be an existing user, we need to get
+            them logged in.
+        """
+        first_name = kwargs.get('first_name')
+        last_name = kwargs.get('last_name')
+        if not kwargs.get('is_student') and not kwargs.get('is_teacher') and not kwargs.get('is_admin'):
+            kwargs['is_student'] = True
+        # if not possible_users:
+        #     # assume we want to query all users
+        #     possible_users = UserHC.objects.all()
+        # if not isinstance(possible_users, models.QuerySet):
+        #     print('possible_users is not a QuerySet')
+        found = UserHC.objects.count(email=email) + UserHC.objects.count(first_name=first_name, last_name=last_name)
+        if found > 0:
+            # redirect to login, auto-filling the appropriate fields
+            # this login should also allow them to so say they don't have a user account.
+            print('---- Maybe they have had classes before? -----')
+            # TODO: redirect to the appropriate login
+        else:
+            # create a new user with this data
+            print('----- Creating a new user! -----')
+            return self.create_user(self, email=email, **kwargs)
+
+        # end find_or_create_for_anon
+
     def find_or_create_by_name(self, email=None, possible_users=None, **kwargs):
         """ This is called when a user signs up someone else """
         first_name = kwargs.get('first_name')
@@ -98,7 +126,7 @@ class UserManagerHC(UserManager):
         print(possible_users)
         if len(possible_users) == 0:
             possible_users = None
-        # TODO: Is this how we want to find matching or near matches? 
+        # TODO: Is this how we want to find matching or near matches?
         if possible_users:
             friend = get_if_only_one(possible_users, first_name=first_name, last_name=last_name) \
                 or get_if_only_one(possible_users, first_name__icontains=first_name, last_name__icontains=last_name) \

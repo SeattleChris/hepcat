@@ -169,6 +169,8 @@ class RegisterForm(forms.ModelForm):
     email = forms.CharField(max_length=User._meta.get_field('email').max_length, widget=forms.EmailInput())
     # password = forms.CharField(min_length=6, max_length=16, widget=forms.PasswordInput())
     class_selected = forms.ModelMultipleChoiceField(queryset=class_choices)
+    user_check = (('NA', 'Please Select an Answer'), ('N', 'This is my first class here'), ('R', 'I am a returning student'),)
+    returning_or_new_student = forms.ChoiceField(choices=(user_check))
     paid_by_other = forms.BooleanField(required=False)
 
     def clean(self):
@@ -187,7 +189,7 @@ class RegisterForm(forms.ModelForm):
         # there is no user inside the cleaned_data
         user = self.initial['user']  # TODO: Test when user login changes after form load
         if user.is_anonymous:  # create a new user account
-            user = User.objects.create(email=input_email, first_name=first_name, last_name=last_name)
+            user = User.objects.find_or_create_for_anon(email=input_email, first_name=first_name, last_name=last_name)
             # TODO: What if a non-user is paying for a friend (established or new user)
         if cleaned_data.get('paid_by_other'):
             # We need to now get the billing info for user who is paying
