@@ -1,13 +1,12 @@
 from django import forms
 # from django.contrib.auth.forms import UserCreationForm
 # from django.contrib.auth.models import User
-from .models import Subject, Session, ClassOffer, Profile, Payment, Registration
+from .models import Session, ClassOffer, Profile, Payment, Registration
 # from .views import decide_session
-from bootstrap_datepicker_plus import DatePickerInput, TimePickerInput
 from django.contrib.auth import get_user_model
 from datetime import datetime
-from django.urls import reverse_lazy
-from django.shortcuts import render
+# from django.urls import reverse_lazy
+# from django.shortcuts import render
 
 
 def decide_session(sess=None, display_date=None):
@@ -35,65 +34,6 @@ def decide_session(sess=None, display_date=None):
     print(sess_data)
     return sess_data  # a list of Session records, even if only 0-1 session
 
-# class SignUpForm(UserCreationForm):
-#     """ Building on top of the defaul UserCreationForm, we'll make a user
-#         creation form
-#     """
-
-#     first_name = forms.CharField(max_length=30, required=False, help_text='Optional.')
-#     last_name = forms.CharField(max_length=30, required=False, help_text='Optional.')
-#     email = forms.EmailField(max_length=254, help_text='Required. Inform a valid email address.')
-
-#     class Meta:
-#         model = get_user_model()
-#         fields = ('username', 'first_name', 'last_name', 'email', 'password1', 'password2', )
-
-
-#     # end of class SignUpForm
-
-
-class SubjectForm(forms.ModelForm):
-    """ Will generate a form for input on whichever fields we include.
-    """
-    class Meta:
-        model = Subject
-        fields = ['level', 'version', 'title', 'num_weeks', 'num_minutes', 'short_desc', 'description', 'syllabus', 'teacher_plan', 'image', 'video_wk1', 'email_wk1', 'video_wk2', 'email_wk2', 'video_wk3', 'email_wk3', 'video_wk4', 'email_wk4', 'video_wk5', 'email_wk5']
-
-
-class SessionForm(forms.ModelForm):
-    """ Used for the admin to create a session
-    """
-    class Meta:
-        model = Session
-        fields = ['name', 'num_weeks', 'key_day_date', 'max_day_shift', 'publish_date', 'expire_date']
-        # https://github.com/monim67/django-bootstrap-datepicker-plus
-        widgets = {
-            'key_day_date': DatePickerInput(format='%m/%d%Y'),
-            'publish_date': DatePickerInput(format='%m/%d%Y'),
-            'expire_date': DatePickerInput(format='%m/%d%Y'),
-        }
-
-        # https://stackoverflow.com/questions/16356289/how-to-show-datepicker-calendar-on-datefield/16356818
-        # widgets = {
-        #     'key_day_date': forms.DateInput(attrs={'class': 'datepicker'}),
-        #     'publish_date': forms.DateInput(attrs={'class': 'datepicker'}),
-        #     'expire_date': forms.DateInput(attrs={'class': 'datepicker'}),
-        #     }
-
-
-class ClassOfferForm(forms.ModelForm):
-    """ Used for the admin or privliged teacher to create a specific class.
-        This will connect to the models for Subject, Session, Teachers, Location.
-    """
-    class Meta:
-        model = ClassOffer
-        fields = ['subject', 'session', 'teachers', 'class_day', 'start_time']
-        # https://github.com/monim67/django-bootstrap-datepicker-plus
-        widgets = {
-            'start_time': TimePickerInput()
-            # options={"stepping": 5}
-        }
-
 
 User = get_user_model()
 
@@ -114,35 +54,6 @@ class ProfileForm(forms.ModelForm):
         fields = ['taken', ]
 
     # end class ProfileForm
-
-
-class RegisterFriendForm(forms.ModelForm):
-    """ If a user indicates that the student and the paying person are not the
-        same, then this view will be called, while taking in the data they
-        already entered.
-
-        Perhaps this is not needed due to PaymentManager we made.
-    """
-    sess = decide_session()
-    class_choices = ClassOffer.objects.filter(session__in=sess)
-    # TODO: Change to CheckboxSelectMultiple and make sure it works
-    first_name = forms.CharField(max_length=User._meta.get_field('first_name').max_length)
-    last_name = forms.CharField(max_length=User._meta.get_field('last_name').max_length)
-    email = forms.CharField(max_length=User._meta.get_field('email').max_length, widget=forms.EmailInput())
-    # password = forms.CharField(min_length=6, max_length=16, widget=forms.PasswordInput())
-    class_selected = forms.ModelMultipleChoiceField(queryset=class_choices)
-
-    class Meta:
-        model = Payment
-        fields = [
-            'billing_first_name',
-            'billing_last_name',
-            'billing_email',
-            'billing_address_1',
-            'billing_address_2',
-            'billing_city',
-            'billing_postcode',
-            ]
 
 
 class RegisterForm(forms.ModelForm):

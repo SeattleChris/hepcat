@@ -5,12 +5,14 @@ cffi==1.11.5
 chardet==3.0.4
 confusable-homoglyphs==3.2.0
 cryptography==2.5
-Django==2.1.7
+Django==2.1.5
 django-appconf==1.0.2
+django-bootstrap-datepicker-plus==3.0.5
 django-compressor==2.2
 django-payments==0.13.0
 django-registration==3.0
 django-sass-processor==0.7.2
+django-tables2==2.0.4
 idna==2.8
 libsass==0.17.0
 psycopg2-binary==2.7.7
