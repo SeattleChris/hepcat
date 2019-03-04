@@ -18,7 +18,6 @@ from django.urls import path, include
 # from django_registration.backends.one_step import RegistrationView
 from .views import home_view
 
-
 urlpatterns = [
     path('', home_view, name='home'),
     path('admin/', admin.site.urls),

@@ -1,0 +1,27 @@
+{% extends "generic/base.html" %}
+{% block head %}
+<title>Your Profile</title>
+{% endblock %}
+
+{% block content %}
+<h2>{{ profile }} Profile Details</h2>
+<p>{{profile.bio}}</p>
+<h3>Context Had</h3>
+  {% for classoffer in had %}
+    <h4>{{classoffer}}</h4>
+    <p>
+      Taught by: {{classoffer.teachers}} |
+      {{classoffer.class_day}} |
+      {{classoffer.start_date}} to {{classoffer.end_date}} |
+      {{classoffer.start_time}} - {{classoffer.end_time}} |
+    </p>
+    <ul>
+      <li>{{classoffer.subject.video_wk1}}</li>
+      <li>{{classoffer.subject.video_wk2}}</li>
+      <li>{{classoffer.subject.video_wk3}}</li>
+      <li>{{classoffer.subject.video_wk4}}</li>
+      <li>{{classoffer.subject.video_wk5}}</li>
+    </ul>
+  {% endfor %}
+
+{% endblock content %}

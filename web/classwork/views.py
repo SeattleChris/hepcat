@@ -3,7 +3,7 @@ from django.views.generic import ListView, CreateView, DetailView, UpdateView
 # from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
-from .models import Location, Session, ClassOffer, Profile, Payment
+from .models import Location, Session, ClassOffer, Profile, Payment, Registration
 from .forms import RegisterForm, PaymentForm  # , ProfileForm, UserForm
 # import django_tables2 as tables
 # from django_tables2 import MultiTableMixin
@@ -73,9 +73,9 @@ class LocationDetailView(DetailView):
 class ClassOfferDetailView(DetailView):
     """ Sometimes we want to show more details for a given class offering
     """
-    template_name = 'class_info/detail.html'
+    template_name = 'classwork/detail.html'
     model = ClassOffer
-    context_object_name = 'class'
+    context_object_name = 'classoffer'
     pk_url_kwarg = 'id'
 
     def get_context_data(self, **kwargs):
@@ -230,6 +230,36 @@ class Checkin(ListView):
 
 
 User = get_user_model()
+
+
+class ProfileView(DetailView):
+    """Each user has a page where they can see resources that have been made
+        available to them.
+    """
+    template_name = 'classwork/user.html'
+    model = Profile
+    context_object_name = 'profile'
+    pk_url_kwarg = 'id'
+
+    def get_object(self):
+        print('=== ProfileView get_object ====')
+        return Profile.objects.get(user=self.request.user)
+
+    def get_context_data(self, **kwargs):
+        """ Modify the context
+        """
+        context = super().get_context_data(**kwargs)
+        print('===== ProfileView get_context_data ======')
+        registers = list(Registration.objects.filter(student=self.object).values('classoffer'))
+        ids = list(set([list(ea.values())[0] for ea in registers]))
+        print(ids)
+        print('-------------------------')
+        context['had'] = ClassOffer.objects.filter(id__in=ids)
+        for ea in context['had']:
+            print(ea)
+        return context
+
+    # end class ProfileView
 
 
 class RegisterView(CreateView):
