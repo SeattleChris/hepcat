@@ -13,7 +13,6 @@ from decimal import Decimal  # used for Payments model
 from payments import PurchasedItem
 from payments.models import BasePayment
 
-
 # Create your models here.
 
 # TODO: Use ForeignKey.limit_choices_to where appropriate.
@@ -189,8 +188,8 @@ class ClassOffer(models.Model):
     """
     # id = auto-created
     # self.students exists as the students signed up for this ClassOffer
-    subject = models.ForeignKey('Subject', on_delete=models.CASCADE)
-    session = models.ForeignKey('Session', on_delete=models.CASCADE)
+    subject = models.ForeignKey('Subject', on_delete=models.SET_NULL, null=True)
+    session = models.ForeignKey('Session', on_delete=models.SET_NULL, null=True)
     num_level = models.IntegerField(default=0, editable=False)
     # TODO: later on location will be selected from Location model
     # location = models.ForeignKey('Location', on_delete=models.CASCADE)
@@ -561,8 +560,8 @@ class Registration(models.Model):
     """ This is an intermediary model refrienced by a user profile model
         so that we can see which students are enrolled in a ClassOffer
     """
-    student = models.ForeignKey(Profile, on_delete=models.CASCADE)
-    classoffer = models.ForeignKey(ClassOffer, on_delete=models.CASCADE)
+    student = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True)
+    classoffer = models.ForeignKey(ClassOffer, on_delete=models.SET_NULL, null=True)
     payment = models.ForeignKey(Payment, on_delete=models.SET_NULL, null=True)
     paid = models.BooleanField(default=False)
 

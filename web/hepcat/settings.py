@@ -139,12 +139,12 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 # CUSTOM Additional Settings for this Project
 
 AUTH_USER_MODEL = 'users.UserHC'
-LOGIN_REDIRECT_URL = 'home'
+LOGIN_REDIRECT_URL = '/user/login/'
 LOGOUT_REDIRECT_URL = 'home'
 
 # Django Registration
 ACCOUNT_ACTIVATION_DAYS = 1
-LOGIN_REDIRECT_URL = '/'
+# LOGIN_REDIRECT_URL = '/'
 if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # else:

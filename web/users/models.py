@@ -48,8 +48,9 @@ class UserManagerHC(UserManager):
             called methods of either create_user or create_superuser
         """
         from django.db.utils import IntegrityError
-
+        print('===== UserManagerHC.set_username was called ========')
         email = self.normalize_email(email)
+        user = None
         if extra_fields.get('uses_email_username') is True:
             if email is None:
                 raise ValueError('You must either have a unique email address, or set a username')
@@ -58,7 +59,6 @@ class UserManagerHC(UserManager):
                 user = self._create_user(username, email, password, **extra_fields)
             except IntegrityError:
                 extra_fields.setdefault('uses_email_username', False)
-                # user = self._create_user('fakeout', email, password, **extra_fields)
         if extra_fields.get('uses_email_username') is False:
             temp = extra_fields.get('first_name') + '_' + extra_fields.get('last_name')
             username = temp.casefold()
@@ -73,6 +73,7 @@ class UserManagerHC(UserManager):
             extra_fields.setdefault('is_staff', True)
         else:
             extra_fields.setdefault('is_staff', False)
+            extra_fields.setdefault('is_student', True)
         return self.set_username(username, email, password, **extra_fields)
 
     def create_superuser(self, username, email, password, **extra_fields):
@@ -99,7 +100,7 @@ class UserManagerHC(UserManager):
         #     possible_users = UserHC.objects.all()
         # if not isinstance(possible_users, models.QuerySet):
         #     print('possible_users is not a QuerySet')
-        found = UserHC.objects.count(email=email) + UserHC.objects.count(first_name=first_name, last_name=last_name)
+        found = UserHC.objects.filter(email=email).count() + UserHC.objects.filter(first_name=first_name, last_name=last_name).count()
         if found > 0:
             # redirect to login, auto-filling the appropriate fields
             # this login should also allow them to so say they don't have a user account.
