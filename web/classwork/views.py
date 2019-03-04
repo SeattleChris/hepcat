@@ -1,5 +1,4 @@
 from django.views.generic import ListView, FormView, CreateView, DetailView, UpdateView
-
 # from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
@@ -11,6 +10,7 @@ from django_tables2 import MultiTableMixin
 from datetime import datetime
 from django.template.response import TemplateResponse  # used for Payments
 from payments import get_payment_model, RedirectNeeded  # used for Payments
+
 # Create your views here.
 
 
@@ -463,7 +463,7 @@ class RegisterView(CreateView):
 
     def post(request, *args, **kwargs):
         print('================ post =================')
-        return super(RegisterView, request).post(*args, **kwargs)
+        return super().post(request, *args, **kwargs)
 
     def put(self, *args, **kwargs):
         print('================ put =================')
@@ -490,9 +490,11 @@ class RegisterView(CreateView):
         initial['class_choices'] = class_choices
         user = self.request.user
         initial['user'] = user
-        initial['first_name'] = user.first_name
-        initial['last_name'] = user.last_name
-        initial['email'] = user.email
+        print(user)
+        if not user.is_anonymous:
+            initial['first_name'] = user.first_name
+            initial['last_name'] = user.last_name
+            initial['email'] = user.email
         return initial
 
     def get_prefix(self):
@@ -526,8 +528,12 @@ class RegisterView(CreateView):
 
     # Unsure after this one.
 
-    def form_invalid(form):
+    def form_invalid(self, form):
         print('================ form_invalid =================')
+        print(f'Self: {self}')
+        for ea in dir(self):
+            print(ea)
+        print(f'Form: {form}')
         return super().form_invalid(form)
 
     def get_object(queryset=None):
