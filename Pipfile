@@ -8,8 +8,6 @@ django = "*"
 "psycopg2-binary" = "*"
 django-registration = "*"
 django-compressor = "*"
-django-bootstrap-datepicker-plus = "*"
-"django-tables2" = "*"
 django-payments = "*"
 
 [dev-packages]
