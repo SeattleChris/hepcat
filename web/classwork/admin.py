@@ -12,9 +12,13 @@ class ResourceInline(admin.StackedInline):
     model = Resource
     extra = 5
 
-    # prepopulated_fields = {'related_type': ('classoffer',)}
+    # prepopulated_fields does not allow me to set defaults or initial
+    # autocomplete does not allow me to set defaults or initial
+    # formfield_overrides ... uh, I think that only changes widgets?
     # fields = ('related_type', 'subject', 'classoffer', 'user_type', 'avail', 'content_type', 'filepath', )
     # exclude = ('classoffer', )
+    # get_changeform_initial_data is not for this context.
+
     fieldsets = (
         (None, {
             'fields': (('user_type', 'avail'), ('content_type', 'filepath',)),
@@ -31,6 +35,11 @@ class ResourceInline(admin.StackedInline):
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'cols': 60, 'rows': 2})},
     }
+
+    # def get_changeform_initial_data(request):
+    #     initial = {}
+    #     print('====== ResourceInline . get_changeform_initial_data =====')
+    #     return initial
 
     def get_formset(self, request, obj=None, **kwargs):
         initial = []
@@ -65,13 +74,8 @@ class ResourceInline(admin.StackedInline):
         #     'subject': subject,
         #     'classoffer': classoffer,
         # })
-
-        # initial.append({
-        #     'subject': obj,
-        #     'classoffer': None,
-        # })
         formset = super(ResourceInline, self).get_formset(request, obj, **kwargs)
-        formset.__init__ = curry(formset.__init__, initial=initial)
+        # formset.__init__ = curry(formset.__init__, initial=initial)
         return formset
 
 
