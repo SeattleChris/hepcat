@@ -44,6 +44,93 @@ class Location(models.Model):
         return f'<Location: {self.name} | Link: {self.map_google} >'
 
 
+def resource_filepath(instance, filename):
+    # file will be uploaded to one of these formats:
+    # MEDIA_ROOT/subject/level/avail/type/all_version_name
+    # MEDIA_ROOT/subject/level/avail/type/classoffer_version_name
+    # MEDIA_ROOT/other/type/name
+    path = ''
+    model_type = instance.related_type
+    ct = instance.content_type
+    obj = None
+    if model_type == 'Subject':
+        sess = 'all'
+        obj = instance.subject
+    elif model_type == 'ClassOffer':
+        sess = str(instance.classoffer.session.name).lower()
+        obj = instance.classoffer.subject
+    else:
+        path += f'/other/{ct}/{filename}'
+        return path
+    level = str(obj.level).lower()
+    version = str(obj.version).lower()
+    avail = str(instance.avail)
+    path += f'subject/{level}/{avail}/{ct}/{sess}_{version}_{filename}'
+    return path
+
+
+class Resource(models.Model):
+    """ Subjects and ClassOffers can have various resources released to the
+        students at different times while attending a ClassOffer or after
+        they have completed the session.
+        Subjects and ClassOffers can have various resources available to the
+        instructors to aid them in class preperation and presentation.
+    """
+    pass
+    # what content type is it:
+    #   URL link, formatted text file, string, video, image, webpage, email
+    # what is the file path (or external url? or our web url?)
+    # what model is it associated to? (Subject, ClassOffer, others?)
+    # what is the foriegn key?
+    # is it for the students, teachers, admin, or public?
+    # when is it published: on sign-up, after wk #, after finished
+    # is it accessable after finished? Or does it have an experiation date?
+    # does it require an admin/teacher response before released?
+
+    MODEL_CHOICES = (
+        ('Subject', 'Subject'),
+        ('ClassOffer', 'ClassOffer'),
+        ('Other', 'Other')
+    )
+    CONTENT_CHOICES = (
+        ('url', 'External Link'),
+        ('file', 'Formatted Text File'),
+        ('text', 'Plain Text'),
+        ('video', 'Video file on our site'),
+        ('image', 'Image file on our site'),
+        ('link', 'Webpage on our site'),
+        ('email', 'Email file')
+    )
+    USER_CHOICES = (
+        (1, 'Student'),
+        (2, 'Teacher'),
+        (4, 'Admin'),
+        (8, 'Public')
+    )
+    PUBLISH_CHOICES = (
+        (0, 'On Sign-up, before week 1'),
+        (1, 'After week 1'),
+        (2, 'After week 2'),
+        (3, 'After week 3'),
+        (4, 'After week 4'),
+        (5, 'After week 5'),
+        (200, 'After completion')
+    )
+
+    # id = auto-created
+    related_type = models.CharField(max_length=15, choices=MODEL_CHOICES, default='Subject')
+    subject = models.ForeignKey('Subject', on_delete=models.SET_NULL, null=True)
+    classoffer = models.ForeignKey('ClassOffer', on_delete=models.SET_NULL, null=True)
+    content_type = models.CharField(max_length=15, choices=CONTENT_CHOICES)
+    user_type = models.PositiveSmallIntegerField(choices=USER_CHOICES, help_text='Who is this for?')
+    avail = models.PositiveSmallIntegerField(choices=PUBLISH_CHOICES, help_text='When is this resource available?')
+    filepath = models.FileField(upload_to='resource/', help_text='If a file, upload here')
+    description = models.TextField(blank=True)
+
+    date_added = models.DateField(auto_now_add=True)
+    date_modified = models.DateField(auto_now=True)
+
+
 class Subject(models.Model):
     """ We are calling the general information for a potential dance class
         offering a "Subject". For a give Subject, there may be different
@@ -184,15 +271,6 @@ class ClassOffer(models.Model):
         for later publication. Will pull from the following models:
             Subject, Session, Teachers, Location
     """
-    # id = auto-created
-    # self.students exists as the students signed up for this ClassOffer
-    subject = models.ForeignKey('Subject', on_delete=models.SET_NULL, null=True)
-    session = models.ForeignKey('Session', on_delete=models.SET_NULL, null=True)
-    num_level = models.IntegerField(default=0, editable=False)
-    # TODO: later on location will be selected from Location model
-    # location = models.ForeignKey('Location', on_delete=models.CASCADE)
-    # TODO: later on teachers will selected from users - teachers.
-    teachers = models.CharField(max_length=125, default='Chris Chapman')
     DOW_CHOICES = (
         (0, 'Monday'),
         (1, 'Tuesday'),
@@ -202,6 +280,15 @@ class ClassOffer(models.Model):
         (5, 'Saturday'),
         (6, 'Sunday')
     )
+    # id = auto-created
+    # self.students exists as the students signed up for this ClassOffer
+    subject = models.ForeignKey('Subject', on_delete=models.SET_NULL, null=True)
+    session = models.ForeignKey('Session', on_delete=models.SET_NULL, null=True)
+    num_level = models.IntegerField(default=0, editable=False)
+    # TODO: later on location will be selected from Location model
+    # location = models.ForeignKey('Location', on_delete=models.CASCADE)
+    # TODO: later on teachers will selected from users - teachers.
+    teachers = models.CharField(max_length=125, default='Chris Chapman')
     class_day = models.SmallIntegerField(choices=DOW_CHOICES, default=3)
     start_time = models.TimeField()
     # TODO: Add field for total_price (does not include pre-pay discount)

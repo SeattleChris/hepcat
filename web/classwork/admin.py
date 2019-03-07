@@ -1,14 +1,104 @@
 from django.contrib import admin
+from django.forms import Textarea
+from django.db import models
 # from django.db import models
-from .models import Subject, Session, ClassOffer, Profile, Registration, Location
+from .models import Resource, Subject, Session, ClassOffer, Profile, Registration, Location
+from django.utils.functional import curry
 
 # Register your models here.
+
+
+class ResourceInline(admin.StackedInline):
+    model = Resource
+    extra = 5
+
+    # prepopulated_fields = {'related_type': ('classoffer',)}
+    # fields = ('related_type', 'subject', 'classoffer', 'user_type', 'avail', 'content_type', 'filepath', )
+    # exclude = ('classoffer', )
+    fieldsets = (
+        (None, {
+            'fields': (('user_type', 'avail'), ('content_type', 'filepath',)),
+        }),
+        (None, {
+            # 'classes': ('collapse',),
+            'fields': ('description',),
+        }),
+        # ('To Hide', {
+        #     'fields': ('related_type', 'subject', 'classoffer', ),
+        #     # 'classes': ('hidden', ),
+        # }),
+    )
+    formfield_overrides = {
+        models.TextField: {'widget': Textarea(attrs={'cols': 60, 'rows': 2})},
+    }
+
+    def get_formset(self, request, obj=None, **kwargs):
+        initial = []
+        print('========== ResourceInline.get_formset ================')
+        print(self)
+        for ea in dir(self):
+            print(ea)
+        # print(self.parent_model)
+        print('----------- Obj -----------')
+        print(obj)
+        # for ea in dir(obj):
+        #     print(ea)
+        related, subject, classoffer = '', None, None
+        if isinstance(obj, Subject):
+            related = 'Subject'
+            subject = obj
+            classoffer = None
+            self.exclude = ('related_type', 'classoffer',)
+        elif isinstance(obj, ClassOffer):
+            related = 'ClassOffer'
+            subject = None
+            classoffer = obj
+            self.exclude = ('subject',)
+        else:
+            related = 'Other'
+            subject = None
+            classoffer = None
+            self.exclude = ('subject', 'classoffer', )
+        print(f'{related}, subj: {subject}, co: {classoffer}')
+        # initial.append({
+        #     'related_type': related,
+        #     'subject': subject,
+        #     'classoffer': classoffer,
+        # })
+
+        # initial.append({
+        #     'subject': obj,
+        #     'classoffer': None,
+        # })
+        formset = super(ResourceInline, self).get_formset(request, obj, **kwargs)
+        formset.__init__ = curry(formset.__init__, initial=initial)
+        return formset
 
 
 class SubjectAdmin(admin.ModelAdmin):
     """
     """
     model = Subject
+
+    list_display = ('__str__', 'title', 'level', 'version', )
+    list_display_links = ('__str__', 'title')
+    inlines = (ResourceInline, )
+
+    # def get_queryset(self, request):
+    #     queryset = super().get_queryset(request)
+
+    #     return queryset
+
+
+class ClassOfferAdmin(admin.ModelAdmin):
+    """
+    """
+    model = Subject
+
+    list_display = ('__str__', 'subject', 'session',)
+    # ('subject', 'session', 'teachers', 'class_day', 'start_time',)
+    list_display_links = ('__str__',)
+    inlines = (ResourceInline, )
 
     # def get_queryset(self, request):
     #     queryset = super().get_queryset(request)
@@ -56,7 +146,8 @@ class RegistrationAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Subject, SubjectAdmin)
+admin.site.register(ClassOffer, ClassOfferAdmin)
 admin.site.register(Session, SessiontAdmin)
 admin.site.register(Profile, ProfileAdmin)
 admin.site.register(Registration, RegistrationAdmin)
-admin.site.register((ClassOffer, Location))
+admin.site.register((Location))
