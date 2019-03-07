@@ -1,9 +1,8 @@
 from django.contrib import admin
 from django.forms import Textarea
 from django.db import models
-# from django.db import models
 from .models import Resource, Subject, Session, ClassOffer, Profile, Registration, Location
-from django.utils.functional import curry
+# from django.utils.functional import curry
 
 # Register your models here.
 
