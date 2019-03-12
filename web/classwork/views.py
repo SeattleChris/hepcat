@@ -3,13 +3,14 @@ from django.views.generic import ListView, CreateView, DetailView, UpdateView
 # from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
-from .models import Location, Session, ClassOffer, Profile, Payment, Registration
+from .models import Resource, Location, Session, Subject, ClassOffer, Profile, Payment, Registration
 from .forms import RegisterForm, PaymentForm  # , ProfileForm, UserForm
 # import django_tables2 as tables
 # from django_tables2 import MultiTableMixin
 from datetime import datetime
 from django.template.response import TemplateResponse  # used for Payments
 from payments import get_payment_model, RedirectNeeded  # used for Payments
+from django.db.models import Q
 
 # Create your views here.
 
@@ -252,11 +253,30 @@ class ProfileView(DetailView):
         print('===== ProfileView get_context_data ======')
         registers = list(Registration.objects.filter(student=self.object).values('classoffer'))
         ids = list(set([list(ea.values())[0] for ea in registers]))
+        taken = ClassOffer.objects.filter(id__in=ids)
         print(ids)
-        print('-------------------------')
-        context['had'] = ClassOffer.objects.filter(id__in=ids)
-        for ea in context['had']:
-            print(ea)
+        # subj_had = [ea.subject for ea in taken]
+        res = []
+        for ea in ids:
+            cur = ClassOffer.objects.get(id=ea)
+            cur_res = [res for res in Resource.objects.filter(
+                Q(classoffer=cur) |
+                Q(subject=cur.subject)
+                ) if cur.resource_publish(res.avail)]
+            res.extend(cur_res) if len(cur_res) else None
+        print('----- res ------')
+        print(res)
+        context['had'] = taken
+        # The following returns all Resources matching ClassOffer or Subject
+        # res = Resource.objects.filter(
+        #     Q(classoffer__in=taken) |
+        #     Q(subject__in=[ea.subject for ea in taken])
+        #     )
+        ct = {ea[0]: [] for ea in Resource.CONTENT_CHOICES}
+        [ct[ea.content_type].append(ea) for ea in res]
+        # TODO: Change ea.avail > 0 to function call determining if available
+        context['resources'] = {key: vals for (key, vals) in ct.items() if len(vals) > 0}
+        print(context['resources'])
         return context
 
     # end class ProfileView
@@ -480,4 +500,3 @@ class PaymentResultView(DetailView):
 #         return redirect(str(redirect_to))
 #     return TemplateResponse(request, 'payment.html',
 #                             {'form': form, 'payment': payment})
-

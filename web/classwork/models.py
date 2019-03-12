@@ -1,7 +1,7 @@
 # from __future__ import unicode_literals
 from django.db import models
 # from django.utils.translation import ugettext_lazy as _
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 # from django.contrib.auth import get_user_model
 # User = get_user_model()
 from django.conf import settings
@@ -130,6 +130,22 @@ class Resource(models.Model):
     date_added = models.DateField(auto_now_add=True)
     date_modified = models.DateField(auto_now=True)
 
+    def __str__(self):
+
+        return super().__str__()
+
+    def __repr__(self):
+        relate = ''
+        if self.related_type == 'Subject':
+            relate = f'Subject {self.subject}'
+        elif self.related_type == 'ClassOffer':
+            relate = f'ClassOffer {self.classoffer}'
+        elif self.related_type == 'Other':
+            relate = 'Other'
+        else:
+            relate = 'Unknown'
+        return f'<Resource | {relate} | {self.content_type} | {self.avail}>'
+
 
 class Subject(models.Model):
     """ We are calling the general information for a potential dance class
@@ -173,18 +189,28 @@ class Subject(models.Model):
     num_weeks = models.PositiveSmallIntegerField(default=5)
     num_minutes = models.PositiveSmallIntegerField(default=60)
     description = models.TextField()
-    syllabus = models.TextField(blank=True)
-    teacher_plan = models.TextField(blank=True)
-    video_wk1 = models.URLField(blank=True)
-    video_wk2 = models.URLField(blank=True)
-    video_wk3 = models.URLField(blank=True)
-    video_wk4 = models.URLField(blank=True)
-    video_wk5 = models.URLField(blank=True)
-    email_wk1 = models.TextField(blank=True)
-    email_wk2 = models.TextField(blank=True)
-    email_wk3 = models.TextField(blank=True)
-    email_wk4 = models.TextField(blank=True)
-    email_wk5 = models.TextField(blank=True)
+    # syllabus = models.TextField(blank=True)
+    # teacher_plan = models.TextField(blank=True)
+    # video_wk1 = models.URLField(blank=True)
+    # video_wk2 = models.URLField(blank=True)
+    # video_wk3 = models.URLField(blank=True)
+    # video_wk4 = models.URLField(blank=True)
+    # video_wk5 = models.URLField(blank=True)
+    # vid_wk1 = models.ForeignKey(Resource, limit_choices_to={'content_type': 'video'}, on_delete=models.SET_NULL, related_name='subect_vid1', blank=True, null=True)
+    # vid_wk2 = models.ForeignKey(Resource, limit_choices_to={'content_type': 'video'}, on_delete=models.SET_NULL, related_name='subect_vid2', blank=True, null=True)
+    # vid_wk3 = models.ForeignKey(Resource, limit_choices_to={'content_type': 'video'}, on_delete=models.SET_NULL, related_name='subect_vid3', blank=True, null=True)
+    # vid_wk4 = models.ForeignKey(Resource, limit_choices_to={'content_type': 'video'}, on_delete=models.SET_NULL, related_name='subect_vid4', blank=True, null=True)
+    # vid_wk5 = models.ForeignKey(Resource, limit_choices_to={'content_type': 'video'}, on_delete=models.SET_NULL, related_name='subect_vid5', blank=True, null=True)
+    # email_wk1 = models.TextField(blank=True)
+    # email_wk2 = models.TextField(blank=True)
+    # email_wk3 = models.TextField(blank=True)
+    # email_wk4 = models.TextField(blank=True)
+    # email_wk5 = models.TextField(blank=True)
+    # email_1 = models.ForeignKey(Resource, related_name='subj_email_1', on_delete=models.SET_NULL, null=True)
+    # email_2 = models.ForeignKey(Resource, related_name='subj_email_2', on_delete=models.SET_NULL, null=True)
+    # email_3 = models.ForeignKey(Resource, related_name='subj_email_3', on_delete=models.SET_NULL, null=True)
+    # email_4 = models.ForeignKey(Resource, related_name='subj_email_4', on_delete=models.SET_NULL, null=True)
+    # email_5 = models.ForeignKey(Resource, related_name='subj_email_5', on_delete=models.SET_NULL, null=True)
     image = models.URLField(blank=True)
     # image = models.ImageField(upload_to=MEDIA_ROOT)
 
@@ -340,13 +366,29 @@ class ClassOffer(models.Model):
         """ When we want a sortable level number
         """
         level_dict = Subject.LEVEL_ORDER
-        higher = 100 + max(level_dict.values)
+        print('======= ClassOffer.set_num_level ========')
+        print(level_dict.values())
+        higher = 100 + max(level_dict.values())
         num = 0
         try:
             num = level_dict[self.subject.level]
         except KeyError:
             num = higher
         return num
+
+    def resource_publish(self, week):
+        """ Returns a bool response if a resource with a given publish
+            code (week it is published) is allowed to be shown now
+            for this given ClassOffer
+        """
+        pub_delay = 3
+        if week == 0:
+            return True
+        elif week == 200:
+            week = self.subject.num_weeks
+        delay = pub_delay+7*week
+        avail_date = self.start_date() + timedelta(days=delay)
+        return date.today() > avail_date
 
     def __str__(self):
         return f'{self.subject} - {self.session}'

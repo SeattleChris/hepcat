@@ -23,5 +23,13 @@
       <li>{{classoffer.subject.video_wk5}}</li>
     </ul>
   {% endfor %}
-
+  <h3>Resources</h3>
+  {% for key, values in resources.items %}
+    <h4>{{key}}</h4>
+    <ul>
+    {% for res in values %}
+      <li>{{res}}</li>
+    {% endfor %}
+    </ul>
+  {% endfor %}
 {% endblock content %}
