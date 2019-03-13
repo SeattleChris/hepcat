@@ -21,7 +21,7 @@
     <h4>{{key}}</h4>
     <ul>
     {% for res in values %}
-      <li>{{res}}</li>
+      <li><a href="{{MEDIA_URL}}{{res.relative_path}}">resource: {{res}}</a></li>
     {% endfor %}
     </ul>
   {% endfor %}

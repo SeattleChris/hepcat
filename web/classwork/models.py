@@ -76,7 +76,6 @@ class Resource(models.Model):
         Subjects and ClassOffers can have various resources available to the
         instructors to aid them in class preperation and presentation.
     """
-    pass
     # what content type is it:
     #   URL link, formatted text file, string, video, image, webpage, email
     # what is the file path (or external url? or our web url?)
@@ -86,7 +85,15 @@ class Resource(models.Model):
     # when is it published: on sign-up, after wk #, after finished
     # is it accessable after finished? Or does it have an experiation date?
     # does it require an admin/teacher response before released?
-
+    # CONTENT_RENDER = (
+    #     ('url',   ''),
+    #     ('file',  ''),
+    #     ('text',  ''),
+    #     ('video', ''),
+    #     ('image', ''),
+    #     ('link',  ''),
+    #     ('email', ''),
+    # )
     MODEL_CHOICES = (
         ('Subject', 'Subject'),
         ('ClassOffer', 'ClassOffer'),
@@ -131,8 +138,11 @@ class Resource(models.Model):
     date_modified = models.DateField(auto_now=True)
 
     def __str__(self):
-
-        return super().__str__()
+        # figure out the kind of resource, and use appropriate render method
+        # ct = self.content_type
+        # cc = [item[0] for item in Resource.CONTENT_CHOICES]
+        # super().__str__()
+        return f'< Resource {self.content_type} | {self.filepath} >'
 
     def __repr__(self):
         relate = ''
