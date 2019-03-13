@@ -1,10 +1,6 @@
 {% extends "generic/base.html" %}
-{% load django_tables2 %}
 
 {% block content %}
-{% for table in tables %}
-  {% render_table table %}
-{% endfor %}
 
 <h2>{{ display_session }}</h2>
   {% for ea in class_list %}

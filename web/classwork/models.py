@@ -1,7 +1,7 @@
 # from __future__ import unicode_literals
 from django.db import models
 # from django.utils.translation import ugettext_lazy as _
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 # from django.contrib.auth import get_user_model
 # User = get_user_model()
 from django.conf import settings
@@ -42,6 +42,119 @@ class Location(models.Model):
 
     def __repr__(self):
         return f'<Location: {self.name} | Link: {self.map_google} >'
+
+
+def resource_filepath(instance, filename):
+    # file will be uploaded to one of these formats:
+    # MEDIA_ROOT/subject/level/avail/type/all_version_name
+    # MEDIA_ROOT/subject/level/avail/type/classoffer_version_name
+    # MEDIA_ROOT/other/type/name
+    path = ''
+    model_type = instance.related_type
+    ct = instance.content_type
+    obj = None
+    if model_type == 'Subject':
+        sess = 'all'
+        obj = instance.subject
+    elif model_type == 'ClassOffer':
+        sess = str(instance.classoffer.session.name).lower()
+        obj = instance.classoffer.subject
+    else:
+        path += f'/other/{ct}/{filename}'
+        return path
+    level = str(obj.level).lower()
+    version = str(obj.version).lower()
+    avail = str(instance.avail)
+    path += f'subject/{level}/{avail}/{ct}/{sess}_{version}_{filename}'
+    return path
+
+
+class Resource(models.Model):
+    """ Subjects and ClassOffers can have various resources released to the
+        students at different times while attending a ClassOffer or after
+        they have completed the session.
+        Subjects and ClassOffers can have various resources available to the
+        instructors to aid them in class preperation and presentation.
+    """
+    # what content type is it:
+    #   URL link, formatted text file, string, video, image, webpage, email
+    # what is the file path (or external url? or our web url?)
+    # what model is it associated to? (Subject, ClassOffer, others?)
+    # what is the foriegn key?
+    # is it for the students, teachers, admin, or public?
+    # when is it published: on sign-up, after wk #, after finished
+    # is it accessable after finished? Or does it have an experiation date?
+    # does it require an admin/teacher response before released?
+    # CONTENT_RENDER = (
+    #     ('url',   ''),
+    #     ('file',  ''),
+    #     ('text',  ''),
+    #     ('video', ''),
+    #     ('image', ''),
+    #     ('link',  ''),
+    #     ('email', ''),
+    # )
+    MODEL_CHOICES = (
+        ('Subject', 'Subject'),
+        ('ClassOffer', 'ClassOffer'),
+        ('Other', 'Other')
+    )
+    CONTENT_CHOICES = (
+        ('url', 'External Link'),
+        ('file', 'Formatted Text File'),
+        ('text', 'Plain Text'),
+        ('video', 'Video file on our site'),
+        ('image', 'Image file on our site'),
+        ('link', 'Webpage on our site'),
+        ('email', 'Email file')
+    )
+    USER_CHOICES = (
+        (1, 'Student'),
+        (2, 'Teacher'),
+        (4, 'Admin'),
+        (8, 'Public')
+    )
+    PUBLISH_CHOICES = (
+        (0, 'On Sign-up, before week 1'),
+        (1, 'After week 1'),
+        (2, 'After week 2'),
+        (3, 'After week 3'),
+        (4, 'After week 4'),
+        (5, 'After week 5'),
+        (200, 'After completion')
+    )
+
+    # id = auto-created
+    related_type = models.CharField(max_length=15, choices=MODEL_CHOICES, default='Subject')
+    subject = models.ForeignKey('Subject', on_delete=models.SET_NULL, null=True)
+    classoffer = models.ForeignKey('ClassOffer', on_delete=models.SET_NULL, null=True)
+    content_type = models.CharField(max_length=15, choices=CONTENT_CHOICES)
+    user_type = models.PositiveSmallIntegerField(choices=USER_CHOICES, help_text='Who is this for?')
+    avail = models.PositiveSmallIntegerField(choices=PUBLISH_CHOICES, help_text='When is this resource available?')
+    filepath = models.FileField(upload_to='resource/', help_text='If a file, upload here')
+    description = models.TextField(blank=True)
+
+    date_added = models.DateField(auto_now_add=True)
+    date_modified = models.DateField(auto_now=True)
+
+    def __str__(self):
+        # figure out the kind of resource, and use appropriate render method
+        # ct = self.content_type
+        # cc = [item[0] for item in Resource.CONTENT_CHOICES]
+        # super().__str__()
+        return f'< Resource {self.content_type} | {self.filepath} >'
+
+    def __repr__(self):
+        relate = ''
+        if self.related_type == 'Subject':
+            relate = f'Subject {self.subject}'
+        elif self.related_type == 'ClassOffer':
+            relate = f'ClassOffer {self.classoffer}'
+        elif self.related_type == 'Other':
+            relate = 'Other'
+        else:
+            relate = 'Unknown'
+        return f'<Resource | {relate} | {self.content_type} | {self.avail}>'
 
 
 class Subject(models.Model):
@@ -86,18 +199,28 @@ class Subject(models.Model):
     num_weeks = models.PositiveSmallIntegerField(default=5)
     num_minutes = models.PositiveSmallIntegerField(default=60)
     description = models.TextField()
-    syllabus = models.TextField(blank=True)
-    teacher_plan = models.TextField(blank=True)
-    video_wk1 = models.URLField(blank=True)
-    video_wk2 = models.URLField(blank=True)
-    video_wk3 = models.URLField(blank=True)
-    video_wk4 = models.URLField(blank=True)
-    video_wk5 = models.URLField(blank=True)
-    email_wk1 = models.TextField(blank=True)
-    email_wk2 = models.TextField(blank=True)
-    email_wk3 = models.TextField(blank=True)
-    email_wk4 = models.TextField(blank=True)
-    email_wk5 = models.TextField(blank=True)
+    # syllabus = models.TextField(blank=True)
+    # teacher_plan = models.TextField(blank=True)
+    # video_wk1 = models.URLField(blank=True)
+    # video_wk2 = models.URLField(blank=True)
+    # video_wk3 = models.URLField(blank=True)
+    # video_wk4 = models.URLField(blank=True)
+    # video_wk5 = models.URLField(blank=True)
+    # vid_wk1 = models.ForeignKey(Resource, limit_choices_to={'content_type': 'video'}, on_delete=models.SET_NULL, related_name='subect_vid1', blank=True, null=True)
+    # vid_wk2 = models.ForeignKey(Resource, limit_choices_to={'content_type': 'video'}, on_delete=models.SET_NULL, related_name='subect_vid2', blank=True, null=True)
+    # vid_wk3 = models.ForeignKey(Resource, limit_choices_to={'content_type': 'video'}, on_delete=models.SET_NULL, related_name='subect_vid3', blank=True, null=True)
+    # vid_wk4 = models.ForeignKey(Resource, limit_choices_to={'content_type': 'video'}, on_delete=models.SET_NULL, related_name='subect_vid4', blank=True, null=True)
+    # vid_wk5 = models.ForeignKey(Resource, limit_choices_to={'content_type': 'video'}, on_delete=models.SET_NULL, related_name='subect_vid5', blank=True, null=True)
+    # email_wk1 = models.TextField(blank=True)
+    # email_wk2 = models.TextField(blank=True)
+    # email_wk3 = models.TextField(blank=True)
+    # email_wk4 = models.TextField(blank=True)
+    # email_wk5 = models.TextField(blank=True)
+    # email_1 = models.ForeignKey(Resource, related_name='subj_email_1', on_delete=models.SET_NULL, null=True)
+    # email_2 = models.ForeignKey(Resource, related_name='subj_email_2', on_delete=models.SET_NULL, null=True)
+    # email_3 = models.ForeignKey(Resource, related_name='subj_email_3', on_delete=models.SET_NULL, null=True)
+    # email_4 = models.ForeignKey(Resource, related_name='subj_email_4', on_delete=models.SET_NULL, null=True)
+    # email_5 = models.ForeignKey(Resource, related_name='subj_email_5', on_delete=models.SET_NULL, null=True)
     image = models.URLField(blank=True)
     # image = models.ImageField(upload_to=MEDIA_ROOT)
 
@@ -184,15 +307,6 @@ class ClassOffer(models.Model):
         for later publication. Will pull from the following models:
             Subject, Session, Teachers, Location
     """
-    # id = auto-created
-    # self.students exists as the students signed up for this ClassOffer
-    subject = models.ForeignKey('Subject', on_delete=models.SET_NULL, null=True)
-    session = models.ForeignKey('Session', on_delete=models.SET_NULL, null=True)
-    num_level = models.IntegerField(default=0, editable=False)
-    # TODO: later on location will be selected from Location model
-    # location = models.ForeignKey('Location', on_delete=models.CASCADE)
-    # TODO: later on teachers will selected from users - teachers.
-    teachers = models.CharField(max_length=125, default='Chris Chapman')
     DOW_CHOICES = (
         (0, 'Monday'),
         (1, 'Tuesday'),
@@ -202,6 +316,15 @@ class ClassOffer(models.Model):
         (5, 'Saturday'),
         (6, 'Sunday')
     )
+    # id = auto-created
+    # self.students exists as the students signed up for this ClassOffer
+    subject = models.ForeignKey('Subject', on_delete=models.SET_NULL, null=True)
+    session = models.ForeignKey('Session', on_delete=models.SET_NULL, null=True)
+    num_level = models.IntegerField(default=0, editable=False)
+    # TODO: later on location will be selected from Location model
+    # location = models.ForeignKey('Location', on_delete=models.CASCADE)
+    # TODO: later on teachers will selected from users - teachers.
+    teachers = models.CharField(max_length=125, default='Chris Chapman')
     class_day = models.SmallIntegerField(choices=DOW_CHOICES, default=3)
     start_time = models.TimeField()
     # TODO: Add field for total_price (does not include pre-pay discount)
@@ -253,13 +376,29 @@ class ClassOffer(models.Model):
         """ When we want a sortable level number
         """
         level_dict = Subject.LEVEL_ORDER
-        higher = 100 + max(level_dict.values)
+        print('======= ClassOffer.set_num_level ========')
+        print(level_dict.values())
+        higher = 100 + max(level_dict.values())
         num = 0
         try:
             num = level_dict[self.subject.level]
         except KeyError:
             num = higher
         return num
+
+    def resource_publish(self, week):
+        """ Returns a bool response if a resource with a given publish
+            code (week it is published) is allowed to be shown now
+            for this given ClassOffer
+        """
+        pub_delay = 3
+        if week == 0:
+            return True
+        elif week == 200:
+            week = self.subject.num_weeks
+        delay = pub_delay+7*week
+        avail_date = self.start_date() + timedelta(days=delay)
+        return date.today() > avail_date
 
     def __str__(self):
         return f'{self.subject} - {self.session}'

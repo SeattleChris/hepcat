@@ -18,6 +18,7 @@
         <li><a href="{% url 'home' %}">home</a></li>
         {% if user.is_authenticated %}
         <li><a href="{% url 'logout' %}">Logout</a></li>
+        <li><a href="{% url 'profile_page' %}">Profile</a></li>
         {% else %}
         <li><a href="{% url 'signup' %}"> Create Login Account</a></li>
         <li><a href="{% url 'login' %}">Login</a></li>
