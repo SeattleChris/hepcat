@@ -233,6 +233,21 @@ class Checkin(ListView):
 User = get_user_model()
 
 
+class ResourceDetailView(DetailView):
+    """ Each Resource can be viewed if the user has permission """
+    model = Resource
+    context_object_name = 'resource'
+    pk_url_kwarg = 'id'
+    template_name = 'classwork/resource.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["type"] = self.object.content_type
+        return context
+
+    # end ResourceDetailView
+
+
 class ProfileView(DetailView):
     """Each user has a page where they can see resources that have been made
         available to them.
@@ -247,15 +262,13 @@ class ProfileView(DetailView):
         return Profile.objects.get(user=self.request.user)
 
     def get_context_data(self, **kwargs):
-        """ Modify the context
-        """
+        """ Modify the context """
         context = super().get_context_data(**kwargs)
         print('===== ProfileView get_context_data ======')
         registers = list(Registration.objects.filter(student=self.object).values('classoffer'))
         ids = list(set([list(ea.values())[0] for ea in registers]))
         taken = ClassOffer.objects.filter(id__in=ids)
         print(ids)
-        # subj_had = [ea.subject for ea in taken]
         res = []
         for ea in ids:
             cur = ClassOffer.objects.get(id=ea)
@@ -267,15 +280,12 @@ class ProfileView(DetailView):
         print('----- res ------')
         print(res)
         context['had'] = taken
-        # The following returns all Resources matching ClassOffer or Subject
-        # res = Resource.objects.filter(
-        #     Q(classoffer__in=taken) |
-        #     Q(subject__in=[ea.subject for ea in taken])
-        #     )
         ct = {ea[0]: [] for ea in Resource.CONTENT_CHOICES}
         [ct[ea.content_type].append(ea) for ea in res]
-        # TODO: Change ea.avail > 0 to function call determining if available
+        # ct is now is a dictionary of all possible content types, with values
+        # of the current user resources that are past their avail date.
         context['resources'] = {key: vals for (key, vals) in ct.items() if len(vals) > 0}
+        # context['resources'] only has the ct keys if the values have data.
         print(context['resources'])
         return context
 

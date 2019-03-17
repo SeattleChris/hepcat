@@ -1,0 +1,37 @@
+{% extends "generic/base.html" %}
+
+{% block head %}
+<title>Resource Detail View</title>
+{% endblock head %}
+
+{% block content %}
+<h2>Resource Detail View</h2>
+
+<h3>{{ type }}</h3>
+{% if type == 'url' %}
+<p>URL</p>
+{% endif %}
+{% if type == 'link' %}
+<p>LINK</p>
+{% endif %}
+{% if type == 'video' %}
+<video width="530" height="440" controls autoplay>
+  <source src="/{{res.filepath.url}}" type="video/mp4"> </source>
+</video>
+<p>VIDEO</p>
+{% endif %}
+{% if type == 'image' %}
+<p>IMAGE</p>
+{% endif %}
+{% if type == 'email' %}
+<p>EMAIL</p>
+{% endif %}
+{% if type == 'file' %}
+<p>FILE</p>
+{% endif %}
+{% if type == 'text' %}
+<p>TEXT</p>
+{% endif %}
+
+<p>{{ resource }} </p>
+{% endblock content %}

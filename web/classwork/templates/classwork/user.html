@@ -1,4 +1,5 @@
 {% extends "generic/base.html" %}
+
 {% block head %}
 <title>Your Profile</title>
 {% endblock %}
@@ -21,7 +22,7 @@
     <h4>{{key}}</h4>
     <ul>
     {% for res in values %}
-      <li><a href="{{MEDIA_URL}}{{res.relative_path}}">resource: {{res}}</a></li>
+      <li><a href="{% url 'resource_detail' id=res.id %}">res: {{res}}</a></li>
     {% endfor %}
     </ul>
   {% endfor %}
