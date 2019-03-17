@@ -17,10 +17,14 @@ from django.contrib import admin
 from django.urls import path, include
 # from django_registration.backends.one_step import RegistrationView
 from .views import home_view
+# from django.conf import settings
+# from django.conf.urls.static import static
 
 urlpatterns = [
     path('', home_view, name='home'),
+    path('', include('classwork.urls')),
     path('admin/', admin.site.urls),
+    # TODO: Set a registration page from one of the following:
     # path('user/', include('django_registration.backends.activation.urls')),
     # path('user/register/', include('django_registration.backends.one_step.urls')),
     # path('user/register/',
@@ -28,9 +32,8 @@ urlpatterns = [
     #      name='django_registration_register'),
     path('user/', include('django.contrib.auth.urls')),
     path('user/', include('users.urls')),
-    path('classes/', include('classwork.urls')),
     # path('payments/', include('payments.urls')),
-]
+]  # + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # Thanks to django.contrib.auth.urls The following paths are set:
 # user/login/ [name='login']

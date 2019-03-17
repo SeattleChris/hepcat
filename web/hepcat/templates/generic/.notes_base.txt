@@ -46,3 +46,10 @@
   <footer></footer>
 </body>
 </html>
+
+alternative for resource url?
+      <li><a href="/{{res.filepath.url}}">resource: {{res}}</a></li>
+
+<video width="530" height="440" controls autoplay>
+  <source src="{% static "mov_bbb.mp4" %}" type="video/mp4"> </source>
+</video>

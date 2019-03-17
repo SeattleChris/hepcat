@@ -121,6 +121,8 @@ class Resource(models.Model):
         (3, 'After week 3'),
         (4, 'After week 4'),
         (5, 'After week 5'),
+        # TODO: Make this adaptable to any class duration.
+        # TODO: Make options for weekly vs. daily classes?
         (200, 'After completion')
     )
 
