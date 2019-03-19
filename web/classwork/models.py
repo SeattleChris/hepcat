@@ -86,13 +86,13 @@ class Resource(models.Model):
     # is it accessable after finished? Or does it have an experiation date?
     # does it require an admin/teacher response before released?
     # CONTENT_RENDER = (
-    #     ('url',   ''),
-    #     ('file',  ''),
-    #     ('text',  ''),
-    #     ('video', ''),
-    #     ('image', ''),
-    #     ('link',  ''),
-    #     ('email', ''),
+    #     ('url',   'link'),
+    #     ('file',  'filepath'),
+    #     ('text',  'text'),
+    #     ('video', 'filepath'),
+    #     ('image', 'imagepath'),
+    #     ('link',  'link'),
+    #     ('email', 'text'),
     # )
     MODEL_CHOICES = (
         ('Subject', 'Subject'),
@@ -129,22 +129,39 @@ class Resource(models.Model):
     # id = auto-created
     related_type = models.CharField(max_length=15, choices=MODEL_CHOICES, default='Subject')
     subject = models.ForeignKey('Subject', on_delete=models.SET_NULL, null=True)
-    classoffer = models.ForeignKey('ClassOffer', on_delete=models.SET_NULL, null=True)
+    classoffer = models.ForeignKey('ClassOffer', on_delete=models.SET_NULL, null=True, blank=True)
     content_type = models.CharField(max_length=15, choices=CONTENT_CHOICES)
     user_type = models.PositiveSmallIntegerField(choices=USER_CHOICES, help_text='Who is this for?')
     avail = models.PositiveSmallIntegerField(choices=PUBLISH_CHOICES, help_text='When is this resource available?')
-    filepath = models.FileField(upload_to='resource/', help_text='If a file, upload here')
+    expire = models.PositiveSmallIntegerField(default=0, help_text='It expires how many weeks after being published? (0 for never)')
+    imagepath = models.ImageField(upload_to='resource/', help_text='If an image, upload here', blank=True)
+    filepath = models.FileField(upload_to='resource/', help_text='If a file, upload here', blank=True)
+    link = models.CharField(max_length=255, help_text='External or Internal links go here', blank=True)
+    text = models.TextField(blank=True, help_text='Text chunk used in page or email publication')
+    title = models.CharField(max_length=60)
     description = models.TextField(blank=True)
 
     date_added = models.DateField(auto_now_add=True)
     date_modified = models.DateField(auto_now=True)
 
+    # def respath(self):
+    #     """Returns the data field for the selected content type"""
+    #     content_path = {
+    #         'url': self.link,
+    #         'file': self.filepath,
+    #         'text': self.text,
+    #         'video': self.fielpath,
+    #         'image': self.imagepath,
+    #         'link': self.link,
+    #         'email': self.text
+    #     }
+    #     return content_path[self.content_type]
+
     def __str__(self):
-        # figure out the kind of resource, and use appropriate render method
-        # ct = self.content_type
-        # cc = [item[0] for item in Resource.CONTENT_CHOICES]
-        # super().__str__()
-        return f'< Resource {self.content_type} | {self.filepath} >'
+        ct = self.content_type
+        if ct == 'email' or ct == 'text':
+            return self.text
+        return self.title
 
     def __repr__(self):
         relate = ''
@@ -157,6 +174,7 @@ class Resource(models.Model):
         else:
             relate = 'Unknown'
         return f'<Resource | {relate} | {self.content_type} | {self.avail}>'
+        #  | {self.expire}>'
 
 
 class Subject(models.Model):

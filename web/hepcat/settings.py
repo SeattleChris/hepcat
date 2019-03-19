@@ -126,12 +126,12 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 # Media files (as uploaded by users who have permission)
-MEDIA_URL = 'media/'
+MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # CUSTOM Additional Settings for this Project
 AUTH_USER_MODEL = 'users.UserHC'
-LOGIN_REDIRECT_URL = '/user/login/'
+LOGIN_REDIRECT_URL = '/profile/'
 LOGOUT_REDIRECT_URL = 'home'
 
 # Django Registration
