@@ -129,7 +129,7 @@ class Resource(models.Model):
     # id = auto-created
     related_type = models.CharField(max_length=15, choices=MODEL_CHOICES, default='Subject')
     subject = models.ForeignKey('Subject', on_delete=models.SET_NULL, null=True)
-    classoffer = models.ForeignKey('ClassOffer', on_delete=models.SET_NULL, null=True)
+    classoffer = models.ForeignKey('ClassOffer', on_delete=models.SET_NULL, null=True, blank=True)
     content_type = models.CharField(max_length=15, choices=CONTENT_CHOICES)
     user_type = models.PositiveSmallIntegerField(choices=USER_CHOICES, help_text='Who is this for?')
     avail = models.PositiveSmallIntegerField(choices=PUBLISH_CHOICES, help_text='When is this resource available?')

@@ -16,12 +16,12 @@
 {% endif %}
 {% if type == 'video' %}
 <video width="530" height="440" controls autoplay>
-  <source src="/{{res.filepath.url}}" type="video/mp4"> </source>
+  <source src="/{{resource.filepath.url}}" type="video/mp4"> </source>
 </video>
 <p>VIDEO</p>
 {% endif %}
 {% if type == 'image' %}
-<img src="{{res.filepath.url}}" alt="res" />
+<img src="{{ resource.imagepath.url }}" alt="{{resource}}" />
 <p>IMAGE</p>
 {% endif %}
 {% if type == 'email' %}

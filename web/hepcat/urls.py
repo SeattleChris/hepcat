@@ -17,8 +17,8 @@ from django.contrib import admin
 from django.urls import path, include
 # from django_registration.backends.one_step import RegistrationView
 from .views import home_view
-# from django.conf import settings
-# from django.conf.urls.static import static
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('', home_view, name='home'),
@@ -33,7 +33,7 @@ urlpatterns = [
     path('user/', include('django.contrib.auth.urls')),
     path('user/', include('users.urls')),
     # path('payments/', include('payments.urls')),
-]  # + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # Thanks to django.contrib.auth.urls The following paths are set:
 # user/login/ [name='login']
