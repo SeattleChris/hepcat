@@ -14,17 +14,17 @@ class ResourceInline(admin.StackedInline):
     # prepopulated_fields does not allow me to set defaults or initial
     # autocomplete does not allow me to set defaults or initial
     # formfield_overrides ... uh, I think that only changes widgets?
-    # fields = ('related_type', 'subject', 'classoffer', 'user_type', 'avail', 'content_type', 'filepath', )
     # exclude = ('classoffer', )
     # get_changeform_initial_data is not for this context.
 
+    # fields = ('CONTENT_RENDER', 'MODEL_CHOICES', 'CONTENT_CHOICES', 'USER_CHOICES', 'PUBLISH_CHOICES', 'id', 'subject', 'classoffer', 'content_type', 'user_type', 'avail', 'expire', 'imagepath', 'filepath', 'link', 'text', 'title', 'description', 'date_added', 'date_modified', 'content_path', 'ct', )
     fieldsets = (
         (None, {
-            'fields': (('user_type', 'avail'), ('content_type', 'filepath',)),
+            'fields': (('user_type', 'content_type',), ('avail', 'expire'), ('title', 'description')),
         }),
-        (None, {
-            # 'classes': ('collapse',),
-            'fields': ('description',),
+        ('Data Fields', {
+            'classes': ('collapse',),
+            'fields': ('imagepath', 'filepath', 'link', 'text',)
         }),
         # ('To Hide', {
         #     'fields': ('related_type', 'subject', 'classoffer', ),

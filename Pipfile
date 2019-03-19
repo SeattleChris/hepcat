@@ -9,6 +9,7 @@ django = "*"
 django-registration = "*"
 django-compressor = "*"
 django-payments = "*"
+pillow = "*"
 
 [dev-packages]
 django-sass-processor = "*"
