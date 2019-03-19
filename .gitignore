@@ -65,6 +65,8 @@ coverage.xml
 .static_storage/
 .media/
 local_settings.py
+# Django Media files (depends on media settings in settings.py)
+web/media/*
 
 # Flask stuff:
 instance/
