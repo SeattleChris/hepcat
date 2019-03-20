@@ -140,18 +140,18 @@ The following routes have been made or scaffolled (mostly in classwork app):
 | /payment/done/<int:id>| [payment_success] | PaymentResultView | /payment/success.html      |
 | /profile/             | [profile_page]    | ProfileView       | /classwork/user.html       |
 | /resource/<int:id>    | [resource_detail] | ResourceDetailView| /classwork/resource.html   |
-| /                     | [home_view]       |       ( defined in hepcat.views ) |
-| /admin/               | -                 |       ( admin.site.urls ) |
+| /                     | [home]    | home_view (hepcat.views) | /home.view (uses base.html) |
+| /admin/               | -         |       ( admin.site.urls ) |
 | **From our users app:**   |
 | /user/signup/         | ['signup']        | SignUp            | signup.html |
-| /user/login/                | [name='login']           |-| /hepcat/django_registration/ ?? |
-| /user/logout/               | [name='logout']          |-| /hepcat/django_registration/ ?? |
-| /user/password_change/      | [name='password_change'] |-| /hepcat/django_registration/ ?? |
-| /user/password_change/done/|[name='password_change_done']|-| /hepcat/django_registration/ ? |
-| /user/password_reset/     | [name='password_reset']      |-| /hepcat/django_registration/ ? |
-| /user/password_reset/done/ | [name='password_reset_done']|-| /hepcat/django_registration/ ? |
-| /user/reset/<uidb64>/<token>/|[name='password_reset_confirm']|-|/hepcat/django_registration/?|
-| /user/reset/done/     | [name='password_reset_complete'] |-| /hepcat/django_registration/ ? |
+| /user/login/                | [name='login']              |-| /django_registration/ ? |
+| /user/logout/               | [name='logout']             |-| /django_registration/ ? |
+| /user/password_change/      | [name='password_change']    |-| /django_registration/ ? |
+| /user/password_change/done/|[name='password_change_done'] |-| /django_registration/ ? |
+| /user/password_reset/     | [name='password_reset']       |-| /django_registration/ ? |
+| /user/password_reset/done/ | [name='password_reset_done'] |-| /django_registration/ ? |
+| /user/reset/<uidb64>/<token>/|[name='password_reset_confirm']|-|/django_registration/?|
+| /user/reset/done/     | [name='password_reset_complete'] |-| /django_registration/ ? |
 
 <!-- /user/register/         django_registration one_step.urls -->
 <!-- /user/                  django.contrib.auth.urls -->
