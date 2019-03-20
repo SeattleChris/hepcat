@@ -1,14 +1,110 @@
 from django.contrib import admin
-# from django.db import models
-from .models import Subject, Session, ClassOffer, Profile, Registration, Location
+from django.forms import Textarea
+from django.db import models
+from .models import Resource, Subject, Session, ClassOffer, Profile, Registration, Location
+# from django.utils.functional import curry
 
 # Register your models here.
+# TODO: Make a ResourceAdmin? This could modify which are shown
+
+
+class ResourceInline(admin.StackedInline):
+    model = Resource
+    extra = 5
+
+    # prepopulated_fields does not allow me to set defaults or initial
+    # autocomplete does not allow me to set defaults or initial
+    # formfield_overrides ... uh, I think that only changes widgets?
+    # exclude = ('classoffer', )
+    # get_changeform_initial_data is not for this context.
+
+    # fields = ('CONTENT_RENDER', 'MODEL_CHOICES', 'CONTENT_CHOICES', 'USER_CHOICES', 'PUBLISH_CHOICES', 'id', 'subject', 'classoffer', 'content_type', 'user_type', 'avail', 'expire', 'imagepath', 'filepath', 'link', 'text', 'title', 'description', 'date_added', 'date_modified', 'content_path', 'ct', )
+    fieldsets = (
+        (None, {
+            'fields': (('user_type', 'content_type',), ('avail', 'expire'), ('title', 'description')),
+        }),
+        ('Data Fields', {
+            'classes': ('collapse',),
+            'fields': ('imagepath', 'filepath', 'link', 'text',)
+        }),
+        # ('To Hide', {
+        #     'fields': ('related_type', 'subject', 'classoffer', ),
+        #     # 'classes': ('hidden', ),
+        # }),
+    )
+    formfield_overrides = {
+        models.TextField: {'widget': Textarea(attrs={'cols': 60, 'rows': 2})},
+    }
+
+    # def get_changeform_initial_data(request):
+    #     initial = {}
+    #     print('====== ResourceInline . get_changeform_initial_data =====')
+    #     return initial
+
+    def get_formset(self, request, obj=None, **kwargs):
+        initial = []
+        print('========== ResourceInline.get_formset ================')
+        print(self)
+        for ea in dir(self):
+            print(ea)
+        # print(self.parent_model)
+        print('----------- Obj -----------')
+        print(obj)
+        # for ea in dir(obj):
+        #     print(ea)
+        related, subject, classoffer = '', None, None
+        if isinstance(obj, Subject):
+            related = 'Subject'
+            subject = obj
+            classoffer = None
+            self.exclude = ('related_type', 'classoffer',)
+        elif isinstance(obj, ClassOffer):
+            related = 'ClassOffer'
+            subject = None
+            classoffer = obj
+            self.exclude = ('subject',)
+        else:
+            related = 'Other'
+            subject = None
+            classoffer = None
+            self.exclude = ('subject', 'classoffer', )
+        print(f'{related}, subj: {subject}, co: {classoffer}')
+        # initial.append({
+        #     'related_type': related,
+        #     'subject': subject,
+        #     'classoffer': classoffer,
+        # })
+        formset = super(ResourceInline, self).get_formset(request, obj, **kwargs)
+        # formset.__init__ = curry(formset.__init__, initial=initial)
+        return formset
 
 
 class SubjectAdmin(admin.ModelAdmin):
     """
     """
     model = Subject
+
+    list_display = ('__str__', 'title', 'level', 'version', )
+    list_display_links = ('__str__', 'title')
+    inlines = (ResourceInline, )
+    # TODO: What if we want to attach an already existing Resource?
+
+    # def get_queryset(self, request):
+    #     queryset = super().get_queryset(request)
+
+    #     return queryset
+
+
+class ClassOfferAdmin(admin.ModelAdmin):
+    """
+    """
+    model = Subject
+
+    list_display = ('__str__', 'subject', 'session',)
+    # ('subject', 'session', 'teachers', 'class_day', 'start_time',)
+    list_display_links = ('__str__',)
+    inlines = (ResourceInline, )
+    # TODO: What if we want to attach an already existing Resource?
 
     # def get_queryset(self, request):
     #     queryset = super().get_queryset(request)
@@ -56,7 +152,8 @@ class RegistrationAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Subject, SubjectAdmin)
+admin.site.register(ClassOffer, ClassOfferAdmin)
 admin.site.register(Session, SessiontAdmin)
 admin.site.register(Profile, ProfileAdmin)
 admin.site.register(Registration, RegistrationAdmin)
-admin.site.register((ClassOffer, Location))
+admin.site.register((Location, Resource))
