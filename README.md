@@ -151,8 +151,8 @@ The following routes have been made or scaffolled (mostly in classwork app):
 | /user/password_change/done/   | [name='password_change_done']    |
 | /user/password_reset/         | _ | [name='password_reset']          |
 | /user/password_reset/done/    | _ | [name='password_reset_done']     |
-| /user/reset/<uidb64>/<token>/ | aa | [name='password_reset_confirm']  |
-| /user/reset/done/             | aa | [name='password_reset_complete'] |
+| /user/reset/<uidb64>/<token>/ | - | [name='password_reset_confirm']  |
+| /user/reset/done/             | - | [name='password_reset_complete'] |
 
 <!-- /user/register/         django_registration one_step.urls -->
 <!-- /user/                  django.contrib.auth.urls -->
