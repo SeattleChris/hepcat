@@ -141,16 +141,16 @@ The following routes have been made or scaffolled (mostly in classwork app):
 | /profile/             | [profile_page]    | ProfileView       | /classwork/user.html |
 | /resource/<int:id>    | [resource_detail] | ResourceDetailView| /classwork/resource.html |
 | /                     | [home_view]       |       [defined in hepcat.views] |
-| /admin/               | a                 |       admin.site.urls | a |
-| a | From our users app:   |
+| /admin/               | _                 |       admin.site.urls | _ |
+| _ | From our users app:   |
 | /user/signup/         | [name='signup']   | SignUp            | signup.html |
-| a | Thanks to django.contrib.auth.urls The following paths are set: | a |
+| _ | Thanks to django.contrib.auth.urls The following paths are set: | _ |
 | /user/login/                  | [name='login']                   |
 | /user/logout/                 | [name='logout']                  |
 | /user/password_change/        | [name='password_change']         |
 | /user/password_change/done/   | [name='password_change_done']    |
-| /user/password_reset/         | a | [name='password_reset']          |
-| /user/password_reset/done/    | a | [name='password_reset_done']     |
+| /user/password_reset/         | _ | [name='password_reset']          |
+| /user/password_reset/done/    | _ | [name='password_reset_done']     |
 | /user/reset/<uidb64>/<token>/ | aa | [name='password_reset_confirm']  |
 | /user/reset/done/             | aa | [name='password_reset_complete'] |
 
