@@ -157,6 +157,21 @@ class Resource(models.Model):
     #     }
     #     return content_path[self.content_type]
 
+    def publish(self, classoffer):
+        """ Returns Bool if this resource is available for someone who
+            attended a given classoffer.
+        """
+        pub_delay = 3
+        week = self.avail if self.avail != 200 else classoffer.subject.num_weeks
+        delay = pub_delay+7*week
+        now = date.today()
+        start = classoffer.start_date()
+        avail_date = min(now, start) if week == 0 else start + timedelta(days=delay)
+        expire_date = None if self.expire == 0 else avail_date + timedelta(weeks=self.expire)
+        if expire_date and now > expire_date:
+            return False
+        return now >= avail_date
+
     def __str__(self):
         ct = self.content_type
         if ct == 'email' or ct == 'text':
@@ -405,20 +420,6 @@ class ClassOffer(models.Model):
         except KeyError:
             num = higher
         return num
-
-    def resource_publish(self, week):
-        """ Returns a bool response if a resource with a given publish
-            code (week it is published) is allowed to be shown now
-            for this given ClassOffer
-        """
-        pub_delay = 3
-        if week == 0:
-            return True
-        elif week == 200:
-            week = self.subject.num_weeks
-        delay = pub_delay+7*week
-        avail_date = self.start_date() + timedelta(days=delay)
-        return date.today() > avail_date
 
     def __str__(self):
         return f'{self.subject} - {self.session}'

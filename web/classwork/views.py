@@ -275,7 +275,7 @@ class ProfileView(DetailView):
             cur_res = [res for res in Resource.objects.filter(
                 Q(classoffer=cur) |
                 Q(subject=cur.subject)
-                ) if cur.resource_publish(res.avail)]
+                ) if res.publish(cur)]
             res.extend(cur_res) if len(cur_res) else None
         print('----- res ------')
         print(res)
