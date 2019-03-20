@@ -6,7 +6,7 @@ from .views import (ClassOfferListView,
                     )
 # SubjectCreateView, SessionCreateView, ClassOfferCreateView,
 urlpatterns = [  # All following are in root
-    path('', ClassOfferListView.as_view(), name='classoffer_list'),  # Display all ClassOffers?
+    path('classes/', ClassOfferListView.as_view(), name='classoffer_list'),  # Display all ClassOffers?
     path('location/<int:id>', LocationDetailView.as_view(), name='location_detail'),
     path('location/', LocationListView.as_view(), name='location_list'),
     path('checkin/', Checkin.as_view(), name='checkin'),

@@ -12,6 +12,7 @@ from django.template.response import TemplateResponse  # used for Payments
 from payments import get_payment_model, RedirectNeeded  # used for Payments
 from django.db.models import Q
 
+# TODO: Clean out excessive print linees telling us where we are.
 # Create your views here.
 
 
@@ -256,6 +257,8 @@ class ProfileView(DetailView):
     model = Profile
     context_object_name = 'profile'
     pk_url_kwarg = 'id'
+    # TODO: Work on the actual layout and presentation of the avail Resources
+    # TODO: Filter out the resources that are not meant for ProfileView
 
     def get_object(self):
         print('=== ProfileView get_object ====')

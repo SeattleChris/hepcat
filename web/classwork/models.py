@@ -76,24 +76,9 @@ class Resource(models.Model):
         Subjects and ClassOffers can have various resources available to the
         instructors to aid them in class preperation and presentation.
     """
-    # what content type is it:
-    #   URL link, formatted text file, string, video, image, webpage, email
-    # what is the file path (or external url? or our web url?)
-    # what model is it associated to? (Subject, ClassOffer, others?)
-    # what is the foriegn key?
-    # is it for the students, teachers, admin, or public?
-    # when is it published: on sign-up, after wk #, after finished
-    # is it accessable after finished? Or does it have an experiation date?
-    # does it require an admin/teacher response before released?
-    # CONTENT_RENDER = (
-    #     ('url',   'link'),
-    #     ('file',  'filepath'),
-    #     ('text',  'text'),
-    #     ('video', 'filepath'),
-    #     ('image', 'imagepath'),
-    #     ('link',  'link'),
-    #     ('email', 'text'),
-    # )
+    # TODO: Make validation checks on new Resource instances
+    # TODO: does it require an admin/teacher response before released?
+
     MODEL_CHOICES = (
         ('Subject', 'Subject'),
         ('ClassOffer', 'ClassOffer'),

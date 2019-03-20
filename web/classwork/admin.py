@@ -5,6 +5,7 @@ from .models import Resource, Subject, Session, ClassOffer, Profile, Registratio
 # from django.utils.functional import curry
 
 # Register your models here.
+# TODO: Make a ResourceAdmin? This could modify which are shown
 
 
 class ResourceInline(admin.StackedInline):
@@ -86,6 +87,7 @@ class SubjectAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'title', 'level', 'version', )
     list_display_links = ('__str__', 'title')
     inlines = (ResourceInline, )
+    # TODO: What if we want to attach an already existing Resource?
 
     # def get_queryset(self, request):
     #     queryset = super().get_queryset(request)
@@ -102,6 +104,7 @@ class ClassOfferAdmin(admin.ModelAdmin):
     # ('subject', 'session', 'teachers', 'class_day', 'start_time',)
     list_display_links = ('__str__',)
     inlines = (ResourceInline, )
+    # TODO: What if we want to attach an already existing Resource?
 
     # def get_queryset(self, request):
     #     queryset = super().get_queryset(request)
