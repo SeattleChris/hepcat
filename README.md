@@ -102,56 +102,56 @@ This is a specific subject, offered during a specific session. It includes infor
 
 ## Getting Started
 
-clone the repo
-make sure the file settings are correct.
-docker-compose up --build
-... To Be Filled In Later ...
+* clone the repo
+* make sure the file settings are correct.
+* docker-compose up --build
+* ... To Be Filled In Later ...
 
 ## Architecture
 
-python 3.6-slim
-Django 2.1.7
-psycopg2-binary 2.7.7
-django-registration 3.0
-nginx
-postgres
-django-compressor 2.2
-django-payments = 0.13.0
-Pillow = 5.4.1
+* python 3.6-slim
+* Django 2.1.7
+* psycopg2-binary 2.7.7
+* django-registration 3.0
+* nginx
+* postgres
+* django-compressor 2.2
+* django-payments = 0.13.0
+* Pillow = 5.4.1
 
-### Dev
+Dev:
 
-django-sass-processor 0.7.2
-libsass 0.16.1
+* django-sass-processor 0.7.2
+* libsass 0.16.1
 
 ## API
 
 The following routes have been made or scaffolled (mostly in classwork app):
-**Route**               **Path Name**     **View**            **Template**
-/classes/               [classoffer_list] ClassOfferListView  /classwork/classoffer_list
-/location/<int:id>      [location_detail] LocationDetailView  /classwork/location_detail.html
-/location/              [location_list]   LocationListView    /classwork/location_list.html
-/checkin/               [checkin]         Checkin             /classwork/checkin.html
-/register/              [register]        RegisterView        /classwork/register.html
-/payment/               [payment]         PaymentProcessView  /payment/payment.html
-/payment/fail/<int:id>  [payment_fail]    PaymentResultView   /payment/fail.html
-/payment/done/<int:id>  [payment_success] PaymentResultView   /payment/success.html
-/profile/               [profile_page]    ProfileView         /classwork/user.html
-/resource/<int:id>      [resource_detail] ResourceDetailView  /classwork/resource.html
-/                       [home_view]             [defined in hepcat.views]
-/admin/                                         admin.site.urls
 
-From our users app:
-/user/signup/           [name='signup'] SignUp              signup.html
+| **Route**          | **Path Name**     | **View**          | **Template**  |
+| -------------------| ----------------- | ----------------- | ------------- |
+| /classes/          | [classoffer_list] | ClassOfferListView| /classwork/classoffer_list |
+| /location/<int:id> | [location_detail] | LocationDetailView| /classwork/location_detail.html |
+| /location/         | [location_list]   | LocationListView  | /classwork/location_list.html |
+| /checkin/          | [checkin]         | Checkin           | /classwork/checkin.html       |
+| /register/         | [register]        | RegisterView      | /classwork/register.html      |
+| /payment/             | [payment]         | PaymentProcessView| /payment/payment.html      |
+| /payment/fail/<int:id>| [payment_fail]    | PaymentResultView | /payment/fail.html         |
+| /payment/done/<int:id>| [payment_success] | PaymentResultView | /payment/success.html      |
+| /profile/             | [profile_page]    | ProfileView       | /classwork/user.html       |
+| /resource/<int:id>    | [resource_detail] | ResourceDetailView| /classwork/resource.html   |
+| /                     | [home]    | home_view (hepcat.views) | /home.view (uses base.html) |
+| /admin/               | -         |       ( admin.site.urls ) |
+| **From our users app:**   |
+| /user/signup/         | ['signup']        | SignUp            | signup.html |
+| /user/login/                | [name='login']              |-| /django_registration/ ? |
+| /user/logout/               | [name='logout']             |-| /django_registration/ ? |
+| /user/password_change/      | [name='password_change']    |-| /django_registration/ ? |
+| /user/password_change/done/|[name='password_change_done'] |-| /django_registration/ ? |
+| /user/password_reset/     | [name='password_reset']       |-| /django_registration/ ? |
+| /user/password_reset/done/ | [name='password_reset_done'] |-| /django_registration/ ? |
+| /user/reset/<uidb64>/<token>/|[name='password_reset_confirm']|-|/django_registration/?|
+| /user/reset/done/     | [name='password_reset_complete'] |-| /django_registration/ ? |
+
 <!-- /user/register/         django_registration one_step.urls -->
 <!-- /user/                  django.contrib.auth.urls -->
-
-Thanks to django.contrib.auth.urls The following paths are set:
-/user/login/                  [name='login']
-/user/logout/                 [name='logout']
-/user/password_change/        [name='password_change']
-/user/password_change/done/   [name='password_change_done']
-/user/password_reset/         [name='password_reset']
-/user/password_reset/done/    [name='password_reset_done']
-/user/reset/<uidb64>/<token>/ [name='password_reset_confirm']
-/user/reset/done/             [name='password_reset_complete']
