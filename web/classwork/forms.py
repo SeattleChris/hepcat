@@ -274,4 +274,3 @@ class PaymentForm(forms.ModelForm):
             'billing_city',
             'billing_postcode',
             ]
-
