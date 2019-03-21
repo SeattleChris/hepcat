@@ -1,15 +1,16 @@
 # from __future__ import unicode_literals
 from django.db import models
 # from django.utils.translation import ugettext_lazy as _
-from datetime import date, datetime, timedelta
-# from django.contrib.auth import get_user_model
-# User = get_user_model()
+from datetime import date, timedelta
 from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from decimal import Decimal  # used for Payments model
 from payments import PurchasedItem
 from payments.models import BasePayment
+# from django.contrib.auth import get_user_model
+# User = get_user_model()
+# TODO: Should we be using get_user_model() instead of settings.AUTH_USER_MODEL ?
 
 # Create your models here.
 
@@ -33,7 +34,6 @@ class Location(models.Model):
     zipcode = models.CharField(max_length=15)
     map_google = models.URLField(verbose_name="Google Maps Link")
 
-    # created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='locations')
     date_added = models.DateField(auto_now_add=True)
     date_modified = models.DateField(auto_now=True)
 
@@ -182,7 +182,6 @@ class Subject(models.Model):
         offering a "Subject". For a give Subject, there may be different
         instances of when it is offered, which will be in the Classes model.
     """
-    # id = auto-created
 
     LEVEL_CHOICES = (
         ('Beg', 'Beginning'),
@@ -210,8 +209,9 @@ class Subject(models.Model):
         ('D', 'D'),
         ('N', 'NA'),
     )
+
+    # id = auto-created
     level = models.CharField(max_length=8, choices=LEVEL_CHOICES, default='Spec')
-    # level_group = models.ManyToManyField('self')
     # num_level = models.IntegerField(default=0, editable=False)
     version = models.CharField(max_length=1, choices=VERSION_CHOICES)
     title = models.CharField(max_length=125, default='Untitled')
@@ -311,7 +311,6 @@ class Session(models.Model):
         """
         pass
 
-    # created_by = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='subjects')
     date_added = models.DateField(auto_now_add=True)
     date_modified = models.DateField(auto_now=True)
 
@@ -514,7 +513,6 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
 
 class PaymentManager(models.Manager):
 
-    
     def classRegister(self, register=None, student=None, paid_by=None, **extra_fields):
         """ This is used to set the defaults for when a user
             is registering for classoffers, which is the most
@@ -579,8 +577,7 @@ class PaymentManager(models.Manager):
 
 
 class Payment(BasePayment):
-    """ Payment Processing
-    """
+    """ Payment Processing """
     objects = PaymentManager()
     student = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True, related_name='payment')
     paid_by = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True, related_name='paid_for')
