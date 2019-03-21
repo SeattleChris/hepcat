@@ -514,46 +514,7 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
 
 class PaymentManager(models.Manager):
 
-    def classReg(self, register=None, student=None, paid_by=None, **extra_fields):
-        """ This is used to set the defaults for when a user
-            is registering for classoffers, which is the most
-            common usage of our payments
-        """
-        student = student if student else Profile.objects.get(user=self.instance)
-
-        full_p, pre_pay_d, credit = 0, 0, 0
-        multiple_discount_count = 0
-        desc = ''
-        register = register if register else []
-        for item in register:
-            # TODO: Change to look up the actual class prices & discount
-            # This could be stored in Registration, or get from ClassOffer
-            desc = desc + ' ' + item.__str__
-            full_p += 65.0
-            pre_pay_d += 5.0
-            multiple_discount_count += 1
-        multiple_discount = 10.0 if multiple_discount_count > 1 else 0.0
-        # TODO: Change multiple_discount amount to not be hard-coded.
-        if student.credit > 0:
-            credit = student.credit
-            # student.credit = 0
-            # student.save()
-        full_total = full_p - multiple_discount - credit
-        pre_total = full_total - pre_pay_d
-        extra_fields.setdefault('full_price', full_p)
-        extra_fields.setdefault('pre_pay_discount', pre_pay_d)
-        extra_fields.setdefault('multiple_purchase_discount', multiple_discount)
-        extra_fields.setdefault('credit_applied', credit)
-        extra_fields.setdefault('description', desc)
-        extra_fields.setdefault('total', pre_total)
-
-        paid_by = paid_by if paid_by else student
-        user = paid_by.user
-        extra_fields.setdefault('billing_first_name', user.first_name)
-        extra_fields.setdefault('billing_last_name', user.last_name)
-        extra_fields.setdefault('billing_country_code', 'US')
-        extra_fields.setdefault('billing_email', user.email)
-
+    
     def classRegister(self, register=None, student=None, paid_by=None, **extra_fields):
         """ This is used to set the defaults for when a user
             is registering for classoffers, which is the most
