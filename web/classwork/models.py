@@ -183,7 +183,6 @@ class Subject(models.Model):
         offering a "Subject". For a give Subject, there may be different
         instances of when it is offered, which will be in the Classes model.
     """
-
     LEVEL_CHOICES = (
         ('Beg', 'Beginning'),
         ('L2', 'Lindy 2'),
@@ -203,6 +202,7 @@ class Subject(models.Model):
         'Spec': 3,
         'L4': 4,
     }
+    # TODO: Update so that site Admin can change class level logic.
     VERSION_CHOICES = (
         ('A', 'A'),
         ('B', 'B'),
@@ -220,29 +220,10 @@ class Subject(models.Model):
     num_weeks = models.PositiveSmallIntegerField(default=5)
     num_minutes = models.PositiveSmallIntegerField(default=60)
     description = models.TextField()
-    # syllabus = models.TextField(blank=True)
-    # teacher_plan = models.TextField(blank=True)
-    # video_wk1 = models.URLField(blank=True)
-    # video_wk2 = models.URLField(blank=True)
-    # video_wk3 = models.URLField(blank=True)
-    # video_wk4 = models.URLField(blank=True)
-    # video_wk5 = models.URLField(blank=True)
-    # vid_wk1 = models.ForeignKey(Resource, limit_choices_to={'content_type': 'video'}, on_delete=models.SET_NULL, related_name='subect_vid1', blank=True, null=True)
-    # vid_wk2 = models.ForeignKey(Resource, limit_choices_to={'content_type': 'video'}, on_delete=models.SET_NULL, related_name='subect_vid2', blank=True, null=True)
-    # vid_wk3 = models.ForeignKey(Resource, limit_choices_to={'content_type': 'video'}, on_delete=models.SET_NULL, related_name='subect_vid3', blank=True, null=True)
-    # vid_wk4 = models.ForeignKey(Resource, limit_choices_to={'content_type': 'video'}, on_delete=models.SET_NULL, related_name='subect_vid4', blank=True, null=True)
-    # vid_wk5 = models.ForeignKey(Resource, limit_choices_to={'content_type': 'video'}, on_delete=models.SET_NULL, related_name='subect_vid5', blank=True, null=True)
-    # email_wk1 = models.TextField(blank=True)
-    # email_wk2 = models.TextField(blank=True)
-    # email_wk3 = models.TextField(blank=True)
-    # email_wk4 = models.TextField(blank=True)
-    # email_wk5 = models.TextField(blank=True)
-    # email_1 = models.ForeignKey(Resource, related_name='subj_email_1', on_delete=models.SET_NULL, null=True)
-    # email_2 = models.ForeignKey(Resource, related_name='subj_email_2', on_delete=models.SET_NULL, null=True)
-    # email_3 = models.ForeignKey(Resource, related_name='subj_email_3', on_delete=models.SET_NULL, null=True)
-    # email_4 = models.ForeignKey(Resource, related_name='subj_email_4', on_delete=models.SET_NULL, null=True)
-    # email_5 = models.ForeignKey(Resource, related_name='subj_email_5', on_delete=models.SET_NULL, null=True)
+    # TODO: Do we want some ForiegnKey references for some common Resources:
+    # syllabus, teacher_plan, weekly emails and videos, etc.
     image = models.URLField(blank=True)
+    # TODO: Update to using ImageField. But what if we want exisiting image?
     # image = models.ImageField(upload_to=MEDIA_ROOT)
 
     date_added = models.DateField(auto_now_add=True)
