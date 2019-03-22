@@ -1,17 +1,19 @@
 # from __future__ import unicode_literals
 from django.db import models
 # from django.utils.translation import ugettext_lazy as _
-from datetime import date, datetime, timedelta
-# from django.contrib.auth import get_user_model
-# User = get_user_model()
-from django.conf import settings
+from datetime import date, timedelta
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from decimal import Decimal  # used for Payments model
 from payments import PurchasedItem
 from payments.models import BasePayment
+from django.conf import settings
+# from django.contrib.auth import get_user_model
+# User = get_user_model()
+# TODO: Should we be using get_user_model() instead of settings.AUTH_USER_MODEL ?
 
 # Create your models here.
+# TODO: Implement calling resource_filepath for resource uploads.
 
 # TODO: Use ForeignKey.limit_choices_to where appropriate.
 # TODO: Update to appropriatly use ForiegnKey.related_name
@@ -33,7 +35,6 @@ class Location(models.Model):
     zipcode = models.CharField(max_length=15)
     map_google = models.URLField(verbose_name="Google Maps Link")
 
-    # created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='locations')
     date_added = models.DateField(auto_now_add=True)
     date_modified = models.DateField(auto_now=True)
 
@@ -182,8 +183,6 @@ class Subject(models.Model):
         offering a "Subject". For a give Subject, there may be different
         instances of when it is offered, which will be in the Classes model.
     """
-    # id = auto-created
-
     LEVEL_CHOICES = (
         ('Beg', 'Beginning'),
         ('L2', 'Lindy 2'),
@@ -203,6 +202,7 @@ class Subject(models.Model):
         'Spec': 3,
         'L4': 4,
     }
+    # TODO: Update so that site Admin can change class level logic.
     VERSION_CHOICES = (
         ('A', 'A'),
         ('B', 'B'),
@@ -210,8 +210,9 @@ class Subject(models.Model):
         ('D', 'D'),
         ('N', 'NA'),
     )
+
+    # id = auto-created
     level = models.CharField(max_length=8, choices=LEVEL_CHOICES, default='Spec')
-    # level_group = models.ManyToManyField('self')
     # num_level = models.IntegerField(default=0, editable=False)
     version = models.CharField(max_length=1, choices=VERSION_CHOICES)
     title = models.CharField(max_length=125, default='Untitled')
@@ -219,29 +220,10 @@ class Subject(models.Model):
     num_weeks = models.PositiveSmallIntegerField(default=5)
     num_minutes = models.PositiveSmallIntegerField(default=60)
     description = models.TextField()
-    # syllabus = models.TextField(blank=True)
-    # teacher_plan = models.TextField(blank=True)
-    # video_wk1 = models.URLField(blank=True)
-    # video_wk2 = models.URLField(blank=True)
-    # video_wk3 = models.URLField(blank=True)
-    # video_wk4 = models.URLField(blank=True)
-    # video_wk5 = models.URLField(blank=True)
-    # vid_wk1 = models.ForeignKey(Resource, limit_choices_to={'content_type': 'video'}, on_delete=models.SET_NULL, related_name='subect_vid1', blank=True, null=True)
-    # vid_wk2 = models.ForeignKey(Resource, limit_choices_to={'content_type': 'video'}, on_delete=models.SET_NULL, related_name='subect_vid2', blank=True, null=True)
-    # vid_wk3 = models.ForeignKey(Resource, limit_choices_to={'content_type': 'video'}, on_delete=models.SET_NULL, related_name='subect_vid3', blank=True, null=True)
-    # vid_wk4 = models.ForeignKey(Resource, limit_choices_to={'content_type': 'video'}, on_delete=models.SET_NULL, related_name='subect_vid4', blank=True, null=True)
-    # vid_wk5 = models.ForeignKey(Resource, limit_choices_to={'content_type': 'video'}, on_delete=models.SET_NULL, related_name='subect_vid5', blank=True, null=True)
-    # email_wk1 = models.TextField(blank=True)
-    # email_wk2 = models.TextField(blank=True)
-    # email_wk3 = models.TextField(blank=True)
-    # email_wk4 = models.TextField(blank=True)
-    # email_wk5 = models.TextField(blank=True)
-    # email_1 = models.ForeignKey(Resource, related_name='subj_email_1', on_delete=models.SET_NULL, null=True)
-    # email_2 = models.ForeignKey(Resource, related_name='subj_email_2', on_delete=models.SET_NULL, null=True)
-    # email_3 = models.ForeignKey(Resource, related_name='subj_email_3', on_delete=models.SET_NULL, null=True)
-    # email_4 = models.ForeignKey(Resource, related_name='subj_email_4', on_delete=models.SET_NULL, null=True)
-    # email_5 = models.ForeignKey(Resource, related_name='subj_email_5', on_delete=models.SET_NULL, null=True)
+    # TODO: Do we want some ForiegnKey references for some common Resources:
+    # syllabus, teacher_plan, weekly emails and videos, etc.
     image = models.URLField(blank=True)
+    # TODO: Update to using ImageField. But what if we want exisiting image?
     # image = models.ImageField(upload_to=MEDIA_ROOT)
 
     date_added = models.DateField(auto_now_add=True)
@@ -311,7 +293,6 @@ class Session(models.Model):
         """
         pass
 
-    # created_by = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='subjects')
     date_added = models.DateField(auto_now_add=True)
     date_modified = models.DateField(auto_now=True)
 
@@ -341,6 +322,7 @@ class ClassOffer(models.Model):
     subject = models.ForeignKey('Subject', on_delete=models.SET_NULL, null=True)
     session = models.ForeignKey('Session', on_delete=models.SET_NULL, null=True)
     num_level = models.IntegerField(default=0, editable=False)
+    # TODO: Need a flag for Admin to approve for publishing each ClassOffer.
     # TODO: later on location will be selected from Location model
     # location = models.ForeignKey('Location', on_delete=models.CASCADE)
     # TODO: later on teachers will selected from users - teachers.
@@ -514,46 +496,6 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
 
 class PaymentManager(models.Manager):
 
-    def classReg(self, register=None, student=None, paid_by=None, **extra_fields):
-        """ This is used to set the defaults for when a user
-            is registering for classoffers, which is the most
-            common usage of our payments
-        """
-        student = student if student else Profile.objects.get(user=self.instance)
-
-        full_p, pre_pay_d, credit = 0, 0, 0
-        multiple_discount_count = 0
-        desc = ''
-        register = register if register else []
-        for item in register:
-            # TODO: Change to look up the actual class prices & discount
-            # This could be stored in Registration, or get from ClassOffer
-            desc = desc + ' ' + item.__str__
-            full_p += 65.0
-            pre_pay_d += 5.0
-            multiple_discount_count += 1
-        multiple_discount = 10.0 if multiple_discount_count > 1 else 0.0
-        # TODO: Change multiple_discount amount to not be hard-coded.
-        if student.credit > 0:
-            credit = student.credit
-            # student.credit = 0
-            # student.save()
-        full_total = full_p - multiple_discount - credit
-        pre_total = full_total - pre_pay_d
-        extra_fields.setdefault('full_price', full_p)
-        extra_fields.setdefault('pre_pay_discount', pre_pay_d)
-        extra_fields.setdefault('multiple_purchase_discount', multiple_discount)
-        extra_fields.setdefault('credit_applied', credit)
-        extra_fields.setdefault('description', desc)
-        extra_fields.setdefault('total', pre_total)
-
-        paid_by = paid_by if paid_by else student
-        user = paid_by.user
-        extra_fields.setdefault('billing_first_name', user.first_name)
-        extra_fields.setdefault('billing_last_name', user.last_name)
-        extra_fields.setdefault('billing_country_code', 'US')
-        extra_fields.setdefault('billing_email', user.email)
-
     def classRegister(self, register=None, student=None, paid_by=None, **extra_fields):
         """ This is used to set the defaults for when a user
             is registering for classoffers, which is the most
@@ -618,8 +560,7 @@ class PaymentManager(models.Manager):
 
 
 class Payment(BasePayment):
-    """ Payment Processing
-    """
+    """ Payment Processing """
     objects = PaymentManager()
     student = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True, related_name='payment')
     paid_by = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True, related_name='paid_for')

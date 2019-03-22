@@ -3,43 +3,15 @@ from django.views.generic import ListView, CreateView, DetailView, UpdateView
 # from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
-from .models import Resource, Location, Session, Subject, ClassOffer, Profile, Payment, Registration
-from .forms import RegisterForm, PaymentForm  # , ProfileForm, UserForm
-# import django_tables2 as tables
-# from django_tables2 import MultiTableMixin
-from datetime import datetime
+from .models import (Resource, Location, ClassOffer,  # ? Subject, Session,
+                     Profile, Payment, Registration)
+from .forms import RegisterForm, PaymentForm, decide_session  # , ProfileForm, UserForm
 from django.template.response import TemplateResponse  # used for Payments
 from payments import get_payment_model, RedirectNeeded  # used for Payments
 from django.db.models import Q
 
 # TODO: Clean out excessive print linees telling us where we are.
 # Create your views here.
-
-
-def decide_session(sess=None, display_date=None):
-    """ Typically we want to see the current session (returned if no params set)
-        Sometimes we want to see a future sesion.
-        Used by many views, generally those that need a list of ClassOffers
-        that a user can view, sign up for, get a check-in sheet, pay for, etc.
-    """
-    sess_data = []
-    # TODO: Deal with appropriate date input data and test it
-    if sess is None:
-        target = display_date or datetime.now()
-        sess_data = Session.objects.filter(publish_date__lte=target, expire_date__gte=target)
-    else:
-        if display_date:
-            raise SyntaxError("You can't filter by both Session and Date")
-        if sess == 'all':
-            return Session.objects.all()
-        if not isinstance(sess, list):
-            sess = [].append(sess)
-        try:
-            sess_data = Session.objects.filter(name__in=sess)
-        except TypeError:
-            sess_data = []
-    print(sess_data)
-    return sess_data  # a list of Session records, even if only 0-1 session
 
 
 class LocationListView(ListView):
@@ -57,19 +29,6 @@ class LocationDetailView(DetailView):
     model = Location
     context_object_name = 'location'
     pk_url_kwarg = 'id'
-
-    # def get_context_data(self, **kwargs):
-    #     """ Modify the context
-    #     """
-    #     context = super().get_context_data(**kwargs)
-    #     context['add_info'] = 'new info'
-    #     return context
-
-    # def get_queryset(self):
-    #     """ We want to limit what location info we get
-    #     """
-    #     location_code = get_object_or_404(Location, code=self.kwargs['code'])
-    #     return Location.objects.filter(code=location_code)
 
 
 class ClassOfferDetailView(DetailView):
@@ -99,53 +58,25 @@ class ClassOfferListView(ListView):
     template_name = 'classwork/classoffer_list.html'
     model = ClassOffer
     context_object_name = 'classoffers'
-
-    # TODO: make decide_session a method that can be imported to various models
-    # Unless all places that need this are a model that inhirit from this model
-    def decide_session(self, sess=None, display_date=None):
-        """ Typically we want to see the current session.
-            Sometimes we want to see a future sesion.
-        """
-        sess_data = []
-        # TODO: Deal with appropriate date input data and test it
-        if sess is None:
-            target = display_date or datetime.now()
-            sess_data = Session.objects.filter(publish_date__lte=target, expire_date__gte=target)
-        else:
-            if display_date:
-                raise SyntaxError("You can't filter by both Session and Date")
-            if sess == 'all':
-                return Session.objects.all()
-            if not isinstance(sess, list):
-                sess = [].append(sess)
-            try:
-                sess_data = Session.objects.filter(name__in=sess)
-            except TypeError:
-                sess_data = []
-        return sess_data  # a list of Session records, even if only 0-1 session
+    # TODO: Make more DRY between get_queryset & get_context_data. Determine
+    # which is used first and if the info is accessible to the other.
 
     def get_queryset(self):
-        """ We can limit the classes list by class level
-        """
+        """ We can limit the classes list by class level """
         display_session = None
         if 'display_session' in self.kwargs:
             display_session = self.kwargs['display_session']
-        # TODO: Change to use the general function instead of self method.
-        sess_id = [ea.id for ea in self.decide_session(sess=display_session)]
+        sess_id = [ea.id for ea in decide_session(sess=display_session)]
         return ClassOffer.objects.filter(session__in=sess_id).order_by('num_level')
 
     def get_context_data(self, **kwargs):
-        """ Get the context of the current published classes from Session table
-        """
+        """ Get the context of the current published classes from Session table """
         context = super().get_context_data(**kwargs)
-        # print(context)
-        # print('-----------------')
-        # print(kwargs)
         display_session = None
         if 'display_session' in kwargs:
             display_session = context['display_session']
         # TODO: Change to use the general function instead of self method.
-        sess_names = [ea.name for ea in self.decide_session(display_session)]
+        sess_names = [ea.name for ea in decide_session(display_session)]
         context['display_session'] = ', '.join(sess_names)
         return context
 
@@ -157,44 +88,15 @@ class Checkin(ListView):
     template_name = 'classwork/checkin.html'
     context_object_name = 'class_list'
 
-    # TODO: make decide_session a method that can be imported to various models
-    # Unless all places that need this are a model that inhirit from this model
-    def decide_session(self, sess=None, display_date=None):
-        """ Typically we want to see the current session.
-            Sometimes we want to see a future sesion.
-        """
-        sess_data = []
-        # TODO: Deal with appropriate date input data and test it
-        if sess is None:
-            target = display_date or datetime.now()
-            sess_data = Session.objects.filter(publish_date__lte=target, expire_date__gte=target)
-        else:
-            if display_date:
-                raise SyntaxError("You can't filter by both Session and Date")
-            if sess == 'all':
-                return Session.objects.all()
-            if not isinstance(sess, list):
-                sess = [].append(sess)
-            try:
-                sess_data = Session.objects.filter(name__in=sess)
-            except TypeError:
-                sess_data = []
-        return sess_data  # a list of Session records, even if only 0-1 session
-
-    # def get_all_sessions(self):
-    #     sess_list = [a.title for a in Session.objects.all()]
-    #     return sess_list
-
     def get_queryset(self):
         """ List all the students from all the classes (grouped in days, then
             in start_time order, and then alphabetical first name)
         """
-        # users = get_user_model()
         # current_classes = super().get_queryset()
         display_session = None
         if 'display_session' in self.kwargs:
             display_session = self.kwargs['display_session']
-        session = self.decide_session(sess=display_session)
+        session = decide_session(sess=display_session)
         selected_classes = ClassOffer.objects.filter(session__in=session).order_by('-class_day', 'start_time')
         class_list = [ea.students.all() for ea in selected_classes if hasattr(ea, 'students')]
         people = Profile.objects.filter(taken__in=selected_classes)
@@ -224,7 +126,7 @@ class Checkin(ListView):
         display_session = None
         if 'display_session' in kwargs:
             display_session = context['display_session']
-        sess_names = [ea.name for ea in self.decide_session(display_session)]
+        sess_names = [ea.name for ea in decide_session(display_session)]
         context['display_session'] = ', '.join(sess_names)
         return context
 
@@ -303,7 +205,6 @@ class RegisterView(CreateView):
 
         We are using the UpdateView to easily populate the user fields.
     """
-    # object_list = ''
     template_name = 'classwork/register.html'
     model = Payment
     form_class = RegisterForm
