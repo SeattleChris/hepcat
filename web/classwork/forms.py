@@ -1,9 +1,9 @@
 from django import forms
 from .models import ClassOffer, Profile, Payment, Registration, Session
-# from .views import decide_session
-from datetime import datetime
 # from django.urls import reverse_lazy
 # from django.shortcuts import render
+from datetime import datetime
+# TODO: should we be using datetime.datetime or datetime.today ?
 from django.contrib.auth import get_user_model
 User = get_user_model()
 

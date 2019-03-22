@@ -13,6 +13,7 @@ from django.conf import settings
 # TODO: Should we be using get_user_model() instead of settings.AUTH_USER_MODEL ?
 
 # Create your models here.
+# TODO: Implement calling resource_filepath for resource uploads.
 
 # TODO: Use ForeignKey.limit_choices_to where appropriate.
 # TODO: Update to appropriatly use ForiegnKey.related_name
@@ -340,6 +341,7 @@ class ClassOffer(models.Model):
     subject = models.ForeignKey('Subject', on_delete=models.SET_NULL, null=True)
     session = models.ForeignKey('Session', on_delete=models.SET_NULL, null=True)
     num_level = models.IntegerField(default=0, editable=False)
+    # TODO: Need a flag for Admin to approve for publishing each ClassOffer.
     # TODO: later on location will be selected from Location model
     # location = models.ForeignKey('Location', on_delete=models.CASCADE)
     # TODO: later on teachers will selected from users - teachers.
