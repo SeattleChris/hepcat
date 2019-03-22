@@ -2,12 +2,12 @@
 from django.db import models
 # from django.utils.translation import ugettext_lazy as _
 from datetime import date, timedelta
-from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from decimal import Decimal  # used for Payments model
 from payments import PurchasedItem
 from payments.models import BasePayment
+from django.conf import settings
 # from django.contrib.auth import get_user_model
 # User = get_user_model()
 # TODO: Should we be using get_user_model() instead of settings.AUTH_USER_MODEL ?

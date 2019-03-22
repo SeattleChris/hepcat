@@ -3,41 +3,15 @@ from django.views.generic import ListView, CreateView, DetailView, UpdateView
 # from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
-from .models import Resource, Location, Session, Subject, ClassOffer, Profile, Payment, Registration
-from .forms import RegisterForm, PaymentForm  # , ProfileForm, UserForm
-from datetime import datetime
+from .models import (Resource, Location, ClassOffer,  # ? Subject, Session,
+                     Profile, Payment, Registration)
+from .forms import RegisterForm, PaymentForm, decide_session  # , ProfileForm, UserForm
 from django.template.response import TemplateResponse  # used for Payments
 from payments import get_payment_model, RedirectNeeded  # used for Payments
 from django.db.models import Q
 
 # TODO: Clean out excessive print linees telling us where we are.
 # Create your views here.
-
-
-def decide_session(sess=None, display_date=None):
-    """ Typically we want to see the current session (returned if no params set)
-        Sometimes we want to see a future sesion.
-        Used by many views, generally those that need a list of ClassOffers
-        that a user can view, sign up for, get a check-in sheet, pay for, etc.
-    """
-    sess_data = []
-    # TODO: Test with different input data, but works with default happy path.
-    if sess is None:
-        target = display_date or datetime.now()
-        sess_data = Session.objects.filter(publish_date__lte=target, expire_date__gte=target)
-    else:
-        if display_date:
-            raise SyntaxError("You can't filter by both Session and Date")
-        if sess == 'all':
-            return Session.objects.all()
-        if not isinstance(sess, list):
-            sess = [].append(sess)
-        try:
-            sess_data = Session.objects.filter(name__in=sess)
-        except TypeError:
-            sess_data = []
-    print(sess_data)
-    return sess_data  # a list of Session records, even if only 0-1 session
 
 
 class LocationListView(ListView):

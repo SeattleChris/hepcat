@@ -1,12 +1,11 @@
 from django import forms
-# from django.contrib.auth.forms import UserCreationForm
-# from django.contrib.auth.models import User
-from .models import Session, ClassOffer, Profile, Payment, Registration
+from .models import ClassOffer, Profile, Payment, Registration, Session
 # from .views import decide_session
-from django.contrib.auth import get_user_model
 from datetime import datetime
 # from django.urls import reverse_lazy
 # from django.shortcuts import render
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 
 def decide_session(sess=None, display_date=None):
@@ -15,8 +14,9 @@ def decide_session(sess=None, display_date=None):
         Used by many views, generally those that need a list of ClassOffers
         that a user can view, sign up for, get a check-in sheet, pay for, etc.
     """
+    print('======= forms.decide_session ==========')
     sess_data = []
-    # TODO: Deal with appropriate date input data and test it
+    # TODO: Test alternative data input. Default happy path is working.
     if sess is None:
         target = display_date or datetime.now()
         sess_data = Session.objects.filter(publish_date__lte=target, expire_date__gte=target)
@@ -33,9 +33,6 @@ def decide_session(sess=None, display_date=None):
             sess_data = []
     print(sess_data)
     return sess_data  # a list of Session records, even if only 0-1 session
-
-
-User = get_user_model()
 
 
 class UserForm(forms.ModelForm):
