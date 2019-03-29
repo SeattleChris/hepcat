@@ -102,6 +102,7 @@ This is a specific subject, offered during a specific session. It includes infor
 
 ## Getting Started
 
+* Make sure you have a processing account through stripe and/or PayPal
 * clone the repo
 * make sure the file settings are correct.
 * docker-compose up --build
