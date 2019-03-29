@@ -119,7 +119,7 @@ class Resource(models.Model):
     content_type = models.CharField(max_length=15, choices=CONTENT_CHOICES)
     user_type = models.PositiveSmallIntegerField(choices=USER_CHOICES, help_text='Who is this for?')
     avail = models.PositiveSmallIntegerField(choices=PUBLISH_CHOICES, help_text='When is this resource available?')
-    expire = models.PositiveSmallIntegerField(default=0, help_text='It expires how many weeks after being published? (0 for never)')
+    expire = models.PositiveSmallIntegerField(default=0, help_text='Number of weeks it stays published? (0 for always)')
     imagepath = models.ImageField(upload_to='resource/', help_text='If an image, upload here', blank=True)
     filepath = models.FileField(upload_to='resource/', help_text='If a file, upload here', blank=True)
     link = models.CharField(max_length=255, help_text='External or Internal links go here', blank=True)
@@ -356,8 +356,8 @@ class ClassOffer(models.Model):
             return start
         shift, complement, move = self.session.max_day_shift, 0, 0
 
-        if dif < 0: complement = dif + 7
-        if dif > 0: complement = dif - 7
+        if dif < 0: complement = dif + 7  # noqa E701
+        if dif > 0: complement = dif - 7  # noqa E701
         if shift < 0:
             move = min(dif, complement)
             if move < shift:
@@ -411,7 +411,8 @@ class Profile(models.Model):
     # interest = models.ManyToManyField(Subject, related_names='interests', through='Requests')
     credit = models.FloatField(verbose_name='Class Payment Credit', default=0)
     # TODO: Impliment self-refrencing key for a 'refer-a-friend' discount.
-    # refer = models.ForeignKey(UserHC, symmetrical=False, on_delete=models.SET_NULL, null=True, blank=True, related_names='referred')
+    # refer = models.ForeignKey(User, symmetrical=False, on_delete=models.SET_NULL,
+    #                           null=True, blank=True, related_names='referred')
     date_added = models.DateField(auto_now_add=True)
     date_modified = models.DateField(auto_now=True)
 
