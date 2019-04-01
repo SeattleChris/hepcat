@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "1ad1a61b55c1f1fdd5296c5d5f01ce733319bdabbe4da11042a4a79e6cee1438"
+            "sha256": "bab0149e32efd7761692df4e01bf8dc33418e97f32ce1ae70d1015defcf0c803"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -25,10 +25,10 @@
         },
         "braintree": {
             "hashes": [
-                "sha256:82bd9f01e3b4e4fdd85980ddbb5cfadf388d38049edc6703634deaa4e3fb913a",
-                "sha256:8c51dff592ef5ecdc5b7c4132c4b5ffbca0205eedc58e04c20145fd639555ba9"
+                "sha256:04396f4d6f0119814a28956b752558c36b1dcf928bf09a811a7a1de10631cd09",
+                "sha256:e45601ac32b4cf32076c44f30af244033b38bb4ebd7be94b3c5f563758ad185d"
             ],
-            "version": "==3.51.0"
+            "version": "==3.52.0"
         },
         "certifi": {
             "hashes": [
@@ -277,6 +277,7 @@
                 "sha256:191f6c3f5b0750ab2e1410a3fedb22001b34afe351728ac0019e281415569806",
                 "sha256:a973c2225faeb062bc33e9fdc936fce9229e507bba4b34c05e2b918503b8a033"
             ],
+            "index": "pypi",
             "version": "==2.23.0"
         },
         "suds-jurko": {
@@ -304,10 +305,10 @@
     "develop": {
         "django-sass-processor": {
             "hashes": [
-                "sha256:0381585a23c0f31a387cb53cf38f744e4d97d8ac3b9b19ec423dd6bfa714ecff"
+                "sha256:5ba3568e53caf1d59573afa75d71e42c23bddbd5b48cbea831816cd72ed242f9"
             ],
             "index": "pypi",
-            "version": "==0.7.2"
+            "version": "==0.7.3"
         },
         "libsass": {
             "hashes": [

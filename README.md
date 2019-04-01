@@ -117,8 +117,9 @@ This is a specific subject, offered during a specific session. It includes infor
 * nginx
 * postgres
 * django-compressor 2.2
-* django-payments = 0.13.0
-* Pillow = 5.4.1
+* django-payments 0.13.0
+* Pillow 5.4.1
+* stripe 2.23.0
 
 Dev:
 
@@ -136,6 +137,7 @@ The following routes have been made or scaffolled (mostly in classwork app):
 | /location/         | [location_list]   | LocationListView  | /classwork/location_list.html |
 | /checkin/          | [checkin]         | Checkin           | /classwork/checkin.html       |
 | /register/         | [register]        | RegisterView      | /classwork/register.html      |
+<!-- TODO: Update the payment url and view -->
 | /payment/             | [payment]         | PaymentProcessView| /payment/payment.html      |
 | /payment/fail/<int:id>| [payment_fail]    | PaymentResultView | /payment/fail.html         |
 | /payment/done/<int:id>| [payment_success] | PaymentResultView | /payment/success.html      |

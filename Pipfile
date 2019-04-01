@@ -10,6 +10,7 @@ django-registration = "*"
 django-compressor = "*"
 django-payments = "*"
 pillow = "*"
+stripe = "*"
 
 [dev-packages]
 django-sass-processor = "*"
