@@ -137,13 +137,14 @@ The following routes have been made or scaffolled (mostly in classwork app):
 | /location/         | [location_list]   | LocationListView  | /classwork/location_list.html |
 | /checkin/          | [checkin]         | Checkin           | /classwork/checkin.html       |
 | /register/         | [register]        | RegisterView      | /classwork/register.html      |
+| /profile/             | [profile_page]    | ProfileView       | /classwork/user.html       |
+| /resource/<int:id>    | [resource_detail] | ResourceDetailView| /classwork/resource.html   |
+| /                     | [home]    | home_view (hepcat.views) | /home.view (uses base.html) |
 <!-- TODO: Update the payment url and view -->
 | /payment/             | [payment]         | PaymentProcessView| /payment/payment.html      |
 | /payment/fail/<int:id>| [payment_fail]    | PaymentResultView | /payment/fail.html         |
 | /payment/done/<int:id>| [payment_success] | PaymentResultView | /payment/success.html      |
-| /profile/             | [profile_page]    | ProfileView       | /classwork/user.html       |
-| /resource/<int:id>    | [resource_detail] | ResourceDetailView| /classwork/resource.html   |
-| /                     | [home]    | home_view (hepcat.views) | /home.view (uses base.html) |
+| /payments/               | -         |       ( payments.urls ) |
 | /admin/               | -         |       ( admin.site.urls ) |
 | **From our users app:**   |
 | /user/signup/         | ['signup']        | SignUp            | signup.html |
