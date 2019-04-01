@@ -14,7 +14,7 @@ def decide_session(sess=None, display_date=None):
         Used by many views, generally those that need a list of ClassOffers
         that a user can view, sign up for, get a check-in sheet, pay for, etc.
     """
-    print('======= forms.decide_session ==========')
+    print('======= forms function - decide_session ==========')
     sess_data = []
     # TODO: Test alternative data input. Default happy path is working.
     if sess is None:

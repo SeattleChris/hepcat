@@ -2,4 +2,8 @@
 
 {% block content %}
 <h2> We had a succesful payment! </h2>
+<p>{{ student_name }} is signed up for: {{ class_selected }}</p>
+{% if paid_by_other %}
+  <p>As paid by: {{ paid_by_name }}
+{% endif %}
 {% endblock content %}

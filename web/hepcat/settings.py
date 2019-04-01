@@ -144,8 +144,15 @@ if DEBUG:
 
 # CUSTOM Settings for Payment Processings
 
+STRIPE_KEY = os.environ.get('STRIPE_KEY', None)
+STRIPE_PUBLIC_KEY = os.environ.get('STRIPE_PUBLIC_KEY', None)
+
 PAYMENT_HOST = 'localhost:8000'
 PAYMENT_USES_SSL = False
 PAYMENT_MODEL = 'classwork.Payment'
 PAYMENT_VARIANTS = {
-    'default': ('payments.dummy.DummyProvider', {})}
+    'default': ('payments.stripe.StripeProvider', {
+        'secret_key': STRIPE_KEY,
+        'public_key': STRIPE_PUBLIC_KEY})}
+# PAYMENT_VARIANTS = {
+#     'default': ('payments.dummy.DummyProvider', {})}
