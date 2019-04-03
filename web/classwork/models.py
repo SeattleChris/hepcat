@@ -551,7 +551,7 @@ class PaymentManager(models.Manager):
             billing_last_name=user.last_name,
             billing_country_code='US',
             billing_email=user.email,
-            customer_ip_address='127.0.0.1',
+            customer_ip_address='127.0.0.1',  # TODO: Capture and use _ip_address
             variant='default',
             currency='usd',
             **extra_fields

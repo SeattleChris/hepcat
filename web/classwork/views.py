@@ -378,6 +378,7 @@ def payment_details(request, id):
     except RedirectNeeded as redirect_to:
         print('---- payment_details redirected -------')
         return redirect(str(redirect_to))
+    form.initial = {'billing_email': payment.billing_email}
     print('------ payment_details TemplateResponse ---------')
     return TemplateResponse(request, 'payment/payment.html',
                             {'form': form, 'payment': payment})

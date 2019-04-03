@@ -173,6 +173,7 @@ class RegisterForm(forms.ModelForm):
                 query_user = User.objects.filter(email=input_email, first_name=first_name, last_name=last_name)
                 if len(query_user) > 1:
                     print('MULTIPLE users with that email & name. We are using the first one.')
+                # TODO: Create Logic when more than one user has the same email, for now using first match.
                 user = query_user[0] if len(query_user) > 0 else None
                 # TODO: Above allows anyone to add the user to the class. Perhaps we should force a login.
                 if not user:
@@ -180,7 +181,7 @@ class RegisterForm(forms.ModelForm):
             # user = User.objects.find_or_create_for_anon(email=input_email, first_name=first_name, last_name=last_name)
             # TODO: What if a non-user is paying for a friend (established or new user)
         print(f'user before paid_by_other check {user}')
-        if cleaned_data.get('paid_by_other'):
+        if cleaned_data.get('paid_by_other', False):
             # We need to now get the billing info for user who is paying
             # Assign the logged in user name & email to paid_by
             paid_by = Profile.objects.get(user=user)
