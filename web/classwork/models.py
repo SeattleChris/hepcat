@@ -626,6 +626,8 @@ class Payment(BasePayment):
     # token = models.CharField(max_length=36, blank=True, default='')
     # captured_amount = models.DecimalField(
     #     max_digits=9, decimal_places=2, default='0.0')
+    # def get_form(self):
+    #     pass
 
     def get_failure_url(self):
         print('============ Payment.get_failure_url =================')
