@@ -1,4 +1,16 @@
+{% extends "generic/base.html" %}
+
+{% block head %}
+<title>Submit Payment</title>
+{% endblock head %}
+
+{% block content %}
+<h2>Select Payment</h2>
+<p>To complete your registration and payment, click your payment button below</p>
+<p>{{ payment.billing_email }} </p>
 <form action="{{ form.action }}" method="{{ form.method }}">
+    {% csrf_token %}
     {{ form.as_p }}
     <p><input type="submit" value="Proceed" /></p>
 </form>
+{% endblock content %}

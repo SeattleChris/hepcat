@@ -32,7 +32,7 @@ urlpatterns = [
     #      name='django_registration_register'),
     path('user/', include('django.contrib.auth.urls')),
     path('user/', include('users.urls')),
-    # path('payments/', include('payments.urls')),
+    path('payments/', include('payments.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # Thanks to django.contrib.auth.urls The following paths are set:

@@ -1,11 +1,11 @@
 from django.views.generic import ListView, CreateView, DetailView, UpdateView
 # from django.contrib.auth.mixins import LoginRequiredMixin
-# from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
 from .models import (Resource, Location, ClassOffer,  # ? Subject, Session,
                      Profile, Payment, Registration)
 from .forms import RegisterForm, PaymentForm, decide_session  # , ProfileForm, UserForm
+from django.shortcuts import get_object_or_404, redirect  # used for Payments
 from django.template.response import TemplateResponse  # used for Payments
 from payments import get_payment_model, RedirectNeeded  # used for Payments
 from django.db.models import Q
@@ -202,8 +202,6 @@ class RegisterView(CreateView):
         We also want to allow anonymousUser to sign up.
         We want to auto-create a user (and profile) account
         if one does not exist.
-
-        We are using the UpdateView to easily populate the user fields.
     """
     template_name = 'classwork/register.html'
     model = Payment
@@ -298,7 +296,8 @@ class RegisterView(CreateView):
     def get_success_url(self):
         print('================ get_success_url =================')
         # TODO: We will need to adjust this later.
-        url = self.test_url + str(self.object.id)
+        # url = self.test_url + str(self.object.id)
+        url = '../payment/' + str(self.object.id)
         print(url)
         return url
 
@@ -371,6 +370,20 @@ class PaymentProcessView(UpdateView):
     success_url = reverse_lazy('payment_success')
 
 
+def payment_details(request, id):
+    print('========== views function - payment_details ==============')
+    payment = get_object_or_404(get_payment_model(), id=id)
+    try:
+        form = payment.get_form(data=request.POST or None)
+    except RedirectNeeded as redirect_to:
+        print('---- payment_details redirected -------')
+        return redirect(str(redirect_to))
+    # form.initial = {'billing_email': payment.billing_email}
+    print('------ payment_details TemplateResponse ---------')
+    return TemplateResponse(request, 'payment/payment.html',
+                            {'form': form, 'payment': payment})
+
+
 class PaymentResultView(DetailView):
     """ After a payment attempt, we can have success or failure
     """
@@ -385,12 +398,13 @@ class PaymentResultView(DetailView):
         print(kwargs)
         for each in context:
             print(each)
-        # payment = context['object']  # for some reason, context['payment'] would also work
-        # context['student_name'] = f'{payment.student.first_name} {payment.student.last_name}'
-        # if payment.student is not payment.paid_by:
-        #     context['paid_by_other'] = True
-        #     context['paid_by_name'] = f'{payment.paid_by.first_name} {payment.paid_by.last_name}'
-        # context['class_selected'] = payment.description
+        payment = context['object']  # for some reason, context['payment'] would also work
+        context['student_name'] = f'{payment.student.user.first_name} {payment.student.user.last_name}'
+        if payment.student is not payment.paid_by:
+            # TODO: Check the logic of this if statement
+            context['paid_by_other'] = True
+            context['paid_by_name'] = f'{payment.paid_by.user.first_name} {payment.paid_by.user.last_name}'
+        context['class_selected'] = payment.description
         # for ea in dir(self):
         #     print(ea)
         # context['user'] = self.request.user
@@ -400,7 +414,7 @@ class PaymentResultView(DetailView):
         return context
 
     def render_to_response(self, context, **response_kwargs):
-        print('========= PaymentResultView.render_to_request ========')
+        print('========= PaymentResultView.render_to_response ========')
         print(context)
         print(response_kwargs)
         return super().render_to_response(context, **response_kwargs)

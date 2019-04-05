@@ -8,6 +8,8 @@ from decimal import Decimal  # used for Payments model
 from payments import PurchasedItem
 from payments.models import BasePayment
 from django.conf import settings
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 # from django.contrib.auth import get_user_model
 # User = get_user_model()
 # TODO: Should we be using get_user_model() instead of settings.AUTH_USER_MODEL ?
@@ -549,7 +551,9 @@ class PaymentManager(models.Manager):
             billing_last_name=user.last_name,
             billing_country_code='US',
             billing_email=user.email,
-            customer_ip_address='127.0.0.1',
+            customer_ip_address='127.0.0.1',  # TODO: Capture and use _ip_address
+            variant='default',
+            currency='usd',
             **extra_fields
             )
         # TODO; Do we really feel safe passing forward the extra_fields?
@@ -622,16 +626,22 @@ class Payment(BasePayment):
     # token = models.CharField(max_length=36, blank=True, default='')
     # captured_amount = models.DecimalField(
     #     max_digits=9, decimal_places=2, default='0.0')
+    # def get_form(self):
+    #     pass
 
     def get_failure_url(self):
-        return 'http://example.com/failure/'
+        print('============ Payment.get_failure_url =================')
+        return reverse('payment_fail', args=(self.pk,))
 
     def get_success_url(self):
-        return 'http://example.com/success/'
+        print('============ Payment.get_success_url =================')
+        # return HttpResponseRedirect(reverse('payment_success', args=(self.pk,)))
+        return reverse('payment_success', args=(self.pk,))
 
     def get_purchased_items(self):
         # you'll probably want to retrieve these from an associated order
         print('====== Payment.get_purchased_items ===========')
+        # items = (Registration.objects.filter(payment=self.id)  # .values('classoffer')
         yield PurchasedItem(name='The Hound of the Baskervilles', sku='BSKV',
                             quantity=9, price=Decimal(10), currency='USD')
 
