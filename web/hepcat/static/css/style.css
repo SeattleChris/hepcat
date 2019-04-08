@@ -15,6 +15,9 @@ header nav li:after {
 }
 
 header nav ul:before {
-    content: url('/static/assets/money.png');
+    content: url('/static/assets/logo.png');
 }
 
+header nav ul {
+    display: inline;
+}
