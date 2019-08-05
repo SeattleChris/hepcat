@@ -65,7 +65,7 @@ class ClassOfferListView(ListView):
         """ We can limit the classes list by class level """
         display_session = None
         if 'display_session' in self.kwargs:
-            display_session = self.kwargs['display_session']
+            display_session = self.kwargs['display_session']  # TODO: change to ternary assignment
         sess_id = [ea.id for ea in decide_session(sess=display_session)]
         return ClassOffer.objects.filter(session__in=sess_id).order_by('num_level')
 
@@ -74,8 +74,7 @@ class ClassOfferListView(ListView):
         context = super().get_context_data(**kwargs)
         display_session = None
         if 'display_session' in kwargs:
-            display_session = context['display_session']
-        # TODO: Change to use the general function instead of self method.
+            display_session = context['display_session']  # TODO: change to ternary assignment
         sess_names = [ea.name for ea in decide_session(display_session)]
         context['display_session'] = ', '.join(sess_names)
         return context
@@ -95,7 +94,7 @@ class Checkin(ListView):
         # current_classes = super().get_queryset()
         display_session = None
         if 'display_session' in self.kwargs:
-            display_session = self.kwargs['display_session']
+            display_session = self.kwargs['display_session']  # TODO: change to ternary assignment
         session = decide_session(sess=display_session)
         selected_classes = ClassOffer.objects.filter(session__in=session).order_by('-class_day', 'start_time')
         class_list = [ea.students.all() for ea in selected_classes if hasattr(ea, 'students')]
@@ -125,7 +124,7 @@ class Checkin(ListView):
         context = super().get_context_data(**kwargs)
         display_session = None
         if 'display_session' in kwargs:
-            display_session = context['display_session']
+            display_session = context['display_session']  # TODO: change to ternary assignment
         sess_names = [ea.name for ea in decide_session(display_session)]
         context['display_session'] = ', '.join(sess_names)
         return context
