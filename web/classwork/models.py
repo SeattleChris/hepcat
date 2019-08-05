@@ -47,31 +47,6 @@ class Location(models.Model):
         return f'<Location: {self.name} | Link: {self.map_google} >'
 
 
-def resource_filepath(instance, filename):
-    # file will be uploaded to one of these formats:
-    # MEDIA_ROOT/subject/level/avail/type/all_version_name
-    # MEDIA_ROOT/subject/level/avail/type/classoffer_version_name
-    # MEDIA_ROOT/other/type/name
-    path = ''
-    model_type = instance.related_type
-    ct = instance.content_type
-    obj = None
-    if model_type == 'Subject':
-        sess = 'all'
-        obj = instance.subject
-    elif model_type == 'ClassOffer':
-        sess = str(instance.classoffer.session.name).lower()
-        obj = instance.classoffer.subject
-    else:
-        path += f'/other/{ct}/{filename}'
-        return path
-    level = str(obj.level).lower()
-    version = str(obj.version).lower()
-    avail = str(instance.avail)
-    path += f'subject/{level}/{avail}/{ct}/{sess}_{version}_{filename}'
-    return path
-
-
 class Resource(models.Model):
     """ Subjects and ClassOffers can have various resources released to the
         students at different times while attending a ClassOffer or after
@@ -689,6 +664,31 @@ class Registration(models.Model):
     #     pass
 
     # end class Registration
+
+
+def resource_filepath(instance, filename):
+    # file will be uploaded to one of these formats:
+    # MEDIA_ROOT/subject/level/avail/type/all_version_name
+    # MEDIA_ROOT/subject/level/avail/type/classoffer_version_name
+    # MEDIA_ROOT/other/type/name
+    path = ''
+    model_type = instance.related_type
+    ct = instance.content_type
+    obj = None
+    if model_type == 'Subject':
+        sess = 'all'
+        obj = instance.subject
+    elif model_type == 'ClassOffer':
+        sess = str(instance.classoffer.session.name).lower()
+        obj = instance.classoffer.subject
+    else:
+        path += f'/other/{ct}/{filename}'
+        return path
+    level = str(obj.level).lower()
+    version = str(obj.version).lower()
+    avail = str(instance.avail)
+    path += f'subject/{level}/{avail}/{ct}/{sess}_{version}_{filename}'
+    return path
 
 
 # end models.py

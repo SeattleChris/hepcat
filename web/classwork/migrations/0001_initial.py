@@ -2,6 +2,7 @@
 
 from django.db import migrations, models
 import django.db.models.deletion
+from django.conf import settings
 
 
 class Migration(migrations.Migration):
@@ -9,6 +10,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
+        ('users', '0001_initial'),
     ]
 
     operations = [
@@ -64,31 +66,119 @@ class Migration(migrations.Migration):
                 ('num_weeks', models.PositiveSmallIntegerField(default=5)),
                 ('num_minutes', models.PositiveSmallIntegerField(default=60)),
                 ('description', models.TextField()),
-                ('syllabus', models.TextField(blank=True)),
-                ('teacher_plan', models.TextField(blank=True)),
-                ('video_wk1', models.URLField(blank=True)),
-                ('video_wk2', models.URLField(blank=True)),
-                ('video_wk3', models.URLField(blank=True)),
-                ('video_wk4', models.URLField(blank=True)),
-                ('video_wk5', models.URLField(blank=True)),
-                ('email_wk1', models.TextField(blank=True)),
-                ('email_wk2', models.TextField(blank=True)),
-                ('email_wk3', models.TextField(blank=True)),
-                ('email_wk4', models.TextField(blank=True)),
-                ('email_wk5', models.TextField(blank=True)),
                 ('image', models.URLField(blank=True)),
                 ('date_added', models.DateField(auto_now_add=True)),
                 ('date_modified', models.DateField(auto_now=True)),
             ],
         ),
+        migrations.CreateModel(
+            name='Profile',
+            fields=[
+                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to=settings.AUTH_USER_MODEL)),
+                ('bio', models.TextField(blank=True, max_length=500)),
+                ('level', models.IntegerField(default=0, verbose_name='skill level')),
+                ('credit', models.FloatField(default=0, verbose_name='Class Payment Credit')),
+                ('date_added', models.DateField(auto_now_add=True)),
+                ('date_modified', models.DateField(auto_now=True)),
+            ],
+        ),
+        migrations.CreateModel(
+            name='Registration',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('classoffer', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='classwork.ClassOffer')),
+                ('student', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='classwork.Profile')),
+                ('paid', models.BooleanField(default=False)),
+            ],
+        ),
+        migrations.CreateModel(
+            name='Payment',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('variant', models.CharField(max_length=255)),
+                ('status', models.CharField(choices=[('waiting', 'Waiting for confirmation'), ('preauth', 'Pre-authorized'), ('confirmed', 'Confirmed'), ('rejected', 'Rejected'), ('refunded', 'Refunded'), ('error', 'Error'), ('input', 'Input')], default='waiting', max_length=10)),
+                ('fraud_status', models.CharField(choices=[('unknown', 'Unknown'), ('accept', 'Passed'), ('reject', 'Rejected'), ('review', 'Review')], default='unknown', max_length=10, verbose_name='fraud check')),
+                ('fraud_message', models.TextField(blank=True, default='')),
+                ('created', models.DateTimeField(auto_now_add=True)),
+                ('modified', models.DateTimeField(auto_now=True)),
+                ('transaction_id', models.CharField(blank=True, max_length=255)),
+                ('currency', models.CharField(max_length=10)),
+                ('total', models.DecimalField(decimal_places=2, default='0.0', max_digits=9)),
+                ('delivery', models.DecimalField(decimal_places=2, default='0.0', max_digits=9)),
+                ('tax', models.DecimalField(decimal_places=2, default='0.0', max_digits=9)),
+                ('description', models.TextField(blank=True, default='')),
+                ('billing_first_name', models.CharField(blank=True, max_length=256)),
+                ('billing_last_name', models.CharField(blank=True, max_length=256)),
+                ('billing_address_1', models.CharField(blank=True, max_length=256)),
+                ('billing_address_2', models.CharField(blank=True, max_length=256)),
+                ('billing_city', models.CharField(blank=True, max_length=256)),
+                ('billing_postcode', models.CharField(blank=True, max_length=256)),
+                ('billing_country_code', models.CharField(blank=True, max_length=2)),
+                ('billing_country_area', models.CharField(blank=True, max_length=256)),
+                ('billing_email', models.EmailField(blank=True, max_length=254)),
+                ('customer_ip_address', models.GenericIPAddressField(blank=True, null=True)),
+                ('extra_data', models.TextField(blank=True, default='')),
+                ('message', models.TextField(blank=True, default='')),
+                ('token', models.CharField(blank=True, default='', max_length=36)),
+                ('captured_amount', models.DecimalField(decimal_places=2, default='0.0', max_digits=9)),
+                ('credit_applied', models.DecimalField(decimal_places=2, default='0.0', max_digits=9)),
+                ('full_price', models.DecimalField(decimal_places=2, default='0.0', max_digits=9)),
+                ('multiple_purchase_discount', models.DecimalField(decimal_places=2, default='0.0', max_digits=9)),
+                ('pre_pay_discount', models.DecimalField(decimal_places=2, default='0.0', max_digits=9)),
+            ],
+            options={
+                'abstract': False,
+            },
+        ),
+        migrations.CreateModel(
+            name='Resource',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('title', models.CharField(max_length=60)),
+                ('description', models.TextField(blank=True)),
+                ('related_type', models.CharField(choices=[('Subject', 'Subject'), ('ClassOffer', 'ClassOffer'), ('Other', 'Other')], default='Subject', max_length=15)),
+                ('user_type', models.PositiveSmallIntegerField(choices=[(1, 'Student'), (2, 'Teacher'), (4, 'Admin'), (8, 'Public')], help_text='Who is this for?')),
+                ('content_type', models.CharField(choices=[('url', 'External Link'), ('file', 'Formatted Text File'), ('text', 'Plain Text'), ('video', 'Video file on our site'), ('image', 'Image file on our site'), ('link', 'Webpage on our site'), ('email', 'Email file')], max_length=15)),
+                ('text', models.TextField(blank=True, help_text='Text chunk used in page or email publication')),
+                ('link', models.CharField(blank=True, help_text='External or Internal links go here', max_length=255)),
+                ('filepath', models.FileField(help_text='If a file, upload here', null=True, upload_to='resource/')),
+                ('imagepath', models.ImageField(blank=True, help_text='If an image, upload here', upload_to='resource/')),
+                ('avail', models.PositiveSmallIntegerField(choices=[(0, 'On Sign-up, before week 1'), (1, 'After week 1'), (2, 'After week 2'), (3, 'After week 3'), (4, 'After week 4'), (5, 'After week 5'), (200, 'After completion')], help_text='When is this resource available?')),
+                ('expire', models.PositiveSmallIntegerField(default=0, help_text='Number of weeks it stays published? (0 for always)')),
+                ('date_added', models.DateField(auto_now_add=True)),
+                ('date_modified', models.DateField(auto_now=True)),
+                ('classoffer', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='classwork.ClassOffer')),
+                ('subject', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='classwork.Subject')),
+            ],
+        ),
+        migrations.AddField(
+            model_name='payment',
+            name='paid_by',
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='paid_for', to='classwork.Profile'),
+        ),
+        migrations.AddField(
+            model_name='payment',
+            name='student',
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='classwork.Profile'),
+        ),
+        migrations.AddField(
+            model_name='profile',
+            name='taken',
+            field=models.ManyToManyField(related_name='students', through='classwork.Registration', to='classwork.ClassOffer'),
+        ),
         migrations.AddField(
             model_name='classoffer',
             name='session',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='classwork.Session'),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='classwork.Session'),
         ),
         migrations.AddField(
             model_name='classoffer',
             name='subject',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='classwork.Subject'),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='classwork.Subject'),
+        ),
+        migrations.AddField(
+            model_name='registration',
+            name='payment',
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='classwork.ClassOffer'),
         ),
     ]
