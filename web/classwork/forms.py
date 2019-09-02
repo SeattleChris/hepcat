@@ -54,11 +54,11 @@ class ProfileForm(forms.ModelForm):
 
 
 class RegisterForm(forms.ModelForm):
-    """ This is where exisiting and even new users/students can sign up for
+    """ This is where existing and even new users/students can sign up for
         a ClassOffer
     """
     # TODO: Create the workflow for when (if) the user wants to fill out the
-    # registeration form for someone else,
+    # registration form for someone else,
 
     # Find the acceptable ClassOffers to show
     class_choices = ClassOffer.objects.filter(session__in=decide_session())

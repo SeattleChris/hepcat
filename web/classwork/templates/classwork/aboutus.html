@@ -1,0 +1,16 @@
+{% extends "generic/base.html" %}
+
+{% block head %}
+<title>About Us</title>
+{% endblock head %}
+
+{% block content %}
+<h1>About Us</h1>
+<p> {{ profiles.business_about }}</p>
+{% for profile in profiles %}
+  <h2>{{ profile }}</h2>
+  <p>{{ profile.bio }}</p>
+  <hr />
+{% endfor %}
+
+{% endblock content %}

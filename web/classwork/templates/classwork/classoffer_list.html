@@ -1,5 +1,8 @@
 {% extends "generic/base.html" %}
 
+{% block head}
+<title>Swing Dance - Lindy Hop Classes</title>
+{% endblock head %}
 
 {% block content %}
 <h2>Scheduled Class Offers</h2>
@@ -11,6 +14,7 @@
       <li>{{ classoffer.start_date }} - {{ classoffer.end_date }}</li>
       <li>Taught by: {{ classoffer.teachers }} </li>
     </ul>
+    <p><a href="{% url 'classoffer_detail' id=classoffer.id %}">More Details</a></p>
     <hr />
   {% endfor %}
   <p>End of list of Class Offers</p>

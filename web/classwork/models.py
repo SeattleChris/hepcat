@@ -18,8 +18,8 @@ from django.urls import reverse
 # TODO: Implement calling resource_filepath for resource uploads.
 
 # TODO: Use ForeignKey.limit_choices_to where appropriate.
-# TODO: Update to appropriatly use ForiegnKey.related_name
-# TODO: Decide if any ForiegnKey should actually be ManytoManyField (incl above)
+# TODO: Update to appropriately use ForeignKey.related_name
+# TODO: Decide if any ForeignKey should actually be ManytoManyField (incl above)
 # TODO: Add a field for "draft" vs. ready to publish for ClassOffer, Subject, Session?
 # TODO: Add @staff_member_required decorator to admin views?
 
@@ -56,6 +56,7 @@ class Resource(models.Model):
     """
     # TODO: Make validation checks on new Resource instances
     # TODO: does it require an admin/teacher response before released?
+    # TODO: Add sending email feature.
 
     MODEL_CHOICES = (
         ('Subject', 'Subject'),
@@ -197,10 +198,10 @@ class Subject(models.Model):
     num_weeks = models.PositiveSmallIntegerField(default=5)
     num_minutes = models.PositiveSmallIntegerField(default=60)
     description = models.TextField()
-    # TODO: Do we want some ForiegnKey references for some common Resources:
+    # TODO: Do we want some ForeignKey references for some common Resources:
     # syllabus, teacher_plan, weekly emails and videos, etc.
     image = models.URLField(blank=True)
-    # TODO: Update to using ImageField. But what if we want exisiting image?
+    # TODO: Update to using ImageField. But what if we want existing image?
     # image = models.ImageField(upload_to=MEDIA_ROOT)
 
     date_added = models.DateField(auto_now_add=True)
@@ -383,13 +384,14 @@ class Profile(models.Model):
         student or a staff member.
     """
     # TODO: Do we want different Profile models for staff vs. students?
+    # TODO: Allow users to modify their profile.
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True)
     bio = models.TextField(max_length=500, blank=True)
     level = models.IntegerField(verbose_name='skill level', default=0)
     taken = models.ManyToManyField(ClassOffer, related_name='students', through='Registration')
     # interest = models.ManyToManyField(Subject, related_names='interests', through='Requests')
     credit = models.FloatField(verbose_name='Class Payment Credit', default=0)
-    # TODO: Impliment self-refrencing key for a 'refer-a-friend' discount.
+    # TODO: Implement self-referencing key for a 'refer-a-friend' discount.
     # refer = models.ForeignKey(User, symmetrical=False, on_delete=models.SET_NULL,
     #                           null=True, blank=True, related_names='referred')
     date_added = models.DateField(auto_now_add=True)
