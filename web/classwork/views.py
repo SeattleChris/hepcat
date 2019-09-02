@@ -10,7 +10,7 @@ from django.template.response import TemplateResponse  # used for Payments
 from payments import get_payment_model, RedirectNeeded  # used for Payments
 from django.db.models import Q
 
-# TODO: Clean out excessive print linees telling us where we are.
+# TODO: Clean out excessive print lines telling us where we are.
 # Create your views here.
 
 

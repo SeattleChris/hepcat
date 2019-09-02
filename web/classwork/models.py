@@ -244,6 +244,7 @@ class Session(models.Model):
     max_day_shift = models.SmallIntegerField(verbose_name='Number of days other classes are away from Main Class')
     num_weeks = models.PositiveSmallIntegerField(default=5)
     # TODO: Later on we will do some logic to auto-populate the publish and expire dates
+    # TODO: Does the session settings need to account for mid-session break weeks?
     publish_date = models.DateField(blank=True)
     expire_date = models.DateField(blank=True)
     # TODO: Make sure class session publish times can NOT overlap
@@ -268,6 +269,7 @@ class Session(models.Model):
         """ Query for the Session in DB that comes before the current Session.
             Return this previous Session expire_date.
         """
+        # TODO: Get the previous session due date. Helps to compute expire_date.
         pass
 
     date_added = models.DateField(auto_now_add=True)
@@ -627,7 +629,7 @@ class Payment(BasePayment):
 
 
 class Registration(models.Model):
-    """ This is an intermediary model refrienced by a user profile model
+    """ This is an intermediary model referenced by a user profile model
         so that we can see which students are enrolled in a ClassOffer
     """
     student = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True)
