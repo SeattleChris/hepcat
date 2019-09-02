@@ -2,13 +2,14 @@ from django.views.generic import ListView, CreateView, DetailView, UpdateView
 # from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
-from .models import (Resource, Location, ClassOffer,  # ? Subject, Session,
+from .models import (SiteContent, Resource, Location, ClassOffer,  # ? Subject, Session,
                      Profile, Payment, Registration)
 from .forms import RegisterForm, PaymentForm, decide_session  # , ProfileForm, UserForm
 from django.shortcuts import get_object_or_404, redirect  # used for Payments
 from django.template.response import TemplateResponse  # used for Payments
 from payments import get_payment_model, RedirectNeeded  # used for Payments
 from django.db.models import Q
+from django.core.exceptions import ObjectDoesNotExist
 User = get_user_model()
 
 # TODO: Clean out excessive print lines telling us where we are.
@@ -23,12 +24,18 @@ class AboutUsListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['business_about'] = 'About this business'  # TODO: add a lookup for this info
+        try:
+            context['business_about'] = SiteContent.objects.get(name='business_about').text
+        except ObjectDoesNotExist:
+            context['business_about'] = ''
+            print('Object Does Not Exist')
         return context
 
     def get_queryset(self):
         all = super().get_queryset()
+        # TODO: only retrieve the staff profiles we want.
         # Profile.objects.filter()
+        # TODO: sort them in some desired order.
         return all
 
     # end AboutUs
@@ -99,8 +106,7 @@ class ClassOfferListView(ListView):
 
 
 class Checkin(ListView):
-    """ This is a report for which students are in which classes.
-    """
+    """ This is a report for which students are in which classes. """
     model = ClassOffer
     template_name = 'classwork/checkin.html'
     context_object_name = 'class_list'
@@ -137,8 +143,7 @@ class Checkin(ListView):
         return selected_classes
 
     def get_context_data(self, **kwargs):
-        """ Get the context of the current, or selected, class session student list
-        """
+        """ Get the context of the current, or selected, class session student list """
         context = super().get_context_data(**kwargs)
         display_session = None
         if 'display_session' in kwargs:

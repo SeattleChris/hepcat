@@ -24,6 +24,23 @@ from django.urls import reverse
 # TODO: Add @staff_member_required decorator to admin views?
 
 
+class SiteContent(models.Model):
+    """ Public content for different sections of the site. """
+    # id = auto-created
+    name = models.CharField(max_length=120, help_text='Descriptive name used to find this content')
+    text = models.TextField(blank=True, help_text='Text chunk used in page or email publication')
+
+    date_added = models.DateField(auto_now_add=True)
+    date_modified = models.DateField(auto_now=True)
+    # end class SiteContent
+
+    def __str__(self):
+        return f'{self.name}'
+
+    def __repr__(self):
+        return f'<SiteContent: {self.name} | Modified: {self.date_modified} >'
+
+
 class Location(models.Model):
     """ ClassOffers may be at various locations.
         This stores information about each location.
@@ -122,9 +139,7 @@ class Resource(models.Model):
     #     return content_path[self.content_type]
 
     def publish(self, classoffer):
-        """ Returns Bool if this resource is available for someone who
-            attended a given classoffer.
-        """
+        """ Bool if this resource is available for users who attended a given classoffer. """
         pub_delay = 3
         week = self.avail if self.avail != 200 else classoffer.subject.num_weeks
         delay = pub_delay+7*week
@@ -556,15 +571,11 @@ class Payment(BasePayment):
 
     @property
     def full_total(self):
-        """ This is the amount owed if they do not pay before
-            the pre-paid discount deadline
-        """
+        """ Amount owed if they do not pay before the pre-paid discount deadline """
         return self.full_price - self.multiple_purchase_discount - self.credit_applied
 
     def pre_total(self):
-        """ This is the computed total if they pay before
-            the pre-paid deadline
-        """
+        """ Computed total if they pay before the pre-paid deadline """
         return self.full_total - self.pre_pay_discount
 
     # variant = models.CharField(max_length=255)
