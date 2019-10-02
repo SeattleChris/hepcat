@@ -6,14 +6,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <link rel="stylesheet" href="{% static 'css/../../static/css/normalize.css' %}">
-  <link rel="stylesheet" href="{% static 'css/../../static/css/style.css' %}">
+  <link rel="stylesheet" href="{% static 'css/normalize.css' %}">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
   {% block head %}
   <title>Swing Dance - Lindy Hop Classes!</title>
   {% endblock %}
 </head>
 <body>
   <header>
+    <h1><span>Seattle</span> Swing</h1>
     <nav>
       <ul>
         <li><a href="{% url 'home' %}">home</a></li>
@@ -39,14 +40,17 @@
       </ul>
       {% endif %}
     </nav>
-    {%if user.is_authenticated %}
-    <p>Welcome {{ user.username }}</p>
-    {% endif %}
-    {% if user.is_superuser %}
-    <p>Super User is Here</p>
-    {% endif %}
-</header>
+  </header>
+  <aside>
+    <img src="{% static 'assets/space-needle.png' %}" alt="Seattle Space Needle" />
+  </aside>
   <main>
+      {%if user.is_authenticated %}
+      <p>Welcome {{ user.username }}</p>
+      {% endif %}
+      {% if user.is_superuser %}
+      <p>Super User is Here</p>
+      {% endif %}
     {% block content %}
     <h3>No Content</h3>
     {% endblock %}
