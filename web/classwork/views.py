@@ -2,29 +2,56 @@ from django.views.generic import ListView, CreateView, DetailView, UpdateView
 # from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
-from .models import (Resource, Location, ClassOffer,  # ? Subject, Session,
+from .models import (SiteContent, Resource, Location, ClassOffer,  # ? Subject, Session,
                      Profile, Payment, Registration)
 from .forms import RegisterForm, PaymentForm, decide_session  # , ProfileForm, UserForm
 from django.shortcuts import get_object_or_404, redirect  # used for Payments
 from django.template.response import TemplateResponse  # used for Payments
 from payments import get_payment_model, RedirectNeeded  # used for Payments
 from django.db.models import Q
+from django.core.exceptions import ObjectDoesNotExist
+User = get_user_model()
 
-# TODO: Clean out excessive print linees telling us where we are.
+# TODO: Clean out excessive print lines telling us where we are.
 # Create your views here.
 
 
+class AboutUsListView(ListView):
+    """ Display details about Business and Staff """
+    template_name = 'classwork/aboutus.html'
+    model = Profile
+    context_object_name = 'profiles'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        try:
+            context['business_about'] = SiteContent.objects.get(name='business_about').text
+        except ObjectDoesNotExist:
+            context['business_about'] = ''
+            print('Object Does Not Exist')
+        return context
+
+    def get_queryset(self):
+        all = super().get_queryset()
+        # TODO: only retrieve the staff profiles we want.
+        # Profile.objects.filter()
+        # TODO: sort them in some desired order.
+        return all
+
+    # end AboutUs
+
+
 class LocationListView(ListView):
-    """ Display all the Locations that we have stored
-    """
+    """ Display all the Locations that we have stored """
+    # TODO: Should we only list them if a published ClassOffer has them listed?
+    # TODO: Should we add a publish flag in the DB for each location?
     template_name = 'classwork/location_list.html'
     model = Location
     context_object_name = 'locations'
 
 
 class LocationDetailView(DetailView):
-    """ Display information for a location
-    """
+    """ Display information for a location """
     template_name = 'classwork/location_detail.html'
     model = Location
     context_object_name = 'location'
@@ -32,16 +59,14 @@ class LocationDetailView(DetailView):
 
 
 class ClassOfferDetailView(DetailView):
-    """ Sometimes we want to show more details for a given class offering
-    """
-    template_name = 'classwork/detail.html'
+    """ Sometimes we want to show more details for a given class offering """
+    template_name = 'classwork/classofer_detail.html'
     model = ClassOffer
     context_object_name = 'classoffer'
     pk_url_kwarg = 'id'
 
     def get_context_data(self, **kwargs):
-        """ Modify the context
-        """
+        """ Modify the context """
         context = super().get_context_data(**kwargs)
         # context['added_info'] =
         return context
@@ -81,8 +106,7 @@ class ClassOfferListView(ListView):
 
 
 class Checkin(ListView):
-    """ This is a report for which students are in which classes.
-    """
+    """ This is a report for which students are in which classes. """
     model = ClassOffer
     template_name = 'classwork/checkin.html'
     context_object_name = 'class_list'
@@ -119,8 +143,7 @@ class Checkin(ListView):
         return selected_classes
 
     def get_context_data(self, **kwargs):
-        """ Get the context of the current, or selected, class session student list
-        """
+        """ Get the context of the current, or selected, class session student list """
         context = super().get_context_data(**kwargs)
         display_session = None
         if 'display_session' in kwargs:
@@ -130,9 +153,6 @@ class Checkin(ListView):
         return context
 
     # end class Checkin
-
-
-User = get_user_model()
 
 
 class ResourceDetailView(DetailView):
@@ -384,8 +404,7 @@ def payment_details(request, id):
 
 
 class PaymentResultView(DetailView):
-    """ After a payment attempt, we can have success or failure
-    """
+    """ After a payment attempt, we can have success or failure """
     template_name = 'payment/incomplete.html'
     model = Payment
     context_object_name = 'payment'
@@ -417,13 +436,3 @@ class PaymentResultView(DetailView):
         print(context)
         print(response_kwargs)
         return super().render_to_response(context, **response_kwargs)
-
-
-# def payment_details(request, payment_id):
-#     payment = get_object_or_404(get_payment_model(), id=payment_id)
-#     try:
-#         form = payment.get_form(data=request.POST or None)
-#     except RedirectNeeded as redirect_to:
-#         return redirect(str(redirect_to))
-#     return TemplateResponse(request, 'payment.html',
-#                             {'form': form, 'payment': payment})

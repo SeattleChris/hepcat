@@ -128,7 +128,7 @@ Dev:
 
 ## API
 
-The following routes have been made or scaffolled (mostly in classwork app):
+The following routes have been made or scaffolded (mostly in classwork app):
 
 | **Route**          | **Path Name**     | **View**          | **Template**  |
 | -------------------| ----------------- | ----------------- | ------------- |
@@ -140,7 +140,6 @@ The following routes have been made or scaffolled (mostly in classwork app):
 | /profile/             | [profile_page]    | ProfileView       | /classwork/user.html       |
 | /resource/<int:id>    | [resource_detail] | ResourceDetailView| /classwork/resource.html   |
 | /                     | [home]    | home_view (hepcat.views) | /home.view (uses base.html) |
-<!-- TODO: Update the payment url and view -->
 | /payment/             | [payment]         | PaymentProcessView| /payment/payment.html      |
 | /payment/fail/<int:id>| [payment_fail]    | PaymentResultView | /payment/fail.html         |
 | /payment/done/<int:id>| [payment_success] | PaymentResultView | /payment/success.html      |
@@ -157,5 +156,6 @@ The following routes have been made or scaffolled (mostly in classwork app):
 | /user/reset/<uidb64>/<token>/|[name='password_reset_confirm']|-|/django_registration/?|
 | /user/reset/done/     | [name='password_reset_complete'] |-| /django_registration/ ? |
 
+<!-- TODO: Update the payment url and view -->
 <!-- /user/register/         django_registration one_step.urls -->
 <!-- /user/                  django.contrib.auth.urls -->

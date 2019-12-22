@@ -10,7 +10,7 @@ User = get_user_model()
 
 def decide_session(sess=None, display_date=None):
     """ Typically we want to see the current session (returned if no params set)
-        Sometimes we want to see a future sesion.
+        Sometimes we want to see a future session.
         Used by many views, generally those that need a list of ClassOffers
         that a user can view, sign up for, get a check-in sheet, pay for, etc.
     """
@@ -54,11 +54,11 @@ class ProfileForm(forms.ModelForm):
 
 
 class RegisterForm(forms.ModelForm):
-    """ This is where exisiting and even new users/students can sign up for
+    """ This is where existing and even new users/students can sign up for
         a ClassOffer
     """
     # TODO: Create the workflow for when (if) the user wants to fill out the
-    # registeration form for someone else,
+    # registration form for someone else,
 
     # Find the acceptable ClassOffers to show
     class_choices = ClassOffer.objects.filter(session__in=decide_session())

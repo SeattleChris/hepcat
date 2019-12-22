@@ -18,10 +18,27 @@ from django.urls import reverse
 # TODO: Implement calling resource_filepath for resource uploads.
 
 # TODO: Use ForeignKey.limit_choices_to where appropriate.
-# TODO: Update to appropriatly use ForiegnKey.related_name
-# TODO: Decide if any ForiegnKey should actually be ManytoManyField (incl above)
+# TODO: Update to appropriately use ForeignKey.related_name
+# TODO: Decide if any ForeignKey should actually be ManytoManyField (incl above)
 # TODO: Add a field for "draft" vs. ready to publish for ClassOffer, Subject, Session?
 # TODO: Add @staff_member_required decorator to admin views?
+
+
+class SiteContent(models.Model):
+    """ Public content for different sections of the site. """
+    # id = auto-created
+    name = models.CharField(max_length=120, help_text='Descriptive name used to find this content')
+    text = models.TextField(blank=True, help_text='Text chunk used in page or email publication')
+
+    date_added = models.DateField(auto_now_add=True)
+    date_modified = models.DateField(auto_now=True)
+    # end class SiteContent
+
+    def __str__(self):
+        return f'{self.name}'
+
+    def __repr__(self):
+        return f'<SiteContent: {self.name} | Modified: {self.date_modified} >'
 
 
 class Location(models.Model):
@@ -56,6 +73,7 @@ class Resource(models.Model):
     """
     # TODO: Make validation checks on new Resource instances
     # TODO: does it require an admin/teacher response before released?
+    # TODO: Add sending email feature.
 
     MODEL_CHOICES = (
         ('Subject', 'Subject'),
@@ -121,9 +139,7 @@ class Resource(models.Model):
     #     return content_path[self.content_type]
 
     def publish(self, classoffer):
-        """ Returns Bool if this resource is available for someone who
-            attended a given classoffer.
-        """
+        """ Bool if this resource is available for users who attended a given classoffer. """
         pub_delay = 3
         week = self.avail if self.avail != 200 else classoffer.subject.num_weeks
         delay = pub_delay+7*week
@@ -197,10 +213,10 @@ class Subject(models.Model):
     num_weeks = models.PositiveSmallIntegerField(default=5)
     num_minutes = models.PositiveSmallIntegerField(default=60)
     description = models.TextField()
-    # TODO: Do we want some ForiegnKey references for some common Resources:
+    # TODO: Do we want some ForeignKey references for some common Resources:
     # syllabus, teacher_plan, weekly emails and videos, etc.
     image = models.URLField(blank=True)
-    # TODO: Update to using ImageField. But what if we want exisiting image?
+    # TODO: Update to using ImageField. But what if we want existing image?
     # image = models.ImageField(upload_to=MEDIA_ROOT)
 
     date_added = models.DateField(auto_now_add=True)
@@ -244,6 +260,7 @@ class Session(models.Model):
     max_day_shift = models.SmallIntegerField(verbose_name='Number of days other classes are away from Main Class')
     num_weeks = models.PositiveSmallIntegerField(default=5)
     # TODO: Later on we will do some logic to auto-populate the publish and expire dates
+    # TODO: Does the session settings need to account for mid-session break weeks?
     publish_date = models.DateField(blank=True)
     expire_date = models.DateField(blank=True)
     # TODO: Make sure class session publish times can NOT overlap
@@ -268,6 +285,7 @@ class Session(models.Model):
         """ Query for the Session in DB that comes before the current Session.
             Return this previous Session expire_date.
         """
+        # TODO: Get the previous session due date. Helps to compute expire_date.
         pass
 
     date_added = models.DateField(auto_now_add=True)
@@ -381,13 +399,14 @@ class Profile(models.Model):
         student or a staff member.
     """
     # TODO: Do we want different Profile models for staff vs. students?
+    # TODO: Allow users to modify their profile.
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True)
     bio = models.TextField(max_length=500, blank=True)
     level = models.IntegerField(verbose_name='skill level', default=0)
     taken = models.ManyToManyField(ClassOffer, related_name='students', through='Registration')
     # interest = models.ManyToManyField(Subject, related_names='interests', through='Requests')
     credit = models.FloatField(verbose_name='Class Payment Credit', default=0)
-    # TODO: Impliment self-refrencing key for a 'refer-a-friend' discount.
+    # TODO: Implement self-referencing key for a 'refer-a-friend' discount.
     # refer = models.ForeignKey(User, symmetrical=False, on_delete=models.SET_NULL,
     #                           null=True, blank=True, related_names='referred')
     date_added = models.DateField(auto_now_add=True)
@@ -552,15 +571,11 @@ class Payment(BasePayment):
 
     @property
     def full_total(self):
-        """ This is the amount owed if they do not pay before
-            the pre-paid discount deadline
-        """
+        """ Amount owed if they do not pay before the pre-paid discount deadline """
         return self.full_price - self.multiple_purchase_discount - self.credit_applied
 
     def pre_total(self):
-        """ This is the computed total if they pay before
-            the pre-paid deadline
-        """
+        """ Computed total if they pay before the pre-paid deadline """
         return self.full_total - self.pre_pay_discount
 
     # variant = models.CharField(max_length=255)
@@ -627,7 +642,7 @@ class Payment(BasePayment):
 
 
 class Registration(models.Model):
-    """ This is an intermediary model refrienced by a user profile model
+    """ This is an intermediary model referenced by a user profile model
         so that we can see which students are enrolled in a ClassOffer
     """
     student = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True)

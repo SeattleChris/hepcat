@@ -1,0 +1,51 @@
+<nav>
+    <input id="sidebar__trigger" class="sidebar__trigger" type="checkbox" />
+    <label for="sidebar__trigger">
+      <span class="sidebar__button sidebar__button-open">Menu</span>
+      <span class="sidebar__button sidebar__button-close">Close</span>
+    </label>
+    <ul class="sidebar">
+      <li>Home Page</li>
+      <li>Example 1</li>
+      <li>Example 2</li>
+      <li>Example 3</li>
+      <ul>
+        <li>Example 1</li>
+        <li>Example 2</li>
+        <li>Example 3</li>
+      </ul>
+      <li>Example 1</li>
+      <li>Example 2</li>
+      <li>Example 3</li>
+    </ul>
+  </nav>
+
+  /* https://dev.to/jacobmparis/hamburger-menu-in-pure-css-mga */
+  body > nav {
+      position: absolute;
+      top: 16rem;
+  }
+  .sidebar {
+      background: #333;
+      color: white;
+      max-width: 200px;
+      transition: transform 0.5s;
+    }
+    .sidebar__trigger {
+      display: none;
+    }
+    .sidebar__trigger:checked + label > .sidebar__button-open {
+      display: none;
+    }
+    .sidebar__trigger:not(:checked) + label > .sidebar__button-close {
+      display: none;
+    }
+    .sidebar__trigger:not(:checked) ~ .sidebar {
+      transform: translateX(-100%);
+    }
+    .sidebar__button {
+      width: 300px;
+      border: 1px solid #ddf;
+      padding: 1rem;
+      border-radius: 0.25rem;
+    }

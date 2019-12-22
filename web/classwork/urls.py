@@ -1,11 +1,15 @@
 from django.urls import path
-from .views import (ClassOfferListView, payment_details,
+from .views import (AboutUsListView,
+                    ClassOfferDetailView, ClassOfferListView,
                     LocationDetailView, LocationListView,
-                    RegisterView, PaymentProcessView, PaymentResultView,
-                    Checkin, ProfileView, ResourceDetailView
+                    Checkin, RegisterView, payment_details,
+                    PaymentProcessView, PaymentResultView,
+                    ProfileView, ResourceDetailView
                     )
 # SubjectCreateView, SessionCreateView, ClassOfferCreateView,
 urlpatterns = [  # All following are in root
+    path('aboutus', AboutUsListView.as_view(), name='aboutus'),
+    path('classes/<int:id>', ClassOfferDetailView.as_view(), name='classoffer_detail'),
     path('classes/', ClassOfferListView.as_view(), name='classoffer_list'),  # Display all ClassOffers?
     path('location/<int:id>', LocationDetailView.as_view(), name='location_detail'),
     path('location/', LocationListView.as_view(), name='location_list'),

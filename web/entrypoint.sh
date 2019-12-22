@@ -10,8 +10,8 @@ cd /src
 
 echo "======================== Collect static files ========================"
 python manage.py collectstatic --noinput
-echo "======================== Skip Make migration files ========================"
-# python manage.py makemigrations --noinput
+# echo "======================== Skip Make migration files ========================"
+python manage.py makemigrations --noinput
 echo "============================= Migrate DB ============================="
 python manage.py migrate --noinput
 

@@ -83,7 +83,7 @@ class UserManagerHC(UserManager):
             raise ValueError('Superuser must have is_staff=True.')
         if extra_fields.get('is_superuser') is not True:
             raise ValueError('Superuser must have is_superuser=True.')
-        return self.set_username(self, username, email, password, **extra_fields)
+        return self.set_username(username, email, password, **extra_fields)
 
     def find_or_create_for_anon(self, email=None, possible_users=None, **kwargs):
         """ This is called when someone registers when they are not logged in.
@@ -136,6 +136,7 @@ class UserManagerHC(UserManager):
                 or get_if_only_one(UserHC, first_name=first_name, last_name=last_name) \
                 or get_if_only_one(UserHC, first_name__icontains=first_name, last_name__icontains=last_name) \
                 or None
+            # TODO: Should there be some kind of confirmation page?
             if friend:
                 return friend
         # Otherwise we create a new user and profile
