@@ -1,3 +1,4 @@
+/* * { box-sizing: border-box; } */
 body {
     background-color: #a3c2d7;  /* ccefdb 3b9c71 light=#abc9dd darker=#72a1ca middle=#92b5d1 25%=#a3c2d7  */
     /* margin: 0; */
@@ -130,7 +131,7 @@ main section:nth-child(2),
 aside,
 main
 {
-    outline: 1px solid red;
+    /* outline: 1px solid red; */
 }
 main {
     width: 100%;
@@ -162,7 +163,7 @@ main {
     justify-content: space-evenly;
     align-items: stretch;
     text-align: center;
-    /* transform: rotate(-20deg); */
+    transform: rotate(-20deg);
 }
 #stripe p.description {
     text-align: left;
@@ -172,7 +173,7 @@ main {
     width: 98%;
     margin: 0.5rem auto;
     padding: 0.25rem;
-    /* min-height: 12rem; */
+    min-height: 12rem;
     border-radius: 2rem;
     border: 0.25rem solid #d8cdbe;
 }
