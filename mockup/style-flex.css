@@ -18,6 +18,15 @@ body {
     background-color: yellow;
     z-index: -2;
 } */
+footer {
+    width: 27rem;
+    height: 5rem;
+    /* vertical-align: bottom; */
+    /* outline: 1px solid red; */
+    position: absolute;
+    /* Left: 3rem; width: 61rem; height: 66rem; Clean edge for: width: 26rem;, padding-top: 4rem;, padding-left: 5rem;*/
+    left: 2rem;  /* was 4.5rem, with width 56rem */
+}
 header {
     display: flex;
     justify-content: space-between;
@@ -106,7 +115,7 @@ header nav a { text-decoration: none; }
     padding: 0;
     align-items: stretch;
 }
-aside {
+#left-design-layout {
   /* seems 19rem  is the "natural" width with img width of 300px. */
   /* seems 12.5rem  is the "natural" width with img width of 200px. */
   width: 18.75rem;
@@ -118,7 +127,7 @@ aside {
   justify-content: flex-start; */
   /* justify-content: space-between; */
 }
-aside img {
+#left-design-layout img {
     /* align-self: flex-start; */
     width: 100%;
     /* outline: 1px solid red; */
@@ -127,7 +136,7 @@ aside img {
 main section:nth-child(2),
 /* #layout, */
 /* #header, */
-aside
+#left-design-layout
 /* main */
 {
     /* outline: 1px solid red; */
