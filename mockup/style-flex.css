@@ -109,8 +109,8 @@ header nav a { text-decoration: none; }
 aside {
   /* seems 19rem  is the "natural" width with img width of 300px. */
   /* seems 12.5rem  is the "natural" width with img width of 200px. */
-  width: 12.5rem;
-  align-self: flex-start;
+  width: 18.75rem;
+  /* align-self: flex-start; */
   /* height: 76rem; */
   /* display: inline-flex;
   flex-direction: column;
@@ -120,17 +120,17 @@ aside {
 }
 aside img {
     /* align-self: flex-start; */
-    /* width: 100%; */
+    width: 100%;
     /* outline: 1px solid red; */
 }
 #stripe,
 main section:nth-child(2),
 /* #layout, */
 /* #header, */
-aside,
-main
+aside
+/* main */
 {
-    outline: 1px solid red;
+    /* outline: 1px solid red; */
 }
 main {
     width: 100%;
@@ -143,42 +143,64 @@ main {
     background-color: #77161e;
     position: absolute;
     /* Left: 3rem; width: 61rem; height: 66rem; Clean edge for: width: 26rem;, padding-top: 4rem;, padding-left: 5rem;*/
-    left: 2rem;  /* was 4.5rem, with width 56rem */
-    width: 61rem;  /* 1180px 74rem */
-    height: 66rem;  /* 980px */
-    clip-path: polygon(3% 0%, 44% 0%, 83% 100%, 44% 100% );
+    left: 1rem;  /* was 4.5rem, with width 56rem */
+    width: 63rem;  /* 1180px 74rem */
+    height: 57.5rem;  /* 980px */
+    /* clip-path: polygon(3% 0%, 44% 0%, 83% 100%, 44% 100% ); */
+    clip-path: polygon(0% 0%, 54% 0%, 73% 100%, 50% 100% );
     z-index: -1;
 }
 #stripe {
     /* background-color: #77161e; #66050d; */
     /* width: 22rem; */
-    width: 26rem;
+    width: 23.5rem;
     /* height: 90%; */
     /* padding: 4rem 0 0 7.25rem; */
-    padding-top: 6rem;
-    padding-left: 3.5rem;
+    padding-top: 1.75rem;
+    padding-left: 0rem;  /* 3.5rem */
+    /* margin-left: 3rem; */
     display: flex;
     flex-direction: column;
     justify-content: space-evenly;
-    align-items: stretch;
+    align-items: flex-end;
     text-align: center;
+    /* transform: skew(20deg); */
+    /* transform: skew(15deg, -15deg); */
     /* transform: rotate(-20deg); */
 }
 #stripe p.description {
     text-align: left;
 }
 #stripe article {
-    align-self: flex-start;
-    width: 98%;
+    /* align-self: flex-start; */
+    /* transform: skew(-20deg); */
+    /* transform: skew(-15deg, 15deg); */
     margin: 0.5rem auto;
     padding: 0.25rem;
     /* min-height: 12rem; */
     border-radius: 2rem;
     border: 0.25rem solid #d8cdbe;
 }
+#stripe article:nth-child(1) {
+    /* width: 82%; */
+    width: 21rem;
+    margin-right: 2.5rem;
+    /* margin-left: 2.5rem; */
+}
+
 #stripe article:nth-child(2) {
+    /* margin-right: 2rem; */
+    /* width: 70%; */
+    width: 18.25rem;
+    margin-left: 7.25rem;
     transform: rotate(-3deg);
 }
+#stripe article:nth-child(3) {
+    /* width: 52%; */
+    width: 13.5rem;
+    margin-left: 14.75rem;
+}
+
 main section:nth-child(2) {
     /* align-self: flex-start; */
     display: flex;
