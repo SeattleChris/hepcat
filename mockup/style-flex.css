@@ -168,7 +168,7 @@ main {
     align-self: flex-start;
     width: 95%;
     margin: 0.5rem auto;
-    height: 12rem;
+    min-height: 12rem;
     border-radius: 2rem;
     border: 0.25rem solid #d8cdbe;
 }
