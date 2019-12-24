@@ -3,7 +3,7 @@ body {
     /* margin: 0; */
     /* padding: 0; */
     /* overflow: hidden; */
-    width: 95%;
+    width: 96%;
     height: 100%;
     margin: 0 auto;
     /* font-family: 'Raleway', sans-serif; */
@@ -32,7 +32,6 @@ header {
     justify-content: space-between;
     align-items: flex-start;
     margin: 0; padding: 0; width: 100%;
-    outline: 1px solid red;
 }
 header h1 {
     align-self: flex-start;
@@ -45,6 +44,12 @@ header h1 {
 #swing::before {
 content: attr(data-text);
 padding: 0 2.5em;
+}
+header img {
+    width: 150px;
+    /* height: auto; */
+    /* border-radius: 1rem; */
+
 }
  /****** Menu ************************/
 input#menu-toggle[type=checkbox] {
@@ -84,28 +89,29 @@ header nav {
     margin: 0;
     text-align: right;
 }
-/****** End Menu ************************/
-/* @media screen and (min-width: 1133px) {
+/* ***** End Menu *********************** */
+/*
+@media screen and (min-width: 1133px) {
     header nav {
         align-self: flex-end;
         margin: 0;
         display: flex;
         flex-direction: column;
         align-items: flex-end;
-        /* justify-content: flex-start; */
-        /* text-align: right; */
+        /* justify-content: flex-start; */ /*
+        /* text-align: right; */ /*
     }
 } */
+
 header nav ul { display: block; margin: 0; }
 header nav li { display: block; text-align: right; }
 header nav .user-login li { display: inline-block; }
 header nav .user-login li:before { content: ' |'; }
 header nav a { text-decoration: none; }
 #layout { display: flex; width: 100%; margin: 0; padding: 0; align-items: stretch;
-    outline: 1px solid red;
 }
 aside {
-  width: 11rem;
+  width: 11rem;  /* it seems 19rem is the "natural" width */
   align-self: flex-start;
   /* height: 76rem; */
   /* display: inline-flex;
@@ -118,35 +124,67 @@ aside img {
     /* align-self: flex-start; */
     width: 100%;
 }
+#stripe,
+main section:nth-child(2),
+/* #layout, */
+/* #header, */
+aside,
+main
+{
+    outline: 1px solid red;
+
+}
 main {
     width: 100%;
     /* height: 76rem; */
     display: flex;
     align-content: space-between;
-    outline: 1px solid red;
+    justify-content: flex-end;
+
 }
 #stripe {
-    width: 20rem;
+    /* background-color: #77161e; #66050d; */
+    width: 22rem;
+    /* height: 90%; */
     padding: 4rem 0 0 7.25rem;
     display: flex;
     flex-direction: column;
+    justify-content: space-evenly;
     align-items: stretch;
-    transform: rotate(-20deg);
-    outline: 1px solid red;
+    /* transform: rotate(-20deg); */
 }
 #stripe article {
     align-self: flex-start;
     width: 95%;
-    margin: 0.5rem 0;
+    margin: 0.5rem auto;
     height: 12rem;
+    border-radius: 2rem;
     border: 0.25rem solid #d8cdbe;
 }
 #stripe article:nth-child(2) {
     transform: rotate(-3deg);
   }
 main section:nth-child(2) {
-    align-self: flex-start;
-    /* width: 36rem; */
-    /* width: 100%; */
-    outline: 1px solid red;
+    /* align-self: flex-start; */
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    /* text-align: right; */
+    width: 33.5rem;  /* width: stripe ok at >=20rem, video ok at >=24rem,  between 20rem or 24rem and 26rem probably */
+}
+iframe {
+    /* 35rem, 18.58rem */
+    /* width 31rem, height: 23rem, 2rem border-radius */
+    width: 31rem;
+    height: 23rem;
+    border-radius: 2rem;
+}
+
+main section:nth-child(2) article:last-child {
+    width: 80%;
+}
+
+main section:nth-child(2) article:last-child p:last-child{
+    padding-left: 13%;
+    /* width: 90%; */
 }
