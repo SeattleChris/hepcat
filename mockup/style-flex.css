@@ -3,7 +3,8 @@ body {
     /* margin: 0; */
     /* padding: 0; */
     /* overflow: hidden; */
-    width: 96%;
+    width: 98%;
+    min-width: 64.5rem;
     max-width: 71.8rem;
     /* height: 100%; */
     margin: 0 auto;
@@ -19,21 +20,14 @@ body {
     background-color: yellow;
     z-index: -2;
 } */
-footer {
-    width: 23rem;
-    height: 5rem;
-    /* vertical-align: bottom; */
-    /* outline: 1px solid red; */
-    /* position: absolute; */
-    /* Left: 3rem; width: 61rem; height: 66rem; Clean edge for: width: 26rem;, padding-top: 4rem;, padding-left: 5rem;*/
-    /* left: 2rem; */
-    /* bottom: 1rem; */
-}
+
 header {
+    order: 1;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     min-width: 57rem;
+    /* min-width: 77rem; */
     margin: 0; padding: 0; width: 100%;
 }
 header h1 {
@@ -115,33 +109,42 @@ header nav a { text-decoration: none; }
     width: 100%;
     margin: 0;
     padding: 0;
-    display: flex;
+    display: inline-flex;
     justify-content: space-between;
-    align-items: stretch;
+    flex-wrap: wrap;
+    /* align-items: stretch; */
 }
 #left-design-layout {
   /* seems 19rem  is the "natural" width with img width of 300px. */
   /* seems 12.5rem  is the "natural" width with img width of 200px. */
+  min-width: 8rem;
   max-width: 14.80rem;
+  max-height: 46rem;
   /* align-self: flex-start; */
-  /* height: 76rem; */
   order: 1;
-  /* flex: 2 2; */
+  flex: 2 2;
   display: flex;
   flex-direction: column;
-  /* justify-content: space-between; */
+  justify-content: space-between;
   align-items: flex-start;
 }
 #left-design-layout img { width: 100%; }
+footer {
+    position: absolute;
+    top: 52.53rem;
+    width: 23rem;
+    /* margin-bottom: 57.5rem; */
+    /* To match the background spotlight/starburst/stripe visual feature */
+}
 
 /* **** HIGHLIGHT HERE **** */
-#stripe,
-main section:last-child,
+/* #stripe, */
+/* main section:last-child, */
 /* #stripe-held, */
-/* #layout, */
-/* #header, */
+#layout,
+#header,
 #left-design-layout,
-/* main, */
+main,
 footer
 {
     outline: 1px solid red;
@@ -150,6 +153,7 @@ main {
     /* width: 100%; */
     /* height: 76rem; */
     order: 2;
+    flex: 1 1;
     display: flex;
     align-content: space-between;
     justify-content: flex-end;
@@ -179,7 +183,8 @@ main {
 }
 #stripe {
     /* width: 22rem; */
-    width: 23.5rem;
+    max-width: 23.5rem;
+    margin-right: 2rem;
     /* padding: 4rem 0 0 7.25rem; */
     padding-top: 1.75rem;
     display: flex;
@@ -207,32 +212,36 @@ main {
 #stripe article:nth-child(1) {
     /* width: 82%; */
     width: 21rem;
-    margin-right: 2.5rem;
+    /* margin-right: 0.106%; */
+    /* margin-right: 2.5rem; */
+    margin-left: 0rem;
     /* margin-left: 2.5rem; */
 }
 
 #stripe article:nth-child(2) {
     /* margin-right: 2rem; */
-    /* width: 70%; */
+    /* width: 78%; */
     width: 18.25rem;
     margin-left: 7.25rem;
     transform: rotate(-3deg);
 }
 #stripe article:nth-child(3) {
-    /* width: 52%; */
+    /* width: 57%; */
     width: 13.5rem;
     margin-left: 14.75rem;
 }
 main section:last-child {
     /* align-self: flex-start; */
-    width: 33.5rem;  /* width: stripe ok at >=20rem, video ok at >=24rem,  between 20rem or 24rem and 26rem probably */
+    max-width: 33.5rem;  /* width: stripe ok at >=20rem, video ok at >=24rem,  between 20rem or 24rem and 26rem probably */
     display: flex;
     flex-direction: column;
     align-items: flex-end;
 }
 main section:last-child iframe {
     /* width 31rem, height: 23rem, 2rem border-radius */
+    /* max-width: 95.5%; */
     width: 31rem;
+    /* width: 92.5%; */
     height: 23rem;
     border-radius: 2rem;
 }
