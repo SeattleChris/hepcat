@@ -111,20 +111,20 @@ This is a specific subject, offered during a specific session. It includes infor
 ## Architecture
 
 * python 3.6-slim
-* Django 2.1.7
-* psycopg2-binary 2.7.7
-* django-registration 3.0
+* Django 3.0.1
+* psycopg2-binary 2.8.4
+* django-registration 3.0.1
 * nginx
 * postgres
-* django-compressor 2.2
+* django-compressor 2.3
 * django-payments 0.13.0
-* Pillow 5.4.1
-* stripe 2.23.0
+* Pillow 6.2.1
+* stripe 2.41.0
 
 Dev:
 
-* django-sass-processor 0.7.2
-* libsass 0.16.1
+* django-sass-processor 0.7.5
+* libsass 0.19.4
 
 ## API
 
