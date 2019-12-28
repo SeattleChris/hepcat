@@ -113,7 +113,48 @@ header nav {
         /* text-align: right; */ /*
     }
 } */
+/* @media screen and (max-width: 1199px) {
+    html { font-size: 95%; }
+}
+@media screen and (max-width: 1080px) {
+    html { font-size: 85%; }
+}
+@media screen and (max-width: 960px) {
+    html { font-size: 75%; }
+}
+@media screen and (max-width: 840px) {
+    html { font-size: 65%; }
+} */
+/* html {font-size: 1vw; } */
+footer {
+    order: 3;
+    font-size: 90%;
+    /* font-size: smaller; */
+    width: 20.58rem;
+    position: relative;
+    bottom: 14.75rem;
+}
+footer img { visibility: collapse; height: 10rem; border-radius: 1.25rem; }
+/* footer img:first-child::before { content: 'Home' }
+footer li:first-child::after { content: 'Home |'} */
 
+@media screen and (max-width: 1199px) {
+    html { font-size: 1.32vw; }
+}
+/* @media screen and (max-width: 1080px) {
+    html { font-size: 85%; }
+} */
+@media screen and (max-width: 960px) {
+    html { font-size: 79.25%; }
+    /* Make paragraph font size of 10 */
+    /* html { font-size: 1.162795vw; } */
+}
+@media screen and (max-width: 880px) {
+    /* html { font-size: 69.25%; } */
+    #left-design-layout img { visibility: collapse; }
+    footer img { visibility: visible; display: inline-block; }
+    footer { width: 9rem; bottom: 16.75rem; }
+}
 header nav ul { display: block; margin: 0; }
 header nav li { display: block; text-align: right; }
 header nav .user-login li { display: inline-block; }
@@ -152,25 +193,16 @@ main {
     align-content: space-between;
     justify-content: flex-end;
 }
-footer {
-    order: 3;
-    font-size: 90%;
-    /* font-size: smaller; */
-    width: 20.5644521713256819rem;
-    position: relative;
-    bottom: 4.75rem;
-}
 
 /* **** HIGHLIGHT HERE **** */
 /* #offers, */
 /* main section:last-child, */
 /* #offers-visual-element, */
 #layout,
-#body
 /* #header, */
 /* #left-design-layout, */
 /* main, */
-/* footer */
+footer
 {
     outline: 1px solid red;
 }
@@ -290,7 +322,7 @@ main section:last-child {
 main section:last-child iframe {
     /* width 31rem, height: 23rem, 2rem border-radius */
     /* max-width: 95.5%; */
-    /* width: 31rem; */
+    width: 31rem;
     /* width: 92.5%; */
     height: 23rem;
     border-radius: 2rem;
