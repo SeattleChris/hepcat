@@ -4,7 +4,9 @@ body {
     /* padding: 0; */
     /* overflow: hidden; */
     width: 98%;
-    min-width: 64.5rem;
+    /* min-width: 64.5rem; */
+    /* min-width: 64.947rem; */
+    min-width: 64.75rem;
     max-width: 71.8rem;
     /* height: 100%; */
     margin: 0 auto;
@@ -20,6 +22,17 @@ body {
     background-color: yellow;
     z-index: -2;
 } */
+#bg-stripe {
+    background-color: #33AA33;
+    position: absolute;
+    /* Left: 3rem; width: 61rem; height: 66rem; Clean edge for: width: 26rem;, padding-top: 4rem;, padding-left: 5rem;*/
+    left: 1rem;  /* was 4.5rem, with width 56rem */
+    width: 63rem;  /* 1180px 74rem */
+    height: 57.5rem;  /* 980px */
+    /* clip-path: polygon(3% 0%, 44% 0%, 83% 100%, 44% 100% ); */
+    clip-path: polygon(0% 0%, 54% 0%, 73% 100%, 50% 100% );
+    z-index: -10;
+}
 
 header {
     margin: 0; padding: 0; width: 100%;
@@ -27,7 +40,8 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    min-width: 57rem;
+    /* min-width: 57rem; */
+    /* min-width: 64.947rem; */
 }
 header h1 {
     align-self: flex-start;
@@ -110,16 +124,18 @@ header nav a { text-decoration: none; }
     padding: 0;
     display: inline-flex;
     justify-content: space-between;
+    /* justify-content: flex-end; */
     flex-wrap: wrap;
     /* align-items: stretch; */
 }
 #left-design-layout {
   /* seems 19rem  is the "natural" width with img width of 300px. */
   /* seems 12.5rem  is the "natural" width with img width of 200px. */
-  min-width: 8rem;
+  /* min-width: 7.947rem; */
+  min-width: 0.1rem;
   max-width: 14.80rem;
   max-height: 46rem;
-  /* align-self: flex-start; */
+  /* align-self: flex-end; */
   order: 1;
   flex: 2 2;
   display: flex;
@@ -128,63 +144,71 @@ header nav a { text-decoration: none; }
   align-items: flex-start;
 }
 #left-design-layout img { width: 100%; }
-footer {
-    order: 3;
-    position: relative;
-    bottom: 4.75rem;
-    /* position: absolute;
-    top: 52.45rem;
-    width: 23rem; */
-
-    /* margin-bottom: 57.5rem; */
-    /* To match the background spotlight/starburst/stripe visual feature */
-}
-
-/* **** HIGHLIGHT HERE **** */
-/* #stripe, */
-/* main section:last-child, */
-/* #stripe-held, */
-#layout,
-#header,
-#left-design-layout,
-main,
-footer
-{
-    outline: 1px solid red;
-}
 main {
-    /* width: 100%; */
-    /* height: 76rem; */
     order: 2;
     flex: 1 1;
     display: flex;
     align-content: space-between;
     justify-content: flex-end;
 }
-#bg-stripe {
-    background-color: #33AA33;
-    position: absolute;
-    /* Left: 3rem; width: 61rem; height: 66rem; Clean edge for: width: 26rem;, padding-top: 4rem;, padding-left: 5rem;*/
-    left: 1rem;  /* was 4.5rem, with width 56rem */
-    width: 63rem;  /* 1180px 74rem */
-    height: 57.5rem;  /* 980px */
-    /* clip-path: polygon(3% 0%, 44% 0%, 83% 100%, 44% 100% ); */
-    clip-path: polygon(0% 0%, 54% 0%, 73% 100%, 50% 100% );
-    z-index: -10;
-}
-#stripe-held {
+footer {
+    order: 3;
+    font-size: 90%;
+    width: 20.5644521713256819rem;
     position: relative;
-    /* width: 63rem; */
-    width: 63rem;
-    height: 57.5rem;
-    left: 24.25rem;
-    top: -57.36rem;
-    background-color: #77161e;
-    /* clip-path: polygon(-40% 0%, 85% 0%, 130% 100%, 50% 100%); */
-    clip-path: polygon(0% 0%, 54% 0%, 73% 100%, 50% 100% );
-    z-index: -5;
+    bottom: 4.75rem;
 }
-#stripe {
+
+/* **** HIGHLIGHT HERE **** */
+/* #offers, */
+/* main section:last-child, */
+/* #offers-visual-element, */
+#layout,
+/* #header, */
+#left-design-layout,
+main,
+footer
+{
+    /* outline: 1px solid red; */
+}
+#offers-visual-element {
+    background-color: #77161e;
+    z-index: -1;
+    order: 4;
+    position: relative;
+    right: 27.8rem;
+    bottom: 57.35rem;
+
+    /* width: 41.63574rem; */
+    /* width: 44.14257621765136363rem;
+    height: 60rem;
+    clip-path: polygon(-7.5% 0%, 72.5% 0%, 100% 100%, 68.25% 100% ); */
+
+    /* width: 45.0069rem;
+    height: 57.35rem;
+    clip-path: polygon(-5.75% 0%, 70% 0%, 100% 100%, 65.75% 100% ); */
+    /* width: 42.08202934265136363rem; */
+    width: 44.186521rem;
+    height: 57.35rem;
+    clip-path: polygon(-7.75% 0%, 70% 0%, 100% 100%, 65.5% 100% );
+
+
+    /* top: -62.10839653rem; */
+    /* left: 24.25rem; */
+    /* top: -57.36rem; */
+    /* width: 63rem; */
+    /* height: 57.5rem; */
+    /* Following forces it into a new row */
+    /* width: 48.94rem; */
+    /* width: 100%; */
+    /* clip-path: polygon(0% 0%, 74% 0%, 100% 100%, 68.25% 100% ); */
+    /* width: 41.63574028015rem; */
+
+    /* clip-path: polygon(0% 0%, 74% 0%, 100% 100%, 68.25% 100% ); */
+    /* clip-path: polygon(-40% 0%, 85% 0%, 130% 100%, 50% 100%); */
+    /* clip-path: polygon(0% 0%, 54% 0%, 73% 100%, 50% 100% ); */
+}
+#offers {
     /* width: 22rem; */
     max-width: 23.5rem;
     margin-right: 2rem;
@@ -199,8 +223,8 @@ main {
     /* transform: skew(15deg, -15deg); */
     /* transform: rotate(-20deg); */
 }
-#stripe p.description { text-align: left; }
-#stripe article {
+#offers p.description { text-align: left; }
+#offers article {
     /* background-color: #77161e; #66050d; */
     /* align-self: flex-start; */
     /* transform: skew(-20deg); */
@@ -212,32 +236,46 @@ main {
     /* min-height: 12rem; */
     z-index: 1;
 }
-#stripe article:nth-child(1) {
+#offers h1 {
+    /* min font-size: 1.76em;  */
+    font-size: 1.8625em;
+    /* margin-bottom: 0.5em; */
+}
+#offers h3 {
+    margin: 0;
+}
+#offers p {
+    margin: 0.75em 0;
+}
+#offers article:nth-child(1) {
     /* width: 82%; */
-    width: 21rem;
+    width: 20.08rem;
+    /* min-width: 20.08rem; */
     /* margin-right: 0.106%; */
     /* margin-right: 2.5rem; */
     margin-left: 0rem;
     /* margin-left: 2.5rem; */
 }
 
-#stripe article:nth-child(2) {
+#offers article:nth-child(2) {
     /* margin-right: 2rem; */
     /* width: 78%; */
-    width: 18.25rem;
-    margin-left: 7.25rem;
+    /* min-width: 15.58300733566285rem; */
+    width: 17.75rem;
+    margin-left: 7.3rem;
     transform: rotate(-3deg);
 }
-#stripe article:nth-child(3) {
+#offers article:nth-child(3) {
     /* width: 57%; */
-    width: 13.5rem;
-    margin-left: 14.75rem;
+    width: 13.36rem;
+    margin-left: 14.6rem;
 }
 main section:last-child {
     /* align-self: flex-start; */
-    /* width: stripe ok at >=20rem, video ok at >=24rem,  between 20rem or 24rem and 26rem probably */
+    /* width: offers ok at >=20rem, video ok at >=24rem,  between 20rem or 24rem and 26rem probably */
     /* max-width: 33.5rem; */
     /* min-width: 31.625rem; */
+    width: 33.5rem;
     display: flex;
     flex-direction: column;
     align-items: flex-end;

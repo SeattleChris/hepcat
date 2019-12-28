@@ -8,7 +8,10 @@ html {
     -moz-box-sizing: inherit;
     box-sizing: inherit;
 }
-  /*! normalize.css v3.0.2 | MIT License | git.io/normalize */
+/* h1, h2, h3, h4, h5, h6 {
+    margin: 0.67em 0;
+} */
+/*! normalize.css v3.0.2 | MIT License | git.io/normalize */
 
 /**
  * 1. Set default font family to sans-serif.
@@ -21,7 +24,6 @@ html {
   -ms-text-size-adjust: 100%; /* 2 */
   -webkit-text-size-adjust: 100%; /* 2 */
 }
-
 /**
  * Remove default margin.
  */
