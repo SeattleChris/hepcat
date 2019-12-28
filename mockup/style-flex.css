@@ -22,13 +22,12 @@ body {
 } */
 
 header {
-    order: 1;
+    margin: 0; padding: 0; width: 100%;
+    order: -1;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     min-width: 57rem;
-    /* min-width: 77rem; */
-    margin: 0; padding: 0; width: 100%;
 }
 header h1 {
     align-self: flex-start;
@@ -130,9 +129,13 @@ header nav a { text-decoration: none; }
 }
 #left-design-layout img { width: 100%; }
 footer {
-    position: absolute;
-    top: 52.53rem;
-    width: 23rem;
+    order: 3;
+    position: relative;
+    bottom: 4.75rem;
+    /* position: absolute;
+    top: 52.45rem;
+    width: 23rem; */
+
     /* margin-bottom: 57.5rem; */
     /* To match the background spotlight/starburst/stripe visual feature */
 }
@@ -232,7 +235,9 @@ main {
 }
 main section:last-child {
     /* align-self: flex-start; */
-    max-width: 33.5rem;  /* width: stripe ok at >=20rem, video ok at >=24rem,  between 20rem or 24rem and 26rem probably */
+    /* width: stripe ok at >=20rem, video ok at >=24rem,  between 20rem or 24rem and 26rem probably */
+    /* max-width: 33.5rem; */
+    /* min-width: 31.625rem; */
     display: flex;
     flex-direction: column;
     align-items: flex-end;
@@ -240,15 +245,25 @@ main section:last-child {
 main section:last-child iframe {
     /* width 31rem, height: 23rem, 2rem border-radius */
     /* max-width: 95.5%; */
-    width: 31rem;
+    /* width: 31rem; */
     /* width: 92.5%; */
     height: 23rem;
     border-radius: 2rem;
 }
 main section:last-child article:last-child {
-    width: 80%;
+    min-width: 26.25rem;
+    /* max-width: 95%; */
+    /* max-width: 27.85rem; */
+    text-align: right;
+    /* width: 80%; */
 }
+main section:last-child article:last-child p {
+    text-align: left;
+    /* width: 90%; */
+    padding-left: 14%;
+}
+
 main section:last-child article:last-child p:last-child{
-    padding-left: 13%;
+    padding-left: 22%;
     /* width: 90%; */
 }
