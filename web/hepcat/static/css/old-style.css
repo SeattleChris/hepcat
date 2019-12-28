@@ -1,0 +1,38 @@
+body {
+    background-color: #9b9;
+}
+
+header h1 {
+    transform: rotate(-30deg);
+    display: inline-block;
+}
+
+header nav a {
+    text-decoration: none;
+}
+
+header nav li {
+    display: inline-block;
+}
+
+header nav li:after {
+    content: ' |';
+}
+
+header nav ul:before {
+    content: url('/static/assets/logo.png');
+}
+
+header nav ul {
+    display: inline;
+}
+
+aside {
+    display: inline-block;
+    height: 100%;
+    width: 20%;
+}
+
+main {
+    display: inline-block;
+}
