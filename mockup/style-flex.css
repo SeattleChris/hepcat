@@ -101,6 +101,11 @@ header nav {
     text-align: right;
 }
 /* ***** End Menu *********************** */
+header nav ul { display: block; margin: 0; }
+header nav li { display: block; text-align: right; }
+header nav .user-login li { display: inline-block; }
+header nav .user-login li:before { content: ' |'; }
+header nav a { text-decoration: none; }
 /*
 @media screen and (min-width: 1133px) {
     header nav {
@@ -132,11 +137,16 @@ footer {
     /* font-size: smaller; */
     width: 20.58rem;
     position: relative;
-    bottom: 14.75rem;
+    bottom: 13.75rem;
 }
+footer ul { display: block; margin: 0; padding:0; }
+footer li { display: inline-block; text-align: left; margin: 0; padding: 0; }
+footer li:before { content: '| '; }
+footer a { text-decoration: none; }
+footer p { margin: 0; padding: 0; }
 footer img { visibility: collapse; height: 10rem; border-radius: 1.25rem; }
-/* footer img:first-child::before { content: 'Home' }
-footer li:first-child::after { content: 'Home |'} */
+/* footer li:first-child::before { content: 'Home' } */
+/* footer li:first-child { content: 'Home |'} */
 
 @media screen and (max-width: 1199px) {
     html { font-size: 1.32vw; }
@@ -153,13 +163,9 @@ footer li:first-child::after { content: 'Home |'} */
     /* html { font-size: 69.25%; } */
     #left-design-layout img { visibility: collapse; }
     footer img { visibility: visible; display: inline-block; }
-    footer { width: 9rem; bottom: 16.75rem; }
+    footer { width: 11.5rem; bottom: 16.75rem; }
+    footer li:first-of-type { visibility: collapse; width: 0; }
 }
-header nav ul { display: block; margin: 0; }
-header nav li { display: block; text-align: right; }
-header nav .user-login li { display: inline-block; }
-header nav .user-login li:before { content: ' |'; }
-header nav a { text-decoration: none; }
 #layout {
     width: 100%;
     margin: 0;
