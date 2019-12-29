@@ -5,16 +5,20 @@
 {% endblock head %}
 
 {% block content %}
-<h1>{{ classoffer.subject.title }}</h1>
-<ul>
-  <li>{{ classoffer.class_day }} | {{ classoffer.start_time }} - {{ classoffer.end_time }} </li>
-  <li>{{ classoffer.start_date }} - {{ classoffer.end_date }}</li>
-  <li>Taught by: {{ classoffer.teachers }} </li>
-</ul>
+<main>
 
-<p>
-  {{ classoffer.subject.description }}
-</p>
+  <h1>{{ classoffer.subject.title }}</h1>
+  <ul>
+    <li>{{ classoffer.class_day }} | {{ classoffer.start_time }} - {{ classoffer.end_time }} </li>
+    <li>{{ classoffer.start_date }} - {{ classoffer.end_date }}</li>
+    <li>Taught by: {{ classoffer.teachers }} </li>
+  </ul>
+
+  <p>
+    {{ classoffer.subject.description }}
+  </p>
+
+</main>
 {% endblock content %}
 
 <!-- TODO: Fill out ClassOffer Detail View -->

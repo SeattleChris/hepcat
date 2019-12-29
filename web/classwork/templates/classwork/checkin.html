@@ -2,20 +2,24 @@
 
 
 {% block content %}
-<h2>{{ display_session }}</h2>
+<main>
+
+  <h2>{{ display_session }}</h2>
   {% for ea in class_list %}
-    <h3>{{ ea.subject }}: {{ ea.subject.title }} </h3>
-    <ul>
+  <h3>{{ ea.subject }}: {{ ea.subject.title }} </h3>
+  <ul>
     {% for student in ea.students.all %}
-      <li>{{ student }} | {{ ea.subject }} | {{ student.credit }}</li>
-      <li>
-        {% for dt in student.checkin_list %}
-          {{ dt }} |
-        {% endfor %}
-      </li>
+    <li>{{ student }} | {{ ea.subject }} | {{ student.credit }}</li>
+    <li>
+      {% for dt in student.checkin_list %}
+      {{ dt }} |
+      {% endfor %}
+    </li>
     {% endfor %}
-    </ul>
+  </ul>
   {% endfor %}
   <hr />
   <p>End of list of Students</p>
+
+</main>
 {% endblock content %}
