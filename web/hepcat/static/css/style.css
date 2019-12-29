@@ -1,38 +1,80 @@
 body {
-    background-color: #9b9;
+    /* background-color: #9b9; */
+    background-color: #a3c2d7;  /* ccefdb 3b9c71 light=#abc9dd darker=#72a1ca middle=#92b5d1 25%=#a3c2d7  */
+    /* overflow: hidden; */
+    width: 98%;
+    min-width: 64.75rem;
+    max-width: 77.8rem;
+    margin: 0 auto;
+    padding: 0;
+    font-family: 'Open Sans', sans-serif;
 }
-
+header {
+    margin: 0; padding: 0; width: 100%;
+    order: -1;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
 header h1 {
-    transform: rotate(-30deg);
+    align-self: flex-start;
+    font-family: 'Diplomata', cursive;
+    font-size: 3.6rem;
+    margin: 0 0 -2.5rem 1.25rem;
+    transform: rotate(-10deg);
+}
+header #swing { display: block; }
+header #swing::before { content: attr(data-text); padding: 0 2.5em; }
+/* Menu Button General Settings */
+header input#menu-toggle[type=checkbox] { position: absolute; top: 0; right: 0; opacity: 0; }
+/* For mobile, better to position checkbox on top of clickable area and turn opacity to 0 instead. */
+header label#menu {
+    -webkit-appearance: push-button;
+    -moz-appearance: button;
     display: inline-block;
+    margin: 0.75rem 0 0.25rem 0;
+    padding: 0.5rem;
+    cursor: pointer;
+    background-color: #66050d; /*  #77161e; */
+    color: #eeeeee;
+    border-radius: 1rem;
 }
-
-header nav a {
-    text-decoration: none;
+/* Menu ul Default State */
+header .nav-menu  {
+    display: none;
+    position: absolute;
+    top: 7rem;
+    right: 2rem;
+    /* visibility: hidden; */
+    text-align: right;
 }
-
-header nav li {
+/* Menu ul Toggled State */
+header input[type=checkbox]:checked ~ .nav-menu {
     display: inline-block;
+    /* visibility: visible; */
 }
+header nav { align-self: flex-end; margin: 0; text-align: right; }
+header nav ul { display: block; margin: 0; }
+header nav li { display: block; text-align: right; }
+header nav .user-login li { display: inline-block; }
+header nav .user-login li:before { content: ' |'; }
+header nav a { text-decoration: none; }
+/* header nav ul:before { content: url('/static/assets/logo.png'); }
+header nav ul { display: inline; }
+main { display: inline-block; } */
 
-header nav li:after {
-    content: ' |';
-}
-
-header nav ul:before {
-    content: url('/static/assets/logo.png');
-}
-
-header nav ul {
-    display: inline;
-}
-
-aside {
-    display: inline-block;
-    height: 100%;
-    width: 20%;
-}
-
-main {
-    display: inline-block;
-}
+footer {
+    position: relative;
+    bottom: 8.75rem;
+    /* bottom: 10rem; */
+    /* font-size: smaller; */
+    font-size: 90%;
+    text-align: center;
+    width: 100%; }
+footer img { visibility: collapse; height: 10rem; border-radius: 1.25rem; }
+footer ul { display: block; margin: 0; padding:0; }
+footer li { display: inline-block; text-align: left; margin: 0; padding: 0; }
+footer li:after { content: ' | '; }
+footer li:last-of-type:after { content: ''; }
+footer a { text-decoration: none; }
+footer p { margin: 0; padding: 0; }

@@ -1,8 +1,6 @@
-{% extends "generic/base.html" %}
-<a href="{% url 'classoffer_list' %}">Classes</a>
-<a href="{% url 'register' %}">Class Sign Up!</a>
+{% extends "generic/needle.html" %}
 
-{% block content %}
+{% block main %}
 <section id="offers">
   <article id="Beginning-Swing-Dance-Lindy-Hop">
     <h1><a href="{% url 'classoffer_list' %}" title="Swing Dance Class Details">Beginning Swing Dance - Lindy Hop!</a></h1>
@@ -52,4 +50,4 @@
     </p>
   </article>
 </section>
-{% endblock content %}
+{% endblock main %}

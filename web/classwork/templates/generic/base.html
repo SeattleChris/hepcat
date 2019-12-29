@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css?family=Diplomata|Open+Sans&display=swap" rel="stylesheet">
   <!-- <link href="https://fonts.googleapis.com/css?family=Fascinate+Inline|Open+Sans|Raleway&display=swap" rel="stylesheet"> -->
   <link rel="stylesheet" href="{% static 'css/normalize.css' %}">
-  <link rel="stylesheet" href="{% static 'css/home-style.css' %}">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
   <!-- <link rel="stylesheet" href="burger-1.css"> -->
   {% block head %}
   <title>Swing Dance - Lindy Hop Classes!</title>
@@ -20,6 +20,14 @@
     <span id="seattle">Seattle</span>
     <span id="swing">Swing</span>
   </h1>
+  {%if user.is_authenticated %}
+    <p>Welcome {{ user.username }}</p>
+  {% else %}
+    <p>You can login.</p>
+  {% endif %}
+  {% if user.is_superuser %}
+    <p>Super User is Here</p>
+  {% endif %}
   <nav role="navigation">
     <ul class='user-login'>
       {% if user.is_authenticated %}
@@ -48,22 +56,13 @@
     {% endif %}
   </nav>
 </header>
-{%if user.is_authenticated %}
-  <p>Welcome {{ user.username }}</p>
-{% endif %}
-{% if user.is_superuser %}
-  <p>Super User is Here</p>
-{% endif %}
-<main>
+
 {% block content %}
+<main>
 <h2>No Content on this view yet.</h2>
-{% endblock content %}
 </main>
-<div id="left-design-layout">
-  <img src="{% static 'assets/space-needle-observation.png' %}" alt="Space Needle Layout Element" />
-  <section>
-  </section>
-</div> <!-- div#left-design-layout  -->
+{% endblock content %}
+
 <footer>
   <a href="/" title="Swing Dance - Lindy Hop"><img src="{% static 'assets/seattleswing.png' %}" alt="Logo Layout Element" /></a>
   <br />
@@ -75,7 +74,6 @@
   </ul>
   <p>1998 - 2020 &copy; SeattleSwing - HepCat Productions</p>
 </footer>
-<div id="offers-visual-element"></div>
 <!-- <script src="script.js"></script> -->
 </body>
 </html>
