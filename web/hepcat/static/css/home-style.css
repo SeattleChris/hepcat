@@ -5,7 +5,11 @@ body {
     min-width: 64.75rem;
     max-width: 77.8rem;
     margin: 0 auto;
+    padding: 0;
     font-family: 'Open Sans', sans-serif;
+    display: inline-flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
 }
 header {
     margin: 0; padding: 0; width: 100%;
@@ -106,14 +110,6 @@ footer img { visibility: collapse; height: 10rem; border-radius: 1.25rem; }
     footer img { visibility: visible; display: inline-block; }
     footer { width: 11.5rem; bottom: 16.75rem; }
     footer li:first-of-type { visibility: collapse; width: 0; }
-}
-#layout {
-    width: 100%;
-    margin: 0;
-    padding: 0;
-    display: inline-flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
 }
 #left-design-layout {
   /* min-width: 7.947rem; */
