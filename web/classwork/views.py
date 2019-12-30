@@ -359,7 +359,7 @@ class RegisterView(CreateView):
         return super().get_slug_field()
 
     def form_valid(self, form):
-        # TODO: Extra logic steps done here for our modificaitons.
+        # TODO: Extra logic steps done here for our modifications.
         print('======== RegisterView.form_valid ========')
         # print('-------- self --------------')
         # print(self)

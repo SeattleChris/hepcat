@@ -1,6 +1,8 @@
-{% extends 'generic/base.html' %}
+{% extends 'generic/needle.html' %}
+
 
 {% block content %}
+
 <div class="login-form container">
   <form method="post">
     {% csrf_token %}
@@ -11,4 +13,5 @@
     <button type="submit">Login</button>
   </form>
 </div>
-{% endblock %}
+
+{% endblock content %}

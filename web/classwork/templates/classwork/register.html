@@ -4,17 +4,19 @@
 <title> Register for Classes </title>
 {% endblock head %}
 
+
 {% block content %}
+
 <h2> Class Sign Up </h2>
 {% if user.is_authenticated %}
-  <p> Sign up with your current user info below.
-      If want to register a different person then ...
-  </p>
+<p> Sign up with your current user info below.
+  If want to register a different person then ...
+</p>
 {% else %}
-  <p> If you have had classes with us before, you can login to your previous details
-      to make class sign up easier (and view custom content for exisitng students).
-      <a href="{% url 'login' %}">Login</a>
-  </p>
+<p> If you have had classes with us before, you can login to your previous details
+  to make class sign up easier (and view custom content for existing students).
+  <a href="{% url 'login' %}">Login</a>
+</p>
 {% endif %}
 
 <form method="post">
@@ -22,4 +24,5 @@
   {{ form.as_p }}
   <input type="submit" value="save">
 </form>
+
 {% endblock content %}

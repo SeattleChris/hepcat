@@ -1,5 +1,67 @@
-{% extends "generic/base.html" %}
+{% extends "generic/needle.html" %}
+{% load static %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/home_design.css' %}">
+<title>Swing Dance - Lindy Hop Classes!</title>
+{% endblock head %}
+
 
 {% block content %}
-<h1>Welcome to the home page!</h1>
-{% endblock %}
+
+<section id="offers">
+  <article id="Beginning-Swing-Dance-Lindy-Hop">
+    <h1><a href="{% url 'classoffer_list' %}" title="Swing Dance Class Details">Beginning Swing Dance - Lindy Hop!</a></h1>
+    <h3>Partner Not Required! <br />No experience needed!</h3>
+    <p class="description">
+      Learn this fun dance &amp; make new friends in this welcoming social activity!
+      You'll be dancing before you know it!
+    </p>
+    <p><b><a href="{% url 'classoffer_list' %}" title="Beginning Swing Dance - Lindy Hop Classes">Class Details</a> |
+      <a class="focus" href="{% url 'register' %}" title="Register for Swing Dance Classes">Sign Up Now!</a></b>
+    </p>
+  </article>
+  <article id="Experienced-Lindy-Hoppers">
+    <h2><a href="{% url 'classoffer_list' %}"
+      title="Lessons for Experienced Lindy Hopper - Swing Dancers">
+      More Lindy Classes!</a>
+    </h2>
+    <p class="description">You've been dancing and you want to take it to a higher level!
+    </p>
+    <p><b><a href="{% url 'classoffer_list' %}" title="Lindy Hop Dance Lessons">Class Details</a> |
+      <a class="focus" href="{% url 'register' %}" title="Register for Swing Dance Classes">Sign Up Now!</a></b>
+    </p>
+  </article>
+  <article id="Weekly-Swing-Dance">
+    <h2><a href="/dance" title="Weekly Swing Dance">
+      Weekly HepCat Swing Dance!</a>
+    </h2>
+    <p>Most Thursdays @ 9:00pm</p>
+    <p><a href="/dance">Dance Details</a> | <a href="{% url 'location_list' %}">Directions</a></p>
+  </article>
+</section>
+<section>
+  <article>
+    <h2>What Is it Like Getting Started?</h2>
+    <iframe
+      src="https://www.youtube.com/embed/ODgOfjtiDos"
+      frameborder="0" allow="autoplay; encrypted-media" allowfullscreen>
+    </iframe>
+  </article>
+  <article>
+    <h2>What People Say About Our Classes!</h2>
+    <p>
+      "Thank you for the wonderful experience! The way you taught dancing made it easy to learn, and your clear explanations, high energy and humor made the class one of the best I have ever had. I would recommend your classes to anyone who wants to learn ... while having loads of fun!" -- former student.
+    </p>
+    <p>
+      "... would definitely be my first choice. I *wish* I had learned the basics from them - I would have had WAY less bad habits to get over … Good beginning instruction in the basics is one of the most vital factors in starting off ... " -- from online discussion of Seattle Swing Dance instruction.
+    </p>
+  </article>
+</section>
+
+{% endblock content %}
+
+
+{% block design_bonus %}
+<div id="offers-visual-element"></div>
+{% endblock design_bonus %}

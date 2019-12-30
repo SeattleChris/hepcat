@@ -5,17 +5,18 @@
 {% endblock head %}
 
 {% block content %}
+
 <h2> We had a failed payment </h2>
 <p>There was a problem, and the payment is incomplete.
-   For now, {{ student_name }} has a spot reserved in the following class(es): {{ class_selected }}
+  For now, {{ student_name }} has a spot reserved in the following class(es): {{ class_selected }}
 </p>
 {% if paid_by_other %}
-  <p>Attempted to be paid by: {{ paid_by_name }}</p>
+<p>Attempted to be paid by: {{ paid_by_name }}</p>
 {% endif %}
 <p> If payment is not made in advance, the full class price, of {{ payment.full_total }}
-    can be paid at the first day of class.
-    To make it easier for class check-in, and to get the pre-paid price of {{ payment.pre_total }},
-    please complete the payment below.
+  can be paid at the first day of class.
+  To make it easier for class check-in, and to get the pre-paid price of {{ payment.pre_total }},
+  please complete the payment below.
 </p>
 <p><a href="{% url 'payment' payment.id %}">home</a></p>
 

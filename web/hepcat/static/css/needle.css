@@ -1,0 +1,71 @@
+body {
+    display: inline-flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+main section {
+    /* width: 28.5rem; */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+#left-column {
+    padding-top: 1.75rem;
+    background-color: #9b9;
+}
+#right-column {
+    padding-top: 0rem;
+    background-color: blueviolet;
+}
+#left-design-layout {
+  min-width: 0.1rem;
+  max-width: 14.80rem;
+  max-height: 46rem;
+  order: 1;
+  /* flex: 1 2 auto; */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+#left-design-layout img { width: 100%; }
+main {
+    background-color: bisque;
+    /* padding: 0; */
+    /* 49.95152rem; */
+    /* min-width: 49.95rem; */
+    width: 49.95rem;
+    /* min-height: 57.35rem; */
+    min-height: 52.297rem;
+    /* height: 57.35rem; */
+    order: 2;
+    /* flex: 3 1 auto; */
+    display: flex;
+    align-content: space-between;
+    justify-content: flex-end;
+}
+footer {
+    bottom: 13.75rem;
+    order: 3;
+    text-align: left;
+    width: 20.58rem;
+}
+/* **** HIGHLIGHT HERE **** */
+/* #offers, */
+/* main section:last-child, */
+/* #offers-visual-element, */
+/* #header, */
+/* #left-design-layout, */
+/* main, */
+/* #layout, */
+/* footer
+{
+    outline: 1px solid red;
+} */
+
+@media screen and (max-width: 880px) {
+    #left-design-layout img { visibility: collapse; }
+    footer img { visibility: visible; display: inline-block; }
+    footer { width: 11.5rem; bottom: 16.75rem; }
+    footer li:first-of-type { visibility: collapse; width: 0; }
+}

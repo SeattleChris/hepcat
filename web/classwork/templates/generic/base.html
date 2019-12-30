@@ -1,60 +1,89 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link href="https://fonts.googleapis.com/css?family=Diplomata|Open+Sans&display=swap" rel="stylesheet">
+  <!-- <link href="https://fonts.googleapis.com/css?family=Fascinate+Inline|Open+Sans|Raleway&display=swap" rel="stylesheet"> -->
   <link rel="stylesheet" href="{% static 'css/normalize.css' %}">
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <!-- <link rel="stylesheet" href="burger-1.css"> -->
+  {% block super_head %}
+
   {% block head %}
   <title>Swing Dance - Lindy Hop Classes!</title>
-  {% endblock %}
+  {% endblock head %}
+
+  {% endblock super_head %}
 </head>
 <body>
-  <header>
-    <h1><span>Seattle</span> Swing</h1>
-    <nav>
-      <ul>
-        <li><a href="{% url 'home' %}">home</a></li>
-        <li><a href="{% url 'classoffer_list' %}">ClassOffer List</a></li>
-        <li><a href="{% url 'location_list' %}">Location List</a></li>
-        <li><a href="{% url 'register' %}">Sign Up for Classes</a></li>
-        <li><a href="{% url 'aboutus' %}">About Us</a></li>
+<header>
+  <h1>
+    <span id="seattle">Seattle</span>
+    <span id="swing">Swing</span>
+  </h1>
+  {%if user.is_authenticated %}
+    <p>Welcome {{ user.username }}</p>
+  {% else %}
+    <p>You can login.</p>
+  {% endif %}
+  {% if user.is_superuser %}
+    <p>Super User is Here</p>
+  {% endif %}
+  <nav role="navigation">
+    <ul class='user-login'>
+      {% if user.is_authenticated %}
+      <li><a href="{% url 'logout' %}">Logout</a></li>
+      <li><a href="{% url 'profile_page' %}">Profile</a></li>
+      {% else %}
+      <li><a href="{% url 'signup' %}"> Create Login Account</a></li>
+      <li><a href="{% url 'login' %}">Login</a></li>
+      {% endif %}
+    </ul>
+    <label id="menu" for="menu-toggle">Menu</label>
+    <input type="checkbox" id="menu-toggle">
+    <ul class="nav-menu" >
+      <li><a href="{% url 'home' %}">Home</a></li>
+      <li><a href="{% url 'classoffer_list' %}">Classes</a></li>
+      <li><a href="{% url 'register' %}">Class Sign Up!</a></li>
+      <li><a href="{% url 'aboutus' %}">About Us</a></li>
+      <li><a href="#">Other Info</a></li>
+    </ul>
+    {% if user.is_staff %}
+    <ul>
+      <li><a href="{% url 'admin:index' %}" >admin</a></li>
+      <li><a href="{% url 'checkin' %}">Checkin Sheet</a></li>
+      <li><a href="{% url 'location_list' %}">Location List</a></li>
+    </ul>
+    {% endif %}
+  </nav>
+</header>
 
-      </ul>
-      <ul class='user-login'>
-        {% if user.is_authenticated %}
-        <li><a href="{% url 'logout' %}">Logout</a></li>
-        <li><a href="{% url 'profile_page' %}">Profile</a></li>
-        {% else %}
-        <li><a href="{% url 'signup' %}"> Create Login Account</a></li>
-        <li><a href="{% url 'login' %}">Login</a></li>
-        {% endif %}
-      </ul>
-      {% if user.is_staff %}
-      <ul>
-        <li><a href="{% url 'admin:index' %}" >admin</a></li>
-        <li><a href="{% url 'checkin' %}">Checkin Sheet</a></li>
-      </ul>
-      {% endif %}
-    </nav>
-  </header>
-  <aside>
-    <img src="{% static 'assets/space-needle.png' %}" alt="Seattle Space Needle" />
-  </aside>
-  <main>
-      {%if user.is_authenticated %}
-      <p>Welcome {{ user.username }}</p>
-      {% endif %}
-      {% if user.is_superuser %}
-      <p>Super User is Here</p>
-      {% endif %}
-    {% block content %}
-    <h3>No Content</h3>
-    {% endblock %}
-  </main>
-  <footer></footer>
+{% block super_content %}
+<main>
+{% block content %}
+
+<h2>No Content on this view yet.</h2>
+
+{% endblock content %}
+</main>
+{% endblock super_content %}
+
+<footer>
+  <a href="/" title="Swing Dance - Lindy Hop"><img src="{% static 'assets/seattleswing.png' %}" alt="Logo Layout Element" /></a>
+  <br />
+  <ul>
+    <li><a href="{% url 'home' %}" title="Swing Dance - Lindy Hop">Home</a></li>
+    <li><a href="{% url 'classoffer_list' %}" title="Swing Dance - Lindy Hop Lessons">Class Details</a></li>
+    <li><a href="{% url 'register' %}" title="Register for Swing Dance - Lindy Hop Lessons">Join Class</a></li>
+    <!-- <li><a href="{% url 'aboutus' %}">About Us</a></li> -->
+  </ul>
+  <p>1998 - 2020 &copy; SeattleSwing - HepCat Productions</p>
+</footer>
+{% block super_end %}
+<!-- <script src="script.js"></script> -->
+{% endblock super_end %}
 </body>
 </html>

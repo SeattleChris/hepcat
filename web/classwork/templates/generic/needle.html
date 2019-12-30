@@ -1,0 +1,41 @@
+{% extends "generic/base.html" %}
+{% load static %}
+
+{% block super_head %}
+<link rel="stylesheet" href="{% static 'css/needle.css' %}">
+{% block head %}
+<title>Swing Dance - Lindy Hop Classes!</title>
+{% endblock head %}
+{% endblock super_head %}
+
+
+{% block super_content %}
+<main>
+
+{% block content %}
+  <section id="left-column">
+  {% block left_column %}
+
+    <h1>No Content yet on this view using the needle template.</h1>
+    <p>This should be filled in with page specific content</p>
+  {% endblock left_column %}
+  </section>
+  <section id ="right-column">
+  {% block right_column %}
+
+    <h2>Second column no content</h2>
+    <p>More page specific content goes here</p>
+  {% endblock right_column %}
+  </section>
+{% endblock content %}
+
+</main>
+<div id="left-design-layout">
+  <img src="{% static 'assets/space-needle-observation.png' %}" alt="Space Needle Layout Element" />
+  <section>
+  </section>
+</div> <!-- div#left-design-layout  -->
+{% block design_bonus %}
+{% endblock design_bonus %}
+
+{% endblock super_content %}

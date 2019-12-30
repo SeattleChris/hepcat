@@ -4,26 +4,29 @@
 <title>Swing Dance - Lindy Hop Classes</title>
 {% endblock head %}
 
+
 {% block content %}
+
 <h2>Swing Dance - Lindy Hop Classes</h2>
 <p>Registration is open for these scheduled classes.</p>
 {% if user.is_staff %}
-  <p> {{ display_session }} </p>
+<p> {{ display_session }} </p>
 {% endif %}
 
 {% for classoffer in classoffers %}
-  <h3>{{ classoffer }}</h3>
-  <p>{{ classoffer.subject.title }}</p>
-  <ul>
-    <li>{{ classoffer.class_day }} | {{ classoffer.start_time }} - {{ classoffer.end_time }} </li>
-    <li>{{ classoffer.start_date }} - {{ classoffer.end_date }}</li>
-    <li>Taught by: {{ classoffer.teachers }} </li>
-  </ul>
-  <p><a href="{% url 'classoffer_detail' id=classoffer.id %}">More Details</a></p>
-  <hr />
+<h3>{{ classoffer }}</h3>
+<p>{{ classoffer.subject.title }}</p>
+<ul>
+  <li>{{ classoffer.class_day }} | {{ classoffer.start_time }} - {{ classoffer.end_time }} </li>
+  <li>{{ classoffer.start_date }} - {{ classoffer.end_date }}</li>
+  <li>Taught by: {{ classoffer.teachers }} </li>
+</ul>
+<p><a href="{% url 'classoffer_detail' id=classoffer.id %}">More Details</a></p>
+<hr />
 {% endfor %}
 <p>
   Generally a new session of classes will start after these classes are finished.
   Check back for an updated schedule.
 </p>
+
 {% endblock content %}

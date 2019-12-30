@@ -1,10 +1,13 @@
-{% extends 'generic/base.html' %}
+{% extends 'generic/needle.html' %}
+
 
 {% block content %}
+
 <div class="activation container">
   <h2>Failed to activate your account</h2>
   <h3>Please check your email for activation request</h3>
   <p>Please don't shortcut our process, but...</p>
   <p>{{activation_key}}</p>
 </div>
-{% endblock %}
+
+{% endblock content %}

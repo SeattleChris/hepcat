@@ -1,16 +1,18 @@
-{% extends "generic/base.html" %}
+{% extends "generic/needle.html" %}
 
 {% block head %}
 <title>About Us</title>
 {% endblock head %}
 
+
 {% block content %}
+
 <h1>About Us</h1>
 <p>{{ business_about|default:"Our staff is here for you." }}</p>
 {% for profile in profiles %}
-  <h2>{{ profile }}</h2>
-  <p>{{ profile.bio|default:"Biography to come later" }}</p>
-  <hr />
+<h2>{{ profile }}</h2>
+<p>{{ profile.bio|default:"Biography to come later" }}</p>
+<hr />
 {% endfor %}
 
 {% endblock content %}

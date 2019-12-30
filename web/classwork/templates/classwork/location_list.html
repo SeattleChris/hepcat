@@ -1,19 +1,21 @@
-{% extends "generic/base.html" %}
+{% extends "generic/needle.html" %}
 
 
 {% block content %}
+
 <h2>Established Locations</h2>
-  {% for location in locations %}
-    <h3>{{ location }}</h3>
-    <p>
-      {{ location.address }} <br \>
-      {{location.city}}, {{location.state}} {{location.zipcode}} <br \>
-    </p>
-    <p>
-      | By Bus | Google Maps |
-    </p>
-    <p><a href="{% url 'location_detail' id=location.id %}">{{ location }}</a></p>
-    <hr />
-  {% endfor %}
+{% for location in locations %}
+<h3>{{ location }}</h3>
+<p>
+  {{ location.address }} <br \>
+  {{location.city}}, {{location.state}} {{location.zipcode}} <br \>
+</p>
+<p>
+  | By Bus | Google Maps |
+</p>
+<p><a href="{% url 'location_detail' id=location.id %}">{{ location }}</a></p>
+<hr />
+{% endfor %}
 <p>End list of Locations</p>
+
 {% endblock content %}
