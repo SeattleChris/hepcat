@@ -11,13 +11,11 @@ body {
 }
 main {
     /* adjust for header overlap */
+    padding: 1.75rem 0 0 0;
     margin: 0;
-    padding: 1.75rem 0;
-    /* width: 100%; */
 }
 header {
     margin: 0; padding: 0; width: 100%;
-    order: -1;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
@@ -65,26 +63,22 @@ header nav li { display: block; text-align: right; }
 header nav .user-login li { display: inline-block; }
 header nav .user-login li:before { content: ' |'; }
 header nav a { text-decoration: none; }
-/* header nav ul:before { content: url('/static/assets/logo.png'); }
-header nav ul { display: inline; }
-main { display: inline-block; } */
+
+/* main { display: inline-block; } */
 
 footer {
     position: relative;
-    /* bottom: 8.75rem; */
-    bottom: 10rem;
-    /* font-size: smaller; */
+    bottom: 1rem;
     font-size: 90%;
     text-align: center;
-    /* width: 100%; */
 }
-footer img { visibility: collapse; height: 10rem; border-radius: 1.25rem; }
+footer img { display: none; }
 footer ul { display: block; margin: 0; padding:0; }
 footer li { display: inline-block; text-align: left; margin: 0; padding: 0; }
 footer li:after { content: ' | '; }
 footer li:last-of-type:after { content: ''; }
 footer a { text-decoration: none; }
-footer p { margin: 0; padding: 0; }
+footer p { margin: 0; padding-top: 0; }
 
 @media screen and (max-width: 1199px) { html { font-size: 1.32vw; } }
 @media screen and (max-width: 960px) { html { font-size: 79.25%; } }
