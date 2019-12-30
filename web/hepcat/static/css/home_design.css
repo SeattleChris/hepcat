@@ -1,0 +1,48 @@
+
+#offers-visual-element {
+    background-color: #77161e;
+    z-index: -1;
+    order: 4;
+    position: relative;
+    right: 27.8rem;
+    bottom: 57.35rem;
+    width: 44.186521rem;
+    height: 57.35rem;
+    clip-path: polygon(-7.75% 0%, 70% 0%, 100% 100%, 65.5% 100% );
+}
+#offers {
+    max-width: 23.5rem;
+    margin-right: 2rem;
+    padding-top: 1.75rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: flex-end;
+    text-align: center;
+}
+#offers p.description { text-align: left; }
+#offers article {
+    margin: 0.5rem auto;
+    border: 0.25rem solid #d8cdbe;
+    border-radius: 2rem;
+    padding: 0.25rem;
+    z-index: 1;
+}
+#offers h1 { font-size: 1.8625em; }
+#offers h3 { margin: 0; }
+#offers p { margin: 0.75em 0; }
+
+#offers article:nth-child(1) { width: 20.08rem; margin-left: 0rem; }
+#offers article:nth-child(2) { width: 17.75rem; margin-left: 7.3rem; transform: rotate(-3deg); }
+#offers article:nth-child(3) { width: 13.36rem; margin-left: 14.6rem; }
+
+main section:last-child {
+    width: 33.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+main section:last-child iframe { width: 31rem; height: 23rem; border-radius: 2rem; }
+main section:last-child article:last-child { min-width: 26.25rem; text-align: right; }
+main section:last-child article:last-child p { text-align: left; padding-left: 14%; }
+main section:last-child article:last-child p:last-child{ padding-left: 22%; }

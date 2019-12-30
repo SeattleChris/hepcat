@@ -1,42 +1,36 @@
-{% extends "generic/base.html" %}
+{% extends "generic/needle.html" %}
 
 {% block head %}
 <title>Resource Detail View</title>
 {% endblock head %}
 
 {% block content %}
-<main>
 
-  <h2>Resource Detail View</h2>
+<h2>Resource Detail View</h2>
 
-  <h3>{{ type }}</h3>
-  {% if type == 'url' %}
+<h3>{{ type }}</h3>
+{% if type == 'url' %}
   <p>URL</p>
-  {% endif %}
-  {% if type == 'link' %}
+{% elif type == 'link' %}
   <p>LINK</p>
-  {% endif %}
-  {% if type == 'video' %}
+{% elif type == 'video' %}
   <video width="530" height="440" controls autoplay>
     <source src="/{{resource.filepath.url}}" type="video/mp4"> </source>
   </video>
   <p>VIDEO</p>
-  {% endif %}
-  {% if type == 'image' %}
+{% elif type == 'image' %}
   <img src="{{ resource.imagepath.url }}" alt="{{resource}}" />
   <p>IMAGE</p>
-  {% endif %}
-  {% if type == 'email' %}
+{% elif type == 'email' %}
   <p>EMAIL</p>
-  {% endif %}
-  {% if type == 'file' %}
+{% elif type == 'file' %}
   <p>FILE</p>
-  {% endif %}
-  {% if type == 'text' %}
+{% elif type == 'text' %}
   <p>TEXT</p>
-  {% endif %}
+{% else %}
+  <p>Unknown Type</p>
+{% endif %}
 
-  <p>{{ resource }} </p>
+<p>{{ resource }} </p>
 
-</main>
 {% endblock content %}

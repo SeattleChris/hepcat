@@ -1,12 +1,10 @@
-{% extends 'generic/base.html' %}
+{% extends 'generic/needle.html' %}
 
 {% block content %}
-<main>
 
-  <div class="activation-failed container">
-    <h2>Activation Failed. Sorry</h2>
-    <p>{{ activation_error.message }}</p>
-  </div>
+<div class="activation-failed container">
+  <h2>Activation Failed. Sorry</h2>
+  <p>{{ activation_error.message }}</p>
+</div>
 
-</main>
 {% endblock content %}

@@ -2,18 +2,16 @@
 
 
 {% block content %}
-<main>
 
-  <h2>Upcoming Classes</h2>
-  {% for classoffer in classoffers %}
-  <h3>{{ classoffer }}</h3>
-  <ul>
-    <li>{{ classoffer.num_weeks }} weeks | {{ classoffer.key_day_date }} </li>
-    <li>First to Last Class: {{ classoffer.start_date }} | {{ classoffer.end_date }} </li>
-    <li>Published: {{ classoffer.publish_date }} | {{ classoffer.expire_date }} </li>
-  </ul>
-  {% endfor %}
-  <p>End list of Sessions</p>
+<h2>Upcoming Classes</h2>
+{% for classoffer in classoffers %}
+<h3>{{ classoffer }}</h3>
+<ul>
+  <li>{{ classoffer.num_weeks }} weeks | {{ classoffer.key_day_date }} </li>
+  <li>First to Last Class: {{ classoffer.start_date }} | {{ classoffer.end_date }} </li>
+  <li>Published: {{ classoffer.publish_date }} | {{ classoffer.expire_date }} </li>
+</ul>
+{% endfor %}
+<p>End list of Sessions</p>
 
-</main>
 {% endblock content %}

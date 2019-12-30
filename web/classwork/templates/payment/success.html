@@ -4,24 +4,23 @@
 <title>Payment Complete!</title>
 {% endblock head %}
 
+
 {% block content %}
-<main>
 
-  <h2> Your Payment is Complete!</h2>
-  <p>{{ student_name }} is signed up for: {{ class_selected }}</p>
-  {% if paid_by_other %}
-  <p>As paid by: {{ paid_by_name }}</p>
-  {% endif %}
-  <p> You should get an email confirmation for the your class registration.
-    During the class we typically send weekly class emails with additional
-    resources, such as review videos and other useful class information.
-    If any unforseen issues come up, such as moving or post-poning the class
-    due to weather or other issues, we will inform all of the students by email.
-    If you do not get the initial confirmation email, please make
-    sure it is not blocked by your spam filters. If the email you provided is
-    not the best to reach you, please update your
-    <a href="{% url 'profile_page' %}">contact information here.</a></li>
-  </p>
+<h2> Your Payment is Complete!</h2>
+<p>{{ student_name }} is signed up for: {{ class_selected }}</p>
+{% if paid_by_other %}
+<p>As paid by: {{ paid_by_name }}</p>
+{% endif %}
+<p> You should get an email confirmation for the your class registration.
+  During the class we typically send weekly class emails with additional
+  resources, such as review videos and other useful class information.
+  If any unforseen issues come up, such as moving or post-poning the class
+  due to weather or other issues, we will inform all of the students by email.
+  If you do not get the initial confirmation email, please make
+  sure it is not blocked by your spam filters. If the email you provided is
+  not the best to reach you, please update your
+  <a href="{% url 'profile_page' %}">contact information here.</a></li>
+</p>
 
-</main>
 {% endblock content %}

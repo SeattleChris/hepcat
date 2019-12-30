@@ -10,9 +10,13 @@
   <link rel="stylesheet" href="{% static 'css/normalize.css' %}">
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
   <!-- <link rel="stylesheet" href="burger-1.css"> -->
+  {% block super_head %}
+
   {% block head %}
   <title>Swing Dance - Lindy Hop Classes!</title>
-  {% endblock %}
+  {% endblock head %}
+
+  {% endblock super_head %}
 </head>
 <body>
 <header>
@@ -41,7 +45,7 @@
     <label id="menu" for="menu-toggle">Menu</label>
     <input type="checkbox" id="menu-toggle">
     <ul class="nav-menu" >
-      <li><a href="{% url 'home' %}">home</a></li>
+      <li><a href="{% url 'home' %}">Home</a></li>
       <li><a href="{% url 'classoffer_list' %}">Classes</a></li>
       <li><a href="{% url 'register' %}">Class Sign Up!</a></li>
       <li><a href="{% url 'aboutus' %}">About Us</a></li>
@@ -57,11 +61,15 @@
   </nav>
 </header>
 
-{% block content %}
+{% block super_content %}
 <main>
+{% block content %}
+
 <h2>No Content on this view yet.</h2>
-</main>
+
 {% endblock content %}
+</main>
+{% endblock super_content %}
 
 <footer>
   <a href="/" title="Swing Dance - Lindy Hop"><img src="{% static 'assets/seattleswing.png' %}" alt="Logo Layout Element" /></a>
@@ -74,6 +82,8 @@
   </ul>
   <p>1998 - 2020 &copy; SeattleSwing - HepCat Productions</p>
 </footer>
+{% block super_end %}
 <!-- <script src="script.js"></script> -->
+{% endblock super_end %}
 </body>
 </html>

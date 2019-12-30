@@ -1,6 +1,14 @@
 {% extends "generic/needle.html" %}
+{% load static %}
 
-{% block main %}
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/home_design.css' %}">
+<title>Swing Dance - Lindy Hop Classes!</title>
+{% endblock head %}
+
+
+{% block content %}
+
 <section id="offers">
   <article id="Beginning-Swing-Dance-Lindy-Hop">
     <h1><a href="{% url 'classoffer_list' %}" title="Swing Dance Class Details">Beginning Swing Dance - Lindy Hop!</a></h1>
@@ -50,4 +58,10 @@
     </p>
   </article>
 </section>
-{% endblock main %}
+
+{% endblock content %}
+
+
+{% block design_bonus %}
+<div id="offers-visual-element"></div>
+{% endblock design_bonus %}

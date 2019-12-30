@@ -1,33 +1,32 @@
-{% extends "generic/base.html" %}
+{% extends "generic/needle.html" %}
 
 {% block head %}
 <title>Your Profile</title>
 {% endblock head %}
 
+
 {% block content %}
-<main>
 
-  <h2>{{ profile }} Profile Details</h2>
-  <p>{{profile.bio}}</p>
-  <h3>Context Had</h3>
-  {% for classoffer in had %}
-  <h4>{{classoffer}}</h4>
-  <p>
-    Taught by: {{classoffer.teachers}} |
-    {{classoffer.class_day}} |
-    {{classoffer.start_date}} to {{classoffer.end_date}} |
-    {{classoffer.start_time}} - {{classoffer.end_time}} |
-  </p>
+<h2>{{ profile }} Profile Details</h2>
+<p>{{profile.bio}}</p>
+<h3>Context Had</h3>
+{% for classoffer in had %}
+<h4>{{classoffer}}</h4>
+<p>
+  Taught by: {{classoffer.teachers}} |
+  {{classoffer.class_day}} |
+  {{classoffer.start_date}} to {{classoffer.end_date}} |
+  {{classoffer.start_time}} - {{classoffer.end_time}} |
+</p>
+{% endfor %}
+<h3>Resources</h3>
+{% for key, values in resources.items %}
+<h4>{{key}}</h4>
+<ul>
+  {% for res in values %}
+  <li><a href="{% url 'resource_detail' id=res.id %}">res: {{res}}</a></li>
   {% endfor %}
-  <h3>Resources</h3>
-  {% for key, values in resources.items %}
-  <h4>{{key}}</h4>
-  <ul>
-    {% for res in values %}
-    <li><a href="{% url 'resource_detail' id=res.id %}">res: {{res}}</a></li>
-    {% endfor %}
-  </ul>
-  {% endfor %}
+</ul>
+{% endfor %}
 
-</main>
 {% endblock content %}
