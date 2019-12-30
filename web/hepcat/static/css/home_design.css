@@ -1,4 +1,4 @@
-
+main { width: auto; min-width: 0; min-height: 0; background-color: inherit; }
 #offers-visual-element {
     background-color: #77161e;
     z-index: -1;

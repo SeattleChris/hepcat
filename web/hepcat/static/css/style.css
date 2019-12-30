@@ -11,7 +11,9 @@ body {
 }
 main {
     /* adjust for header overlap */
-    margin: 0; padding: 1.75rem 0; width: 100%;
+    margin: 0;
+    padding: 1.75rem 0;
+    /* width: 100%; */
 }
 header {
     margin: 0; padding: 0; width: 100%;
@@ -74,7 +76,8 @@ footer {
     /* font-size: smaller; */
     font-size: 90%;
     text-align: center;
-    width: 100%; }
+    /* width: 100%; */
+}
 footer img { visibility: collapse; height: 10rem; border-radius: 1.25rem; }
 footer ul { display: block; margin: 0; padding:0; }
 footer li { display: inline-block; text-align: left; margin: 0; padding: 0; }
