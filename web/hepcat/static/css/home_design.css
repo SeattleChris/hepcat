@@ -1,4 +1,12 @@
-main { width: auto; min-width: 0; min-height: 0; background-color: inherit; }
+main {
+    padding: 0;
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    display: flex;
+    align-content: space-between;
+    justify-content: flex-end;
+}
 #offers-visual-element {
     background-color: #77161e;
     z-index: -1;
@@ -26,7 +34,6 @@ main { width: auto; min-width: 0; min-height: 0; background-color: inherit; }
     border: 0.25rem solid #d8cdbe;
     border-radius: 2rem;
     padding: 0.25rem;
-    z-index: 1;
 }
 #offers h1 { font-size: 1.8625em; }
 #offers h3 { margin: 0; }
@@ -46,3 +53,14 @@ main section:last-child iframe { width: 31rem; height: 23rem; border-radius: 2re
 main section:last-child article:last-child { min-width: 26.25rem; text-align: right; }
 main section:last-child article:last-child p { text-align: left; padding-left: 14%; }
 main section:last-child article:last-child p:last-child{ padding-left: 22%; }
+
+footer {
+    bottom: 4.5rem;
+}
+
+@media screen and (max-width: 880px) {
+    footer { width: 12.5rem; bottom: 16.75rem; }
+    #left-design-layout img { visibility: collapse; }
+    footer img { display: initial; height: 10rem; border-radius: 1.25rem; }
+    footer li:first-of-type { visibility: collapse; width: 0; }
+}

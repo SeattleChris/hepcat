@@ -60,7 +60,7 @@ class LocationDetailView(DetailView):
 
 class ClassOfferDetailView(DetailView):
     """ Sometimes we want to show more details for a given class offering """
-    template_name = 'classwork/classofer_detail.html'
+    template_name = 'classwork/classoffer_detail.html'
     model = ClassOffer
     context_object_name = 'classoffer'
     pk_url_kwarg = 'id'

@@ -9,7 +9,7 @@
   <!-- <link href="https://fonts.googleapis.com/css?family=Fascinate+Inline|Open+Sans|Raleway&display=swap" rel="stylesheet"> -->
   <link rel="stylesheet" href="{% static 'css/normalize.css' %}">
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
-  <!-- <link rel="stylesheet" href="burger-1.css"> -->
+  <link rel="stylesheet" href="{% static 'css/burger-1.css' %}">
   {% block super_head %}
 
   {% block head %}
@@ -50,14 +50,12 @@
       <li><a href="{% url 'register' %}">Class Sign Up!</a></li>
       <li><a href="{% url 'aboutus' %}">About Us</a></li>
       <li><a href="#">Other Info</a></li>
-    </ul>
-    {% if user.is_staff %}
-    <ul>
+      {% if user.is_staff %}
       <li><a href="{% url 'admin:index' %}" >admin</a></li>
       <li><a href="{% url 'checkin' %}">Checkin Sheet</a></li>
       <li><a href="{% url 'location_list' %}">Location List</a></li>
+      {% endif %}
     </ul>
-    {% endif %}
   </nav>
 </header>
 
