@@ -12,10 +12,11 @@
 @keyframes not-checked-anim {
     0% { width: 3000px; height: 3000px; }
 }
-li, a {
-    margin: 75px 0 -55px 0;
-    color: #03A9F4;
-    font: 14pt "Roboto", sans-serif;
+.nav-menu li, .nav-menu a {
+    /* margin: 75px 0 -55px 0; */
+    /* color: #03A9F4; */
+    color: #5e5;
+    /* font: 14pt "Roboto", sans-serif; */
     font-weight: 700;
     line-height: 1.8;
     text-decoration: none;
@@ -24,14 +25,14 @@ li, a {
     outline: 0;
     display: none;
 }
-li { width: 230px; text-indent: 56px; }
-a:focus {
+/* header nav li { width: 230px; text-indent: 56px; } */
+header nav a:focus {
     display: block;
     color: #333;
     background-color: #eee;
     transition: all .5s;
 }
-aside {
+header aside {
     position: absolute;
     color: white;
     top: 35%;
@@ -57,18 +58,15 @@ h4 {
 } */
 
 html, body {
-    margin: 0;
-    padding: 0;
     overflow: hidden;
-    background-color: #03A9F4;
-    font-family: 'Roboto', sans-serif;
 }
 
-#trigger, #burger, #burger:before, #burger:after {
+#trigger, #nav-menu, #nav-menu:before, #nav-menu:after {
     position: absolute;
     top: 25px;
     left: 25px;
-    background: #03A9F4;
+    /* background: #03A9F4; */
+    background: #f90;
     width: 30px;
     height: 5px;
     transition: .2s ease;
@@ -79,30 +77,30 @@ html, body {
     height: 25px;
     background: none;
 }
-#burger:before {
+#nav-menu:before {
     content: " ";
     top: 10px;
     left: 0;
 }
-#burger:after {
+#nav-menu:after {
     content: " ";
     top: 20px;
     left: 0;
 }
-#menu-toggle:checked + #trigger + #burger {
+#menu-toggle:checked + #trigger + #nav-menu {
     top: 35px;
     transform: rotate(180deg);
     transition: transform .2s ease;
 }
 
-#menu-toggle:checked + #trigger + #burger:before {
+#menu-toggle:checked + #trigger + #nav-menu:before {
     width: 20px;
     top: -2px;
     left: 18px;
     transform: rotate(45deg) translateX(-5px);
     transition: transform .2s ease;
 }
-#menu-toggle:checked + #trigger + #burger:after {
+#menu-toggle:checked + #trigger + #nav-menu:after {
     width: 20px;
     top: 2px;
     left: 18px;
@@ -120,7 +118,7 @@ html, body {
     animation: not-checked-anim .2s both;
     transition: .2s;
 }
-#menu-toggle:checked + #trigger + #burger + #menu {
+#menu-toggle:checked + #trigger + #nav-menu + #menu {
     animation: checked-anim 1s ease both;
 }
 #menu-toggle:checked + #trigger ~ #menu > li, a {
