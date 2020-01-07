@@ -75,10 +75,11 @@ header nav {
     text-align: right;
 }
 /* ***** End Menu *********************** */
+header nav { font-size: 115%; }
 header nav ul { display: block; margin: 0; }
-header nav li { display: block; text-align: right; }
+header nav li { display: inline-block; text-align: right; }
 header nav .user-login li { display: inline-block; }
-header nav .user-login li:before { content: ' |'; }
+header nav li:before { content: ' | '; }
 header nav a { text-decoration: none; }
 /* ***** End Header Elements ************ */
 footer {

@@ -9,7 +9,7 @@
 	<link href="normalize.css" rel="stylesheet" type="text/css" />
   <link href="style-flex.css" rel="stylesheet" type="text/css" />
   <!-- <link href="burger-1.css" rel="stylesheet" type="text/css" /> -->
-  <link href="burger-new.css" rel="stylesheet" type="text/css" />
+  <!-- <link href="burger-new.css" rel="stylesheet" type="text/css" /> -->
 
 </head>
 <body>
@@ -19,28 +19,29 @@
       <span id="seattle">Seattle</span>
       <span id="swing">Swing</span>
     </h1>
-    <div class="container">
-      <!-- This checkbox will give us the toggle behavior, it will be hidden, but functional -->
-      <input id="toggle" type="checkbox">
+    <nav role="navigation">
+      <ul class="user-login">
+        <!-- <li><a href="#">Logout</a></li>
+        <li><a href="#">Profile</a></li> -->
+        <li><a href="#">Sign Up Account</a></li>
+        <li><a href="#">Login</a></li>
+      </ul>
 
-      <!-- IMPORTANT: Any element that we want to modify when the checkbox state changes go here, being "sibling" of the checkbox element -->
+      <label id="menu" for="menu-toggle">Menu</label>
+      <input type="checkbox" id="menu-toggle">
+      <ul class="nav-menu" >
+        <li><a href="#">Home</a></li>
+        <li><a href="#">Classes</a></li>
+        <li><a href="#">Sign Up!</a></li>
+        <li><a href="#">About Us</a></li>
+        <li><a href="#">Other Info</a></li>
+      </ul>
+      <!-- <ul>
+        <li><a href="#" >admin</a></li>
+        <li><a href="#">Checkin Sheet</a></li>
+      </ul> -->
+    </nav>
 
-      <!-- This label is tied to the checkbox, and it will contain the toggle "buttons" -->
-      <label class="toggle-container" for="toggle">
-          <!-- If menu is open, it will be the "X" icon, otherwise just a clickable area behind the hamburger menu icon -->
-          <span class="button button-toggle"></span>
-      </label>
-
-      <!-- The nav menu -->
-      <nav class="nav">
-        <a class="nav-item" href="">Classes</a>
-        <a class="nav-item" href="">Sign Up!</a>
-        <a class="nav-item" href="">About Us</a>
-        <a class="nav-item" href="">Other Info</a>
-        <a class="nav-item" href="">Fifth Info Item</a>
-        <a class="nav-item" href="">Sixth Info Is A Lot</a>
-      </nav>
-    </div>
   </header>
   <main>
 
