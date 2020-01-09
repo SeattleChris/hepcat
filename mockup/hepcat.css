@@ -1,0 +1,174 @@
+/* Default for most browsers is 16px for 1rem */
+html { width: 98%; min-width: 0; max-width: 80rem; margin: 0 auto; padding: 0;  }
+body {
+    background-color: #a3c2d7;  /* ccefdb 3b9c71 light=#abc9dd darker=#72a1ca middle=#92b5d1 25%=#a3c2d7  */
+    width: 100%; margin: 0; padding: 0;
+    font-family: 'Open Sans', sans-serif;
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+header {
+    margin: 0; padding: 0; width: 100%;
+    order: -1;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+header h1 {
+    align-self: flex-start;
+    font-family: 'Diplomata', cursive;
+    font-size: 3.6rem;
+    /* margin-bottom: -2.5rem; */
+    margin: 0 0 -2.5rem 0.25rem;
+    transform: rotate(-10deg);
+}
+#swing { display: block; }
+#swing::before { content: attr(data-text); padding: 0 2.5em; }
+/* Main Site Nav inside a nav inside of Header */
+header nav { align-self: flex-end; margin: 0; text-align: right; font-size: 110%;}
+input#menu-toggle[type=checkbox] { position: absolute; top: 0; right: 0; opacity: 0; }
+/* For mobile: better for 0 Opacity and position checkbox in top right of clickable area */
+/* Default State, then Toggled (on) State */
+header .nav-menu  { display: none; position: absolute; top: 7rem; right: 2rem; text-align: right; }
+header input[type=checkbox]:checked ~ .nav-menu { display: inline-block; }
+    /* Maybe could add to the previous two - visibility: invisible | visible; */
+header label#menu {
+    -webkit-appearance: push-button;
+    -moz-appearance: button;
+    display: inline-block;
+    margin: 0.75rem 0 0.25rem 0;
+    padding: 0.5rem;
+    cursor: pointer;
+    background-color: #66050d; /*  #77161e; */
+    color: #eeeeee;
+    border-radius: 1rem;
+}
+header nav ul, footer ul { display: block; margin: 0; padding: 0;}
+header nav li { display: inline-block; text-align: right; }
+footer li { display: inline-block; text-align: left; margin: 0; padding: 0; }
+header nav li:before, footer li:after { content: ' | '; }
+footer li:last-of-type:after { content: ''; }
+header nav a, footer a { text-decoration: none; }
+footer p { margin: 0; padding: 0; }
+footer img { visibility: collapse; width: 10rem; border-radius: 1.25rem; }
+footer {
+    order: 3;
+    font-size: 90%;
+    width: 20.58rem;
+    /* position: absolute; */
+    /* position: relative;
+    bottom: 13.75rem; */
+}
+
+#left-design-layout {
+    /* min-width: 7.947rem; */
+    width: 15.082030rem;
+    order: 1;
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+#left-design-layout img { width: 100%; }
+main {
+    order: 2;
+    flex: 1 1;
+    display: inline-flex;
+    align-content: space-between;
+    /* justify-content: flex-end; */
+}
+#offers {
+    width: 23.5rem;
+    margin-right: 2rem;
+    padding-top: 1.75rem;
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: flex-end;
+    text-align: center;
+}
+main section:last-child {
+    /* max-width: 33.5rem;
+    min-width: 31.625rem; */
+    /* flex: 1 1; */
+    align-self: flex-end;
+    width: 32rem;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+#offers article {
+    margin: 0.5rem auto;
+    border: 0.25rem solid #d8cdbe;
+    border-radius: 2rem;
+    padding: 0.25rem;
+    z-index: 1;
+}
+#offers article img { float: left; width: 7.55rem; margin: 0; padding: 0; }
+#offers h1 { font-size: 1.8rem; margin-top: 0.8rem; margin-bottom: 1rem; }
+#offers h3 { margin: 0; font-size: 1.1rem; }
+#offers p { margin: 1rem 0; }
+#offers p.description { text-align: left; }
+#offers article:nth-child(1) { width: 20.428rem; margin-left: 0rem; } /* max-width: 21.1988rem; min-width: 19.5543rem; */
+#offers article:nth-child(2) { width: 17.75rem; margin-left: 31.067%; transform: rotate(-3deg); }
+#offers article:nth-child(3) { width: 13.3545rem; margin-left: 62.13%; }
+
+/* #offers article:nth-child(2) { width: 17.75rem; margin-left: 7.3rem; transform: rotate(-3deg); }
+#offers article:nth-child(3) { width: 13.3545rem; margin-left: 14.6rem; } */
+
+/* #offers article:nth-child(2) { margin-left: 8.6711vw;   }
+#offers article:nth-child(3) { margin-left: 17.34225vw; } */
+
+.video {
+    position:relative;
+    padding-top: 74.19%;
+    width: 92.537%;
+    /* min-width: 31rem; */
+}
+.video iframe, .video video {
+    position:absolute; top:0; right:0;
+    width:100%; height:100%;
+    border-radius: 2rem;
+}
+/* main section:last-child iframe { width: 31rem; height: 23rem; border-radius: 2rem; } */
+main section:last-child article:last-child {
+    min-width: 26.25rem;
+    /* max-width: 27.85rem; */
+    text-align: right;
+}
+main section:last-child article:last-child p { text-align: left; padding-left: 14%; }
+main section:last-child article:last-child p:last-child{ padding-left: 22%; }
+
+#offers-visual-element {
+    background-color: #77161e;
+    z-index: -1;
+    order: 4;
+    /* position: relative;
+    right: 26.5rem;
+    bottom: 58.35rem; */
+    position: absolute;
+    left: -1rem;
+    top: 0;
+    width: 48rem;
+    height: 65rem;
+    clip-path: polygon(0% 0%, 72% 0%, 100% 100%, 74% 100% );
+}
+@media screen and (max-width: 1199px) {
+    html { font-size: 1.32vw; }
+
+}
+@media screen and (max-width: 960px) {
+    html { font-size: 79.25%; }
+
+    /* #left-design-layout {
+        min-width: 0.1rem;
+        max-width: 14.80rem;
+        max-height: 46rem;
+        flex: 3 3;
+    } */
+}
+
+/* header, #offers { outline: solid red; }
+footer, main, main section:last-child { outline: solid purple; } */
