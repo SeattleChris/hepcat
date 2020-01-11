@@ -1,6 +1,6 @@
 /* Default for most browsers is 16px for 1rem */
 .clear { clear: both; }
-html { width: 98%; min-width: 0; max-width: 80rem; margin: 0 auto; padding: 0;  }
+html { width: 98%; min-width: 0; max-width: 73rem; margin: 0 auto; padding: 0;  }
 body {
     background-color: #a3c2d7;  /* ccefdb 3b9c71 light=#abc9dd darker=#72a1ca middle=#92b5d1 25%=#a3c2d7  */
     width: 100%; margin: 0; padding: 0;
@@ -59,8 +59,8 @@ footer {
     font-size: 90%;
     width: 20.58rem;
     /* position: absolute; */
-    /* position: relative;
-    bottom: 13.75rem; */
+    position: relative;
+    bottom: 13.25rem;
 }
 /****************** End of Header & Footer Settings ************************/
 .flex-container {
@@ -169,53 +169,57 @@ main section:last-child article:last-child p:last-child{ padding-left: 22%; }
 [ ] Medium - Ratio of everything is set with font sized according to screen width.
 [ ] Sm.Med - Needle and/or Video gets smaller
 [ ] Small - Needle is gone, logo comes in. Main 2 columns. Background stripe kept if possible
+[ ] Small & Very Small - ? html width is 100%?
 [ ] Very Small - Needle gone, logo in. Main is 1-2 rows as space allows.
 [ ] Very Small - No background stripe. Diagonal content is less diagonal
 */
 /* Pertinent defaults
-html { width: 98%; min-width: 0; max-width: 80rem; }
+html { width: 98%; min-width: 0; max-width: 74rem; }
 #left-design-layout { width: 15.082030rem; order: 1; }
-main { order: 2 }
+main { order: 2; justify-content: flex-end; }
 #offers { width: 23.5rem; margin-right: 2rem; }
 main section:last-child { width: 26.25rem; }
 */
-@media screen and (min-width: 1107px) {
+@media screen and (min-width: 1000px) {
     /* html { font-size: 1.32vw; } */
     main section:last-child {
-        width: unset;
+        /* width: unset; */
         /* was 26.25rem; */
-        min-width: 26.25rem;
-        max-width: 32rem;
-        flex: 1 1;
+        width: 32rem;
+        /* min-width: 26.25rem; */
+        /* max-width: 32rem; */
+        /* flex: 1 1; */
     }
-    footer, main, main section:last-child { outline: solid purple; }
+    /* #left-design-layout { width: 15.5rem; } */
+    /* #left-design-layout { width: unset; flex: 1 1; } */
+    .flex-container { align-items: stretch; justify-content: flex-start; }
+    main { justify-content: flex-start; }
+    .flex-container, main, main section:last-child { outline: solid purple; }
 
 }
 @media screen and (min-width: 960px) {
     /* html { font-size: 1.44535vw; } */
     main section:last-child {
-        width: 26.25rem;
+        /* width: 26.25rem; */
         /* was 32rem */
-        min-width: unset;
-        max-width: unset;
-        flex: unset;
+        /* min-width: unset; */
+        /* max-width: unset; */
+        /* flex: unset; */
     }
     #left-design-layout {
-        width: unset;
+        /* width: unset; */
         /* was 15.082030rem; */
         /* width: 21.798vw; */
-        min-width: 2rem;
-        max-width: 15.082030rem;
+        /* min-width: 2rem; */
+        /* max-width: 15.082030rem; */
         /* width: unset; */
         /* flex: 1 1; */
         /* min-width: 2%;
         max-width: 44%; */
     }
-
-
 }
 @media screen and (max-width: 960px) {
-    html { font-size: 79.25%; }
+    /* html { font-size: 79.25%; } */
 
     /* #left-design-layout {
         min-width: 0.1rem;
