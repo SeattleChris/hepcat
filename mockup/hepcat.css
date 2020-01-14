@@ -7,24 +7,12 @@ body {
     width: 100%; margin: 0; padding: 0;
     font-family: 'Open Sans', sans-serif;
     position: relative;
-    /* display: flex; */
-    /* justify-content: space-between; */
-    /* flex-wrap: wrap; */
 }
-header {
-    margin: 0; padding: 0; width: 100%;
-    /* order: -1; */
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-}
-header h1 {
-    align-self: flex-start;
-    font-family: 'Diplomata', cursive;
+header { display: flex; justify-content: space-between; align-items: flex-start; }
+    /* margin: 0; padding: 0; width: 100%; */
+header h1 { font-family: 'Diplomata', cursive; transform: rotate(-10deg); margin: 0 0 -2.5rem 0.25rem; }
+    /* align-self: flex-start; */
     /* font-size: 3.6rem; */
-    margin: 0 0 -2.5rem 0.25rem;
-    transform: rotate(-10deg);
-}
 #swing { display: block; }
 #swing::before { content: attr(data-text); padding: 0 2.5em; }
 /* Main Site Nav inside a nav inside of Header */
@@ -34,7 +22,7 @@ input#menu-toggle[type=checkbox] { position: absolute; top: 0; right: 0; opacity
 /* Default State, then Toggled (on) State */
 header .nav-menu  { display: none; position: absolute; top: 7rem; right: 2rem; text-align: right; }
 header input[type=checkbox]:checked ~ .nav-menu { display: inline-block; }
-    /* Maybe could add to the previous two - visibility: invisible | visible; */
+    /* Maybe could add to the previous two - visibility: collapse | visible; */
 header label#menu {
     -webkit-appearance: push-button;
     -moz-appearance: button;
@@ -54,11 +42,9 @@ footer li:last-of-type:after { content: ''; }
 header nav a, footer a { text-decoration: none; }
 footer p { margin: 0; padding: 0; }
 footer img { visibility: collapse; width: 9rem; border-radius: 1.25rem; margin: 0; padding: 0; } /* width: 16.775vw */
-footer { font-size: 90%; }
+footer { font-size: 90%; text-align: center; }
 /****************** End of Header & Footer Settings ************************/
 #left-design-layout {
-    /* min-width: 7.947rem; */
-    /* width: 15.082030rem; */
     order: 1;
     display: flex;
     flex-direction: column;
@@ -76,7 +62,6 @@ footer { font-size: 90%; }
 }
 main section:nth-child(2) {
     order: 3;
-    /* width: 32rem; */
     align-self: stretch;
     display: flex;
     flex-direction: column;
@@ -88,107 +73,51 @@ main section:nth-child(2) {
     border: 0.25rem solid #d8cdbe;
     border-radius: 2rem;
     padding: 0.25rem;
-    z-index: 1;
-    width: 20.4293rem;
-        /* width: 21.
-        26rem; */
+    z-index: 2;
+    width: 20.4295rem;
 }
 #offers article img { float: left; width: 7.55rem; margin: 0; padding: 0; }
 #offers h3 { margin: 0; font-size: 1.1rem; }
 #offers p { margin: 1rem 0; }
 #offers p.description { text-align: left; }
-
 /* #offers article:nth-child(2) { width: 17.75rem; margin-left: 7.63672rem; transform: rotate(-3deg); }
 #offers article:nth-child(3) { width: 13.3545rem; margin-left: 14.5996rem; } */
-
 /* #offers article:nth-child(2) { margin-left: 8.6711vw;   }
 #offers article:nth-child(3) { margin-left: 17.34225vw; } */
-
-.video {
-    position: relative;
-    padding-top: 74.19%;
-    /* width: 92.537%; */
-    width: 100%;
-}
-.video iframe, .video video {
-    position: absolute; top:0; right:0;
-    width:100%; height:100%;
-    border-radius: 2rem;
-}
-
+.video { position: relative; padding-top: 74.19%; width: 100%; }
+.video iframe, .video video { position: absolute; top:0; right:0; width:100%; height:100%; border-radius: 2rem; }
 #offers-visual-element {
     /* background-color: #77161e; */
     background-color: #205b4f;
     z-index: -1;
     position: absolute;
-    left: -1rem;
+    /* left: -1rem; */
+    right: 18.85rem;
     top: 0;
     width: 48rem;
     height: 65rem;
     clip-path: polygon(0% 0%, 72% 0%, 100% 100%, 74% 100% );
 }
-/****************** Media Queries for Page Sizes ************************/
-/* Goals:
-[x] Very big - Set max width, center all content. [set on html as default ]
-[ ] Very big - Large Needle, Large Video. Biggest size font.
-[ ] Pretty big - Same as Very Wide, but video can adjust to more sane size
-[ ] Fairly big - Video set to smallest of Pretty wide. Needle adjusts as needed for space
-[ ] Medium - Ratio of everything is set with font sized according to screen width.
-[ ] Sm.Med - Needle and/or Video gets smaller
-[ ] Small - Needle is gone, logo comes in. Main 2 columns. Background stripe kept if possible
-[ ] Small & Very Small - ? html width is 100%?
-[ ] Very Small - Needle gone, logo in. Main is 1-2 rows as space allows.
-[ ] Very Small - No background stripe. Diagonal content is less diagonal
-*/
-/* Pertinent defaults
-html { width: 98%; min-width: 0; max-width: 74rem; }
-#left-design-layout { width: 15.082030rem; order: 1; }
-main { order: 2; justify-content: flex-end; }
-#offers { width: 23.5rem; margin-right: 2rem; }
-main section:nth-child(2) { width: 26.25rem; }
-*/
-header h1 { font-size: 3.6rem; }
 
-@media screen and (min-width: 1000px) {
-    #left-design-layout { max-width: 15.082030rem; }
-    main { justify-content: flex-start; }
-    #offers { min-width: 23.5rem; }
-    main section:nth-child(2) { min-width: 24.3; max-width: 32rem; }
-}
-@media screen and (max-width: 1075px) {
-    main { justify-content: flex-end; }
-    #offers-visual-element { left: unset; right: 18.85rem; }
-    main section:nth-child(2) { max-width: 25.3em; }
-    #left-design-layout { min-width: 0.1rem; max-width: 15.082030rem; }
-}
-@media screen and (max-width: 1024px) {
-    main { justify-content: flex-end; }
-    #offers-visual-element { left: unset; right: 18.85rem; }
-    main section:nth-child(2) { max-width: 25.3em; }
-    html { font-size: 1.5625vw; }
-    #left-design-layout { min-width: 0.1rem; max-width: 15.082030rem; }
-}
-@media screen and (max-width: 832px) {
-    /* header h1 { font-size: 3.6rem; } */
-    header h1 { font-size: 5.625vw; }
-    html { font-size: 81.25%; }
-}
+header h1 { font-size: 3.6rem; }
+html { font-size: 81.25%; }
+
 @media screen and (max-width: 460px) {
     main { display: block; }
-    footer { display: block; position: initial; text-align: center; width: unset; }
     #offers { padding-top: 0; }
+    #offers article img { float: right; }
     #offers article:nth-child(n) { width: 22.697rem; transform: unset; }
     main section:nth-child(2) { width: 100%; max-width: 22.697rem; margin: 0 auto; }
 }
 @media screen and (min-width: 461px) {
     main { display: flex; align-content: space-between; align-items: stretch; justify-content: flex-start; }
     #offers { padding-top: 2.75vw; margin-right: 1rem; justify-content: flex-start; }
-    /* #offers article:nth-child(1) { width: 20.4293rem; margin-left: 0rem; } */
+    /* #offers article:nth-child(1) { width: 20.4295rem; } */
     #offers article:nth-child(2) { width: 17.75rem; transform: rotate(-3deg); }
     #offers article:nth-child(3) { width: 13.355rem; }
-    footer { display: block; position: initial; text-align: center; width: unset; }
+    main section:nth-child(2) { max-width: 25.3rem; }
 }
-@media screen and (min-width: 690px) { /* 660px */
+@media screen and (min-width: 690px) {
     main { justify-content: flex-end;  }
     /* header h1 { font-size: 3.9394vw; } */
     #offers { padding-top: 1.75rem; margin-right: 2rem; min-width: 23.5rem; justify-content: flex-end; }
@@ -200,25 +129,46 @@ header h1 { font-size: 3.6rem; }
     main section:nth-child(2) article:last-child { min-width: 25.3rem; text-align: right; }
     main section:nth-child(2) article:last-child p { text-align: left; padding-left: 14%; }
     main section:nth-child(2) article:last-child p:last-child{ padding-left: 22%; }
-    footer { width: 11.5rem; position: relative; bottom: 13.25rem; }
+    footer { text-align: left; width: 11.5rem; position: relative; bottom: 13.25rem; }
     footer img { visibility: visible; display: inline-block; }
     footer li:first-of-type { display: none; }
 }
-@media screen and (max-width: 689px) {
-    #left-design-layout img, #left-design-layout, footer img, #offers-visual-element { display: none; }
-}
+@media screen and (max-width: 689px) { footer img, #offers-visual-element { display: none; } }
+@media screen and (max-width: 775px) { #left-design-layout { width: 0; height: 0; min-width: unset; display: none; } }
 @media screen and (min-width: 776px) {
+    #left-design-layout { min-width: 0.1rem; max-width: 15.082030rem; }
     footer img { visibility: collapse; }
     footer { width: 20.58rem; }
     footer li:first-of-type { display: unset; }
 }
-@media screen and (max-width: 775px) {
-    /* #left-design-layout img { visibility: collapse; } */
-    #left-design-layout { width: 0; height: 0; min-width: unset; display: none; }
-    /* footer li:first-of-type { display: none; } */
-    /* #offers-visual-element { width: 0; height: 0;} */
+@media screen and (min-width: 874px) {
+    /* html { font-size: 1.5625vw; } */
+    /* min-width 874px is where needle hits the max size. Any pixel higher has needle at same size. */
+    html { font-size: 1.48741vw; }
+    /* 1.48741vw - 1.4874085vw to 1.4874199162358824333196594125183764845132vw */
+    /* min-width 873px */
+    /* html { font-size: 1.48912vw; } */
+    footer ul { outline: solid purple; }
 }
-
+@media screen and (min-width: 1076px) {
+    html { font-size: unset; }
+    main { justify-content: flex-start; }
+    #offers-visual-element { left: -1rem; right: unset; }
+    #left-design-layout { min-width: unset; max-width: unset; width: 15.082030rem; }
+    /* #left-design-layout { min-width: 15.082030rem; max-width: 15.082030rem; width: 15.082030rem; } */
+    main section:nth-child(2) { min-width: 25rem; max-width: 26.7rem; }
+    main section:nth-child(2) { min-width: 25rem; max-width: 32.45rem; }
+    footer ul { outline: dashed purple; }
+    main section:nth-child(2) {outline: solid red;}
+    main { outline: solid purple; }
+}
+@media screen and (max-width: 1024px) {
+    /* html { font-size: 1.5625vw; } */
+}
+@media screen and (max-width: 832px) {
+    header h1 { font-size: 5.625vw; }
+    /* html { font-size: 81.25%; } */
+}
 
 /* header { outline: solid red; } */
 /* #left-design-layout, main { outline: dashed purple} */
