@@ -99,11 +99,10 @@ main section:nth-child(2) {
     clip-path: polygon(0% 0%, 72% 0%, 100% 100%, 74% 100% );
 }
 
-header h1 { font-size: 3.6rem; }
 html { font-size: 81.25%; }
-
 @media screen and (max-width: 460px) {
     main { display: block; }
+    header h1 { font-size: 2rem; }
     #offers { padding-top: 0; }
     #offers article img { float: right; }
     #offers article:nth-child(n) { width: 22.697rem; transform: unset; }
@@ -111,6 +110,7 @@ html { font-size: 81.25%; }
 }
 @media screen and (min-width: 461px) {
     main { display: flex; align-content: space-between; align-items: stretch; justify-content: flex-start; }
+    header h1 { font-size: 5.625vw; }
     #offers { padding-top: 2.75vw; margin-right: 1rem; justify-content: flex-start; }
     /* #offers article:nth-child(1) { width: 20.4295rem; } */
     #offers article:nth-child(2) { width: 17.75rem; transform: rotate(-3deg); }
@@ -141,13 +141,10 @@ html { font-size: 81.25%; }
     footer { width: 20.58rem; }
     footer li:first-of-type { display: unset; }
 }
+@media screen and (min-width: 833px) { header h1 { font-size: 3.6rem; } }
 @media screen and (min-width: 874px) {
-    /* html { font-size: 1.5625vw; } */
-    /* min-width 874px is where needle hits the max size. Any pixel higher has needle at same size. */
     html { font-size: 1.48741vw; }
     /* 1.48741vw - 1.4874085vw to 1.4874199162358824333196594125183764845132vw */
-    /* min-width 873px */
-    /* html { font-size: 1.48912vw; } */
     footer ul { outline: solid purple; }
 }
 @media screen and (min-width: 1076px) {
@@ -162,13 +159,14 @@ html { font-size: 81.25%; }
     /* main section:nth-child(2) {outline: solid red;} */
     /* main { outline: solid purple; } */
 }
-@media screen and (max-width: 1024px) {
-    /* html { font-size: 1.5625vw; } */
-}
-@media screen and (max-width: 832px) {
-    header h1 { font-size: 5.625vw; }
-    /* html { font-size: 81.25%; } */
-}
 
-/* header { outline: solid red; } */
-/* #left-design-layout, main { outline: dashed purple} */
+
+/* Design Questions
+How big should the video actually get?
+    Maybe keep the indentation flow from diagonal?
+When background stripe is gone, should articles still have some angle?
+    article angle could shrink until column
+Minimum size of video compared to rest?
+Navigation bar / button at all sizes
+
+*/
