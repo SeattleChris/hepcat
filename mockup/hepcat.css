@@ -157,10 +157,10 @@ html { font-size: 81.25%; }
     #left-design-layout { min-width: unset; max-width: unset; width: 15.082030rem; }
     /* #left-design-layout { min-width: 15.082030rem; max-width: 15.082030rem; width: 15.082030rem; } */
     main section:nth-child(2) { min-width: 25rem; max-width: 26.7rem; }
-    main section:nth-child(2) { min-width: 25rem; max-width: 32.45rem; }
+    main section:nth-child(2) { min-width: 25rem; max-width: 32.3876935rem; }
     footer ul { outline: dashed purple; }
-    main section:nth-child(2) {outline: solid red;}
-    main { outline: solid purple; }
+    /* main section:nth-child(2) {outline: solid red;} */
+    /* main { outline: solid purple; } */
 }
 @media screen and (max-width: 1024px) {
     /* html { font-size: 1.5625vw; } */
