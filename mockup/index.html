@@ -24,12 +24,13 @@
       </a>
     </h1>
     <nav role="navigation">
-      <ul class="user-login">
-        <li>Account</li>
-        <!-- <li><a href="#">Logout</a></li>
-        <li><a href="#">Profile</a></li> -->
-        <li><a href="#">Sign Up</a></li>
+      <label for="user-login">Account </label>
+      <ul id="user-login">
+        <!-- <li><a href="#">Logout</a></li> -->
+        <!-- <li><a href="#">Profile</a></li> -->
+        <li><a href="#">Create</a></li>
         <li><a href="#">Login</a></li>
+        <!-- <li><a href="#" >Admin</a></li> -->
       </ul>
       <!-- <label id="menu" for="menu-toggle">Menu</label>
       <input type="checkbox" id="menu-toggle">
@@ -41,15 +42,11 @@
         <li><a href="#">About Us</a></li>
         <li><a href="#">Info</a></li>
       </ul>
-      <!-- <ul>
-        <li><a href="#" >admin</a></li>
-        <li><a href="#">Checkin Sheet</a></li>
-      </ul> -->
     </nav>
   </header>
-  <!-- <div class="flex-container"> -->
 
   <main>
+
     <section id="offers">
       <article id="Beginning-Swing-Dance-Lindy-Hop">
         <h1><a href="/lindy" title="Swing Dance Class Details">Beginning Swing Dance - Lindy Hop!</a></h1>
@@ -82,6 +79,7 @@
         <p><a href="/dance">Dance Details</a> | <a href="/directions">Directions</a></p>
       </article>
     </section>
+
     <section>
       <h2>What's it Like Getting Started?</h2>
       <article class="video">
@@ -100,21 +98,22 @@
         </p>
       </article>
     </section>
+
     <div id="left-design-layout">
       <img src="space-needle-observation.png" alt="Space Needle Layout Element" />
       <section>
       </section>
     </div> <!-- div#left-design-layout  -->
+
   </main>
 
-  <!-- </div> -->
-  <!-- div#flex-container-->
-<div id="offers-visual-element"></div>
+  <div id="offers-visual-element"></div>
+
   <footer>
     <a href="/" title="Swing Dance - Lindy Hop">
       <img src="SeattleSwing2.png" alt="Logo Layout Element" />
     </a>
-    <br />
+    <!-- <br /> -->
     <ul>
       <li><a href="/" title="Swing Dance - Lindy Hop">Home</a></li>
       <li><a href="/lindy" title="Swing Dance - Lindy Hop Lessons">Class Details</a></li>
@@ -125,27 +124,3 @@
 <!-- <script src="script.js"></script> -->
 </body>
 </html>
-
-<!-- Version A
-880px - 1199px > font-size related to screen width
-880px - 960px  > font-size set. video column static, needle section changes size
-                 keep the red background, attached to the right.
-629px - 880px  > needle static, video column changes (main section:last-child)
-                 keep the red background? attached to the left?
-                 diag column changes?
-0?    - 629px  > NO red background, maybe diag column changes article margins
-                 No needle, see the logo instead
-                 Maybe if narrow enough, main columns will stack
-
--->
-<!-- Version B
-880px - 1199px > font-size related to screen width
-880px - 960px  > font-size set. needle static,  video column changes (main section:last-child)
-                 keep the red background
-629px - 880px  > video column static, needle column changes
-                 keep the red background
-                 diag column changes?
-0?    - 629px  > NO red background, maybe diag column changes article margins
-                 No needle, see the logo instead
-                 Maybe if narrow enough, main columns will stack
--->
