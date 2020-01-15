@@ -5,6 +5,7 @@ html { width: 98%; min-width: 20.03rem; max-width: 73rem; margin: 0 auto; paddin
 /* min-width: 41.25rem; */
 body {
     background-color: #a3c2d7;  /* ccefdb 3b9c71 light=#abc9dd darker=#72a1ca middle=#92b5d1 25%=#a3c2d7  */
+    color: #111;
     width: 100%; margin: 0; padding: 0;
     font-family: 'Open Sans', sans-serif;
     position: relative;
@@ -16,6 +17,7 @@ header h1 { font-family: 'Diplomata', cursive; transform: rotate(-10deg); margin
     /* font-size: 3.6rem; */
 #swing { display: block; }
 #swing::before { content: attr(data-text); padding: 0 2.5em; }
+header h1 a:link, header h1 a:visited { color: #111; }
 /* Main Site Nav inside a nav inside of Header */
 header nav { align-self: flex-end; margin: 0; text-align: right; font-size: 110%;}
 input#menu-toggle[type=checkbox] { position: absolute; top: 0; right: 0; opacity: 0; }
@@ -35,12 +37,13 @@ header label#menu {
     color: #eeeeee;
     border-radius: 1rem;
 }
-header nav ul, footer ul { display: block; margin: 0; padding: 0;}
+header nav ul, footer ul { display: block; margin: 0; padding: 0; }
 header nav li { display: inline-block; text-align: right; }
 footer li { display: inline-block; text-align: left; margin: 0; padding: 0; }
 header nav li:before, footer li:after { content: ' | '; }
 header .user-login li:nth-child(1):before, footer li:last-of-type:after { content: ''; }
-header nav a, footer a { text-decoration: none; }
+header nav a, footer a { text-decoration: none; padding: 0.25em; }
+header h1 a { text-decoration: none; }
 footer p { margin: 0; padding: 0; }
 footer img { visibility: collapse; width: 9rem; border-radius: 1.25rem; margin: 0; padding: 0; } /* width: 16.775vw */
 footer { font-size: 90%; text-align: center; }
@@ -79,26 +82,10 @@ main section:nth-child(2) {
     padding: 0.25rem;
     z-index: 2;
     width: 20.4295rem;
-    /* color: #f7f3e3; */
-    /* color: #BCF8EC; */
-    /* color: #F1D87A; */
-    /* color: #FFF1BD; */
-    /* Extra Brighter Home */
-    /* color: #c5e4f9; */
     color: #FFFCF1;
 }
 /* color: #FFFCF1; */
 #offers article a, #offers article h3 {
-    /* color: #EFD09E; */
-    /* Home */
-    /* color: #a3c2d7; */
-    /* Brighter Home */
-    /* color: #b3d2e7; */
-    /* Extra Brighter Home */
-    /* color: #c5e4f9; */
-    /* color: #BCF8EC; */
-    /* color: #FFF1BD; */
-    /* color: #D4AA7D; */
     color: #F1D87A;
 }
 /* color: #F1D87A; */
@@ -221,3 +208,38 @@ Minimum size of video compared to rest?
 Navigation bar / button at all sizes
 
 */
+.test {
+    color: #f7f3e3;
+    /* "Orange" */
+    color: #F1D87A;
+    color: #EFD09E;
+    color: #D4AA7D;
+    /* Border over red */
+    color: #FFF1BD;
+    /* Home "Blue" */
+    color: #a3c2d7;
+    /* Brighter Home */
+    color: #b3d2e7;
+    /* Extra Brighter Home */
+    color: #c5e4f9;
+    color: #BCF8EC;
+}
+/* Color Palette
+Style guide: "White" = #FFFCF1, "Black" = #111, "Blue" = #a3c2d7, "Orange" = #F1D87A
+Page/light background: "Blue"
+Section light background: "White"
+Stripe dark/red background: #77161e
+Text on light background: "Black"
+Text over dark/red background: "White"
+Header & link over dark/red background: "Orange"
+Border on red background: #FFF1BD
+
+nav button background: #66050d
+nav button text: #eee
+
+*/
+html body a:link {}
+html body a:visited {}
+a:hover, a:focus, header h1:hover { outline: #F1D87A dotted; }
+html body header h1 a:hover { outline: unset}
+html body a:active { color: #FFF1BD; }
