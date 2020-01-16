@@ -4,13 +4,20 @@
 html { width: 98%; min-width: 20.03rem; max-width: 73rem; margin: 0 auto; padding: 0;  }
 body {
     background-color: #a3c2d7;  /* ccefdb 3b9c71 light=#abc9dd darker=#72a1ca middle=#92b5d1 25%=#a3c2d7  */
+    /* background-color: #DBEAF3; */
     color: #111;
+    color: #1E2159;
     width: 100%; margin: 0; padding: 0;
     font-family: 'Open Sans', sans-serif;
     position: relative;
 }
 header { display: flex; justify-content: space-between; align-items: flex-start; }
-header h1 { font-family: 'Diplomata', cursive; transform: rotate(-10deg); margin: 0 0 -2.5rem 0.25rem; }
+header h1 {
+    font-family: 'Diplomata', cursive;
+    transform: rotate(-10deg);
+    margin: 0 0 -2.5rem 0.25rem;
+    text-shadow: 0.25em 0.25em 0.65em #FFF1BD;
+}
 #swing { display: block; }
 #swing::before { content: attr(data-text); padding: 0 2.5em; }
 
@@ -21,7 +28,7 @@ nav ul, footer ul { margin-block-start: 0; margin-block-end: 0; padding-inline-s
 ul#user-login, nav label, nav li, footer li { display: inline-block; text-align: center; }
 /* footer li, footer ul { text-align: left; } */
 nav li::before, footer li::after { content: ' | '; }
-footer li:last-child::after, ul#user-login li:first-child::before { content: ''; }
+footer li:last-child::after, ul#user-login li:first-child::before, ul li:first-child::before { content: ''; }
 footer img { width: 9rem; border-radius: 1.25rem; margin: 0; padding: 0; }
 footer > a:first-child { display: none; }
 input#menu-toggle[type=checkbox] { position: absolute; top: 0; right: 0; opacity: 0; }
@@ -80,7 +87,7 @@ main section:nth-child(2) {
 }
 #offers article img { float: left; width: 7.55rem; margin: 0; padding: 0; }
 #offers h3 { margin: 0; font-size: 1.1rem; }
-#offers p { margin: 1rem 0; }
+#offers p, main section:nth-child(2) p { margin: 1rem 0; }
 #offers p.description { text-align: left; }
 /* #offers article:nth-child(2) { width: 17.75rem; margin-left: 7.63672rem; transform: rotate(-3deg); }
 #offers article:nth-child(3) { width: 13.3545rem; margin-left: 14.5996rem; } */
@@ -139,8 +146,7 @@ html { font-size: 81.25%; }
     main section:nth-child(2) article:last-child p { text-align: left; padding-left: 14%; }
     main section:nth-child(2) article:last-child p:last-child{ padding-left: 22%; }
     footer { text-align: left; width: 11.5rem; position: relative; bottom: 13.25rem; }
-    /* footer img { visibility: visible; display: inline-block; } */
-    footer > a:first-child { display: initial; }
+    footer > a:first-child { display: initial; } /* hides footer img */
     footer li:first-child { display: none; }
 }
 @media screen and (max-width: 689px) {
@@ -155,8 +161,7 @@ html { font-size: 81.25%; }
 @media screen and (max-width: 775px) { #left-design-layout { width: 0; height: 0; min-width: unset; display: none; } }
 @media screen and (min-width: 776px) {
     #left-design-layout { min-width: 0.1rem; max-width: 15.082030rem; }
-    footer > a:first-child { display: none; }
-    /* footer img { visibility: collapse; } */
+    footer > a:first-child { display: none; } /* hides footer img */
     footer { width: 20.58rem; bottom: 4.25rem; }
     footer li:first-child { display: unset; }
 }
@@ -219,9 +224,12 @@ Base color: #FF8900
 Left Secondary: #FF0000
 Right Secondary: #FFC600
 Complement: #0CB0FF
-
 */
-
+/* http://colrd.com/image-dna/23868/
+    color: #841619;
+    color: #accecd;
+    color: #b4ab9a;
+*/
 /* Color Palette
 Style guide: "White" = #FFFCF1, "Black" = #111, "Blue" = #a3c2d7, "Orange" = #F1D87A
 Backgrounds: Home/light: "Blue", Section/light: "White", Stripe/red: #77161e
@@ -231,8 +239,18 @@ h3 text over dark/red background: ??
 Border over red background: #FFF1BD
 nav button background: #66050d, nav button text: #eee
 */
-header nav a, footer a { text-decoration: none; padding: 0.25em; }
-header h1 a { text-decoration: none; }
+nav ul.site-nav {
+    background-color: #b4ab9a;
+    background-color: #6791AD;
+    background-color: #396887;
+    color: #6791AD;
+    font-weight: bold;
+    display: inline-block;
+    padding: 0.7rem 0.4rem;
+}
+nav ul li a:link { color: #111; }
+nav a, footer a { padding: 0.25em 0.15em; }
+header h1 a, .site-nav a { text-decoration: none; }
 /* #offers article a, #offers article h3 { color: #F1D87A; } */
 /* color: #F1D87A; */
 /* body main #offers article a { color: #F1D87A; } */
@@ -241,20 +259,60 @@ header h1 a { text-decoration: none; }
 a:link {
     -webkit-transition-duration: 0.4s;
     transition-duration: 0.4s;
-    color: #F1D87A; /* "Orange" */
+    /* display: inline-block; */
+    /* padding: 0.5rem; */
+    color: #00550f;
+    color: #116600;
+    color: #000;
+    text-decoration-color: #77161e;
+    /* font-weight: bold; */
+    /* font-style: italic; */
+    /* font-style: oblique; */
 }
 a:visited {
     -webkit-transition-duration: 0.4s;
     transition-duration: 0.4s;
-    color: #D4AA7D; /* "Dark Orange" */
+    color: #6EC18D;
+    color: #0D612C;
+    color: #116600;
+    color: #000;
 }
 a:hover, a:focus {
     cursor: pointer;
     outline: #F1D87A dotted;
-    color: #FFF1BD; /* Border Color */
+    color: #772222;
+    text-decoration: none;
+    font-weight: bold;
 }
 a:active {
+}
+nav ul#user-login { margin-bottom: 0.5rem; }
+nav ul.site-nav a:link, #offers article a:link {
+    color: #DCF6E6;
+    color: #F1D87A; /* "Orange" */
+}
+nav ul.site-nav a:visited, #offers article a:visited {
     color: #D4AA7D; /* "Dark Orange" */
 }
-header h1 a:link, header h1 a:visited, header h1 a:hover { color: #111; outline: initial; }
+nav ul.site-nav a:hover, nav ul.site-nav a:focus, #offers article a:hover, #offers article a:focus {
+    color: #FFF1BD; /* Border Color */
+}
+nav ul.site-nav a:active, #offers article a:active {
+    color: #D4AA7D; /* "Dark Orange" */
+}
+
+
+header h1 a:hover, header h1 a:focus,
+#user-login a:hover, #user-login a:focus {
+    /* letter-spacing: 0.05em; */
+}
+header h1 a:hover,
+header h1 a:link, header h1 a:visited { color: #111; outline: initial; background-color: transparent; }
+header h1 a:hover, header h1 a:focus {
+    text-shadow: 0.05em 0.05em 0.65em #FFF1BD;
+    /* color: #222; */
+}
+#user-login a:active {
+
+}
 /* header h1 a:hover { outline: initial; } */
