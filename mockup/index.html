@@ -6,51 +6,57 @@
   <title>Mockup</title>
   <link href="https://fonts.googleapis.com/css?family=Diplomata|Open+Sans&display=swap" rel="stylesheet">
   <!-- <link href="https://fonts.googleapis.com/css?family=Fascinate+Inline|Open+Sans|Raleway&display=swap" rel="stylesheet"> -->
-	<link href="normalize.css" rel="stylesheet" type="text/css" />
-  <link href="style-flex.css" rel="stylesheet" type="text/css" />
+  <link href="normalize.css" rel="stylesheet" type="text/css" />
+	<!-- <link href="reset.css" rel="stylesheet" type="text/css" /> -->
+  <!-- <link href="style-flex.css" rel="stylesheet" type="text/css" /> -->
+  <link href="hepcat.css" rel="stylesheet" type="text/css" />
   <!-- <link href="burger-1.css" rel="stylesheet" type="text/css" /> -->
-  <link href="burger-new.css" rel="stylesheet" type="text/css" />
+  <!-- <link href="burger-new.css" rel="stylesheet" type="text/css" /> -->
 
 </head>
 <body>
   <header>
     <!-- <img class="logo" src="SeattleSwing2.png" alt="Seattle Swing Logo" /> -->
     <h1>
-      <span id="seattle">Seattle</span>
-      <span id="swing">Swing</span>
+      <a href="#">
+        <span id="seattle">Seattle</span>
+        <span id="swing">Swing</span>
+      </a>
     </h1>
     <nav role="navigation">
-      <ul class="user-login">
-        <!-- <li><a href="#">Logout</a></li>
-        <li><a href="#">Profile</a></li> -->
-        <li><a href="#">Sign Up Account</a></li>
-        <li><a href="#">Login</a></li>
+      <label for="user-login">Account </label>
+      <ul id="user-login">
+        <li><a href="#">Logout</a></li>
+        <li><a href="#">Profile</a></li>
+        <!-- <li><a href="#">Create</a></li> -->
+        <!-- <li><a href="#">Login</a></li> -->
+        <!-- <li><a href="#" >Admin</a></li> -->
       </ul>
-      <label id="menu" for="menu-toggle">Menu</label>
+      <!-- <label id="menu" for="menu-toggle">Menu</label>
       <input type="checkbox" id="menu-toggle">
-      <ul class="nav-menu" >
-        <li><a href="#">home</a></li>
+      <ul class="nav-menu" > -->
+      <ul class="site-nav">
+        <!-- <li><a href="#">Home</a></li> -->
         <li><a href="#">Classes</a></li>
         <li><a href="#">Sign Up!</a></li>
         <li><a href="#">About Us</a></li>
-        <li><a href="#">Other Info</a></li>
+        <li><a href="#">Info</a></li>
       </ul>
-      <!-- <ul>
-        <li><a href="#" >admin</a></li>
-        <li><a href="#">Checkin Sheet</a></li>
-      </ul> -->
     </nav>
   </header>
+
   <main>
+
     <section id="offers">
       <article id="Beginning-Swing-Dance-Lindy-Hop">
         <h1><a href="/lindy" title="Swing Dance Class Details">Beginning Swing Dance - Lindy Hop!</a></h1>
+        <img src="beginning_swing_dance_class_lindy_hop.png" alt="Swing Dance Couple" />
         <h3>Partner Not Required! <br />No experience needed!</h3>
         <p class="description">
           Learn this fun dance &amp; make new friends in this welcoming social activity!
           You'll be dancing before you know it!
         </p>
-        <p><b><a href="lindy" title="Beginning Swing Dance - Lindy Hop Classes">Class Details</a> |
+        <p class="clear"><b><a href="lindy" title="Beginning Swing Dance - Lindy Hop Classes">Class Details</a> |
           <a class="focus" href="/register" title="Register for Swing Dance Classes">Sign Up Now!</a></b>
         </p>
       </article>
@@ -73,9 +79,10 @@
         <p><a href="/dance">Dance Details</a> | <a href="/directions">Directions</a></p>
       </article>
     </section>
+
     <section>
+      <h2>What's it Like Getting Started?</h2>
       <article class="video">
-        <h2>What Is it Like Getting Started?</h2>
         <iframe
           src="https://www.youtube.com/embed/ODgOfjtiDos"
           frameborder="0" allow="autoplay; encrypted-media" allowfullscreen>
@@ -84,25 +91,29 @@
       <article>
         <h2>What People Say About Our Classes!</h2>
         <p>
-          "Thank you for the wonderful experience! The way you taught dancing made it easy to learn, and your clear explanations, high energy and humor made the class one of the best I have ever had. I would recommend your classes to anyone who wants to learn ... while having loads of fun!" -- former student.
+          "Thank you for the wonderful experience! The way you taught dancing made it easy to learn, and your clear explanations, high energy and humor <a href="#"> made the class</a> one of the best I have ever had. I would recommend your classes to anyone who wants to learn ... while having loads of fun!" -- former student.
         </p>
         <p>
           "... would definitely be my first choice. I *wish* I had learned the basics from them - I would have had WAY less bad habits to get over … Good beginning instruction in the basics is one of the most vital factors in starting off ... " -- from online discussion of Seattle Swing Dance instruction.
         </p>
       </article>
     </section>
+
+    <div id="left-design-layout">
+      <img src="space-needle-observation.png" alt="Space Needle Layout Element" />
+      <section>
+      </section>
+    </div> <!-- div#left-design-layout  -->
+
   </main>
-  <div id="left-design-layout">
-    <img src="space-needle-observation.png" alt="Space Needle Layout Element" />
-    <section>
-    </section>
-  </div> <!-- div#left-design-layout  -->
+
   <div id="offers-visual-element"></div>
+
   <footer>
     <a href="/" title="Swing Dance - Lindy Hop">
       <img src="SeattleSwing2.png" alt="Logo Layout Element" />
     </a>
-    <br />
+    <!-- <br /> -->
     <ul>
       <li><a href="/" title="Swing Dance - Lindy Hop">Home</a></li>
       <li><a href="/lindy" title="Swing Dance - Lindy Hop Lessons">Class Details</a></li>
