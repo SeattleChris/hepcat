@@ -14,10 +14,11 @@ main section:nth-child(2) { align-items: flex-end; }
     footer li:first-child { display: none; }
     #offers-visual-element {
         display: initial;
-        z-index: -1;
-        background-color: #77161e;
-        position: absolute; top: 0; right: 18.85rem;
+        /* z-index: -1; */
+        /* background-color: #77161e; */
+        position: absolute; top: 0; left: unset; right: 18.85rem;
         width: 48rem; height: 65rem;
+        max-height: unset;
         clip-path: polygon(0% 0%, 72% 0%, 100% 100%, 74% 100% );
     }
     main section:nth-child(2) article:last-child { min-width: 25.3rem; text-align: right; }
