@@ -3,7 +3,7 @@ main section:nth-child(2) { align-items: flex-end; }
 /* main section:nth-child(2) > h2 { text-align: left; } */
 
 @media screen and (min-width: 461px) {
-    /* main section:nth-child(2) { max-width: 25.3rem; } */
+    main section:nth-child(2) { max-width: 25.3rem; }
 
 }
 @media screen and (min-width: 690px) {
@@ -26,4 +26,8 @@ main section:nth-child(2) { align-items: flex-end; }
     footer > a:first-child { display: none; } /* hides footer img */
     footer { width: 20.58rem; bottom: 4.25rem; }
     footer li:first-child { display: unset; }
+}
+@media screen and (min-width: 1076px) {
+    main section:nth-child(2) { min-width: 25rem; max-width: 32.3876935rem; }
+
 }
