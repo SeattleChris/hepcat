@@ -1,11 +1,9 @@
-/* Default for most browsers is 16px for 1rem */
 .clear { clear: both; }
 /* .nowrap { white-space: nowrap; } */
-html { width: 98%; min-width: 20.03rem; max-width: 73rem; margin: 0 auto; padding: 0; }
+/* Default font-size for most browsers is 16px for 1rem */
+html { font-size: 81.25%; width: 98%; min-width: 20.03rem; max-width: 73rem; margin: 0 auto; padding: 0; }
 body {
-    background-color: #a3c2d7;  /* ccefdb 3b9c71 light=#abc9dd darker=#72a1ca middle=#92b5d1 25%=#a3c2d7  */
-    /* background-color: #DBEAF3; */
-    color: #1E2159;
+    background-color: #a3c2d7;
     color: #111;
     width: 100%; margin: 0; padding: 0;
     font-family: 'Open Sans', sans-serif;
@@ -13,24 +11,24 @@ body {
 }
 header h1 { font-family: 'Diplomata', cursive; }
 #swing { display: block; }
-/* #swing::before { content: attr(data-text); padding: 0 2.5em; } */
-#swing::before { content: "\A"; padding: 0 2.5em; }
+#swing::before { content: "\A"; padding: 0 2.5em; }  /* content: attr(data-text); */
 /* Main Site Nav inside a nav inside of Header. Repeated page navigation in footer. */
 header nav { align-self: flex-end; text-align: right; font-size: 100%; }
 footer { font-size: 90%; text-align: center; }
 nav ul, footer ul { margin-block-start: 0; margin-block-end: 0; padding-inline-start: 0; list-style: none; }
+nav ul.site-nav a, header h1 a { text-decoration: none; }
 ul#user-login, nav label, nav li, footer li { display: inline-block; text-align: center; }
-/* footer li, footer ul { text-align: left; } */
 nav li::before, footer li::after { content: ' | '; }
 footer li:last-child::after, ul#user-login li:first-child::before, ul li:first-child::before { content: ''; }
+nav ul#user-login { margin: 0.2rem 0 0.55rem; }
+nav ul.site-nav { background-color: #396887; color: #6791AD; font-weight: bold; padding: 0.3rem 0.25rem; }
+nav a, footer a { display: inline-block; padding: 0.1em 0.1em; }
 footer img { width: 9rem; border-radius: 1.25rem; margin: 0; padding: 0; }
-footer > a:first-child { display: none; }
-input#menu-toggle[type=checkbox] { position: absolute; top: 0; right: 0; opacity: 0; }
-/* For mobile: better for 0 Opacity and position checkbox in top right of clickable area */
-/* Default State, then Toggled (on) State */
-header .nav-menu  { display: none; position: absolute; top: 7rem; right: 2rem; text-align: right; }
-header input[type=checkbox]:checked ~ .nav-menu { display: inline-block; }
-    /* Maybe could add to the previous two - visibility: collapse | visible; */
+footer > a:first-child { display: none; } /* Hides footer img & link, until we want it */
+/* Nav Menu Toggle Button and Menu Settings (Currently Not Used) */
+input#menu-toggle[type=checkbox] { position: absolute; top: 0; right: 0; opacity: 0; } /* Opacity & position for hiding in mobile. visibility: collapse is another option, perhaps less good. */
+header .nav-menu  { display: none; position: absolute; top: 7rem; right: 2rem; text-align: right; } /* Default State */
+header input[type=checkbox]:checked ~ .nav-menu { display: inline-block; } /* Toggled State */
 header label#menu {
     -webkit-appearance: push-button;
     -moz-appearance: button;
@@ -42,12 +40,12 @@ header label#menu {
     color: #eeeeee;
     border-radius: 1rem;
 }
+/* End Nav Menu Toggle Button and Menu Settings (Currently Not Used) */
 /****************** End of Header & Footer Settings ************************/
-/* main > * { flex-grow: 1; flex-shrink: 2; } */
 main > * { flex: 2 3; }
-#left-design-layout { flex: 1 1; }
 #left-design-layout {
     order: -1;
+    flex: 1 1;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -64,10 +62,8 @@ main section p { margin: 1rem 0; }
     padding: 0.25rem;
     margin: 0.5rem auto;
     border: 0.25rem solid #FFF1BD;
-    /* border: 0.25rem solid #d8cdbd; */
     border-radius: 2rem;
     background-color: #77161e;
-    /* background-color: #6D2725; */
     color: #FFFCF1;
 }
 #offers article img { float: left; width: 7.55rem; margin: 0; padding: 0; }
@@ -81,7 +77,7 @@ main section p { margin: 1rem 0; }
 .video { position: relative; padding-top: 74.19%; width: 100%; }
 .video iframe, .video video { position: absolute; top:0; right:0; width:100%; height:100%; border-radius: 2rem; }
 #offers-visual-element { z-index: -1; background-color: #77161e; display: none; }
-html { font-size: 81.25%; }
+/****************** End of sub-parts. Adjustments for screen size. ************************/
 @media screen and (max-width: 460px) {
     header h1 { font-size: 7vw; white-space: nowrap; transform: unset; margin: 0; padding: 0.25rem; }
     #swing { display: inline; }
@@ -91,6 +87,7 @@ html { font-size: 81.25%; }
 }
 @media screen and (min-width: 461px) {
     main { display: flex; align-items: stretch; }
+    body { top: -1.25rem; }
     header h1 {
         font-size: 5.5vw;
         transform: rotate(-10deg);
@@ -99,7 +96,7 @@ html { font-size: 81.25%; }
     }
     /* #offers */
     main section:nth-child(1) { margin-right: 1rem; justify-content: flex-start; }
-    /* #offers article:nth-child(1) { width: 20.4295rem; } */
+    /* #offers article default width: 20.4295rem; */
     #offers article:nth-child(2) { width: 17.75rem; transform: rotate(-3deg); }
     #offers article:nth-child(3) { width: 13.355rem; }
 }
@@ -108,18 +105,13 @@ html { font-size: 81.25%; }
     #offers-visual-element {
         display: initial;
         position: absolute; top: 0; left: -15rem;
-        /* right: 18.85rem; */
-        width: 48rem;
-        /* height: 6.3rem; */
-        height: 12vw;
-        max-height: 8.0693355rem;
+        width: 48rem; height: 12vw; max-height: 8.0693355rem;
         clip-path: polygon(0% 0%, 72% 0%, 100% 100%, 74% 100% );
     }
-
-        /* Create Flex Header Here */
+    /* Flex Header */
+    body { top: 0; }
     header { display: flex; justify-content: space-between; align-items: flex-start; }
     header h1 { margin: 0 0 -2.5rem -0.3rem; }
-    /* header h1 { font-size: 3.9394vw; } */
     main section:nth-child(1) { padding-top: 1.75rem; }
     #offers { margin-right: 2rem; min-width: 23.5rem; justify-content: flex-end; }
     #offers h1 { font-size: 1.8rem; margin-top: 0.8rem; margin-bottom: 1rem; }
@@ -129,148 +121,61 @@ html { font-size: 81.25%; }
     .video { width: 92.537%; }
 }
 @media screen and (max-width: 689px) {
-    main { justify-content: flex-start; }
+    main { justify-content: space-evenly; }
     footer > a:first-child { display: none; }
-    /* .site-nav li:nth-last-child(2) { display: none; } */
-        main section:nth-child(n+2) {
+    main section:nth-child(n+2) {
         background-color: #FFFCF1;
         border-radius: 2rem;
         padding: 0 1rem;
         margin-top: 0.75rem;
     }
 }
-/* @media screen and (max-width: 700px) and (min-width: 461px) {
-    .site-nav { width: 10.5rem; }
-} */
-@media screen and (max-width: 775px) {
-    #left-design-layout { width: 0; height: 0; min-width: unset; display: none; }
-}
-@media screen and (min-width: 776px) {
-    #left-design-layout { min-width: 0.1rem; max-width: 15.082030rem; }
-}
+@media screen and (max-width: 775px) { #left-design-layout { width: 0; height: 0; min-width: unset; display: none; } }
+@media screen and (min-width: 776px) { #left-design-layout { min-width: 0.1rem; max-width: 15.082030rem; } }
 @media screen and (min-width: 833px) { header h1 { font-size: 3.6rem; } }
-@media screen and (min-width: 874px) {
-    html { font-size: 1.48741vw; }
-    /* 1.48741vw - 1.4874085vw to 1.4874199162358824333196594125183764845132vw */
-    /* footer ul { outline: solid purple; } */
-}
+@media screen and (min-width: 874px) { html { font-size: 1.48741vw; } }
 @media screen and (min-width: 1076px) {
     html { font-size: unset; }
     main { justify-content: flex-start; }
     #left-design-layout { min-width: unset; max-width: unset; width: 15.082030rem; }
 }
 
-
-/* Design Questions
-How big should the video actually get and minimum size? Solved
-When background stripe is gone, should angle shrink until a column or just snap to column?
-Navigation bar / button at all sizes
-*/
-.test {
-    /* "White" */
-    color: #FFFCF1;
-    color: #f7f3e3;
-    /* #EFD09E Too close, but not distinct */
-    /* Home "Blue" */
-    color: #a3c2d7;
-    /* Brighter Home */
-    color: #b3d2e7;
-    /* Extra Brighter Home */
-    color: #c5e4f9;
-    color: #BCF8EC;
-    color: #00550f;
-    color: #0D612C;
-    color: #116600;
-}
-.orange-set {
-    background-color: #b4ab9a;
-    color: #F1D87A; /* "Orange" */
-    color: #D4AA7D; /* "Dark Orange" */
-    color: #FFF1BD; /* Border (over red) Color */
-}
-/* Paletton.com
-Dist: 30%, Triad w/ Complement
-Base color: #FF7400
-Left Secondary: #FF0000
-Right Secondary: #FFAA00
-Complement: #00FFFF
-Dist: 35%, Triad w/ Complement
-Base color: #FF7F00
-Left Secondary: #FF0000
-Right Secondary: #FFB800
-Complement: #07D0FF
-Dist: 40%, Triad w/ Complement
-Base color: #FF8900
-Left Secondary: #FF0000
-Right Secondary: #FFC600
-Complement: #0CB0FF
-*/
-/* http://colrd.com/image-dna/23868/
-    color: #841619;
-    color: #accecd;
-    color: #b4ab9a;
-*/
-/* Color Palette
-Style guide: "White" = #FFFCF1, "Black" = #111, "Blue" = #a3c2d7, "Orange" = #F1D87A
+/* Color Palette Style Guide
+Style guide: "White" = #FFFCF1, "Black" = #111, "Blue" = #a3c2d7, "Orange" = #F1D87A, "Dark Orange" = #D4AA7D
 Backgrounds: Home/light: "Blue", Section/light: "White", Stripe/red: #77161e
+site-nav background: #396887 "Steel Blue"
+"Light Blue" = #DCF6E6
+site-nav color for separator bars: #6791AD "Middle Blue"
 Text on light background: "Black", Text over dark/red background: "White"
 Header & link over dark/red background: "Orange"
 h3 text over dark/red background: ??
 Border over red background: #FFF1BD
-nav button background: #66050d, nav button text: #eee
+Earlier, more space needle gray, border over red background - border: 0.25rem solid #d8cdbd;
+?? nav button background: #66050d, nav button text: #eee ??
 */
-/* #offers article a, #offers article h3 { color: #F1D87A; } */
-/* color: #F1D87A; */
-/* body main #offers article a { color: #F1D87A; } */
-/* "Orange" */
-nav ul.site-nav {
-    /* z-index: 10; */
-    background-color: #6791AD;
-    background-color: #396887;
-    color: #6791AD;
-    font-weight: bold;
-    padding: 0.3rem 0.25rem;
-}
-nav ul#user-login { margin: 0.2rem 0 0.55rem; }
-nav a, footer a { display: inline-block; padding: 0.1em 0.1em; }
-header h1 a, .site-nav a { text-decoration: none; }
 
+/* Link Colors: General Page (over light background), Nav Bar and #offers (over dark background) */
 a:link, a:visited {
     -webkit-transition-duration: 0.4s;
     transition-duration: 0.4s;
-    /* padding: 0.5rem; */
     color: #000;
     text-decoration-color: #F1D87A;
     text-decoration-style: solid;
-    /* font-weight: bold; */
-    /* text-shadow: 0 0.25em 0.65em #FFF1BD; */
-    /* text-shadow: 0 0.25em 0.65em #337733; */
-    /* text-shadow: 0 0.25em 0.85em #D4AA7D; */
-    /* text-shadow: 0 0.25em 0.65em #F1D87A; */
-    /* text-shadow: 0 0.25em 0.65em #F1D87A, 0 -0.25em 0.65em #F1D87A; */
-    text-shadow: 0 0.25em 0.65em #FFF1BD, 0 -0.25em 0.65em #FFF1BD;
+    /* text-shadow: 0 0.25em 0.65em #FFF1BD, 0 -0.25em 0.65em #FFF1BD; */
     text-shadow: 0 0.25em 0.65em #D4AA7D, 0 -0.25em 0.65em #D4AA7D;
 }
 /* a:link { color: #000; } */
 /* a:visited { color: #000; } */
-/* a:hover, a:focus {
-    text-shadow: unset;
-    cursor: pointer;
-    outline: #F1D87A dotted;
-    color: #772222;
-    font-weight: bold;
-    text-decoration: none;
-} */
 a:hover, a:focus {
-    text-shadow: unset;
-    text-shadow: 0 0.05em 0.65em #D4AA7D, 0 -0.05em 0.65em #D4AA7D;
+    /* text-shadow: unset; */
+    /* text-shadow: 0 0.05em 0.65em #D4AA7D, 0 -0.05em 0.65em #D4AA7D; */
     text-shadow: 0 0.05em 0.65em #FFF1BD, 0 -0.05em 0.65em #FFF1BD;
-    cursor: pointer;
     outline: #F1D87A dotted;
-    /* color: #772222; */
+    /* color: #722; */
     color: #222;
     /* font-weight: bold; */
     text-decoration: none;
+    cursor: pointer;
 }
 a:active {
     background-color: #F1D87A;
@@ -280,9 +185,10 @@ a:active {
 .site-nav a:link,    #offers article a:link,
 .site-nav a:visited, #offers article a:visited {
     text-shadow: unset;
-    color: #DCF6E6;
-    color: #D4AA7D; /* "Dark Orange" */
-    color: #F1D87A; /* "Orange" */
+    /* "Dark Orange" */
+    /* color: #D4AA7D; */
+    /* "Orange" */
+    color: #F1D87A;
 }
 .site-nav a:hover, .site-nav a:focus,
 #offers article a:hover, #offers article a:focus
@@ -294,9 +200,8 @@ header h1 a:link, header h1 a:visited,
 header h1 a:hover, header h1 a:focus
     { color: #111; outline: initial; background-color: transparent; }
 header h1 a:link, header h1 a:visited { text-shadow: 0.25em 0.25em 0.65em #FFF1BD; }
-header h1 a:hover, header h1 a:focus  { text-shadow: 0.05em 0.05em 0.65em #FFF1BD;
-    color: #222;
-}
+header h1 a:hover, header h1 a:focus  { text-shadow: 0.05em 0.05em 0.65em #FFF1BD; color: #222; }
 /* header h1 a:hover, header h1 a:focus  { text-shadow: 0.25em 0.25em 0.65em #FFF1BD,  0.05em -0.05em 0.65em #FFF1BD; color: #222; } */
 /* header h1 a:hover, header h1 a:focus  { text-shadow: 0.05em 0.05em 0.65em #FFF1BD,  0.05em -0.05em 0.65em #FFF1BD; color: #222; } */
 /* header h1 a:hover { outline: initial; } */
+/* End Link Colors */
