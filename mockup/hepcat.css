@@ -80,8 +80,7 @@ main section p { margin: 1rem 0; }
 
 .video { position: relative; padding-top: 74.19%; width: 100%; }
 .video iframe, .video video { position: absolute; top:0; right:0; width:100%; height:100%; border-radius: 2rem; }
-#offers-visual-element { display: none; }
-
+#offers-visual-element { z-index: -1; background-color: #77161e; display: none; }
 html { font-size: 81.25%; }
 @media screen and (max-width: 460px) {
     header h1 { font-size: 7vw; white-space: nowrap; transform: unset; margin: 0; padding: 0.25rem; }
@@ -106,7 +105,18 @@ html { font-size: 81.25%; }
 }
 @media screen and (min-width: 690px) {
     main { justify-content: flex-end; min-height: 16.25rem; }
-    /* Create Flex Header Here */
+    #offers-visual-element {
+        display: initial;
+        position: absolute; top: 0; left: -15rem;
+        /* right: 18.85rem; */
+        width: 48rem;
+        /* height: 6.3rem; */
+        height: 12vw;
+        max-height: 8.0693355rem;
+        clip-path: polygon(0% 0%, 72% 0%, 100% 100%, 74% 100% );
+    }
+
+        /* Create Flex Header Here */
     header { display: flex; justify-content: space-between; align-items: flex-start; }
     header h1 { margin: 0 0 -2.5rem -0.3rem; }
     /* header h1 { font-size: 3.9394vw; } */
@@ -147,7 +157,6 @@ html { font-size: 81.25%; }
 @media screen and (min-width: 1076px) {
     html { font-size: unset; }
     main { justify-content: flex-start; }
-    #offers-visual-element { left: -1rem; right: unset; }
     #left-design-layout { min-width: unset; max-width: unset; width: 15.082030rem; }
 }
 
