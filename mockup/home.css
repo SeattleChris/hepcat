@@ -1,5 +1,7 @@
 main > * { flex: unset; }
 main section:nth-child(2) { align-items: flex-end; }
+/* #offers-visual-element { display: none; } */
+
 /* main section:nth-child(2) > h2 { text-align: left; } */
 
 @media screen and (min-width: 461px) {
@@ -28,6 +30,16 @@ main section:nth-child(2) { align-items: flex-end; }
     footer li:first-child { display: unset; }
 }
 @media screen and (min-width: 1076px) {
+    main { justify-content: flex-start; }
+    #offers-visual-element { left: -1rem; right: unset; }
     main section:nth-child(2) { min-width: 25rem; max-width: 32.3876935rem; }
 
+}
+
+header h1 a:link, header h1 a:visited,
+header h1 a:hover, header h1 a:focus
+    { color: #111; outline: initial; background-color: transparent; }
+header h1 a:link, header h1 a:visited { text-shadow: 0.25em 0.25em 0.65em #FFF1BD; }
+header h1 a:hover, header h1 a:focus  { text-shadow: 0.05em 0.05em 0.65em #FFF1BD;
+    color: #222;
 }
