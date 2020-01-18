@@ -299,6 +299,7 @@ a:link, a:visited {
 a:hover, a:focus {
     text-shadow: unset;
     text-shadow: 0 0.05em 0.65em #D4AA7D, 0 -0.05em 0.65em #D4AA7D;
+    text-shadow: 0 0.05em 0.65em #FFF1BD, 0 -0.05em 0.65em #FFF1BD;
     cursor: pointer;
     outline: #F1D87A dotted;
     /* color: #772222; */
@@ -307,6 +308,9 @@ a:hover, a:focus {
     text-decoration: none;
 }
 a:active {
+    background-color: #F1D87A;
+    -webkit-transition-duration: 0s;
+    transition-duration: 0s;
 }
 .site-nav a:link,    #offers article a:link,
 .site-nav a:visited, #offers article a:visited {
@@ -325,7 +329,9 @@ header h1 a:link, header h1 a:visited,
 header h1 a:hover, header h1 a:focus
     { color: #111; outline: initial; background-color: transparent; }
 header h1 a:link, header h1 a:visited { text-shadow: 0.25em 0.25em 0.65em #FFF1BD; }
-header h1 a:hover, header h1 a:focus  { text-shadow: 0.05em 0.05em 0.65em #FFF1BD; color: #222; }
+header h1 a:hover, header h1 a:focus  { text-shadow: 0.05em 0.05em 0.65em #FFF1BD;
+    color: #222;
+}
 /* header h1 a:hover, header h1 a:focus  { text-shadow: 0.25em 0.25em 0.65em #FFF1BD,  0.05em -0.05em 0.65em #FFF1BD; color: #222; } */
 /* header h1 a:hover, header h1 a:focus  { text-shadow: 0.05em 0.05em 0.65em #FFF1BD,  0.05em -0.05em 0.65em #FFF1BD; color: #222; } */
 /* header h1 a:hover { outline: initial; } */
