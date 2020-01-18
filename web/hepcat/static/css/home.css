@@ -1,0 +1,28 @@
+main > * { flex: unset; }
+main section:nth-child(2) { align-items: flex-end; }
+
+@media screen and (min-width: 461px) { main section:nth-child(2) { max-width: 25.3rem; } }
+@media screen and (min-width: 690px) {
+    footer { text-align: left; width: 11.5rem; position: relative; bottom: 13.25rem; }
+    footer > a:first-child { display: initial; } /* un-hides footer img */
+    footer li:first-child { display: none; }
+    #offers-visual-element {
+        display: initial;
+        position: absolute; top: 0; left: unset; right: 18.85rem;
+        width: 48rem; height: 65rem; max-height: unset;
+        clip-path: polygon(0% 0%, 72% 0%, 100% 100%, 74% 100% );
+    }
+    main section:nth-child(2) article:last-child { min-width: 25.3rem; text-align: right; }
+    main section:nth-child(2) article:last-child p { text-align: left; padding-left: 14%; }
+    main section:nth-child(2) article:last-child p:last-child{ padding-left: 22%; }
+}
+@media screen and (min-width: 776px) {
+    footer > a:first-child { display: none; } /* hides footer img */
+    footer { width: 20.58rem; bottom: 4.25rem; }
+    footer li:first-child { display: unset; }
+}
+@media screen and (min-width: 1076px) {
+    main { justify-content: flex-start; }
+    #offers-visual-element { left: -1rem; right: unset; }
+    main section:nth-child(2) { min-width: 25rem; max-width: 32.3876935rem; }
+}

@@ -1,8 +1,8 @@
-{% extends "generic/needle.html" %}
+{% extends "generic/base.html" %}
 {% load static %}
 
 {% block head %}
-<link rel="stylesheet" href="{% static 'css/home_design.css' %}">
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
 <title>Swing Dance - Lindy Hop Classes!</title>
 {% endblock head %}
 
@@ -40,9 +40,10 @@
     <p><a href="/dance">Dance Details</a> | <a href="{% url 'location_list' %}">Directions</a></p>
   </article>
 </section>
+
 <section>
-  <article>
-    <h2>What Is it Like Getting Started?</h2>
+  <h2>What Is it Like Getting Started?</h2>
+  <article class="video">
     <iframe
       src="https://www.youtube.com/embed/ODgOfjtiDos"
       frameborder="0" allow="autoplay; encrypted-media" allowfullscreen>
@@ -60,8 +61,3 @@
 </section>
 
 {% endblock content %}
-
-
-{% block design_bonus %}
-<div id="offers-visual-element"></div>
-{% endblock design_bonus %}
