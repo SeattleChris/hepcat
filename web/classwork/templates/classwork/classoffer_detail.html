@@ -4,18 +4,23 @@
 <title>{{ classoffer.subject.title }}</title>
 {% endblock head %}
 
+
 {% block content %}
 
-<h1>{{ classoffer.subject.title }}</h1>
-<ul>
-  <li>{{ classoffer.class_day }} | {{ classoffer.start_time }} - {{ classoffer.end_time }} </li>
-  <li>{{ classoffer.start_date }} - {{ classoffer.end_date }}</li>
-  <li>Taught by: {{ classoffer.teachers }} </li>
-</ul>
+<section>
+  <article>
+    <h1>{{ classoffer.subject.title }}</h1>
+    <ul>
+      <li>{{ classoffer.class_day }} | {{ classoffer.start_time }} - {{ classoffer.end_time }} </li>
+      <li>{{ classoffer.start_date }} - {{ classoffer.end_date }}</li>
+      <li>Taught by: {{ classoffer.teachers }} </li>
+    </ul>
 
-<p>
-  {{ classoffer.subject.description }}
-</p>
+    <p>
+      {{ classoffer.subject.description }}
+    </p>
+  </article>
+</section>
 
 {% endblock content %}
 

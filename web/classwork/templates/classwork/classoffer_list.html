@@ -6,27 +6,36 @@
 
 
 {% block content %}
+<section>
 
-<h2>Swing Dance - Lindy Hop Classes</h2>
-<p>Registration is open for these scheduled classes.</p>
-{% if user.is_staff %}
-<p> {{ display_session }} </p>
-{% endif %}
+  <article class="header">
+    <h2>Swing Dance - Lindy Hop Classes</h2>
+    <p>Registration is open for these scheduled classes.</p>
+    {% if user.is_staff %}
+    <p> {{ display_session }} </p>
+    {% endif %}
+  </article>
 
-{% for classoffer in classoffers %}
-<h3>{{ classoffer }}</h3>
-<p>{{ classoffer.subject.title }}</p>
-<ul>
-  <li>{{ classoffer.class_day }} | {{ classoffer.start_time }} - {{ classoffer.end_time }} </li>
-  <li>{{ classoffer.start_date }} - {{ classoffer.end_date }}</li>
-  <li>Taught by: {{ classoffer.teachers }} </li>
-</ul>
-<p><a href="{% url 'classoffer_detail' id=classoffer.id %}">More Details</a></p>
-<hr />
-{% endfor %}
-<p>
-  Generally a new session of classes will start after these classes are finished.
-  Check back for an updated schedule.
-</p>
+  {% for classoffer in classoffers %}
+  <article>
+    <h3>{{ classoffer }}</h3>
+    <p>{{ classoffer.subject.title }}</p>
+    <ul>
+      <li>{{ classoffer.class_day }} | {{ classoffer.start_time }} - {{ classoffer.end_time }} </li>
+      <li>{{ classoffer.start_date }} - {{ classoffer.end_date }}</li>
+      <li>Taught by: {{ classoffer.teachers }} </li>
+    </ul>
+    <p><a href="{% url 'classoffer_detail' id=classoffer.id %}">More Details</a></p>
+  </article>
+  <hr />
+  {% endfor %}
 
+  <article class="footer">
+    <p>
+      Generally a new session of classes will start after these classes are finished.
+      Check back for an updated schedule.
+    </p>
+  </article>
+
+</section>
 {% endblock content %}

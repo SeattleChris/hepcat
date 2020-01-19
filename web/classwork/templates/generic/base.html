@@ -9,7 +9,6 @@
   <!-- <link href="https://fonts.googleapis.com/css?family=Fascinate+Inline|Open+Sans|Raleway&display=swap" rel="stylesheet"> -->
   <link rel="stylesheet" href="{% static 'css/normalize.css' %}">
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
-  <link rel="stylesheet" href="{% static 'css/burger-1.css' %}">
   {% block super_head %}
 
   {% block head %}
@@ -21,40 +20,41 @@
 <body>
 <header>
   <h1>
-    <span id="seattle">Seattle</span>
-    <span id="swing">Swing</span>
+    <a href="{% url 'home' %}" title="Swing Dance - Lindy Hop Classes">
+      <span id="seattle">Seattle</span>
+      <span id="swing">Swing</span>
+    </a>
   </h1>
-  {%if user.is_authenticated %}
-    <p>Welcome {{ user.username }}</p>
-  {% else %}
-    <p>You can login.</p>
-  {% endif %}
-  {% if user.is_superuser %}
-    <p>Super User is Here</p>
-  {% endif %}
   <nav role="navigation">
-    <ul class='user-login'>
+    <label for="user-login">
+      {%if user.is_authenticated %}
+      Welcome {{ user.username }}
+       {% if user.is_superuser %} - SU {% endif %}
+      {% else %}
+      Account
+      {% endif %}
+    </label>
+    <ul id='user-login'>
       {% if user.is_authenticated %}
       <li><a href="{% url 'logout' %}">Logout</a></li>
       <li><a href="{% url 'profile_page' %}">Profile</a></li>
       {% else %}
-      <li><a href="{% url 'signup' %}"> Create Login Account</a></li>
+      <li><a href="{% url 'signup' %}"> Create</a></li>
       <li><a href="{% url 'login' %}">Login</a></li>
       {% endif %}
-    </ul>
-    <label id="menu" for="menu-toggle">Menu</label>
-    <input type="checkbox" id="menu-toggle">
-    <ul class="nav-menu" >
-      <li><a href="{% url 'home' %}">Home</a></li>
-      <li><a href="{% url 'classoffer_list' %}">Classes</a></li>
-      <li><a href="{% url 'register' %}">Class Sign Up!</a></li>
-      <li><a href="{% url 'aboutus' %}">About Us</a></li>
-      <li><a href="#">Other Info</a></li>
       {% if user.is_staff %}
-      <li><a href="{% url 'admin:index' %}" >admin</a></li>
+      <li><a href="{% url 'admin:index' %}" >Admin</a></li>
       <li><a href="{% url 'checkin' %}">Checkin Sheet</a></li>
-      <li><a href="{% url 'location_list' %}">Location List</a></li>
       {% endif %}
+    </ul>
+    <!-- <label id="menu" for="menu-toggle">Menu</label> -->
+    <!-- <input type="checkbox" id="menu-toggle"> -->
+    <!-- <ul class="nav-menu" > -->
+    <ul class="site-nav">
+      <li><a href="{% url 'classoffer_list' %}">Classes</a></li>
+      <li><a href="{% url 'register' %}">Sign Up!</a></li>
+      <li><a href="{% url 'aboutus' %}">About Us</a></li>
+      <li><a href="#">Info</a></li>
     </ul>
   </nav>
 </header>
@@ -62,21 +62,32 @@
 {% block super_content %}
 <main>
 {% block content %}
+<section>
+  <article>
+    <h2>No Content on this view yet.</h2>
+    <p>This page does not yet have content. </p>
+  </article>
+</section>
+<section>
 
-<h2>No Content on this view yet.</h2>
+</section>
 
 {% endblock content %}
+<div id="left-design-layout">
+  <img src="{% static 'assets/space-needle-observation.png' %}" alt="Space Needle Layout Element" />
+  <section>
+  </section>
+</div> <!-- div#left-design-layout  -->
 </main>
+<div id="offers-visual-element"></div>
 {% endblock super_content %}
 
 <footer>
-  <a href="/" title="Swing Dance - Lindy Hop"><img src="{% static 'assets/seattleswing.png' %}" alt="Logo Layout Element" /></a>
-  <br />
+  <a href="{% url 'home' %}" title="Swing Dance - Lindy Hop Dance Classes"><img src="{% static 'assets/seattleswing2.png' %}" alt="Logo Layout Element" /></a>
   <ul>
-    <li><a href="{% url 'home' %}" title="Swing Dance - Lindy Hop">Home</a></li>
+    <li><a href="{% url 'home' %}" title="Swing Dance - Lindy Hop Dance Classes">Home</a></li>
     <li><a href="{% url 'classoffer_list' %}" title="Swing Dance - Lindy Hop Lessons">Class Details</a></li>
     <li><a href="{% url 'register' %}" title="Register for Swing Dance - Lindy Hop Lessons">Join Class</a></li>
-    <!-- <li><a href="{% url 'aboutus' %}">About Us</a></li> -->
   </ul>
   <p>1998 - 2020 &copy; SeattleSwing - HepCat Productions</p>
 </footer>
