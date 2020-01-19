@@ -10,7 +10,11 @@
 <section>
   <article class="header">
     <h2>{{ profile }} Profile Details</h2>
+    {% if profile.bio %}
     <p>{{profile.bio}}</p>
+    {% else %}
+    <p>Currently no profile available</p>
+    {% endif %}
     <h3>Resources</h3>
   </article>
 
