@@ -2,16 +2,27 @@
 
 {% block content %}
 
-<h2>{{ display_session }}</h2>
-{% for ea in class_list %}
-<h3>{{ ea.subject }}: {{ ea.subject.title }} </h3>
-<ul>
-  {% for student in ea.students.all %}
-  <li>{{ student }} {{student.beg_finished}} {{student.l2_finished}}</li>
+<section>
+  <article class="header">
+    <h2>{{ display_session }}</h2>
+    <p>Some section content</p>
+  </article>
+
+  {% for ea in class_list %}
+  <article>
+    <h3>{{ ea.subject }}: {{ ea.subject.title }} </h3>
+    <ul>
+      {% for student in ea.students.all %}
+      <li>{{ student }} {{student.beg_finished}} {{student.l2_finished}}</li>
+      {% endfor %}
+    </ul>
+  </article>
   {% endfor %}
-</ul>
-{% endfor %}
-<hr />
-<p>End of list of Students</p>
+
+  <hr />
+  <article class="footer">
+    <p>End of list of Students</p>
+  </article>
+</section>
 
 {% endblock content %}

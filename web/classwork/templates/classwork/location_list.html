@@ -1,21 +1,31 @@
-{% extends "generic/needle.html" %}
+{% extends "generic/base.html" %}
 
 
 {% block content %}
 
-<h2>Established Locations</h2>
-{% for location in locations %}
-<h3>{{ location }}</h3>
-<p>
-  {{ location.address }} <br \>
-  {{location.city}}, {{location.state}} {{location.zipcode}} <br \>
-</p>
-<p>
-  | By Bus | Google Maps |
-</p>
-<p><a href="{% url 'location_detail' id=location.id %}">{{ location }}</a></p>
-<hr />
-{% endfor %}
-<p>End list of Locations</p>
+<section>
+  <article class="header">
+    <h2>Established Locations</h2>
+    <p>These are locations we use. If you are looking for your class, confirm which location your class is held in. </p>
+  </article>
+
+  {% for location in locations %}
+  <article>
+    <h3>{{ location }}</h3>
+    <p>
+      {{ location.address }} <br \>
+      {{location.city}}, {{location.state}} {{location.zipcode}} <br \>
+    </p>
+    <p>
+      | By Bus | Google Maps |
+    </p>
+    <p><a href="{% url 'location_detail' id=location.id %}">{{ location }}</a></p>
+  </article>
+  {% endfor %}
+  <hr />
+  <article class="footer">
+    <p>End list of Locations</p>
+  </article>
+</section>
 
 {% endblock content %}

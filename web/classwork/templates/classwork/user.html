@@ -1,4 +1,4 @@
-{% extends "generic/needle.html" %}
+{% extends "generic/base.html" %}
 
 {% block head %}
 <title>Your Profile</title>
@@ -7,26 +7,44 @@
 
 {% block content %}
 
-<h2>{{ profile }} Profile Details</h2>
-<p>{{profile.bio}}</p>
-<h3>Context Had</h3>
-{% for classoffer in had %}
-<h4>{{classoffer}}</h4>
-<p>
-  Taught by: {{classoffer.teachers}} |
-  {{classoffer.class_day}} |
-  {{classoffer.start_date}} to {{classoffer.end_date}} |
-  {{classoffer.start_time}} - {{classoffer.end_time}} |
-</p>
-{% endfor %}
-<h3>Resources</h3>
-{% for key, values in resources.items %}
-<h4>{{key}}</h4>
-<ul>
-  {% for res in values %}
-  <li><a href="{% url 'resource_detail' id=res.id %}">res: {{res}}</a></li>
+<section>
+  <article class="header">
+    <h2>{{ profile }} Profile Details</h2>
+    <p>{{profile.bio}}</p>
+    <h3>Resources</h3>
+  </article>
+
+  {% for key, values in resources.items %}
+  <article>
+    <h4>{{key}}</h4>
+    <ul>
+      {% for res in values %}
+      <li><a href="{% url 'resource_detail' id=res.id %}">res: {{res}}</a></li>
+      {% endfor %}
+    </ul>
+  </article>
   {% endfor %}
-</ul>
-{% endfor %}
+
+</section>
+
+<section>
+  <article class="header">
+    <h3>Class History</h3>
+    <p>These are the classes we have records of you attending. Contact us if any seem missing. </p>
+  </article>
+
+  {% for classoffer in had %}
+  <article>
+    <h4>{{classoffer}}</h4>
+    <p>
+      Taught by: {{classoffer.teachers}} |
+      {{classoffer.class_day}} |
+      {{classoffer.start_date}} to {{classoffer.end_date}} |
+      {{classoffer.start_time}} - {{classoffer.end_time}} |
+    </p>
+  </article>
+  {% endfor %}
+
+</section>
 
 {% endblock content %}
