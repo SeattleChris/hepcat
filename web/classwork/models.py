@@ -1,7 +1,7 @@
 # from __future__ import unicode_literals
 from django.db import models
 # from django.utils.translation import ugettext_lazy as _
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime as dt
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from decimal import Decimal  # used for Payments model
@@ -331,15 +331,34 @@ class ClassOffer(models.Model):
     date_added = models.DateField(auto_now_add=True)
     date_modified = models.DateField(auto_now=True)
 
+    @property
+    def day(self, short=False):
+        """ Used for displaying the day of week for the class as a word.
+            Returns plural form if the class has multiple weeks.
+            Returns abbreviated form if short is True.
+        """
+        lookup_day = [value[:3] if short else value for key, value in ClassOffer.DOW_CHOICES]
+        # lookup_day = ['Mon', 'Tue', 'Wed', 'Thur', 'Fri', 'Sat', 'Sun'] if short else [value for key, value in ClassOffer.DOW_CHOICES]
+        day = lookup_day[self.class_day]
+        if self.subject.num_weeks > 1:
+            day += '(s)' if short else 's'
+        return day
+
     def end_time(self):
         """ For a given subject, the time duration is set. So now this
             ClassOffer instance has set the start time, end time is knowable.
         """
         # TODO: compute and return the end time of the class offer
-        # return self.start_time + timedelta(minutes=self.subject.num_minutes)
-        t = self.start_time
+        # t = self.start_time
         # t += 60 * self.subject.num_minutes
-        return t
+        # return t
+        # end_dt = combine(self.start_date(), self.start_time) + timedelta(minutes=self.subject.num_minutes)
+        # return end_dt.time()
+        start = dt.combine(self.start_date(), self.start_time)
+        end = start + timedelta(minutes=self.subject.num_minutes)
+        print(f"End: {end}")
+        print(f"End time: {end.time()}")
+        return end.time()
 
     def start_date(self):
         """ Depends on class_day, Session dates, and possibly on

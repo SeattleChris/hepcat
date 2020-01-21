@@ -77,6 +77,8 @@ main section p { margin: 1rem 0; }
 .video { position: relative; padding-top: 74.19%; width: 100%; }
 .video iframe, .video video { position: absolute; top:0; right:0; width:100%; height:100%; border-radius: 2rem; }
 #offers-visual-element { z-index: -1; background-color: #77161e; display: none; }
+.classoffer ul { list-style: none; display: inline-block; }
+.classoffer p { display: inline-block; }
 /****************** End of sub-parts. Adjustments for screen size. ************************/
 @media screen and (max-width: 460px) {
     header h1 { font-size: 7vw; white-space: nowrap; transform: unset; margin: 0; padding: 0.25rem; }
