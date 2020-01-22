@@ -27,7 +27,7 @@
         <span class="shorten" data-text="{{classoffer.day_short}}, ">
           {{ classoffer.day }},
         </span>
-        <span class="nowrap">
+        <span class="nowrap shorten" data-text="{{classoffer.start_time|date:'g'}}-{{classoffer.end_time|date:'gA'}}">
           {{ classoffer.start_time|date:"g:i"|lower }} - {{ classoffer.end_time|date:"g:iA"|lower }}
         </span>
       </li>
