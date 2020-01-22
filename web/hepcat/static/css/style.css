@@ -82,6 +82,7 @@ main section p { margin: 1rem 0; }
 .classoffer p.description { display: inline-block; width: 69%;}
 .classoffer { border: 0.25rem solid #FFF1BD; border-radius: 2rem; padding: 0.25rem 0.5rem; }
 /* .classoffer li { white-space: nowrap; } */
+aside#levels { display: none; }
 /****************** End of sub-parts. Adjustments for screen size. ************************/
 @media screen and (max-width: 380px) {
     /* .classoffer p.description, .classoffer ul { display: block; width: unset; } */
