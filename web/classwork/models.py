@@ -332,6 +332,16 @@ class ClassOffer(models.Model):
     date_modified = models.DateField(auto_now=True)
 
     @property
+    def full_price(self):
+        """ This is full, at-the-door, price """
+        return 70
+
+    @property
+    def pre_price(self):
+        """ This is the price if they pay in advance """
+        pre_pay_discount = 5
+        return self.full_price - pre_pay_discount if pre_pay_discount > 0 else None
+
     def day(self, short=False):
         """ Used for displaying the day of week for the class as a word.
             Returns plural form if the class has multiple weeks.
@@ -343,6 +353,21 @@ class ClassOffer(models.Model):
         if self.subject.num_weeks > 1:
             day += '(s)' if short else 's'
         return day
+
+    @property
+    def day_short(self):
+        """ Same as day, but returns a shorter text in the string. """
+        return self.day(short=True)
+
+    @property
+    def skip_week(self):
+        """ Most of the time there is not a missing week in the middle of session.
+            However, sometimes there are holidays that we can not otherwise schedule around.
+            This returns some text explaining the skipped week. Generally this is included in class description details.
+        """
+        explain = ''
+        # if some skip condition, modify explain with explaination text
+        return explain
 
     def end_time(self):
         """ For a given subject, the time duration is set. So now this
@@ -360,7 +385,7 @@ class ClassOffer(models.Model):
         print(f"End time: {end.time()}")
         return end.time()
 
-    def start_date(self):
+    def start_date(self, short=False):
         """ Depends on class_day, Session dates, and possibly on
             Session.max_day_shift being positive or negative.
         """
@@ -381,16 +406,27 @@ class ClassOffer(models.Model):
             if move > shift:
                 move = min(dif, complement)
         start += timedelta(days=move)
+        if short:
+            return start
+
         return start
 
+    @property
+    def start_date_short(self):
+        """ Same as start_date, but returns shorter text in the string. """
+        return self.start_date()
+
     def end_date(self):
-        """ Returns the computed end date for this class offer
-        """
+        """ Returns the computed end date for this class offer. """
         return self.start_date() + timedelta(days=7*self.subject.num_weeks)
 
+    @property
+    def end_date_short(self):
+        """ Same as end_date, but returns a shorter text in the string. r"""
+        return self.end_date()
+
     def set_num_level(self):
-        """ When we want a sortable level number
-        """
+        """ When we want a sortable level number. """
         level_dict = Subject.LEVEL_ORDER
         print('======= ClassOffer.set_num_level ========')
         print(level_dict.values())

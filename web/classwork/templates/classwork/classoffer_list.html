@@ -20,14 +20,63 @@
   <article class="classoffer">
     <h2>{{ classoffer.subject.title }}</h2>
     <ul>
-      <li>{{ classoffer.day }} | {{ classoffer.start_time }} - {{ classoffer.end_time }} </li>
-      <li>{{ classoffer.start_date }} - {{ classoffer.end_date }}</li>
-      <li>Taught by: {{ classoffer.teachers }} </li>
+      {% if classoffer.short_desc1 %}<li>{{classoffer.shortdesc1}}</li>{% endif %}
+      {% if classoffer.short_desc2 %}<li>{{classoffer.shortdesc2}}</li>{% endif %}
+      <li>&nbsp;</li>
+      <li>
+        <span class="shorten" data-text="{{classoffer.day_short}}, ">
+          {{ classoffer.day }},
+        </span>
+        <span class="nowrap">
+          {{ classoffer.start_time|date:"g:i"|lower }} - {{ classoffer.end_time|date:"g:iA"|lower }}
+        </span>
+      </li>
+      {% if classoffer.skip_week %}
+      <li>
+        <span class="shorten" data-text="{{classoffer.start_date_short|date:'b d'}} - {{classoffer.end_date_short|date:'b dS'}}">
+          {{ classoffer.start_date|date:"M dS" }} - {{ classoffer.end_date|date:"F dS" }}
+        </span>
+      </li>
+      <li>{{ classoffer.skip_week }} </li>
+      {% else %}
+      <li>
+        <span class="shorten" data-text="Starts {{classoffer.start_date_short|date:'b d'}}">
+          Starts {{ classoffer.start_date|date:"F dS" }}
+        </span>
+      </li>
+      <li>&nbsp;</li>
+      {% endif %}
+      {% if classoffer.session.num_weeks > 1 %}
+      <li>{{ classoffer.session.num_weeks }} week class series</li>
+      {% else %}
+      <li>One Day Workshop</li>
+      {% endif %}
+      {% if classoffer.location %}
+      <li>at <a href="{% url 'location_detail' id=classoffer.location.id }">{{ classoffer.location }}</a></li>
+      {% endif %}
+      <li>&nbsp;</li>
+      <li class="nowrap"><a href="{% url 'register' %}">Sign Up Now!</a></li>
     </ul>
     <p class="description">
+      Taught by: {{ classoffer.teachers }} <br />
       {{ classoffer.subject.description }}
     </p>
-    <p><a href="{% url 'classoffer_detail' id=classoffer.id %}">More Details</a></p>
+    <p class="description">
+    {% if classoffer.session.num_weeks > 1 %}
+      {{ classoffer.session.num_weeks }} weeks of classes for {{self.full_price}}
+      {% else %}
+      One Day Workshop for {{self.full_price}}
+      {% endif %}
+      {% if self.pre_price %}
+      at first class or {{self.pre_price}} if <a href="{% url 'register' %}">Paid in Advance</a>.
+      {% else %}
+      - <a href="{% url 'register' %}">Sign Up Now!</a>
+      {% endif %}
+    </p>
+    <p>
+      <a href="{% url 'classoffer_detail' id=classoffer.id %}">More Details</a> |
+      <a href="{% url 'register' %}">Sign Up Now!</a>
+    </p>
   </article>
   <hr />
   {% endfor %}
