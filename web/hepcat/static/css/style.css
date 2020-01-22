@@ -80,12 +80,15 @@ main section p { margin: 1rem 0; }
 /* List view (maybe detail view also) for ClassOffers */
 .classoffer ul { list-style: none; display: inline-block; width: 29%; text-align: center; }
 .classoffer p.description { display: inline-block; width: 69%;}
-.classoffer { border-color: #FFF1BD; border-radius: 2rem; }
+.classoffer { border: 0.25rem solid #FFF1BD; border-radius: 2rem; padding: 0.25rem 0.5rem; }
 /* .classoffer li { white-space: nowrap; } */
 /****************** End of sub-parts. Adjustments for screen size. ************************/
 @media screen and (max-width: 380px) {
     .classoffer p.description, .classoffer ul { display: block; width: unset; }
-    .shorten {visibility: hidden; font-size: 95%; }
+    /* .shorten {
+        visibility: hidden;
+        font-size: 95%;
+    } */
     .shorten::before {
         /* content: "stuff" attr("data-text"); */
         /* content: "stuff"; */
