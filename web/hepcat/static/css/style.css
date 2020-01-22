@@ -84,16 +84,16 @@ main section p { margin: 1rem 0; }
 /* .classoffer li { white-space: nowrap; } */
 /****************** End of sub-parts. Adjustments for screen size. ************************/
 @media screen and (max-width: 380px) {
-    .classoffer p.description, .classoffer ul { display: block; width: unset; }
-    /* .shorten {
+    /* .classoffer p.description, .classoffer ul { display: block; width: unset; } */
+    .shorten {
         visibility: hidden;
         font-size: 95%;
-    } */
+    }
     .shorten::before {
         /* content: "stuff" attr("data-text"); */
         /* content: "stuff"; */
-        /* content: attr("data-text"); */
-        content: "";
+        content: attr(data-text);
+        /* content: ""; */
         visibility: visible;
     }
 }
