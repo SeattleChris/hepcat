@@ -1,5 +1,5 @@
 .clear { clear: both; }
-/* .nowrap { white-space: nowrap; } */
+.nowrap { white-space: nowrap; }
 /* Default font-size for most browsers is 16px for 1rem */
 html { font-size: 81.25%; width: 98%; min-width: 20.03rem; max-width: 73rem; margin: 0 auto; padding: 0; }
 body {
@@ -77,11 +77,30 @@ main section p { margin: 1rem 0; }
 .video { position: relative; padding-top: 74.19%; width: 100%; }
 .video iframe, .video video { position: absolute; top:0; right:0; width:100%; height:100%; border-radius: 2rem; }
 #offers-visual-element { z-index: -1; background-color: #77161e; display: none; }
+/* List view (maybe detail view also) for ClassOffers */
+.classoffer ul { list-style: none; display: inline-block; width: 29%; text-align: center; }
+.classoffer p.description { display: inline-block; width: 69%;}
+.classoffer { border: 0.25rem solid #FFF1BD; border-radius: 2rem; padding: 0.25rem 0.5rem; }
+/* .classoffer li { white-space: nowrap; } */
 /****************** End of sub-parts. Adjustments for screen size. ************************/
+@media screen and (max-width: 380px) {
+    /* .classoffer p.description, .classoffer ul { display: block; width: unset; } */
+    .shorten {
+        visibility: hidden;
+        font-size: 95%;
+    }
+    .shorten::before {
+        /* content: "stuff" attr("data-text"); */
+        /* content: "stuff"; */
+        content: attr(data-text);
+        /* content: ""; */
+        visibility: visible;
+    }
+}
 @media screen and (max-width: 460px) {
     header h1 { font-size: 7vw; white-space: nowrap; transform: unset; margin: 0; padding: 0.25rem; }
     #swing { display: inline; }
-    #swing::before { content: ""; padding: 0; }
+    #swing:before { content: ""; padding: 0; }
     /* #offers article img { float: right; } */
     #offers article:nth-child(n) { width: 22.697rem; transform: unset; }
 }

@@ -28,7 +28,7 @@
   <nav role="navigation">
     <label for="user-login">
       {%if user.is_authenticated %}
-      Welcome {{ user.username }}
+      Hi {{ user.username }}
        {% if user.is_superuser %} - SU {% endif %}
       {% else %}
       Account

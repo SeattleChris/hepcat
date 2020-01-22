@@ -1,4 +1,4 @@
-{% extends 'generic/needle.html' %}
+{% extends 'generic/base.html' %}
 
 {% block head %}
 <title>Create User Account</title>
@@ -6,12 +6,14 @@
 
 
 {% block content %}
-
-<h2>Sign up</h2>
-<form method="post">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Sign up</button>
-</form>
-
+<section>
+  <article>
+    <h2>Sign up</h2>
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit">Sign up</button>
+    </form>
+  </article>
+</section>
   {% endblock content %}
