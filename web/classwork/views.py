@@ -2,7 +2,7 @@ from django.views.generic import ListView, CreateView, DetailView, UpdateView
 # from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
-from .models import (SiteContent, Resource, Location, ClassOffer,  # ? Subject, Session,
+from .models import (SiteContent, Resource, Location, ClassOffer, Subject,  # ? Session,
                      Profile, Payment, Registration)
 from .forms import RegisterForm, PaymentForm, decide_session  # , ProfileForm, UserForm
 from django.shortcuts import get_object_or_404, redirect  # used for Payments
@@ -39,6 +39,21 @@ class AboutUsListView(ListView):
         return all
 
     # end AboutUs
+
+
+class SubjectProgressView(ListView):
+    """ More in-depth description of how the Organization expects students to progress through classoffers. """
+    template_name = ''
+    model = Subject
+    context_object_name = 'levels'
+
+    def get_context_data(self, **kwargs):
+        """ Modify the context """
+        context = super().get_context_data(**kwargs)
+        # context['added_info'] =
+        return context
+
+    # end SubjectProgressView
 
 
 class LocationListView(ListView):
