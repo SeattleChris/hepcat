@@ -3,10 +3,10 @@
 
 {% block content %}
 <section>
-  <article class="header">
+  <header>
     <h2>Upcoming Classes</h2>
     <p>some section header content</p>
-  </article>
+  </header>
 
   {% for classoffer in classoffers %}
   <article>
@@ -19,9 +19,9 @@
   </article>
   {% endfor %}
 
-  <article class="footer">
+  <footer>
     <p>End list of Sessions</p>
 
-  </article>
+  </footer>
 </section>
 {% endblock content %}

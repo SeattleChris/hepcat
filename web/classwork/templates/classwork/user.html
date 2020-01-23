@@ -8,7 +8,7 @@
 {% block content %}
 
 <section>
-  <article class="header">
+  <header>
     <h2>{{ profile }} Profile Details</h2>
     {% if profile.bio %}
     <p>{{profile.bio}}</p>
@@ -16,7 +16,7 @@
     <p>Currently no profile available</p>
     {% endif %}
     <h3>Resources</h3>
-  </article>
+  </header>
 
   {% for key, values in resources.items %}
   <article>
@@ -32,10 +32,10 @@
 </section>
 
 <section>
-  <article class="header">
+  <header>
     <h3>Class History</h3>
     <p>These are the classes we have records of you attending. Contact us if any seem missing. </p>
-  </article>
+  </header>
 
   {% for classoffer in had %}
   <article>
