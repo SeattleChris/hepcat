@@ -8,13 +8,13 @@
 {% block content %}
 <section>
 
-  <article class="header">
+  <header>
     <h1>Swing Dance - Lindy Hop Classes</h1>
     <p>Registration is open for these scheduled classes.</p>
     {% if user.is_staff %}
     <p> {{ display_session }} </p>
     {% endif %}
-  </article>
+  </header>
 
   {% for classoffer in classoffers %}
   <article class="classoffer">
@@ -51,8 +51,10 @@
       {% else %}
       <li>One Day Workshop</li>
       {% endif %}
-      {% if classoffer.location %}
-      <li>at <a href="{% url 'location_detail' id=classoffer.location.id }">{{ classoffer.location }}</a></li>
+      {% if classoffer.location.id %}
+      <li>at <a href="{% url 'location_detail' id=classoffer.location.id %}">{{ classoffer.location }}</a></li>
+      {% else %}
+      <li>at location TBA</li>
       {% endif %}
       <li>&nbsp;</li>
       <li class="nowrap"><a href="{% url 'register' %}">Sign Up Now!</a></li>
@@ -81,12 +83,12 @@
   <hr />
   {% endfor %}
 
-  <article class="footer">
+  <footer>
     <p>
       Generally a new session of classes will start after these classes are finished.
       Check back for an updated schedule.
     </p>
-  </article>
+  </footer>
 
 </section>
 

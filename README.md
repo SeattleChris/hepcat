@@ -1,7 +1,7 @@
 # hepcat
 
 **Author**: Chris L Chapman
-**Version**: 0.1.0
+**Version**: 0.2.0
 
 ## Overview
 
@@ -111,15 +111,15 @@ This is a specific subject, offered during a specific session. It includes infor
 ## Architecture
 
 * python 3.6-slim
-* Django 3.0.1
+* Django 3.0.2
 * psycopg2-binary 2.8.4
 * django-registration 3.0.1
 * nginx
 * postgres
-* django-compressor 2.3
+* django-compressor 2.4
 * django-payments 0.13.0
-* Pillow 6.2.1
-* stripe 2.41.0
+* Pillow 7.0.0
+* stripe 2.42.0
 
 Dev:
 

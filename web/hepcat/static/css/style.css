@@ -9,14 +9,14 @@ body {
     font-family: 'Open Sans', sans-serif;
     position: relative;
 }
-header h1 { font-family: 'Diplomata', cursive; }
+body > header h1 { font-family: 'Diplomata', cursive; }
 #swing { display: block; }
 #swing::before { content: "\A"; padding: 0 2.5em; }  /* content: attr(data-text); */
 /* Main Site Nav inside a nav inside of Header. Repeated page navigation in footer. */
-header nav { align-self: flex-end; text-align: right; font-size: 100%; }
+body > header nav { align-self: flex-end; text-align: right; font-size: 100%; }
 footer { font-size: 90%; text-align: center; }
 nav ul, footer ul { margin-block-start: 0; margin-block-end: 0; padding-inline-start: 0; list-style: none; }
-nav ul.site-nav a, header h1 a { text-decoration: none; }
+nav ul.site-nav a, body > header h1 a { text-decoration: none; }
 ul#user-login, nav label, nav li, footer li { display: inline-block; text-align: center; }
 nav li::before, footer li::after { content: ' | '; }
 footer li:last-child::after, ul#user-login li:first-child::before, ul li:first-child::before { content: ''; }
@@ -27,9 +27,9 @@ footer img { width: 9rem; border-radius: 1.25rem; margin: 0; padding: 0; }
 footer > a:first-child { display: none; } /* Hides footer img & link, until we want it */
 /* Nav Menu Toggle Button and Menu Settings (Currently Not Used) */
 input#menu-toggle[type=checkbox] { position: absolute; top: 0; right: 0; opacity: 0; } /* Opacity & position for hiding in mobile. visibility: collapse is another option, perhaps less good. */
-header .nav-menu  { display: none; position: absolute; top: 7rem; right: 2rem; text-align: right; } /* Default State */
-header input[type=checkbox]:checked ~ .nav-menu { display: inline-block; } /* Toggled State */
-header label#menu {
+body > header .nav-menu  { display: none; position: absolute; top: 7rem; right: 2rem; text-align: right; } /* Default State */
+body > header input[type=checkbox]:checked ~ .nav-menu { display: inline-block; } /* Toggled State */
+body > header label#menu {
     -webkit-appearance: push-button;
     -moz-appearance: button;
     display: inline-block;
@@ -99,7 +99,7 @@ aside#levels { display: none; }
     }
 }
 @media screen and (max-width: 460px) {
-    header h1 { font-size: 7vw; white-space: nowrap; transform: unset; margin: 0; padding: 0.25rem; }
+    body > header h1 { font-size: 7vw; white-space: nowrap; transform: unset; margin: 0; padding: 0.25rem; }
     #swing { display: inline; }
     #swing:before { content: ""; padding: 0; }
     /* #offers article img { float: right; } */
@@ -108,7 +108,7 @@ aside#levels { display: none; }
 @media screen and (min-width: 461px) {
     main { display: flex; align-items: stretch; }
     body { top: -1.25rem; }
-    header h1 {
+    body > header h1 {
         font-size: 5.5vw;
         transform: rotate(-10deg);
         margin: 0 0 -2.5rem -0.3rem;
@@ -130,8 +130,8 @@ aside#levels { display: none; }
     }
     /* Flex Header */
     body { top: 0; }
-    header { display: flex; justify-content: space-between; align-items: flex-start; }
-    header h1 { margin: 0 0 -2.5rem -0.3rem; }
+    body > header { display: flex; justify-content: space-between; align-items: flex-start; }
+    body > header h1 { margin: 0 0 -2.5rem -0.3rem; }
     main section:nth-child(1) { padding-top: 1.75rem; }
     #offers { margin-right: 2rem; min-width: 23.5rem; justify-content: flex-end; }
     #offers h1 { font-size: 1.8rem; margin-top: 0.8rem; margin-bottom: 1rem; }
@@ -152,7 +152,7 @@ aside#levels { display: none; }
 }
 @media screen and (max-width: 775px) { #left-design-layout { width: 0; height: 0; min-width: unset; display: none; } }
 @media screen and (min-width: 776px) { #left-design-layout { min-width: 0.1rem; max-width: 15.082030rem; } }
-@media screen and (min-width: 833px) { header h1 { font-size: 3.6rem; } }
+@media screen and (min-width: 833px) { body > header h1 { font-size: 3.6rem; } }
 @media screen and (min-width: 874px) { html { font-size: 1.48741vw; } }
 @media screen and (min-width: 1076px) {
     html { font-size: unset; }
@@ -216,12 +216,11 @@ a:active {
 nav ul.site-nav a:active, #offers article a:active
     { color: #D4AA7D; /* "Dark Orange" */ }
 
-header h1 a:link, header h1 a:visited,
-header h1 a:hover, header h1 a:focus
+body > header h1 a:link, body > header h1 a:visited,
+body > header h1 a:hover, body > header h1 a:focus
     { color: #111; outline: initial; background-color: transparent; }
-header h1 a:link, header h1 a:visited { text-shadow: 0.25em 0.25em 0.65em #FFF1BD; }
-header h1 a:hover, header h1 a:focus  { text-shadow: 0.05em 0.05em 0.65em #FFF1BD; color: #222; }
-/* header h1 a:hover, header h1 a:focus  { text-shadow: 0.25em 0.25em 0.65em #FFF1BD,  0.05em -0.05em 0.65em #FFF1BD; color: #222; } */
-/* header h1 a:hover, header h1 a:focus  { text-shadow: 0.05em 0.05em 0.65em #FFF1BD,  0.05em -0.05em 0.65em #FFF1BD; color: #222; } */
-/* header h1 a:hover { outline: initial; } */
+body > header h1 a:link, body > header h1 a:visited { text-shadow: 0.25em 0.25em 0.65em #FFF1BD; }
+body > header h1 a:hover, body > header h1 a:focus  { text-shadow: 0.05em 0.05em 0.65em #FFF1BD; color: #222; }
+/* body > header h1 a:hover, body > header h1 a:focus  { text-shadow: 0.25em 0.25em 0.65em #FFF1BD,  0.05em -0.05em 0.65em #FFF1BD; color: #222; } */
+/* body > header h1 a:hover, body > header h1 a:focus  { text-shadow: 0.05em 0.05em 0.65em #FFF1BD,  0.05em -0.05em 0.65em #FFF1BD; color: #222; } */
 /* End Link Colors */

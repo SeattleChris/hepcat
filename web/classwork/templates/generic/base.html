@@ -27,7 +27,7 @@
   </h1>
   <nav role="navigation">
     <label for="user-login">
-      {%if user.is_authenticated %}
+      {% if user.is_authenticated %}
       Hi {{ user.username }}
        {% if user.is_superuser %} - SU {% endif %}
       {% else %}

@@ -7,7 +7,7 @@
 
 {% block content %}
 <section>
-  <article class="header">
+  <header>
     <h2> Class Sign Up </h2>
     {% if user.is_authenticated %}
     <p> Sign up with your current user info below.
@@ -19,7 +19,7 @@
       <a href="{% url 'login' %}">Login</a>
     </p>
     {% endif %}
-  </article>
+  </header>
   <form method="post">
     {% csrf_token %}
     {{ form.as_p }}

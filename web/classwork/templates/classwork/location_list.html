@@ -4,10 +4,10 @@
 {% block content %}
 
 <section>
-  <article class="header">
+  <header>
     <h2>Established Locations</h2>
     <p>These are locations we use. If you are looking for your class, confirm which location your class is held in. </p>
-  </article>
+  </header>
 
   {% for location in locations %}
   <article>
@@ -23,9 +23,9 @@
   </article>
   {% endfor %}
   <hr />
-  <article class="footer">
+  <footer>
     <p>End list of Locations</p>
-  </article>
+  </footer>
 </section>
 
 {% endblock content %}
