@@ -7,10 +7,9 @@
   <article class="login-form container">
     <h2>Login</h2>
     <p>If you have have previously had classes with us, you can login with your email you used to sign up for classes. </p>
-    {% csrf_token %}
-
+    <form method="post">
+      {% csrf_token %}
       {{ form.as_p }}
-
       {% comment %} <input type="submit" value="Submit" /> {% endcomment %}
       <button type="submit">Login</button>
     </form>
