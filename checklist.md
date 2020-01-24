@@ -18,12 +18,14 @@
 | :heavy_check_mark: | User Views: ClassOffer list (only currently open to join are shown), Register (join class)
 | :heavy_check_mark: | User Views: Profile for user - see resources granted them, and class history.
 |                    | **Milestone 2 Completion**           |
-|                    | Models: Location - connect locations to ClassOffer |
+| :heavy_check_mark: | Models: Location - connect locations to ClassOffer |
 | :heavy_check_mark: | User Views: AboutUs, ClassOffer details, Locations (directions) - core structure stubbed out |
+| :heavy_check_mark: | Admin Views: Admin can assign class credit to any student (tracked in student Profile) |
 | :heavy_check_mark: | Existing user joining a ClassOffer: Prompted to login. Catches if they already have account |
 | :heavy_check_mark: | User onboarding: Can join ClassOffer, account created afterwards. No friction onboarding    |
 | :heavy_check_mark: | User onboarding: Existing user can sign-up and/or pay for other users (existing or not)     |
 | :heavy_check_mark: | Admin Views: Checkin - Each page for a day/location. Sections/class. Sorted by student name |
+| :heavy_check_mark: | Metrics: Categorize students on their class progression - completed Beg and/or L2? (Profile)|
 | :heavy_check_mark: | Design: Home page / landing site design. General pages layout design                        |
 |                    | **Milestone 3 Completion**           |
 |                    | Payment Processing: PayPal integration       |
@@ -35,12 +37,13 @@
 |                    | Deploy Version 1.0: List classes, register, payment, manage resources, user onboarding      |
 |                    | **Launch Version 1.0**           |
 |                    | **Upcoming Features**           |
+|                    | Interest tracking: update Profile model, forms for students, prompts sent to users.  |
 |                    | Social Media connections on website: FB business page, FB group page, Twitter, etc.        |
 |                    | Payment Processing: Square integration - on-site (in person) payments       |
 |                    | Payment Processing: Stripe integration       |
 |                    | User onboarding: integrate user accounts with Facebook/Google/etc login                     |
 |                    | Email Features: Manage general customer emailing list        |
-|                    | Metrics: Categorize students on their class progression (expected customer process)         |
+|                    | Metrics: Update class progression - include repeated L2, and higher levels                  |
 |                    | Metrics: Typical follow-through rates in expected progression (at each step) |
 |                    | Email Features: Better targeted messaging (depending on student's classoffer history)       |
 |                    | Metrics: Identify groups outside of expected class progression |
@@ -73,6 +76,9 @@ Current Status:
 - [ ] Manual process for managing on-site payments (with Square, Check, Cash)
 - [s] Automatically manage on-site credit card (via Square?) processing
 - [s] Stripe payment integration
+- [x] Update Subject (or ClassOffer) models to have price fields
+- [x] Update price fields to auto-populate based on class type
+- [ ] Update multi-class discount based on Subject/ClassOffer settings
 
 ## Email Features
 

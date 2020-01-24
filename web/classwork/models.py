@@ -4,11 +4,11 @@ from django.db import models
 from datetime import date, timedelta, datetime as dt
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from decimal import Decimal  # used for Payments model
+from decimal import Decimal  # used for Payments
 from payments import PurchasedItem
 from payments.models import BasePayment
 from django.conf import settings
-from django.http import HttpResponseRedirect
+# from django.http import HttpResponseRedirect
 from django.urls import reverse
 # from django.contrib.auth import get_user_model
 # User = get_user_model()
@@ -204,7 +204,7 @@ class Subject(models.Model):
         ('N', 'NA'),
     )
 
-    # id = auto-created
+    # id = auto-createdint(
     level = models.CharField(max_length=8, choices=LEVEL_CHOICES, default='Spec')
     # num_level = models.IntegerField(default=0, editable=False)
     version = models.CharField(max_length=1, choices=VERSION_CHOICES)
@@ -218,6 +218,10 @@ class Subject(models.Model):
     image = models.URLField(blank=True)
     # TODO: Update to using ImageField. But what if we want existing image?
     # image = models.ImageField(upload_to=MEDIA_ROOT)
+    full_price = models.DecimalField(max_digits=9, decimal_places=2, default=settings.DEFAULT_CLASS_PRICE)
+    pre_pay_discount = models.DecimalField(max_digits=9, decimal_places=2, default=settings.DEFAULT_PRE_DISCOUNT)
+    multiple_purchase_discount = models.DecimalField(max_digits=9, decimal_places=2, default=settings.MULTI_DISCOUNT)
+    qualifies_as_multi_class_discount = models.BooleanField(default=True)
 
     date_added = models.DateField(auto_now_add=True)
     date_modified = models.DateField(auto_now=True)
@@ -301,7 +305,7 @@ class Session(models.Model):
 class ClassOffer(models.Model):
     """ Different classes can be offered at different times and scheduled
         for later publication. Will pull from the following models:
-            Subject, Session, Teachers, Location
+            Subject, Session, Profile (for teacher association), Location
     """
     DOW_CHOICES = (
         (0, 'Monday'),
@@ -319,7 +323,7 @@ class ClassOffer(models.Model):
     num_level = models.IntegerField(default=0, editable=False)
     # TODO: Need a flag for Admin to approve for publishing each ClassOffer.
     # TODO: later on location will be selected from Location model
-    # location = models.ForeignKey('Location', on_delete=models.CASCADE)
+    location = models.ForeignKey('Location', on_delete=models.SET_NULL, null=True)
     # TODO: later on teachers will selected from users - teachers.
     teachers = models.CharField(max_length=125, default='Chris Chapman')
     class_day = models.SmallIntegerField(choices=DOW_CHOICES, default=3)
@@ -334,12 +338,12 @@ class ClassOffer(models.Model):
     @property
     def full_price(self):
         """ This is full, at-the-door, price """
-        return 70
+        return Decimal(getattr(self.subject, 'full_price', 65))
 
     @property
     def pre_price(self):
         """ This is the price if they pay in advance """
-        pre_pay_discount = 5
+        pre_pay_discount = Decimal(getattr(self.subject, 'pre_price', 0))
         return self.full_price - pre_pay_discount if pre_pay_discount > 0 else None
 
     def day(self, short=False):
@@ -366,19 +370,14 @@ class ClassOffer(models.Model):
             This returns some text explaining the skipped week. Generally this is included in class description details.
         """
         explain = ''
-        # if some skip condition, modify explain with explaination text
+        # if some skip condition, modify explain with explanation text
         return explain
 
+    @property
     def end_time(self):
         """ For a given subject, the time duration is set. So now this
             ClassOffer instance has set the start time, end time is knowable.
         """
-        # TODO: compute and return the end time of the class offer
-        # t = self.start_time
-        # t += 60 * self.subject.num_minutes
-        # return t
-        # end_dt = combine(self.start_date(), self.start_time) + timedelta(minutes=self.subject.num_minutes)
-        # return end_dt.time()
         start = dt.combine(self.start_date(), self.start_time)
         end = start + timedelta(minutes=self.subject.num_minutes)
         print(f"End: {end}")
@@ -422,7 +421,7 @@ class ClassOffer(models.Model):
 
     @property
     def end_date_short(self):
-        """ Same as end_date, but returns a shorter text in the string. r"""
+        """ Same as end_date, but returns a shorter text in the string. """
         return self.end_date()
 
     def set_num_level(self):
@@ -553,8 +552,6 @@ class PaymentManager(models.Manager):
             is registering for classoffers, which is the most
             common usage of our payments
         """
-        from decimal import Decimal
-
         print("===== PaymentManager.classRegister ======")
         if not isinstance(student, Profile):
             raise TypeError('We need a user Profile passed here.')
@@ -568,7 +565,7 @@ class PaymentManager(models.Manager):
             # TODO: Change to look up the actual class prices & discount
             # This could be stored in Registration, or get from ClassOffer
             description = description + str(item) + ', '
-            full_price += 65.0
+            full_price += 70.0
             pre_pay_discount += 5.0
             multiple_discount_count += 1
         multiple_purchase_discount = 10.0 if multiple_discount_count > 1 else 0.0

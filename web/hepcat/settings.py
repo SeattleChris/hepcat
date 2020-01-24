@@ -142,7 +142,7 @@ if DEBUG:
 # else:
 #     Handle all of the configs for a real email SMTPBackend
 
-# CUSTOM Settings for Payment Processings
+# CUSTOM Settings for Payment Processing
 
 STRIPE_KEY = os.environ.get('STRIPE_KEY', None)
 STRIPE_PUBLIC_KEY = os.environ.get('STRIPE_PUBLIC_KEY', None)
@@ -156,3 +156,9 @@ PAYMENT_VARIANTS = {
         'public_key': STRIPE_PUBLIC_KEY})}
 # PAYMENT_VARIANTS = {
 #     'default': ('payments.dummy.DummyProvider', {})}
+
+# CUSTOM Global variables
+
+DEFAULT_CLASS_PRICE = '70.0'
+DEFAULT_PRE_DISCOUNT = '5.0'
+MULTI_DISCOUNT = '10.0'

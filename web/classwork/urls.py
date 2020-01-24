@@ -10,7 +10,7 @@ from .views import (AboutUsListView,
 urlpatterns = [  # All following are in root
     path('aboutus', AboutUsListView.as_view(), name='aboutus'),
     path('classes/<int:id>', ClassOfferDetailView.as_view(), name='classoffer_detail'),
-    path('classes/', ClassOfferListView.as_view(), name='classoffer_list'),  # Display all ClassOffers?
+    path('classes/', ClassOfferListView.as_view(), name='classoffer_list'),
     path('location/<int:id>', LocationDetailView.as_view(), name='location_detail'),
     path('location/', LocationListView.as_view(), name='location_list'),
     path('checkin/', Checkin.as_view(), name='checkin'),

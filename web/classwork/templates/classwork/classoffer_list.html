@@ -51,8 +51,10 @@
       {% else %}
       <li>One Day Workshop</li>
       {% endif %}
-      {% if classoffer.location %}
-      <li>at <a href="{% url 'location_detail' id=classoffer.location.id }">{{ classoffer.location }}</a></li>
+      {% if classoffer.location.id %}
+      <li>at <a href="{% url 'location_detail' id=classoffer.location.id %}">{{ classoffer.location }}</a></li>
+      {% else %}
+      <li>at location TBA</li>
       {% endif %}
       <li>&nbsp;</li>
       <li class="nowrap"><a href="{% url 'register' %}">Sign Up Now!</a></li>
