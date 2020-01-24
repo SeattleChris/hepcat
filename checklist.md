@@ -10,32 +10,33 @@
 |                    | **Milestone 1 Completion**                |
 | :heavy_check_mark: | Models: User model module - student, teacher, admin.                |
 | :heavy_check_mark: | Models: Subject, ClassOffer, Session - core product structure and inter-connections |
-| :heavy_check_mark: | Models: Resource, Locations - allows both temporary or repeated resources |
+| :heavy_check_mark: | Models: Resource - allows both temporary or repeated resources |
 | :heavy_check_mark: | Models: Profile & connected Resources - students get resources from their classoffers |
 | :heavy_check_mark: | Admin Views: interface for Subject structure and planning specific ClassOffers.
 | :heavy_check_mark: | Admin Views: interface for Session - planning future products, assigning publish times.
 | :heavy_check_mark: | Admin Views: teacher/admin interface assigning resources (populates to students Profile)|
 | :heavy_check_mark: | User Views: ClassOffer list (only currently open to join are shown), Register (join class)
 | :heavy_check_mark: | User Views: Profile for user - see resources granted them, and class history.
-| :heavy_check_mark: | User Views: AboutUs, ClassOffer details, Locations (directions) - core structure stubbed out |
 |                    | **Milestone 2 Completion**           |
+|                    | Models: Location - connect locations to ClassOffer |
+| :heavy_check_mark: | User Views: AboutUs, ClassOffer details, Locations (directions) - core structure stubbed out |
 | :heavy_check_mark: | Existing user joining a ClassOffer: Prompted to login. Catches if they already have account |
 | :heavy_check_mark: | User onboarding: Can join ClassOffer, account created afterwards. No friction onboarding    |
 | :heavy_check_mark: | User onboarding: Existing user can sign-up and/or pay for other users (existing or not)     |
 | :heavy_check_mark: | Admin Views: Checkin - Each page for a day/location. Sections/class. Sorted by student name |
 | :heavy_check_mark: | Design: Home page / landing site design. General pages layout design                        |
+|                    | **Milestone 3 Completion**           |
 |                    | Payment Processing: PayPal integration       |
 |                    | Email Features: send register confirmations, weekly class emails         |
 |                    | User Views: more filled out - student Profile structure, visual & layout of ClassOffers     |
 |                    | User Views: About Us - show profile info for only teachers and staff, plus general business |
-|                    | User Views: ? weekly current class view, or just their profile page?                        |
 |                    | User Views: Contact Us (including contact form), Info - general site resources, sub-pages   |
 |                    | User Views: General site clean up before first launch                                       |
 |                    | Deploy Version 1.0: List classes, register, payment, manage resources, user onboarding      |
 |                    | **Launch Version 1.0**           |
-|                    | **Milestone 3 Completion**           |
-|                    | Social Media connections: FB business page, FB group page, Twitter, etc.                    |
-|                    | Payment Processing: Square integration - on-site payments       |
+|                    | **Upcoming Features**           |
+|                    | Social Media connections on website: FB business page, FB group page, Twitter, etc.        |
+|                    | Payment Processing: Square integration - on-site (in person) payments       |
 |                    | Payment Processing: Stripe integration       |
 |                    | User onboarding: integrate user accounts with Facebook/Google/etc login                     |
 |                    | Email Features: Manage general customer emailing list        |
