@@ -105,8 +105,27 @@ This is a specific subject, offered during a specific session. It includes infor
 * Make sure you have a processing account through stripe and/or PayPal
 * clone the repo
 * make sure the file settings are correct.
+* make an `.env` file, following the example of `.env_template`
 * docker-compose up --build
 * ... To Be Filled In Later ...
+
+Each organization installing this app while have some unique settings. Some of these depend on the deployment and development environments, and some of these depend on the business/organization structure. While some of these organization structure settings are created as an organization admin after the app is installed, some are handled elsewhere, most notably in the `.env` file (which should never be published or shared publicly). The following has some `.env` file settings explained:
+
+SECRET_KEY: a unique, unpublished, key used by Django
+DEBUG: True during development. False for production deployment
+ALLOWED_HOSTS: space separated list - usually for development: 127.0.0.1 localhost 0.0.0.0
+DB_NAME: connection to the database (ie: postgres)
+DB_USER, DB_PASS, DB_HOST, DB_PORT: for connecting to the database
+EMAIL_HOST_USER, EMAIL_HOST_PASSWORD: allowing the app to send email
+STRIPE_PUBLIC_KEY, STRIPE_KEY: Public and Private keys, only needed if implementing stripe payment processing
+PAYPAL_EMAIL: If implementing PayPal payments, the email payments send their funds
+PAYPAL_SECRET: As given from PayPal developer dashboard credentials
+PAYPAL_CLIENT_ID: As given from PayPal developer dashboard credentials
+PAYPAL_URL: something like https://api.sandbox.paypal.com for development or https://api.paypal.com for production
+DEFAULT_CLASS_PRICE: Optional - Can set the common base price for most products (ClassOffer)
+DEFAULT_PRE_DISCOUNT: Optional - Can set the typical discount for paying in advanced (per product)
+MULTI_DISCOUNT: Optional - If offering a discount for multiple classes, this is the default value
+*Note: The above 3 are the pre-populated values, overwritable per product. Whole numbers should have '.0' at the end.
 
 ## Architecture
 
