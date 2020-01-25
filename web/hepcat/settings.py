@@ -146,16 +146,26 @@ if DEBUG:
 
 STRIPE_KEY = os.environ.get('STRIPE_KEY', None)
 STRIPE_PUBLIC_KEY = os.environ.get('STRIPE_PUBLIC_KEY', None)
-
+PAYPAL_EMAIL = os.environ.get('PAYPAL_EMAIL', None)
+PAYPAL_SECRET = os.environ.get('PAYPAL_SECRET', None)
+PAYPAL_URL = os.environ.get('PAYPAL_URL', 'https://api.sandbox.paypal.com')  # https://api.paypal.com for production
 PAYMENT_HOST = 'localhost:8000'
 PAYMENT_USES_SSL = False
 PAYMENT_MODEL = 'classwork.Payment'
+
 PAYMENT_VARIANTS = {
-    'default': ('payments.stripe.StripeProvider', {
+    'paypal': ('payments.paypal.PaypalProvider', {
+        'client_id': 'user@example.com',
+        'secret': 'iseedeadpeople',
+        'endpoint': 'https://api.sandbox.paypal.com',
+        'capture': False}),
+    'stripe': ('payments.stripe.StripeProvider', {
         'secret_key': STRIPE_KEY,
-        'public_key': STRIPE_PUBLIC_KEY})}
+        'public_key': STRIPE_PUBLIC_KEY
+        }),
+    'default': ('payments.dummy.DummyProvider', {})
+    }
 # PAYMENT_VARIANTS = {
-#     'default': ('payments.dummy.DummyProvider', {})}
 
 # CUSTOM Global variables
 

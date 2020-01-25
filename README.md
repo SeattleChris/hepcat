@@ -119,7 +119,8 @@ This is a specific subject, offered during a specific session. It includes infor
 * django-compressor 2.4
 * django-payments 0.13.0
 * Pillow 7.0.0
-* stripe 2.42.0
+* PayPal integration (django-payments)
+* Future Features: stripe 2.42.0
 
 Dev:
 
