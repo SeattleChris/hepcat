@@ -146,6 +146,25 @@ Dev:
 * django-sass-processor 0.7.5
 * libsass 0.19.4
 
+## Development Progress
+
+| Complete           | Core feature progress for Version 1.0 release |
+| ------------------ |:-----------------------------------------:|
+| :heavy_check_mark: | Models, Views, etc for planning and publishing class products (ClassOffer, Subject, Session)
+| :heavy_check_mark: | User & Profile, w/ role permissions (customer, teacher, admin), login, no-friction onboarding
+| :heavy_check_mark: | Resources assigned by staff to ClassOffer, or individually, incl. deliver to student/customer
+| :heavy_check_mark: | About Us, Location, and general site content
+| :heavy_check_mark: | Visual Design: Home page, general site design templates, assets, etc
+| :heavy_check_mark: | Flow for student register & check-in - connect student to resources, admin check-in reports.
+|                    | Payment Processing (PayPal first): generate & receive payment, track completed payments
+|                    | Email management: confirm register, payment, weekly class announcement
+
+We are keeping a checklist of upcoming tasks and feature development, as well as a more detailed summary of progress of the above core features. This is a live document, mostly describing the next steps in development. Currently focusing on PayPal integration, with summary and scratch pad notes linked below.
+
+[Development Checklist](./checklist.md)
+
+[Developer Notes - PayPal integration](./paypal.md)
+
 ## API
 
 The following routes have been made or scaffolded (mostly in classwork app):
