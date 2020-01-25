@@ -343,7 +343,7 @@ class ClassOffer(models.Model):
     @property
     def pre_price(self):
         """ This is the price if they pay in advance """
-        pre_pay_discount = Decimal(getattr(self.subject, 'pre_price', 0))
+        pre_pay_discount = Decimal(getattr(self.subject, 'pre_pay_discount', 0))
         return self.full_price - pre_pay_discount if pre_pay_discount > 0 else None
 
     def day(self, short=False):

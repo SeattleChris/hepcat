@@ -130,35 +130,40 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # CUSTOM Additional Settings for this Project
+
+# Django Registration
 AUTH_USER_MODEL = 'users.UserHC'
 LOGIN_REDIRECT_URL = '/profile/'
 LOGOUT_REDIRECT_URL = 'home'
-
-# Django Registration
 ACCOUNT_ACTIVATION_DAYS = 1
-# LOGIN_REDIRECT_URL = '/'
 if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # else:
 #     Handle all of the configs for a real email SMTPBackend
 
 # CUSTOM Settings for Payment Processing
-
 STRIPE_KEY = os.environ.get('STRIPE_KEY', None)
 STRIPE_PUBLIC_KEY = os.environ.get('STRIPE_PUBLIC_KEY', None)
-
+PAYPAL_EMAIL = os.environ.get('PAYPAL_EMAIL', None)
+PAYPAL_SECRET = os.environ.get('PAYPAL_SECRET', None)
+PAYPAL_URL = os.environ.get('PAYPAL_URL', 'https://api.sandbox.paypal.com')  # https://api.paypal.com for production
 PAYMENT_HOST = 'localhost:8000'
 PAYMENT_USES_SSL = False
 PAYMENT_MODEL = 'classwork.Payment'
 PAYMENT_VARIANTS = {
-    'default': ('payments.stripe.StripeProvider', {
+    'paypal': ('payments.paypal.PaypalProvider', {
+        'client_id': PAYPAL_EMAIL,
+        'secret': PAYPAL_SECRET,
+        'endpoint': PAYPAL_URL,
+        'capture': False}),
+    'stripe': ('payments.stripe.StripeProvider', {
         'secret_key': STRIPE_KEY,
-        'public_key': STRIPE_PUBLIC_KEY})}
-# PAYMENT_VARIANTS = {
-#     'default': ('payments.dummy.DummyProvider', {})}
+        'public_key': STRIPE_PUBLIC_KEY
+        }),
+    'default': ('payments.dummy.DummyProvider', {})
+    }
 
 # CUSTOM Global variables
-
-DEFAULT_CLASS_PRICE = '70.0'
-DEFAULT_PRE_DISCOUNT = '5.0'
-MULTI_DISCOUNT = '10.0'
+DEFAULT_CLASS_PRICE = os.environ.get('DEFAULT_CLASS_PRICE', None)
+DEFAULT_PRE_DISCOUNT = os.environ.get('DEFAULT_PRE_DISCOUNT', None)
+MULTI_DISCOUNT = os.environ.get('MULTI_DISCOUNT', None)

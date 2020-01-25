@@ -1,0 +1,85 @@
+# PayPal Processing
+
+Currently planning to use django-payments (ver 0.13.0).
+    - Might want to look at django-paypal (ver 1.0.0)
+    - Official [Paypal Python REST SDK](https://github.com/paypal/Checkout-Python-SDK)
+Paypal Payments Pro - costs monthly fee. Paypal Standard has no additional cost.
+PayPal Standard with Encrypted Buttons - may be a thing to look into creating/implementing.
+Paypal Standard: Payment Data Transfer (PDT) vs. Instant Payment Notification (IPN):
+IPN - probably best. Handle message on a separate endpoint. User may return sooner than confirmation from Paypal.
+PDT - probably not as good. Can miss transaction response. Transaction id (confirmation) in user return route.
+PayPal Checkout - is this just standard or a different integration solution?
+    Orders API
+? Payments API ?
+Vault API - securely store customer cards w/ PayPal. Stretch goal?
+
+## Authentication & Authorization
+
+Use PAYPAL_CLIENT_ID and PAYPAL_SECRET (Note: may need set the Accept header to application/x-www-form-urlencoded)
+with following command:
+
+curl -v https://api.sandbox.paypal.com/v1/oauth2/token \
+   -H "Accept: application/json" \
+   -H "Accept-Language: en_US" \
+   -u "client_id:secret" \
+   -d "grant_type=client_credentials"
+
+PayPal will return `access_token` field within JSON response formatted as:
+
+{
+  "scope": "scope",
+  "access_token": "Access-Token",
+  "token_type": "Bearer",
+  "app_id": "APP-80W284485P519543T",
+  "expires_in": 31349,
+  "nonce": "nonce"
+}
+
+Include this bearer token in the `Authorization` header with the `Bearer` authentication scheme in REST API calls,
+such as:
+
+curl -v -X GET https://api.sandbox.paypal.com/v1/invoicing/invoices?page=3&page_size=4&total_count_required=true \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <Access-Token>"
+
+To detect when an access token expires, write code to either by 1) Keep track of the expires_in value in the token response or 2) Handle the HTTP 401 Unauthorized status code. The API endpoint issues this status code when it detects an expired token.
+
+## Make Rest API Calls
+
+Use PAYPAL_URL and the access token from above.
+
+curl -v -X GET PAYPAL_URL/v1/payment-experience/web-profiles/XP-8YTH-NNP3-WSVN-3C76 \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <Access-Token>"
+
+With expected result format:
+{
+  "id": "XP-8YTH-NNP3-WSVN-3C76",
+  "name": "exampleProfile",
+  "temporary": false,
+  "flow_config": {
+    "landing_page_type": "billing",
+    "bank_txn_pending_url": "https://example.com/flow_config/"
+  },
+  "input_fields": {
+    "no_shipping": 1,
+    "address_override": 1
+  },
+  "presentation": {
+    "logo_image": "https://example.com/logo_image/"
+  }
+}
+
+[Orders API](https://developer.paypal.com/docs/api/orders/v2/)
+create, update, retrieve, authorize, and capture payments between parties >=2
+POST /v2/checkout/orders
+
+[Payments API](https://developer.paypal.com/docs/api/payments/v2/)
+authorize, capture, refund, show payment information, used in conjunction with Orders API
+Show details: GET /v2/payments/authorizations/{authorization_id}
+Capture authorized payment: POST /v2/payments/authorizations/{authorization_id}/capture
+Reauthorize (after 3-day honor period): POST /v2/payments/authorizations/{authorization_id}/reauthorize
+Void authorized payment: POST /v2/payments/authorizations/{authorization_id}/void
+Show captured details: GET /v2/payments/captures/{capture_id}
+Refund captured payment: POST /v2/payments/captures/{capture_id}/refund
+Show refund details: GET /v2/payments/refunds/{refund_id}

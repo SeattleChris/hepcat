@@ -258,7 +258,7 @@ class RegisterView(CreateView):
         # context['class_choices'] = ClassOffer.objects.filter(session__in=decide_session(sess=sess, display_date=date))
         return context
 
-    # unsure how to accuratly call this one
+    # unsure how to accurately call this one
     # def as_view(**initkwargs):
     #     print('================ as_view =================')
     #     return super().as_view(**initkwargs)
