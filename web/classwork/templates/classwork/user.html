@@ -32,6 +32,35 @@
 </section>
 
 <section>
+  <article>
+    <h3>User Account Details</h3>
+    <ul>
+      <li>First Name: {{ profile.user.first_name }} </li>
+      <li>Last Name: {{ profile.user.last_name }} </li>
+      <li>Email: {{ profile.user.email }} </li>
+      {% if profile.username != profile.user.email %}
+      <li>Login Name: {{ profile.username }}  </li>
+      {% endif %}
+      <li>
+        Billing Address: <br />
+        {{ profile.user.billing_address_1 }} <br />
+        {% if profile.user.billing_address_2 %}
+        {{ profile.user.billing_address_2 }} <br />
+        {% endif %}
+        {{ profile.user.billing_city }},
+        {{ profile.user.billing_country_area }}
+        {% if profile.user.billing_country_code != 'US'  %}
+        {{ profile.user.billing_country_code }}
+        {% endif %}
+        {{ profile.user.billing_postcode }}
+      </li>
+      <p>
+        Update Account Details
+      </p>
+    </ul>
+
+  </article>
+
   <header>
     <h3>Class History</h3>
     <p>These are the classes we have records of you attending. Contact us if any seem missing. </p>
@@ -41,10 +70,10 @@
   <article>
     <h4>{{classoffer}}</h4>
     <p>
-      Taught by: {{classoffer.teachers}} |
-      {{classoffer.class_day}} |
       {{classoffer.start_date}} to {{classoffer.end_date}} |
       {{classoffer.start_time}} - {{classoffer.end_time}} |
+      <br />
+      Taught by: {{classoffer.teachers}} |
     </p>
   </article>
   {% endfor %}

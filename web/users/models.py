@@ -100,7 +100,8 @@ class UserManagerHC(UserManager):
         #     possible_users = UserHC.objects.all()
         # if not isinstance(possible_users, models.QuerySet):
         #     print('possible_users is not a QuerySet')
-        found = UserHC.objects.filter(email=email).count() + UserHC.objects.filter(first_name=first_name, last_name=last_name).count()
+        found = UserHC.objects.filter(email=email).count()
+        found += UserHC.objects.filter(first_name=first_name, last_name=last_name).count()
         if found > 0:
             # redirect to login, auto-filling the appropriate fields
             # this login should also allow them to so say they don't have a user account.
@@ -153,7 +154,13 @@ class UserHC(AbstractUser):
     is_teacher = models.BooleanField('teacher', default=False)
     is_admin = models.BooleanField('admin', default=False)
     uses_email_username = models.BooleanField('Using Email', default=True)
-    # user.profile holds the linked profile for this user.
+    billing_address_1 = models.CharField(max_length=255, blank=True)
+    billing_address_2 = models.CharField(max_length=255, blank=True)
+    billing_city = models.CharField(max_length=255, blank=True)
+    billing_country_area = models.CharField(max_length=2, default='WA', blank=True)  # State, if in US
+    billing_postcode = models.CharField(max_length=255, blank=True)
+    billing_country_code = models.CharField(max_length=2, default='US', blank=True)
+    # # user.profile holds the linked profile for this user.
     objects = UserManagerHC()
 
     class Meta(AbstractUser.Meta):
