@@ -341,10 +341,22 @@ class ClassOffer(models.Model):
         return Decimal(getattr(self.subject, 'full_price', 65))
 
     @property
+    def pre_discount(self):
+        """ Discount given if they sign up and pay in advanced. """
+        return Decimal(getattr(self.subject, 'pre_pay_discount', 0))
+
+    @property
+    def multi_discount(self):
+        """ Does this ClassOffer qualify as one that gets a multiple discount and what discount can it provide? """
+        if not self.subject.qualifies_as_multi_class_discount:
+            return 0
+        else:
+            return self.subject.multiple_purchase_discount
+
+    @property
     def pre_price(self):
         """ This is the price if they pay in advance """
-        pre_pay_discount = Decimal(getattr(self.subject, 'pre_pay_discount', 0))
-        return self.full_price - pre_pay_discount if pre_pay_discount > 0 else None
+        return self.full_price - self.pre_discount if self.pre_discount > 0 else None
 
     def day(self, short=False):
         """ Used for displaying the day of week for the class as a word.
@@ -558,18 +570,20 @@ class PaymentManager(models.Manager):
         print(student)
 
         full_price, pre_pay_discount, credit_applied = 0, 0, 0
-        multiple_discount_count = 0
+        # multiple_discount_count = 0
         description = ''
+        multi_discount_list = []
         register = register if isinstance(register, list) else list(register)
         for item in register:
-            # TODO: Change to look up the actual class prices & discount
             # This could be stored in Registration, or get from ClassOffer
             description = description + str(item) + ', '
-            full_price += 70.0
-            pre_pay_discount += 5.0
-            multiple_discount_count += 1
-        multiple_purchase_discount = 10.0 if multiple_discount_count > 1 else 0.0
-        # TODO: Change multiple_discount amount to not be hard-coded.
+            # TODO: DONE? Change to look up the actual class prices & discount
+            full_price += item.full_price
+            pre_pay_discount += item.pre_discount
+            multi_discount_list.append(item.multi_discount)
+        # TODO: DONE? Change multiple_discount amount to not be hard-coded.
+        multi_discount_list.sort()
+        multiple_purchase_discount = multi_discount_list[-2] if len(multi_discount_list) > 1 else 0
         if student.credit > 0:
             credit_applied = student.credit
             # TODO: Remove the used credit from the student profile
@@ -615,7 +629,6 @@ class Payment(BasePayment):
     objects = PaymentManager()
     student = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True, related_name='payment')
     paid_by = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True, related_name='paid_for')
-
     full_price = models.DecimalField(max_digits=9, decimal_places=2, default='0.0')
     pre_pay_discount = models.DecimalField(max_digits=9, decimal_places=2, default='0.0')
     multiple_purchase_discount = models.DecimalField(max_digits=9, decimal_places=2, default='0.0')
@@ -630,27 +643,26 @@ class Payment(BasePayment):
         """ Computed total if they pay before the pre-paid deadline """
         return self.full_total - self.pre_pay_discount
 
+#   fields needed:
+#   variant = 'paypal', currency = <USD code>, total = ?, description = <string of purchased>
+#   billing_ with: first_name, last_name, address_1, address_2, city, postcode, country_code,
+#   billing_email = models.EmailField(blank=True)
+
+    # # : payment method (PayPal, Stripe, etc)
     # variant = models.CharField(max_length=255)
     # # : Transaction status
-    # status = models.CharField(
-    #     max_length=10, choices=PaymentStatus.CHOICES,
-    #     default=PaymentStatus.WAITING)
-    # fraud_status = models.CharField(
-    #     _('fraud check'), max_length=10, choices=FraudStatus.CHOICES,
-    #     default=FraudStatus.UNKNOWN)
+    # status = models.CharField(max_length=10, choices=PaymentStatus.CHOICES, default=PaymentStatus.WAITING)
+    # fraud_status = models.CharField(_('fraud check'), max_length=10, choices=FraudStatus.CHOICES, default=FraudStatus.UNKNOWN)
     # fraud_message = models.TextField(blank=True, default='')
-    # #: Creation date and time
     # created = models.DateTimeField(auto_now_add=True)
-    # #: Date and time of last modification
     # modified = models.DateTimeField(auto_now=True)
-    # #: Transaction ID (if applicable)
+    # #: Transaction ID (if applicable) from payment processor
     # transaction_id = models.CharField(max_length=255, blank=True)
     # #: Currency code (may be provider-specific)
     # currency = models.CharField(max_length=10)
     # #: Total amount (gross)
     # total = models.DecimalField(max_digits=9, decimal_places=2, default='0.0')
-    # delivery = models.DecimalField(
-    #     max_digits=9, decimal_places=2, default='0.0')
+    # delivery = models.DecimalField(max_digits=9, decimal_places=2, default='0.0')
     # tax = models.DecimalField(max_digits=9, decimal_places=2, default='0.0')
     # description = models.TextField(blank=True, default='')
     # billing_first_name = models.CharField(max_length=256, blank=True)
@@ -666,8 +678,7 @@ class Payment(BasePayment):
     # extra_data = models.TextField(blank=True, default='')
     # message = models.TextField(blank=True, default='')
     # token = models.CharField(max_length=36, blank=True, default='')
-    # captured_amount = models.DecimalField(
-    #     max_digits=9, decimal_places=2, default='0.0')
+    # captured_amount = models.DecimalField(max_digits=9, decimal_places=2, default='0.0')
     # def get_form(self):
     #     pass
 

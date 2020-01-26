@@ -174,7 +174,7 @@ class RegisterForm(forms.ModelForm):
                 if len(query_user) > 1:
                     print('MULTIPLE users with that email & name. We are using the first one.')
                 # TODO: Create Logic when more than one user has the same email, for now using first match.
-                user = query_user[0] if len(query_user) > 0 else None
+                user = query_user[0] if len(query_user) > 0 else None  # TODO: refactor to use get_one_or_none ?
                 # TODO: Above allows anyone to add the user to the class. Perhaps we should force a login.
                 if not user:
                     raise forms.ValidationError("We did not find your user account with your name and email address. Try the login link. If that does not work, select that you are a new student and we can fix it later.")
