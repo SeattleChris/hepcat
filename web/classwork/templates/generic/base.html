@@ -29,7 +29,6 @@
     <label for="user-login">
       {% if user.is_authenticated %}
       Hi {{ user.username }}
-       {% if user.is_superuser %} - SU {% endif %}
       {% else %}
       Account
       {% endif %}
@@ -43,18 +42,23 @@
       <li><a href="{% url 'login' %}">Login</a></li>
       {% endif %}
       {% if user.is_staff %}
-      <li><a href="{% url 'admin:index' %}" >Admin</a></li>
-      <li><a href="{% url 'checkin' %}">Checkin Sheet</a></li>
+      <li>
+        <a href="{% url 'admin:index' %}" >Admin</a>
+        {% if user.is_superuser %} - SU {% endif %}
+      </li>
       {% endif %}
     </ul>
     <!-- <label id="menu" for="menu-toggle">Menu</label> -->
     <!-- <input type="checkbox" id="menu-toggle"> -->
     <!-- <ul class="nav-menu" > -->
-    <ul class="site-nav">
-      <li><a href="{% url 'classoffer_list' %}">Classes</a></li>
-      <li><a href="{% url 'register' %}">Sign Up!</a></li>
-      <li><a href="{% url 'aboutus' %}">About Us</a></li>
-      <li><a href="#">Info</a></li>
+      <ul class="site-nav">
+        <li><a href="{% url 'classoffer_list' %}">Classes</a></li>
+        <li><a href="{% url 'register' %}">Sign Up!</a></li>
+        <li><a href="{% url 'aboutus' %}">About Us</a></li>
+        <li><a href="#">Info</a></li>
+        {% if user.is_staff %}
+        <li><a href="{% url 'checkin' %}">Checkin Sheet</a></li>
+        {% endif %}
     </ul>
   </nav>
 </header>

@@ -32,17 +32,19 @@
 </section>
 
 <section>
-  <article>
+  <header>
     <h3>User Account Details</h3>
-    <ul>
-      <li>First Name: {{ profile.user.first_name }} </li>
-      <li>Last Name: {{ profile.user.last_name }} </li>
-      <li>Email: {{ profile.user.email }} </li>
+    <ul class="no_bullet">
+      <li>{{ profile.user.first_name }} {{ profile.user.last_name }}</li>
+      <li>{{ profile.user.email }} </li>
       {% if profile.username != profile.user.email %}
-      <li>Login Name: {{ profile.username }}  </li>
+      <li>{{ profile.username }} (login name)  </li>
       {% endif %}
+      {% if not profile.user.password %}
+      <li>No Password created yet</li>
+      {% endif %}
+      {% if profile.user.billing_address_1 and profile.user.billing_city and profile.user.billing_postcode %}
       <li>
-        Billing Address: <br />
         {{ profile.user.billing_address_1 }} <br />
         {% if profile.user.billing_address_2 %}
         {{ profile.user.billing_address_2 }} <br />
@@ -54,26 +56,26 @@
         {% endif %}
         {{ profile.user.billing_postcode }}
       </li>
-      <p>
-        Update Account Details
-      </p>
+      {% else %}
+      <li>Billing Address Incomplete</li>
+      {% endif %}
     </ul>
+    <p>
+      Update Account Details
+    </p>
 
-  </article>
-
-  <header>
     <h3>Class History</h3>
     <p>These are the classes we have records of you attending. Contact us if any seem missing. </p>
   </header>
 
   {% for classoffer in had %}
-  <article>
+  <article class="class_history">
     <h4>{{classoffer}}</h4>
     <p>
       {{classoffer.start_date}} to {{classoffer.end_date}} |
-      {{classoffer.start_time}} - {{classoffer.end_time}} |
+      {{classoffer.start_time}} - {{classoffer.end_time}}
       <br />
-      Taught by: {{classoffer.teachers}} |
+      Taught by: {{classoffer.teachers}}
     </p>
   </article>
   {% endfor %}

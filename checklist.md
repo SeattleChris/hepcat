@@ -95,6 +95,7 @@ Current Status:
 ## General Site
 
 - [ ] Layout student Profile Resources & class history
+- [ ] User: create update view and method
 - [ ] About Us page shows only teacher & staff profile info, plus business info. Links to Contact Us.
 - [ ] Contact Us page w/ contact form (send to email)
 - [ ] Add interesting dance images to ClassOffer list view, maybe detail view also
