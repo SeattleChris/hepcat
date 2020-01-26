@@ -83,6 +83,10 @@ main section p { margin: 1rem 0; }
 .classoffer { border: 0.25rem solid #FFF1BD; border-radius: 2rem; padding: 0.25rem 0.5rem; }
 /* .classoffer li { white-space: nowrap; } */
 aside#levels { display: none; }
+.class_history h1, .class_history h2, .class_history h3, .class_history h4, .class_history h5, .class_history h6 {
+    margin-bottom: 0;
+}
+.class_history p { margin-top: 0; }
 /****************** End of sub-parts. Adjustments for screen size. ************************/
 @media screen and (max-width: 380px) {
     /* .classoffer p.description, .classoffer ul { display: block; width: unset; } */
