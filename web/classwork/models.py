@@ -596,7 +596,16 @@ class PaymentManager(models.Manager):
         user = paid_by.user
         # TODO: If billing address info added to user Profile, let
         # Payment.objects.classRegister get that info from user profile
-
+        # print("------ Check some pricing processesing ")
+        # print(full_price)
+        # print(multiple_purchase_discount)
+        # print(credit_applied)
+        # print('----------')
+        # print(full_total)
+        # print(pre_pay_discount)
+        # print('----------')
+        # print(pre_total)
+        # print('-=-=-=-=-=-=-=-=-=-=-=-')
         payment = self.create(
             student=student,
             paid_by=paid_by,
@@ -611,9 +620,11 @@ class PaymentManager(models.Manager):
             billing_last_name=user.last_name,
             billing_country_code='US',
             billing_email=user.email,
-            customer_ip_address='127.0.0.1',  # TODO: Capture and use _ip_address
+            # customer_ip_address='127.0.0.1',
+            # TODO: Capture and use _ip_address
             variant='paypal',
             currency='usd',
+            # items_list=register,
             **extra_fields
             )
         # TODO; Do we really feel safe passing forward the extra_fields?
@@ -643,10 +654,10 @@ class Payment(BasePayment):
         """ Computed total if they pay before the pre-paid deadline """
         return self.full_total - self.pre_pay_discount
 
-#   fields needed:
-#   variant = 'paypal', currency = <USD code>, total = ?, description = <string of purchased>
-#   billing_ with: first_name, last_name, address_1, address_2, city, postcode, country_code,
-#   billing_email = models.EmailField(blank=True)
+    #   fields needed:
+    #   variant = 'paypal', currency = <USD code>, total = ?, description = <string of purchased>
+    #   billing_ with: first_name, last_name, address_1, address_2, city, postcode, country_code,
+    #   billing_email = models.EmailField(blank=True)
 
     # # : payment method (PayPal, Stripe, etc)
     # variant = models.CharField(max_length=255)
@@ -692,9 +703,12 @@ class Payment(BasePayment):
         return reverse('payment_success', args=(self.pk,))
 
     def get_purchased_items(self):
+        # TODO: Write this method.
         # you'll probably want to retrieve these from an associated order
         print('====== Payment.get_purchased_items ===========')
+        # print(f"items list: {self.items_list}")
         # items = (Registration.objects.filter(payment=self.id)  # .values('classoffer')
+
         yield PurchasedItem(name='The Hound of the Baskervilles', sku='BSKV',
                             quantity=9, price=Decimal(10), currency='USD')
 

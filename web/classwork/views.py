@@ -235,9 +235,8 @@ class ProfileView(DetailView):
 
 class RegisterView(CreateView):
     """ Allows a user/student to sign up for a ClassOffer.
-        We also want to allow anonymousUser to sign up.
-        We want to auto-create a user (and profile) account
-        if one does not exist.
+        We also want to allow anonymousUser to sign up, creating a new user (and profile) as needed.
+        Payment model is instantiated, student is added to the ClassOffer list.
     """
     template_name = 'classwork/register.html'
     model = Payment
@@ -398,7 +397,8 @@ class RegisterView(CreateView):
 
 
 class PaymentProcessView(UpdateView):
-    """ Payment Processing
+    """ Payment Processing.
+        Currently not being used.
     """
     template_name = 'payment/payment.html'
     model = Payment

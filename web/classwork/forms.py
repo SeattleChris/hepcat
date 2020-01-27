@@ -225,6 +225,7 @@ class RegisterForm(forms.ModelForm):
         print(f'user as used for student profile {user}')
         cleaned_data['student'] = Profile.objects.get(user=user)
         print(f"student profile: {cleaned_data['student']}")
+        print(f"class selected: {cleaned_data['class_selected']}")
         return cleaned_data
 
     def save(self, commit=True):
