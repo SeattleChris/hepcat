@@ -29,7 +29,6 @@
     <label for="user-login">
       {% if user.is_authenticated %}
       Hi {{ user.username }}
-       {% if user.is_superuser %} - SU {% endif %}
       {% else %}
       Account
       {% endif %}
@@ -43,8 +42,11 @@
       <li><a href="{% url 'login' %}">Login</a></li>
       {% endif %}
       {% if user.is_staff %}
-      <li><a href="{% url 'admin:index' %}" >Admin</a></li>
-      <li><a href="{% url 'checkin' %}">Checkin Sheet</a></li>
+      <li>
+        <a href="{% url 'admin:index' %}" >Admin</a>
+        {% if user.is_superuser %} SU {% endif %}
+      </li>
+      <li><a href="{% url 'checkin' %}">sheet</a></li>
       {% endif %}
     </ul>
     <!-- <label id="menu" for="menu-toggle">Menu</label> -->

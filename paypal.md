@@ -83,3 +83,39 @@ Void authorized payment: POST /v2/payments/authorizations/{authorization_id}/voi
 Show captured details: GET /v2/payments/captures/{capture_id}
 Refund captured payment: POST /v2/payments/captures/{capture_id}/refund
 Show refund details: GET /v2/payments/refunds/{refund_id}
+
+## Scratch Notes
+
+ id                         | integer                  |           | not null |
+ variant                    | character varying(255)   |           | not null |
+ status                     | character varying(10)    |           | not null |
+ fraud_status               | character varying(10)    |           | not null |
+ fraud_message              | text                     |           | not null |
+ created                    | timestamp with time zone |           | not null |
+ modified                   | timestamp with time zone |           | not null |
+ transaction_id             | character varying(255)   |           | not null |
+ currency                   | character varying(10)    |           | not null |
+ total                      | numeric(9,2)             |           | not null |
+ delivery                   | numeric(9,2)             |           | not null |
+ tax                        | numeric(9,2)             |           | not null |
+ description                | text                     |           | not null |
+ billing_first_name         | character varying(256)   |           | not null |
+ billing_last_name          | character varying(256)   |           | not null |
+ billing_address_1          | character varying(256)   |           | not null |
+ billing_address_2          | character varying(256)   |           | not null |
+ billing_city               | character varying(256)   |           | not null |
+ billing_postcode           | character varying(256)   |           | not null |
+ billing_country_code       | character varying(2)     |           | not null |
+ billing_country_area       | character varying(256)   |           | not null |
+ billing_email              | character varying(254)   |           | not null |
+ customer_ip_address        | inet                     |           |          |
+ extra_data                 | text                     |           | not null |
+ message                    | text                     |           | not null |
+ token                      | character varying(36)    |           | not null |
+ captured_amount            | numeric(9,2)             |           | not null |
+ credit_applied             | numeric(9,2)             |           | not null |
+ full_price                 | numeric(9,2)             |           | not null |
+ multiple_purchase_discount | numeric(9,2)             |           | not null |
+ pre_pay_discount           | numeric(9,2)             |           | not null |
+ paid_by_id                 | integer                  |           |          |
+ student_id                 | integer                  |           |          |

@@ -83,6 +83,10 @@ main section p { margin: 1rem 0; }
 .classoffer { border: 0.25rem solid #FFF1BD; border-radius: 2rem; padding: 0.25rem 0.5rem; }
 /* .classoffer li { white-space: nowrap; } */
 aside#levels { display: none; }
+.class_history h1, .class_history h2, .class_history h3, .class_history h4, .class_history h5, .class_history h6 {
+    margin-bottom: 0;
+}
+.class_history p { margin-top: 0; }
 /****************** End of sub-parts. Adjustments for screen size. ************************/
 @media screen and (max-width: 380px) {
     /* .classoffer p.description, .classoffer ul { display: block; width: unset; } */
@@ -224,3 +228,10 @@ body > header h1 a:hover, body > header h1 a:focus  { text-shadow: 0.05em 0.05em
 /* body > header h1 a:hover, body > header h1 a:focus  { text-shadow: 0.25em 0.25em 0.65em #FFF1BD,  0.05em -0.05em 0.65em #FFF1BD; color: #222; } */
 /* body > header h1 a:hover, body > header h1 a:focus  { text-shadow: 0.05em 0.05em 0.65em #FFF1BD,  0.05em -0.05em 0.65em #FFF1BD; color: #222; } */
 /* End Link Colors */
+
+/* Another Color Palette
+Cream/linin, used as a white substitute for background and border: #f2efe4
+Light blue: #3b8fa2
+Dark blue: #153755
+Orange: #f4b60d
+*/

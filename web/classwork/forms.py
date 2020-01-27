@@ -39,8 +39,10 @@ class UserForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email']
-
+        fields = [
+            'first_name', 'last_name', 'email',
+            'billing_address_1', 'billing_address_2', 'billing_city', 'billing_country_area', 'billing_postcode',
+        ]
     # end class UserForm
 
 
@@ -80,6 +82,7 @@ class RegisterForm(forms.ModelForm):
             'billing_address_1',
             'billing_address_2',
             'billing_city',
+            'billing_country_area',
             'billing_postcode',
         )
 
@@ -155,8 +158,13 @@ class RegisterForm(forms.ModelForm):
                 same_name = User.objects.filter(first_name=first_name, last_name=last_name).count()
                 if same_name > 0:
                     print('We found user(s) with that same name')
-                    # TODO: Create a system to deal with matches
-                    # raise forms.ValidationError('Are you sure you have not had classes with us? We have someone with that name already in our records. If this is you, either login or select you are a returning student.')
+                    message = "Are you sure you have not had classes with us? "
+                    message += "We have someone with that name already in our records. "
+                    message += "If this is you, either login or select you are a returning student. "
+                    message += "If this is not you, please resubmit with either a variation of your name or include an "
+                    # TODO: Create a system to deal with matching names, but are unique people
+                    message += "extra symbol (such as '.' or '+') at the end of your name to confirm your input"
+                    raise forms.ValidationError(message)
                 else:
                     print('No user with that name yet')
                 user = User.objects.create_user(
@@ -174,7 +182,7 @@ class RegisterForm(forms.ModelForm):
                 if len(query_user) > 1:
                     print('MULTIPLE users with that email & name. We are using the first one.')
                 # TODO: Create Logic when more than one user has the same email, for now using first match.
-                user = query_user[0] if len(query_user) > 0 else None
+                user = query_user[0] if len(query_user) > 0 else None  # TODO: refactor to use get_one_or_none ?
                 # TODO: Above allows anyone to add the user to the class. Perhaps we should force a login.
                 if not user:
                     raise forms.ValidationError("We did not find your user account with your name and email address. Try the login link. If that does not work, select that you are a new student and we can fix it later.")
@@ -217,6 +225,7 @@ class RegisterForm(forms.ModelForm):
         print(f'user as used for student profile {user}')
         cleaned_data['student'] = Profile.objects.get(user=user)
         print(f"student profile: {cleaned_data['student']}")
+        print(f"class selected: {cleaned_data['class_selected']}")
         return cleaned_data
 
     def save(self, commit=True):
@@ -241,6 +250,7 @@ class RegisterForm(forms.ModelForm):
             billing_address_1=self.cleaned_data['billing_address_1'],
             billing_address_2=self.cleaned_data['billing_address_2'],
             billing_city=self.cleaned_data['billing_city'],
+            billing_country_area=self.cleaned_data['billing_country_area'],
             billing_postcode=self.cleaned_data['billing_postcode'],
             )
         # We can not use objects.bulk_create due to Many-to-Many relationships
@@ -270,5 +280,6 @@ class PaymentForm(forms.ModelForm):
             'billing_address_1',
             'billing_address_2',
             'billing_city',
+            'billing_country_area',
             'billing_postcode',
             ]
