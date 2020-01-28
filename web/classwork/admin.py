@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.forms import Textarea
 from django.db import models
 from .models import (SiteContent, Resource, Subject, Session, ClassOffer,
-                     Profile, Registration, Location)
+                     Profile, Payment, Registration, Location)
 # from django.utils.functional import curry
 
 # Register your models here.
@@ -158,4 +158,4 @@ admin.site.register(Session, SessiontAdmin)
 admin.site.register(Profile, ProfileAdmin)
 admin.site.register(Registration, RegistrationAdmin)
 # For the following: each model in the tuple for the first parameter will use default admin.
-admin.site.register((SiteContent, Location, Resource))
+admin.site.register((SiteContent, Payment, Location, Resource))

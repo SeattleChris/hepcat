@@ -145,14 +145,15 @@ if DEBUG:
 STRIPE_KEY = os.environ.get('STRIPE_KEY', None)
 STRIPE_PUBLIC_KEY = os.environ.get('STRIPE_PUBLIC_KEY', None)
 PAYPAL_EMAIL = os.environ.get('PAYPAL_EMAIL', None)
+PAYPAL_CLIENT_ID = os.environ.get('PAYPAL_CLIENT_ID', None)
 PAYPAL_SECRET = os.environ.get('PAYPAL_SECRET', None)
 PAYPAL_URL = os.environ.get('PAYPAL_URL', 'https://api.sandbox.paypal.com')  # https://api.paypal.com for production
-PAYMENT_HOST = 'localhost:8000'
+PAYMENT_HOST = 'localhost'
 PAYMENT_USES_SSL = False
 PAYMENT_MODEL = 'classwork.Payment'
 PAYMENT_VARIANTS = {
     'paypal': ('payments.paypal.PaypalProvider', {
-        'client_id': PAYPAL_EMAIL,
+        'client_id': PAYPAL_CLIENT_ID,
         'secret': PAYPAL_SECRET,
         'endpoint': PAYPAL_URL,
         'capture': False}),

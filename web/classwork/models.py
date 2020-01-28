@@ -628,7 +628,7 @@ class PaymentManager(models.Manager):
             # customer_ip_address='127.0.0.1',
             # TODO: Capture and use _ip_address
             variant='paypal',
-            currency='usd',
+            currency='USD',
             # items_list=register,
             **extra_fields
             )
