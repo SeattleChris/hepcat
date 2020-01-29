@@ -13,7 +13,11 @@ PayPal Checkout - is this just standard or a different integration solution?
 ? Payments API ?
 Vault API - securely store customer cards w/ PayPal. Stretch goal?
 
-## Authentication & Authorization
+## PayPal Docs
+
+These are some notes from reading the flow from PayPal documentation. I believe these are Version 2.0 docs, but maybe django-payments only implements version 1.0 API.
+
+### Authentication & Authorization
 
 Use PAYPAL_CLIENT_ID and PAYPAL_SECRET (Note: may need set the Accept header to application/x-www-form-urlencoded)
 with following command:
@@ -44,7 +48,7 @@ curl -v -X GET https://api.sandbox.paypal.com/v1/invoicing/invoices?page=3&page_
 
 To detect when an access token expires, write code to either by 1) Keep track of the expires_in value in the token response or 2) Handle the HTTP 401 Unauthorized status code. The API endpoint issues this status code when it detects an expired token.
 
-## Make Rest API Calls
+### Make Rest API Calls
 
 Use PAYPAL_URL and the access token from above.
 
@@ -83,6 +87,17 @@ Void authorized payment: POST /v2/payments/authorizations/{authorization_id}/voi
 Show captured details: GET /v2/payments/captures/{capture_id}
 Refund captured payment: POST /v2/payments/captures/{capture_id}/refund
 Show refund details: GET /v2/payments/refunds/{refund_id}
+
+## Django Payments
+
+On readthedocs.io, the stable docs seem out of date. The [django-payments latest docs](https://django-payments.readthedocs.io/en/latest/index.html) seem to be the best source. There is also the [GitHub repository issues](https://github.com/mirumee/django-payments/issues) for maintenance concerns.
+
+### Authorize & Capture
+
+PayPal does use the [Authorize & Capture](https://django-payments.readthedocs.io/en/latest/preauth.html) payment method.
+
+After we get confirmation we are Authorized for a payment amount, we need to issue a capture request `payment.capture()` (if payment was the instance we just received authorization).
+
 
 ## Scratch Notes
 

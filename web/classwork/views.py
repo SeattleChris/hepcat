@@ -10,6 +10,7 @@ from django.template.response import TemplateResponse  # used for Payments
 from payments import get_payment_model, RedirectNeeded  # used for Payments
 from django.db.models import Q
 from django.core.exceptions import ObjectDoesNotExist
+from django.conf import settings
 User = get_user_model()
 
 # TODO: Clean out excessive print lines telling us where we are.
@@ -421,7 +422,9 @@ def payment_details(request, id):
 
 
 class PaymentResultView(DetailView):
-    """ After a payment attempt, we can have success or failure """
+    """ After a payment attempt, we can have success or failure.
+        If this variant is using an Authorize & Capture, method, we need to capture.
+    """
     template_name = 'payment/incomplete.html'
     model = Payment
     context_object_name = 'payment'
@@ -434,6 +437,8 @@ class PaymentResultView(DetailView):
         for each in context:
             print(each)
         payment = context['object']  # for some reason, context['payment'] would also work
+        variant = payment.get('variant', 'default')
+        context['capture'] = settings.PAYMENT_VARIANTS[variant][1].get('capture', True)
         context['student_name'] = f'{payment.student.user.first_name} {payment.student.user.last_name}'
         if payment.student is not payment.paid_by:
             # TODO: Check the logic of this if statement
@@ -448,8 +453,19 @@ class PaymentResultView(DetailView):
         # context['class_choices'] = ClassOffer.objects.filter(session__in=decide_session(sess=sess, display_date=date))
         return context
 
+    def auth_capture(self, *args, **kwargs):
+        """ Check if we only have an authorization, and we need to capture """
+        context = self.get_context_data()
+        if context['capture']:
+            # we need to capture
+            print('We need to capture')
+        else:
+            return redirect(url_for('payment_done'))
+        # done auth_capture
+
     def render_to_response(self, context, **response_kwargs):
         print('========= PaymentResultView.render_to_response ========')
         print(context)
+        print('------------ Context vs Response kwargs -------------------')
         print(response_kwargs)
         return super().render_to_response(context, **response_kwargs)
