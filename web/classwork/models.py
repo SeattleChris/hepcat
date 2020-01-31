@@ -706,20 +706,40 @@ class Payment(BasePayment):
 
     def get_success_url(self):
         print('============ Payment.get_success_url =================')
-        # return HttpResponseRedirect(reverse('payment_success', args=(self.pk,)))
         return reverse('payment_success', args=(self.pk,))
+
+    def get_done_url(self):
+        print('============ Payment.get_success_url =================')
+        return reverse('payment_done', args=(self.pk,))
 
     def get_purchased_items(self):
         # TODO: Write this method.
         # you'll probably want to retrieve these from an associated order
         print('====== Payment.get_purchased_items ===========')
         # print(f"items list: {self.items_list}")
-        # items = (Registration.objects.filter(payment=self.id)  # .values('classoffer')
-        # for item in self.items:
-        #  ClassOffer.objects.filter(session__in=session).order_by('-class_day', 'start_time')
-        # regs = Registration.objects.filter(payment=self)
-        # for ea in regs:
-        yield PurchasedItem(name=self.description, sku='BSKV',
+        # registrations = Registration.objects.filter(payment=self.id)
+        # items, multi_discount_list, pre_pay_total = [], [], 0
+        # for ea in registrations:
+        #     selected = ClassOffer.objects.get(id=ea.classoffer)
+        #     # TODO: handle determining if pre-pay discount is valid
+        #     pre_pay_total += selected.pre_discount
+        #     multi_discount_list.append(selected.multi_discount)
+        #     item = PurchasedItem(name=str(selected), sku=ea.id, currency='USD',
+        #                          price=Decimal(selected.full_price), quantity=1)
+        #     items.append(item)
+        # if pre_pay_total > 0:
+        #     item = PurchasedItem(name='Paid in Advanced Discount', sku='ppd', currency='USD',
+        #                          price=Decimal(pre_pay_total), quantity=1)
+        #     items.append(item)
+        # if len(multi_discount_list) > 1:
+        #     multi_discount_list.sort()
+        #     discount = multi_discount_list[-2]
+        #     item = PurchasedItem(name='Multiple Class Discount', sku='mcd', currency='USD',
+        #                          price=Decimal(discount), quantity=1)
+        #     items.append(item)
+        # for item in items:
+        #     yield item
+        yield PurchasedItem(name=self.description, sku='HCRF',
                             quantity=1, price=Decimal(self.total), currency='USD')
 
     # def __str__(self):

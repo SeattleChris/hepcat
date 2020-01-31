@@ -35,6 +35,9 @@ urlpatterns = [
     path('payments/', include('payments.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
+# Thanks to django-payments, the following paths are set:
+# payments/process/<token-regex>/ [name=process_data]
+# payments/process/<variant-regex>/ [static_process_payment]
 # Thanks to django.contrib.auth.urls The following paths are set:
 # user/login/ [name='login']
 # user/logout/ [name='logout']

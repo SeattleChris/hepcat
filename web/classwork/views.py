@@ -330,7 +330,7 @@ class RegisterView(CreateView):
     #     return super(RegisterView, self).form_valid(form)
 
     def get_success_url(self):
-        print('================ get_success_url =================')
+        print('================ RegisterView.get_success_url =================')
         # TODO: We will need to adjust this later.
         # url = self.test_url + str(self.object.id)
         url = '../payment/' + str(self.object.id)
@@ -399,15 +399,91 @@ class RegisterView(CreateView):
 
 class PaymentProcessView(UpdateView):
     """ Payment Processing.
-        Currently not being used.
+        The RegisterView is the create for a payment which sends an authorization request.
+        Here, we receive the authorization request and handle the next steps.
+        - Error: Something did not work in the Authorization request
+            - Payment left as incomplete. Request new payment.
+        - Incomplete: User was sent to make a payment, but they did not finish.
+            - Payment left as incomplete. Request new payment.
+        - Authorize Fail: User tried to pay, but could not authorize the payment.
+            - Payment left as incomplete. Request new payment.
+        - Authorized: Using Authorize & Capture, so we now need to Capture.
+            - ? Confirm the authorized amount matches the expected total amount?
+            - Update the Payment model with Authorize details.
+            - Start process that issues a payment.capture()
+        - Captured: We already requested, and were successful, in getting the Capture.
+            - Confirm the captured amount is the expected total and/or mark as partial payment.
+            - Update the Payment model with Capture details.
+            - Make sure the checkin, profile, etc all know this payment is complete (or partial)
+        - Capture Fail: We tried, but an authorized capture did not work.
+            - Retry later?
+            - Make sure the payment is incomplete - Marked as still authorized?
+        - Refund ??
+        See Payment statuses: https://django-payments.readthedocs.io/en/latest/usage.html
     """
-    template_name = 'payment/payment.html'
+    template_name = 'classwork/register.html'  # matches create form
+    # template_name = 'payment/payment.html'  # matches PaymentForm form_class
     model = Payment
-    form_class = PaymentForm
-    success_url = reverse_lazy('payment_success')
+    context_object_name = 'payment'
+    pk_url_kwarg = 'id'
+    # form_class = PaymentForm   # only payment fields, not same as the create view
+    form_class = RegisterForm  # matches the create view
+    # success_url = reverse_lazy('payment_success')
+
+    def get_success_url(self):
+        """ Overwriting the default method. Return depends on auth vs capture status. """
+        # If payment.status = 'preauth': Go to capture url
+        # If payment.status indicates captured completed, go to done url
+        return reverse_lazy('payment_success')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        print('========== PaymentResultView.get_context_data =============')
+        print(kwargs)
+        for each in context:
+            print(each)
+        payment = context['object']  # context['payment'] would also work
+        variant = payment.get('variant', 'default')
+        context['capture'] = settings.PAYMENT_VARIANTS[variant][1].get('capture', True)
+        context['student_name'] = f'{payment.student.user.first_name} {payment.student.user.last_name}'
+        if payment.student is not payment.paid_by:
+            # TODO: Check the logic of this if statement
+            context['paid_by_other'] = True
+            context['paid_by_name'] = f'{payment.paid_by.user.first_name} {payment.paid_by.user.last_name}'
+        context['class_selected'] = payment.description
+        # for ea in dir(self):
+        #     print(ea)
+        # context['user'] = self.request.user
+        # sess = context['session'] if context['session'] else None
+        # date = context['display_date'] if context['display_date'] else None
+        # context['class_choices'] = ClassOffer.objects.filter(session__in=decide_session(sess=sess, display_date=date))
+        return context
+
+    def auth_capture(self, *args, **kwargs):
+        """ Check if we only have an authorization, and we need to capture """
+        from pprint import pprint
+
+        context = self.get_context_data()
+        payment = context['object']  # for some reason, context['payment'] would also work
+        if context['capture']:
+            capture = payment.capture()
+            pprint(capture)
+            print('We need to capture')
+        else:
+            return redirect(payment.get_done_url(), *args, **kwargs)
+
+        # done auth_capture
+
+    def render_to_response(self, context, **response_kwargs):
+        print('========= PaymentResultView.render_to_response ========')
+        print(context)
+        print('------------ Context vs Response kwargs -------------------')
+        print(response_kwargs)
+        return super().render_to_response(context, **response_kwargs)
 
 
 def payment_details(request, id):
+    """ This is based on the django-payments docs. """
     print('========== views function - payment_details ==============')
     payment = get_object_or_404(get_payment_model(), id=id)
     try:
@@ -455,12 +531,17 @@ class PaymentResultView(DetailView):
 
     def auth_capture(self, *args, **kwargs):
         """ Check if we only have an authorization, and we need to capture """
+        from pprint import pprint
+
         context = self.get_context_data()
+        payment = context['object']  # for some reason, context['payment'] would also work
         if context['capture']:
-            # we need to capture
+            capture = payment.capture()
+            pprint(capture)
             print('We need to capture')
         else:
-            return redirect(url_for('payment_done'))
+            return redirect(payment.get_done_url(), *args, **kwargs)
+
         # done auth_capture
 
     def render_to_response(self, context, **response_kwargs):

@@ -65,7 +65,7 @@
 - [s] Stretch Goal. Not for current feature plan.
 
 Current Status:
-2020-01-23 14:48:20
+2020-01-30 14:17:45
 <!-- Ctrl-Shift-I to generate timestamp -->
 
 ### Payment Processing
@@ -88,6 +88,12 @@ Current Status:
 - [x] Update Subject (or ClassOffer) models to have price fields
 - [x] Update price fields to auto-populate based on class type
 - [ ] Update multi-class discount based on Subject/ClassOffer settings
+- [ ] Instead of field saying 'billing_country_area' it should say 'State'
+  - [ ] Simple fix: Change property to state, but modify when authorizing payments
+  - [ ] Find some override: Displays as state, but tracks as field name.
+  - [ ] Fix in fields list (add 'state'), then clean_state turns into field name
+  - [ ] JS changes display based on country code or other field inputs
+  - [ ] Create a Mixin: somehow fixes it whenever it comes up
 
 ## Email Features
 
