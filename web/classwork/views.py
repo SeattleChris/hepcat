@@ -430,35 +430,21 @@ class PaymentProcessView(UpdateView):
     # form_class = RegisterForm  # matches the create view
     # success_url = reverse_lazy('payment_success')
 
-    def get_success_url(self):
-        """ Overwriting the default method. Return depends on auth vs capture status. """
-        # payment = self.object
-        # if payment.status == 'preauth':
-        # If payment.status = 'preauth': Go to capture url
-        # If payment.status indicates captured completed, go to done url
-        return reverse_lazy('payment')
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         print('========== PaymentResultView.get_context_data =============')
-        print(kwargs)
-        for each in context:
-            print(each)
         payment = context['object']  # context['payment'] would also work
-        # variant = payment.get('variant', 'default')
-        # context['capture'] = settings.PAYMENT_VARIANTS[variant][1].get('capture', True)
+        if payment.status == 'preauth':
+            print('------------ Payment Capture -------------------')
+            payment.capture()
+            context['note'] = f"We did a capture and got status {payment.status}"
+        context['payment_done'] = True if payment.status == 'confirmed' else False
         context['student_name'] = f'{payment.student.user.first_name} {payment.student.user.last_name}'
-        if payment.student is not payment.paid_by:
+        if payment.student != payment.paid_by:
             # TODO: Check the logic of this if statement
             context['paid_by_other'] = True
             context['paid_by_name'] = f'{payment.paid_by.user.first_name} {payment.paid_by.user.last_name}'
         context['class_selected'] = payment.description
-        # for ea in dir(self):
-        #     print(ea)
-        # context['user'] = self.request.user
-        # sess = context['session'] if context['session'] else None
-        # date = context['display_date'] if context['display_date'] else None
-        # context['class_choices'] = ClassOffer.objects.filter(session__in=decide_session(sess=sess, display_date=date))
         return context
 
     def render_to_response(self, context, **response_kwargs):
@@ -466,11 +452,6 @@ class PaymentProcessView(UpdateView):
         print(context)
         print('------------ Context vs Response kwargs -------------------')
         print(response_kwargs)
-        payment = context['payment']
-        if payment.status == 'preauth':
-            print('------------ Payment Capture -------------------')
-            payment.capture()
-            context['note'] = f"We did a capture and got status {payment.status}"
         return super().render_to_response(context, **response_kwargs)
 
 

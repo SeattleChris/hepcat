@@ -8,7 +8,17 @@
 {% block content %}
 <section>
   <article>
+    {% if payment_done %}
     <h2> Your Payment is Complete!</h2>
+    {% else %}
+    <h2>Your Payment is Pending</h2>
+    <p>
+      Sometimes the payment can take some time before it is confirmed.
+      If you have completed all the confirmation steps,
+      check your records later to confirm the payment has completed.
+    </p>
+    {% endif %}
+    
     <p>{{ student_name }} is signed up for: {{ class_selected }}</p>
     {% if paid_by_other %}
     <p>As paid by: {{ paid_by_name }}</p>
