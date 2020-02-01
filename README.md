@@ -176,24 +176,26 @@ The following routes have been made or scaffolded (mostly in classwork app):
 | /location/         | [location_list]   | LocationListView  | /classwork/location_list.html |
 | /checkin/          | [checkin]         | Checkin           | /classwork/checkin.html       |
 | /register/         | [register]        | RegisterView      | /classwork/register.html      |
-| /profile/             | [profile_page]    | ProfileView       | /classwork/user.html       |
-| /resource/<int:id>    | [resource_detail] | ResourceDetailView| /classwork/resource.html   |
-| /                     | [home]    | home_view (hepcat.views) | /home.view (uses base.html) |
-| /payment/             | [payment]         | PaymentProcessView| /payment/payment.html      |
-| /payment/fail/<int:id>| [payment_fail]    | PaymentResultView | /payment/fail.html         |
-| /payment/done/<int:id>| [payment_success] | PaymentResultView | /payment/success.html      |
-| /payments/               | -         |       ( payments.urls ) |
-| /admin/               | -         |       ( admin.site.urls ) |
+| /profile/          | [profile_page]    | ProfileView       | /classwork/user.html       |
+| /resource/<int:id> | [resource_detail] | ResourceDetailView| /classwork/resource.html   |
+| /                  | [home]    | home_view (hepcat.views)  | /home.view (uses base.html)|
+| /payment/              | [payment]         | PaymentProcessView| /payment/payment.html  |
+| /payment/fail/<int:id> | [payment_fail]    | PaymentProcessView| /payment/fail.html     |
+| /payment/done/<int:id> | [payment_success] | PaymentProcessView| /payment/success.html  |
+| /payments/             | -                        | (payments.urls)  | -                |
+|  " process/<token>/    | [process_data]           | (payments.urls)  | -                |
+|  " process/<variant>/  | [static_process_payment] | (payments.urls)  | -                |
+| /admin/                | -                        |(admin.site.urls) | -                |
 | **From our users app:**   |
-| /user/signup/         | ['signup']        | SignUp            | signup.html |
-| /user/login/                | [name='login']              |-| /django_registration/ ? |
-| /user/logout/               | [name='logout']             |-| /django_registration/ ? |
-| /user/password_change/      | [name='password_change']    |-| /django_registration/ ? |
-| /user/password_change/done/|[name='password_change_done'] |-| /django_registration/ ? |
-| /user/password_reset/     | [name='password_reset']       |-| /django_registration/ ? |
-| /user/password_reset/done/ | [name='password_reset_done'] |-| /django_registration/ ? |
-| /user/reset/<uidb64>/<token>/|[name='password_reset_confirm']|-|/django_registration/?|
-| /user/reset/done/     | [name='password_reset_complete'] |-| /django_registration/ ? |
+| /user/signup/                 | ['signup']           | SignUp | signup.html             |
+| /user/login/                  | ['login']                   |-| /django_registration/ ? |
+| /user/logout/                 | [logout']                   |-| /django_registration/ ? |
+| /user/password_change/        | ['password_change']         |-| /django_registration/ ? |
+| /user/password_change/done/   | ['password_change_done']    |-| /django_registration/ ? |
+| /user/password_reset/         | ['password_reset']          |-| /django_registration/ ? |
+| /user/password_reset/done/    | ['password_reset_done']     |-| /django_registration/ ? |
+| /user/reset/<uidb64>/<token>/ | ['password_reset_confirm']  |-| /django_registration/?  |
+| /user/reset/done/             | ['password_reset_complete'] |-| /django_registration/ ? |
 
 <!-- TODO: Update the payment url and view -->
 <!-- /user/register/         django_registration one_step.urls -->

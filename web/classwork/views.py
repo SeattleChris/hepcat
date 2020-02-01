@@ -421,20 +421,22 @@ class PaymentProcessView(UpdateView):
         - Refund ??
         See Payment statuses: https://django-payments.readthedocs.io/en/latest/usage.html
     """
-    template_name = 'classwork/register.html'  # matches create form
-    # template_name = 'payment/payment.html'  # matches PaymentForm form_class
+    # template_name = 'classwork/register.html'  # matches create form
+    template_name = 'payment/success.html'  # matches PaymentForm form_class
     model = Payment
     context_object_name = 'payment'
     pk_url_kwarg = 'id'
-    # form_class = PaymentForm   # only payment fields, not same as the create view
-    form_class = RegisterForm  # matches the create view
+    form_class = PaymentForm   # only payment fields, not same as the create view
+    # form_class = RegisterForm  # matches the create view
     # success_url = reverse_lazy('payment_success')
 
     def get_success_url(self):
         """ Overwriting the default method. Return depends on auth vs capture status. """
+        # payment = self.object
+        # if payment.status == 'preauth':
         # If payment.status = 'preauth': Go to capture url
         # If payment.status indicates captured completed, go to done url
-        return reverse_lazy('payment_success')
+        return reverse_lazy('payment')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -443,8 +445,8 @@ class PaymentProcessView(UpdateView):
         for each in context:
             print(each)
         payment = context['object']  # context['payment'] would also work
-        variant = payment.get('variant', 'default')
-        context['capture'] = settings.PAYMENT_VARIANTS[variant][1].get('capture', True)
+        # variant = payment.get('variant', 'default')
+        # context['capture'] = settings.PAYMENT_VARIANTS[variant][1].get('capture', True)
         context['student_name'] = f'{payment.student.user.first_name} {payment.student.user.last_name}'
         if payment.student is not payment.paid_by:
             # TODO: Check the logic of this if statement
@@ -459,26 +461,16 @@ class PaymentProcessView(UpdateView):
         # context['class_choices'] = ClassOffer.objects.filter(session__in=decide_session(sess=sess, display_date=date))
         return context
 
-    def auth_capture(self, *args, **kwargs):
-        """ Check if we only have an authorization, and we need to capture """
-        from pprint import pprint
-
-        context = self.get_context_data()
-        payment = context['object']  # for some reason, context['payment'] would also work
-        if context['capture']:
-            capture = payment.capture()
-            pprint(capture)
-            print('We need to capture')
-        else:
-            return redirect(payment.get_done_url(), *args, **kwargs)
-
-        # done auth_capture
-
     def render_to_response(self, context, **response_kwargs):
         print('========= PaymentResultView.render_to_response ========')
         print(context)
         print('------------ Context vs Response kwargs -------------------')
         print(response_kwargs)
+        payment = context['payment']
+        if payment.status == 'preauth':
+            print('------------ Payment Capture -------------------')
+            payment.capture()
+            context['note'] = f"We did a capture and got status {payment.status}"
         return super().render_to_response(context, **response_kwargs)
 
 

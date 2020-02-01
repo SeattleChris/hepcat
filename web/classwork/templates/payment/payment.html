@@ -11,6 +11,8 @@
     <h2>Select Payment</h2>
     <p>To complete your registration and payment, click your payment button below</p>
     <p>{{ payment.billing_email }} </p>
+    <p>Payment Status: {{ payment_status}} </p>
+    <p>Payment Obj Status: {{ payment.status }} </p>
     <form action="{{ form.action }}" method="{{ form.method }}">
       {% csrf_token %}
       {{ form.as_p }}

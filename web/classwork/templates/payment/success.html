@@ -13,6 +13,11 @@
     {% if paid_by_other %}
     <p>As paid by: {{ paid_by_name }}</p>
     {% endif %}
+    <p>{{ payment.billing_email }} </p>
+    <p>Payment Obj Status: {{ payment.status }} </p>
+    {% if note %}
+    <p>Note: {{ note }} </p>
+    {% endif %}
     <p> You should get an email confirmation for the your class registration.
       During the class we typically send weekly class emails with additional
       resources, such as review videos and other useful class information.
