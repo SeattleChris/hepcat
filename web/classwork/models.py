@@ -322,16 +322,11 @@ class ClassOffer(models.Model):
     session = models.ForeignKey('Session', on_delete=models.SET_NULL, null=True)
     num_level = models.IntegerField(default=0, editable=False)
     # TODO: Need a flag for Admin to approve for publishing each ClassOffer.
-    # TODO: later on location will be selected from Location model
     location = models.ForeignKey('Location', on_delete=models.SET_NULL, null=True)
     # TODO: later on teachers will selected from users - teachers.
     teachers = models.CharField(max_length=125, default='Chris Chapman')
     class_day = models.SmallIntegerField(choices=DOW_CHOICES, default=3)
     start_time = models.TimeField()
-    # TODO: Add field for total_price (does not include pre-pay discount)
-    # TODO: Add field for pre_pay_discount (to be subtracted from total_price)
-    # TODO: Add boolean field to indicate if this ClassOffer qualifies for multi-discount
-
     date_added = models.DateField(auto_now_add=True)
     date_modified = models.DateField(auto_now=True)
 
@@ -359,7 +354,9 @@ class ClassOffer(models.Model):
         return self.full_price - self.pre_discount if self.pre_discount > 0 else None
 
     def day(self, short=False):
-        """ Used for displaying the day of week for the class as a word.
+        """ Used for displaying the day of week for the class as a word.Viewed 120k times
+￼
+
             Returns plural form if the class has multiple weeks.
             Returns abbreviated form if short is True.
         """
@@ -574,8 +571,11 @@ class PaymentManager(models.Manager):
         description = ''
         multi_discount_list = []
         register = register if isinstance(register, list) else list(register)
+        # line_items = []
         for item in register:
             # This could be stored in Registration, or get from ClassOffer
+            # purchased = PurchasedItem(name=str(item), sku=str(item), quantity=1, price=item.full_price, currency='USD')
+            # line_items.append(purchased)
             description = description + str(item) + ', '
             # TODO: DONE? Change to look up the actual class prices & discount
             full_price += item.full_price
@@ -584,8 +584,13 @@ class PaymentManager(models.Manager):
         # TODO: DONE? Change multiple_discount amount to not be hard-coded.
         multi_discount_list.sort()
         multiple_purchase_discount = multi_discount_list[-2] if len(multi_discount_list) > 1 else 0
+        # if multiple_purchase_discount > 0:
+        #     line_items.append(PurchasedItem(name='Multiple Class Discount', sku='multi_discount', quantity=1,
+        #                                     price=multiple_purchase_discount, currency='USD'))
         if student.credit > 0:
             credit_applied = student.credit
+            # line_items.append(PurchasedItem(name="Credit from Account", sku='credit', quantity=1,
+            #                                 price=credit_applied, currency='USD'))
             # TODO: Remove the used credit from the student profile
             # student.credit_applied = 0
             # student.save()
@@ -623,7 +628,7 @@ class PaymentManager(models.Manager):
             # customer_ip_address='127.0.0.1',
             # TODO: Capture and use _ip_address
             variant='paypal',
-            currency='usd',
+            currency='USD',
             # items_list=register,
             **extra_fields
             )
@@ -631,6 +636,7 @@ class PaymentManager(models.Manager):
         # TODO: Do we need customer_ip_address, and if yes, need to populate now?
         print(payment)
         print("==============----------===========")
+        # print(payment.items)
         return payment
     # end class PaymentManager
 
@@ -644,6 +650,7 @@ class Payment(BasePayment):
     pre_pay_discount = models.DecimalField(max_digits=9, decimal_places=2, default='0.0')
     multiple_purchase_discount = models.DecimalField(max_digits=9, decimal_places=2, default='0.0')
     credit_applied = models.DecimalField(max_digits=9, decimal_places=2, default='0.0')
+    # items = models.ManyToManyField(ClassOffer, related_name='payments', through='Registration')
 
     @property
     def full_total(self):
@@ -699,18 +706,41 @@ class Payment(BasePayment):
 
     def get_success_url(self):
         print('============ Payment.get_success_url =================')
-        # return HttpResponseRedirect(reverse('payment_success', args=(self.pk,)))
         return reverse('payment_success', args=(self.pk,))
+
+    def get_done_url(self):
+        print('============ Payment.get_success_url =================')
+        return reverse('payment_done', args=(self.pk,))
 
     def get_purchased_items(self):
         # TODO: Write this method.
         # you'll probably want to retrieve these from an associated order
         print('====== Payment.get_purchased_items ===========')
         # print(f"items list: {self.items_list}")
-        # items = (Registration.objects.filter(payment=self.id)  # .values('classoffer')
-
-        yield PurchasedItem(name='The Hound of the Baskervilles', sku='BSKV',
-                            quantity=9, price=Decimal(10), currency='USD')
+        # registrations = Registration.objects.filter(payment=self.id)
+        # items, multi_discount_list, pre_pay_total = [], [], 0
+        # for ea in registrations:
+        #     selected = ClassOffer.objects.get(id=ea.classoffer)
+        #     # TODO: handle determining if pre-pay discount is valid
+        #     pre_pay_total += selected.pre_discount
+        #     multi_discount_list.append(selected.multi_discount)
+        #     item = PurchasedItem(name=str(selected), sku=ea.id, currency='USD',
+        #                          price=Decimal(selected.full_price), quantity=1)
+        #     items.append(item)
+        # if pre_pay_total > 0:
+        #     item = PurchasedItem(name='Paid in Advanced Discount', sku='ppd', currency='USD',
+        #                          price=Decimal(pre_pay_total), quantity=1)
+        #     items.append(item)
+        # if len(multi_discount_list) > 1:
+        #     multi_discount_list.sort()
+        #     discount = multi_discount_list[-2]
+        #     item = PurchasedItem(name='Multiple Class Discount', sku='mcd', currency='USD',
+        #                          price=Decimal(discount), quantity=1)
+        #     items.append(item)
+        # for item in items:
+        #     yield item
+        yield PurchasedItem(name=self.description, sku='HCRF',
+                            quantity=1, price=Decimal(self.total), currency='USD')
 
     # def __str__(self):
     #     return 'payment by ' + str(self.paid_by) + 'for ' + str(self.student) + 'attending ' + self.description

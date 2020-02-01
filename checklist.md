@@ -65,20 +65,35 @@
 - [s] Stretch Goal. Not for current feature plan.
 
 Current Status:
-2020-01-23 14:48:20
+2020-01-30 14:17:45
 <!-- Ctrl-Shift-I to generate timestamp -->
 
 ### Payment Processing
 
-- [ ] Can send needed data to PayPal payment site for user to complete payment process
-- [ ] Can receive confirmation from PayPal to integrate into our records
+- [x] Can send needed data to PayPal payment site for user to complete payment process
+- [x] Can receive authorization from PayPal (success url)
+- [ ] Can check what email they used on PayPal for confirmation
+  - [n] NO - ?Should a mis-match mean we change their email on file?
+  - [ ] ?Should a mis-match change the 'paid by' field?
+  - [ ] ?Should a single User account be allowed secondary associated email addresses?
+- [ ] Fix: when getting authorization response, it falsely triggers user is not the same as paid_by
+- [ ] Can take authorization, then capture amount through PayPal
+- [ ] Can update student and checkin records with the completed payment amount
+- [ ] If payment amount refunded or revoked, our records are also updated
 - [ ] Checkin sheet is automatically updated with all online payment processes
 - [ ] Manual process for managing on-site payments (with Square, Check, Cash)
+- [ ] Login to newly created User account after they pay for their first ClassOffer
 - [s] Automatically manage on-site credit card (via Square?) processing
 - [s] Stripe payment integration
 - [x] Update Subject (or ClassOffer) models to have price fields
 - [x] Update price fields to auto-populate based on class type
 - [ ] Update multi-class discount based on Subject/ClassOffer settings
+- [ ] Instead of field saying 'billing_country_area' it should say 'State'
+  - [ ] Simple fix: Change property to state, but modify when authorizing payments
+  - [ ] Find some override: Displays as state, but tracks as field name.
+  - [ ] Fix in fields list (add 'state'), then clean_state turns into field name
+  - [ ] JS changes display based on country code or other field inputs
+  - [ ] Create a Mixin: somehow fixes it whenever it comes up
 
 ## Email Features
 
@@ -95,6 +110,7 @@ Current Status:
 ## General Site
 
 - [ ] Layout student Profile Resources & class history
+- [ ] Auto-Login new user if created on their first ClassOffer sign up.
 - [ ] User: create update view and method
 - [ ] Profile details view: add note for completed Beg and/or L2
 - [ ] About Us page shows only teacher & staff profile info, plus business info. Links to Contact Us.
