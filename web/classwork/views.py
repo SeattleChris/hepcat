@@ -437,7 +437,7 @@ class PaymentProcessView(UpdateView):
         if payment.status == 'preauth':
             print('------------ Payment Capture -------------------')
             payment.capture()
-            context['note'] = f"We did a capture and got status {payment.status}"
+        # TODO: put in logic for handling refunds, release, etc.
         context['payment_done'] = True if payment.status == 'confirmed' else False
         context['student_name'] = f'{payment.student.user.first_name} {payment.student.user.last_name}'
         if payment.student != payment.paid_by:
@@ -454,6 +454,8 @@ class PaymentProcessView(UpdateView):
         print(response_kwargs)
         return super().render_to_response(context, **response_kwargs)
 
+    # end class PaymentProcessView
+
 
 def payment_details(request, id):
     """ This is based on the django-payments docs. """
@@ -468,58 +470,3 @@ def payment_details(request, id):
     print('------ payment_details TemplateResponse ---------')
     return TemplateResponse(request, 'payment/payment.html',
                             {'form': form, 'payment': payment})
-
-
-class PaymentResultView(DetailView):
-    """ After a payment attempt, we can have success or failure.
-        If this variant is using an Authorize & Capture, method, we need to capture.
-    """
-    template_name = 'payment/incomplete.html'
-    model = Payment
-    context_object_name = 'payment'
-    pk_url_kwarg = 'id'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        print('========== PaymentResultView.get_context_data =============')
-        print(kwargs)
-        for each in context:
-            print(each)
-        payment = context['object']  # for some reason, context['payment'] would also work
-        variant = payment.get('variant', 'default')
-        context['capture'] = settings.PAYMENT_VARIANTS[variant][1].get('capture', True)
-        context['student_name'] = f'{payment.student.user.first_name} {payment.student.user.last_name}'
-        if payment.student is not payment.paid_by:
-            # TODO: Check the logic of this if statement
-            context['paid_by_other'] = True
-            context['paid_by_name'] = f'{payment.paid_by.user.first_name} {payment.paid_by.user.last_name}'
-        context['class_selected'] = payment.description
-        # for ea in dir(self):
-        #     print(ea)
-        # context['user'] = self.request.user
-        # sess = context['session'] if context['session'] else None
-        # date = context['display_date'] if context['display_date'] else None
-        # context['class_choices'] = ClassOffer.objects.filter(session__in=decide_session(sess=sess, display_date=date))
-        return context
-
-    def auth_capture(self, *args, **kwargs):
-        """ Check if we only have an authorization, and we need to capture """
-        from pprint import pprint
-
-        context = self.get_context_data()
-        payment = context['object']  # for some reason, context['payment'] would also work
-        if context['capture']:
-            capture = payment.capture()
-            pprint(capture)
-            print('We need to capture')
-        else:
-            return redirect(payment.get_done_url(), *args, **kwargs)
-
-        # done auth_capture
-
-    def render_to_response(self, context, **response_kwargs):
-        print('========= PaymentResultView.render_to_response ========')
-        print(context)
-        print('------------ Context vs Response kwargs -------------------')
-        print(response_kwargs)
-        return super().render_to_response(context, **response_kwargs)
