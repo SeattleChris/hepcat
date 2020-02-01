@@ -32,13 +32,14 @@ class SiteContent(models.Model):
 
     date_added = models.DateField(auto_now_add=True)
     date_modified = models.DateField(auto_now=True)
-    # end class SiteContent
 
     def __str__(self):
         return f'{self.name}'
 
     def __repr__(self):
         return f'<SiteContent: {self.name} | Modified: {self.date_modified} >'
+
+    # end class SiteContent
 
 
 class Location(models.Model):
@@ -204,9 +205,8 @@ class Subject(models.Model):
         ('N', 'NA'),
     )
 
-    # id = auto-createdint(
+    # id = auto-created
     level = models.CharField(max_length=8, choices=LEVEL_CHOICES, default='Spec')
-    # num_level = models.IntegerField(default=0, editable=False)
     version = models.CharField(max_length=1, choices=VERSION_CHOICES)
     title = models.CharField(max_length=125, default='Untitled')
     short_desc = models.CharField(max_length=100)
@@ -354,9 +354,7 @@ class ClassOffer(models.Model):
         return self.full_price - self.pre_discount if self.pre_discount > 0 else None
 
     def day(self, short=False):
-        """ Used for displaying the day of week for the class as a word.Viewed 120k times
-￼
-
+        """ Used for displaying the day of week for the class as a word.
             Returns plural form if the class has multiple weeks.
             Returns abbreviated form if short is True.
         """

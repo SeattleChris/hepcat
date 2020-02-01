@@ -1,6 +1,6 @@
 from django.views.generic import ListView, CreateView, DetailView, UpdateView
 # from django.contrib.auth.mixins import LoginRequiredMixin
-from django.urls import reverse_lazy
+# from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
 from .models import (SiteContent, Resource, Location, ClassOffer, Subject,  # ? Session,
                      Profile, Payment, Registration)
@@ -10,7 +10,6 @@ from django.template.response import TemplateResponse  # used for Payments
 from payments import get_payment_model, RedirectNeeded  # used for Payments
 from django.db.models import Q
 from django.core.exceptions import ObjectDoesNotExist
-from django.conf import settings
 User = get_user_model()
 
 # TODO: Clean out excessive print lines telling us where we are.
@@ -427,7 +426,6 @@ class PaymentProcessView(UpdateView):
     context_object_name = 'payment'
     pk_url_kwarg = 'id'
     form_class = PaymentForm   # only payment fields, not same as the create view
-    # form_class = RegisterForm  # matches the create view
     # success_url = reverse_lazy('payment_success')
 
     def get_context_data(self, **kwargs):
@@ -441,7 +439,6 @@ class PaymentProcessView(UpdateView):
         context['payment_done'] = True if payment.status == 'confirmed' else False
         context['student_name'] = f'{payment.student.user.first_name} {payment.student.user.last_name}'
         if payment.student != payment.paid_by:
-            # TODO: Check the logic of this if statement
             context['paid_by_other'] = True
             context['paid_by_name'] = f'{payment.paid_by.user.first_name} {payment.paid_by.user.last_name}'
         context['class_selected'] = payment.description
@@ -458,7 +455,7 @@ class PaymentProcessView(UpdateView):
 
 
 def payment_details(request, id):
-    """ This is based on the django-payments docs. """
+    """ The route for this function is called by django-payments after a registration is submitted. """
     print('========== views function - payment_details ==============')
     payment = get_object_or_404(get_payment_model(), id=id)
     try:
@@ -466,7 +463,6 @@ def payment_details(request, id):
     except RedirectNeeded as redirect_to:
         print('---- payment_details redirected -------')
         return redirect(str(redirect_to))
-    # form.initial = {'billing_email': payment.billing_email}
     print('------ payment_details TemplateResponse ---------')
     return TemplateResponse(request, 'payment/payment.html',
                             {'form': form, 'payment': payment})

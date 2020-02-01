@@ -76,8 +76,8 @@ Current Status:
   - [n] NO - ?Should a mis-match mean we change their email on file?
   - [ ] ?Should a mis-match change the 'paid by' field?
   - [ ] ?Should a single User account be allowed secondary associated email addresses?
-- [ ] Fix: when getting authorization response, it falsely triggers user is not the same as paid_by
-- [ ] Can take authorization, then capture amount through PayPal
+- [x] Fix: correctly identify if paid_by vs user signed up for class are different.
+- [x] Can take authorization, then capture amount through PayPal
 - [ ] Can update student and checkin records with the completed payment amount
 - [ ] If payment amount refunded or revoked, our records are also updated
 - [ ] Checkin sheet is automatically updated with all online payment processes
