@@ -540,7 +540,8 @@ class Profile(models.Model):
         return [
             self.user.first_name,
             self.user.last_name,
-            self.taken,
+            self.beg_finished,
+            self.l2_finished,
             self.credit,
         ]
 
@@ -775,10 +776,17 @@ class Registration(models.Model):
     # reg_class.admin_order_field = 'classoffer__subject__level'
 
     @property
-    def reg_session(self):
-        return self.classoffer.session.name
+    def session(self):
+        return self.classoffer.session
     # reg_session.admin_order_field = 'classoffer__session__key_day_date'
 
+    @property
+    def class_day(self):
+        return self.classoffer.class_day
+
+    @property
+    def start_time(self):
+        return self.classoffer.start_time
     # class Meta:
     #     order_with_respect_to = 'classoffer'
     #     pass

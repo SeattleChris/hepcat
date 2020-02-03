@@ -1,6 +1,7 @@
 from django.views.generic import ListView, CreateView, DetailView, UpdateView
 # from django.contrib.auth.mixins import LoginRequiredMixin
 # from django.urls import reverse_lazy
+from collections import OrderedDict
 from django.contrib.auth import get_user_model
 from .models import (SiteContent, Resource, Location, ClassOffer, Subject,  # ? Session,
                      Profile, Payment, Registration)
@@ -124,7 +125,7 @@ class ClassOfferListView(ListView):
 
 class Checkin(ListView):
     """ This is a report for which students are in which classes. """
-    model = ClassOffer
+    model = Registration
     template_name = 'classwork/checkin.html'
     context_object_name = 'class_list'
 
@@ -132,39 +133,16 @@ class Checkin(ListView):
         """ List all the students from all the classes (grouped in days, then
             in start_time order, and then alphabetical first name)
         """
-        # current_classes = super().get_queryset()
-        display_session = None
-        if 'display_session' in self.kwargs:
-            display_session = self.kwargs['display_session']  # TODO: change to ternary assignment
+        print("============ Checkin.get_queryset ================")
+        display_session = self.kwargs.get('display_session', None)
         session = decide_session(sess=display_session)
         selected_classes = ClassOffer.objects.filter(session__in=session).order_by('-class_day', 'start_time')
-        class_list = [ea.students.all() for ea in selected_classes if hasattr(ea, 'students')]
-        people = Profile.objects.filter(taken__in=selected_classes)
-        # registered = Registration.objects.filter(classoffer__in=selected_classes)
-        # selected_students = Profile.objects.filter()
-        print('===================')
-        print(people)
-        # print(registered)
-        print('===================')
-        print(selected_classes)
-        # print(selected_students)
-        print('===================')
-        for ea in selected_classes:
-            print(ea)
-            for student in ea.students.all():
-                print('----------------')
-                print(student)
-            print('+++++++++++++++++++')
-        print('===================')
-        print(class_list)
         return selected_classes
 
     def get_context_data(self, **kwargs):
         """ Get the context of the current, or selected, class session student list """
         context = super().get_context_data(**kwargs)
-        display_session = None
-        if 'display_session' in kwargs:
-            display_session = context['display_session']  # TODO: change to ternary assignment
+        display_session = context.get('display_session', None)
         sess_names = [ea.name for ea in decide_session(display_session)]
         context['display_session'] = ', '.join(sess_names)
         return context

@@ -110,6 +110,7 @@ Current Status:
 ## General Site
 
 - [ ] Layout student Profile Resources & class history
+- [ ] Profile model: update highest_level to not include "current" classoffer.
 - [ ] Auto-Login new user if created on their first ClassOffer sign up.
 - [ ] User: create update view and method
 - [ ] Profile details view: add note for completed Beg and/or L2
