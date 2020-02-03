@@ -32,13 +32,14 @@ class SiteContent(models.Model):
 
     date_added = models.DateField(auto_now_add=True)
     date_modified = models.DateField(auto_now=True)
-    # end class SiteContent
 
     def __str__(self):
         return f'{self.name}'
 
     def __repr__(self):
         return f'<SiteContent: {self.name} | Modified: {self.date_modified} >'
+
+    # end class SiteContent
 
 
 class Location(models.Model):
@@ -204,9 +205,8 @@ class Subject(models.Model):
         ('N', 'NA'),
     )
 
-    # id = auto-createdint(
+    # id = auto-created
     level = models.CharField(max_length=8, choices=LEVEL_CHOICES, default='Spec')
-    # num_level = models.IntegerField(default=0, editable=False)
     version = models.CharField(max_length=1, choices=VERSION_CHOICES)
     title = models.CharField(max_length=125, default='Untitled')
     short_desc = models.CharField(max_length=100)
@@ -354,9 +354,7 @@ class ClassOffer(models.Model):
         return self.full_price - self.pre_discount if self.pre_discount > 0 else None
 
     def day(self, short=False):
-        """ Used for displaying the day of week for the class as a word.Viewed 120k times
-￼
-
+        """ Used for displaying the day of week for the class as a word.
             Returns plural form if the class has multiple weeks.
             Returns abbreviated form if short is True.
         """
@@ -415,23 +413,22 @@ class ClassOffer(models.Model):
                 move = min(dif, complement)
         start += timedelta(days=move)
         if short:
-            return start
-
+            return start  # Update if we create a short version.
         return start
 
     @property
     def start_date_short(self):
         """ Same as start_date, but returns shorter text in the string. """
-        return self.start_date()
+        return self.start_date(short=True)
 
-    def end_date(self):
+    def end_date(self, short=False):
         """ Returns the computed end date for this class offer. """
-        return self.start_date() + timedelta(days=7*self.subject.num_weeks)
+        return self.start_date(short=short) + timedelta(days=7*self.subject.num_weeks)
 
     @property
     def end_date_short(self):
         """ Same as end_date, but returns a shorter text in the string. """
-        return self.end_date()
+        return self.end_date(short=True)
 
     def set_num_level(self):
         """ When we want a sortable level number. """
@@ -537,14 +534,15 @@ class Profile(models.Model):
     def __repr__(self):
         return self.user.get_full_name()
 
-    @property
-    def checkin_list(self):
-        return [
-            self.user.first_name,
-            self.user.last_name,
-            self.taken,
-            self.credit,
-        ]
+    # @property
+    # def checkin_list(self):
+    #     return [
+    #         self.user.first_name,
+    #         self.user.last_name,
+    #         self.beg_finished,
+    #         self.l2_finished,
+    #         self.credit,
+    #     ]
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
@@ -567,7 +565,6 @@ class PaymentManager(models.Manager):
         print(student)
 
         full_price, pre_pay_discount, credit_applied = 0, 0, 0
-        # multiple_discount_count = 0
         description = ''
         multi_discount_list = []
         register = register if isinstance(register, list) else list(register)
@@ -584,13 +581,8 @@ class PaymentManager(models.Manager):
         # TODO: DONE? Change multiple_discount amount to not be hard-coded.
         multi_discount_list.sort()
         multiple_purchase_discount = multi_discount_list[-2] if len(multi_discount_list) > 1 else 0
-        # if multiple_purchase_discount > 0:
-        #     line_items.append(PurchasedItem(name='Multiple Class Discount', sku='multi_discount', quantity=1,
-        #                                     price=multiple_purchase_discount, currency='USD'))
         if student.credit > 0:
             credit_applied = student.credit
-            # line_items.append(PurchasedItem(name="Credit from Account", sku='credit', quantity=1,
-            #                                 price=credit_applied, currency='USD'))
             # TODO: Remove the used credit from the student profile
             # student.credit_applied = 0
             # student.save()
@@ -716,7 +708,6 @@ class Payment(BasePayment):
         # TODO: Write this method.
         # you'll probably want to retrieve these from an associated order
         print('====== Payment.get_purchased_items ===========')
-        # print(f"items list: {self.items_list}")
         # registrations = Registration.objects.filter(payment=self.id)
         # items, multi_discount_list, pre_pay_total = [], [], 0
         # for ea in registrations:
@@ -758,6 +749,16 @@ class Registration(models.Model):
     paid = models.BooleanField(default=False)
 
     @property
+    def owed(self):
+        """ How much is owed by this student currently in this classoffer. """
+        if not self.payment:
+            return None
+        owed = self.payment.total - self.payment.captured_amount
+        if owed > 0:
+            owed = self.payment.full_total - self.payment.captured_amount
+        return owed
+
+    @property
     def first_name(self):
         return self.student.user.first_name
 
@@ -777,10 +778,17 @@ class Registration(models.Model):
     # reg_class.admin_order_field = 'classoffer__subject__level'
 
     @property
-    def reg_session(self):
-        return self.classoffer.session.name
+    def session(self):
+        return self.classoffer.session
     # reg_session.admin_order_field = 'classoffer__session__key_day_date'
 
+    @property
+    def class_day(self):
+        return self.classoffer.class_day
+
+    @property
+    def start_time(self):
+        return self.classoffer.start_time
     # class Meta:
     #     order_with_respect_to = 'classoffer'
     #     pass

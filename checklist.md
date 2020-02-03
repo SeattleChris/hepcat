@@ -76,8 +76,8 @@ Current Status:
   - [n] NO - ?Should a mis-match mean we change their email on file?
   - [ ] ?Should a mis-match change the 'paid by' field?
   - [ ] ?Should a single User account be allowed secondary associated email addresses?
-- [ ] Fix: when getting authorization response, it falsely triggers user is not the same as paid_by
-- [ ] Can take authorization, then capture amount through PayPal
+- [x] Fix: correctly identify if paid_by vs user signed up for class are different.
+- [x] Can take authorization, then capture amount through PayPal
 - [ ] Can update student and checkin records with the completed payment amount
 - [ ] If payment amount refunded or revoked, our records are also updated
 - [ ] Checkin sheet is automatically updated with all online payment processes
@@ -87,6 +87,10 @@ Current Status:
 - [s] Stripe payment integration
 - [x] Update Subject (or ClassOffer) models to have price fields
 - [x] Update price fields to auto-populate based on class type
+- [ ] Maybe combine Checkin view with ClassOfferListView - diff in sort and templates.
+- [ ] Add items as Many-to-Many field to make Payments easier to use a orders.
+- [ ] Mark All associated Registration models when payment captured in full.
+- [ ] Handle partial payment structure, especially if multi-class discount was given.
 - [ ] Update multi-class discount based on Subject/ClassOffer settings
 - [ ] Instead of field saying 'billing_country_area' it should say 'State'
   - [ ] Simple fix: Change property to state, but modify when authorizing payments
@@ -110,6 +114,7 @@ Current Status:
 ## General Site
 
 - [ ] Layout student Profile Resources & class history
+- [ ] Profile model: update highest_level to not include "current" classoffer.
 - [ ] Auto-Login new user if created on their first ClassOffer sign up.
 - [ ] User: create update view and method
 - [ ] Profile details view: add note for completed Beg and/or L2

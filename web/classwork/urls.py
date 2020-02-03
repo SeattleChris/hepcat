@@ -1,10 +1,9 @@
 from django.urls import path
-from .views import (AboutUsListView,
+from .views import (AboutUsListView, ResourceDetailView,
                     ClassOfferDetailView, ClassOfferListView,
                     LocationDetailView, LocationListView,
-                    Checkin, RegisterView, payment_details,
-                    PaymentProcessView, PaymentResultView,
-                    ProfileView, ResourceDetailView
+                    Checkin, RegisterView, ProfileView,
+                    PaymentProcessView, payment_details,
                     )
 # SubjectCreateView, SessionCreateView, ClassOfferCreateView,
 urlpatterns = [  # All following are in root

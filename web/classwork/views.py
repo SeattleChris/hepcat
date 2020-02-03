@@ -1,20 +1,19 @@
 from django.views.generic import ListView, CreateView, DetailView, UpdateView
 # from django.contrib.auth.mixins import LoginRequiredMixin
-from django.urls import reverse_lazy
-from django.contrib.auth import get_user_model
-from .models import (SiteContent, Resource, Location, ClassOffer, Subject,  # ? Session,
-                     Profile, Payment, Registration)
+# from django.urls import reverse_lazy
+# from collections import OrderedDict
 from .forms import RegisterForm, PaymentForm, decide_session  # , ProfileForm, UserForm
 from django.shortcuts import get_object_or_404, redirect  # used for Payments
 from django.template.response import TemplateResponse  # used for Payments
 from payments import get_payment_model, RedirectNeeded  # used for Payments
 from django.db.models import Q
 from django.core.exceptions import ObjectDoesNotExist
-from django.conf import settings
+from django.contrib.auth import get_user_model
+from .models import (SiteContent, Resource, Location, ClassOffer, Subject,  # ? Session,
+                     Profile, Payment, Registration)
 User = get_user_model()
 
 # TODO: Clean out excessive print lines telling us where we are.
-# Create your views here.
 
 
 class AboutUsListView(ListView):
@@ -105,19 +104,13 @@ class ClassOfferListView(ListView):
     def get_queryset(self):
         """ We can limit the classes list by class level """
         display_session = self.kwargs.get('display_session', None)
-        # display_session = None
-        # if 'display_session' in self.kwargs:
-        #     display_session = self.kwargs['display_session']  # TODO: change to ternary assignment
-        sess_id = [ea.id for ea in decide_session(sess=display_session)]
-        return ClassOffer.objects.filter(session__in=sess_id).order_by('num_level')
+        session = decide_session(sess=display_session)
+        return ClassOffer.objects.filter(session__in=session).order_by('num_level')
 
     def get_context_data(self, **kwargs):
         """ Get the context of the current published classes from Session table """
         context = super().get_context_data(**kwargs)
         display_session = context.get('display_session', None)
-        # display_session = None
-        # if 'display_session' in kwargs:
-        #     display_session = context['display_session']  # TODO: change to ternary assignment
         sess_names = [ea.name for ea in decide_session(display_session)]
         context['display_session'] = ', '.join(sess_names)
         return context
@@ -125,7 +118,7 @@ class ClassOfferListView(ListView):
 
 class Checkin(ListView):
     """ This is a report for which students are in which classes. """
-    model = ClassOffer
+    model = Registration
     template_name = 'classwork/checkin.html'
     context_object_name = 'class_list'
 
@@ -133,44 +126,19 @@ class Checkin(ListView):
         """ List all the students from all the classes (grouped in days, then
             in start_time order, and then alphabetical first name)
         """
-        # current_classes = super().get_queryset()
-        display_session = None
-        if 'display_session' in self.kwargs:
-            display_session = self.kwargs['display_session']  # TODO: change to ternary assignment
+        print("============ Checkin.get_queryset ================")
+        display_session = self.kwargs.get('display_session', None)
         session = decide_session(sess=display_session)
         selected_classes = ClassOffer.objects.filter(session__in=session).order_by('-class_day', 'start_time')
-        class_list = [ea.students.all() for ea in selected_classes if hasattr(ea, 'students')]
-        people = Profile.objects.filter(taken__in=selected_classes)
-        # registered = Registration.objects.filter(classoffer__in=selected_classes)
-        # selected_students = Profile.objects.filter()
-        print('===================')
-        print(people)
-        # print(registered)
-        print('===================')
-        print(selected_classes)
-        # print(selected_students)
-        print('===================')
-        for ea in selected_classes:
-            print(ea)
-            for student in ea.students.all():
-                print('----------------')
-                print(student)
-            print('+++++++++++++++++++')
-        print('===================')
-        print(class_list)
         return selected_classes
 
     def get_context_data(self, **kwargs):
         """ Get the context of the current, or selected, class session student list """
         context = super().get_context_data(**kwargs)
-        display_session = None
-        if 'display_session' in kwargs:
-            display_session = context['display_session']  # TODO: change to ternary assignment
+        display_session = context.get('display_session', None)
         sess_names = [ea.name for ea in decide_session(display_session)]
         context['display_session'] = ', '.join(sess_names)
         return context
-
-    # end class Checkin
 
 
 class ResourceDetailView(DetailView):
@@ -249,15 +217,6 @@ class RegisterView(CreateView):
     test_url = '../payment/done/'
     # TODO: We will need to adjust the payment url stuff later.
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        print('========== RegisterView.get_context_data =============')
-        # context['user'] = self.request.user
-        # sess = context['session'] if context['session'] else None
-        # date = context['display_date'] if context['display_date'] else None
-        # context['class_choices'] = ClassOffer.objects.filter(session__in=decide_session(sess=sess, display_date=date))
-        return context
-
     # unsure how to accurately call this one
     # def as_view(**initkwargs):
     #     print('================ as_view =================')
@@ -311,9 +270,14 @@ class RegisterView(CreateView):
         print('================ get_prefix =================')
         return super().get_prefix()
 
-    # def get_context_data(self, **kwargs):
-    #     print('================ get_context_data =================')
-    #     return super().get_context_data(**kwargs)
+    def get_context_data(self, **kwargs):
+        print('========== RegisterView.get_context_data =============')
+        context = super().get_context_data(**kwargs)
+        # context['user'] = self.request.user
+        # sess = context['session'] if context['session'] else None
+        # date = context['display_date'] if context['display_date'] else None
+        # context['class_choices'] = ClassOffer.objects.filter(session__in=decide_session(sess=sess, display_date=date))
+        return context
 
     def render_to_response(self, context, **response_kwargs):
         print('================ render_to_response =================')
@@ -323,11 +287,12 @@ class RegisterView(CreateView):
         print('================ get_template_names =================')
         return super().get_template_names()
 
-    # def form_valid(self, form):
-    #     # Inside the following is when the form is called
-    #     # to be verified.
-    #     # if successful, will return a self.get_success_url
-    #     return super(RegisterView, self).form_valid(form)
+    def form_valid(self, form):
+        print('======== RegisterView.form_valid ========')
+        print('---- Docs say handle unauthorized users in this form_valid ----')
+        fv = super(RegisterView, self).form_valid(form)
+        print(fv)
+        return fv
 
     def get_success_url(self):
         print('================ RegisterView.get_success_url =================')
@@ -375,25 +340,6 @@ class RegisterView(CreateView):
         print('================ get_slug_field =================')
         return super().get_slug_field()
 
-    def form_valid(self, form):
-        # TODO: Extra logic steps done here for our modifications.
-        print('======== RegisterView.form_valid ========')
-        # print('-------- self --------------')
-        # print(self)
-        # print('------ Self has: ------')
-        # for ea in dir(self):
-        #     print(ea)
-        # print('----------- form ---------------')
-        # print(form)
-
-        print('---- Docs say handle unauthorized users in this form_valid ----')
-        print('------- calling super form_valid ----- ')
-        fv = super(RegisterView, self).form_valid(form)
-        print('------- printing super RegisterView.form_valid -------')
-        print(fv)
-        print('==== End RegisterView.form_valid =======')
-        return fv
-
     # end class RegisterView
 
 
@@ -427,7 +373,6 @@ class PaymentProcessView(UpdateView):
     context_object_name = 'payment'
     pk_url_kwarg = 'id'
     form_class = PaymentForm   # only payment fields, not same as the create view
-    # form_class = RegisterForm  # matches the create view
     # success_url = reverse_lazy('payment_success')
 
     def get_context_data(self, **kwargs):
@@ -441,7 +386,6 @@ class PaymentProcessView(UpdateView):
         context['payment_done'] = True if payment.status == 'confirmed' else False
         context['student_name'] = f'{payment.student.user.first_name} {payment.student.user.last_name}'
         if payment.student != payment.paid_by:
-            # TODO: Check the logic of this if statement
             context['paid_by_other'] = True
             context['paid_by_name'] = f'{payment.paid_by.user.first_name} {payment.paid_by.user.last_name}'
         context['class_selected'] = payment.description
@@ -458,7 +402,7 @@ class PaymentProcessView(UpdateView):
 
 
 def payment_details(request, id):
-    """ This is based on the django-payments docs. """
+    """ The route for this function is called by django-payments after a registration is submitted. """
     print('========== views function - payment_details ==============')
     payment = get_object_or_404(get_payment_model(), id=id)
     try:
@@ -466,7 +410,6 @@ def payment_details(request, id):
     except RedirectNeeded as redirect_to:
         print('---- payment_details redirected -------')
         return redirect(str(redirect_to))
-    # form.initial = {'billing_email': payment.billing_email}
     print('------ payment_details TemplateResponse ---------')
     return TemplateResponse(request, 'payment/payment.html',
                             {'form': form, 'payment': payment})

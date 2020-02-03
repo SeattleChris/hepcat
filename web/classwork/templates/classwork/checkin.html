@@ -8,14 +8,28 @@
     {% for ea in class_list %}
     <h3>{{ ea.subject }}: {{ ea.subject.title }} </h3>
     <ul>
-      {% for student in ea.students.all %}
-      <li>{{ student }} | {{ ea.subject }} | {{ student.credit }}</li>
+    {% for reg in ea.registration_set.all %}
       <li>
-        {% for dt in student.checkin_list %}
-        {{ dt }} |
-        {% endfor %}
+        {{reg.student}} |
+      {% if reg.student.l2_finished %}
+        L2 |
+        {% elif reg.student.beg_finished %}
+        Beg |
+        {% else %}
+        NA |
+      {% endif %}
+      {% if reg.payment %}
+        <a href="{% url 'payment' id=reg.payment.id %}">{{reg.payment.id}}</a> |
+      {% endif %}
+      {% if reg.owed is None %}
+        Unpaid |
+        {% elif reg.owed == 0 %}
+        Paid |
+        {% else %}
+        {{ reg.owed }} |
+      {% endif %}
       </li>
-      {% endfor %}
+    {% endfor %}
     </ul>
     {% endfor %}
     <hr />
