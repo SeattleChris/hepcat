@@ -105,19 +105,13 @@ class ClassOfferListView(ListView):
     def get_queryset(self):
         """ We can limit the classes list by class level """
         display_session = self.kwargs.get('display_session', None)
-        # display_session = None
-        # if 'display_session' in self.kwargs:
-        #     display_session = self.kwargs['display_session']  # TODO: change to ternary assignment
-        sess_id = [ea.id for ea in decide_session(sess=display_session)]
-        return ClassOffer.objects.filter(session__in=sess_id).order_by('num_level')
+        session = decide_session(sess=display_session)
+        return ClassOffer.objects.filter(session__in=session).order_by('num_level')
 
     def get_context_data(self, **kwargs):
         """ Get the context of the current published classes from Session table """
         context = super().get_context_data(**kwargs)
         display_session = context.get('display_session', None)
-        # display_session = None
-        # if 'display_session' in kwargs:
-        #     display_session = context['display_session']  # TODO: change to ternary assignment
         sess_names = [ea.name for ea in decide_session(display_session)]
         context['display_session'] = ', '.join(sess_names)
         return context
@@ -413,6 +407,13 @@ class PaymentProcessView(UpdateView):
         if payment.status == 'preauth':
             print('------------ Payment Capture -------------------')
             payment.capture()
+            owed = payment.total - payment.captured_amount
+            if owed < 0:
+                student = payment.student
+                student.credit += owed
+                # student.save()
+            
+
         # TODO: put in logic for handling refunds, release, etc.
         context['payment_done'] = True if payment.status == 'confirmed' else False
         context['student_name'] = f'{payment.student.user.first_name} {payment.student.user.last_name}'

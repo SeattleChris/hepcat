@@ -87,6 +87,9 @@ Current Status:
 - [s] Stripe payment integration
 - [x] Update Subject (or ClassOffer) models to have price fields
 - [x] Update price fields to auto-populate based on class type
+- [ ] Maybe combine Checkin view with ClassOfferListView - differences in sort and templates.
+- [ ] Mark All associated Registration models when payment captured in full.
+- [ ] Handle partial payment structure, especially if multi-class discount was given.
 - [ ] Update multi-class discount based on Subject/ClassOffer settings
 - [ ] Instead of field saying 'billing_country_area' it should say 'State'
   - [ ] Simple fix: Change property to state, but modify when authorizing payments

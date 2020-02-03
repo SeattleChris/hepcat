@@ -583,13 +583,8 @@ class PaymentManager(models.Manager):
         # TODO: DONE? Change multiple_discount amount to not be hard-coded.
         multi_discount_list.sort()
         multiple_purchase_discount = multi_discount_list[-2] if len(multi_discount_list) > 1 else 0
-        # if multiple_purchase_discount > 0:
-        #     line_items.append(PurchasedItem(name='Multiple Class Discount', sku='multi_discount', quantity=1,
-        #                                     price=multiple_purchase_discount, currency='USD'))
         if student.credit > 0:
             credit_applied = student.credit
-            # line_items.append(PurchasedItem(name="Credit from Account", sku='credit', quantity=1,
-            #                                 price=credit_applied, currency='USD'))
             # TODO: Remove the used credit from the student profile
             # student.credit_applied = 0
             # student.save()
@@ -746,6 +741,20 @@ class Payment(BasePayment):
 
     # end class Payment
 
+# use a signal to trigger when Payment.capture happens. This function should:
+    # If payment.capture_amount == payment.total: mark all assoc Registration models paid
+    # Elif payment.capture_amount > payment.total: assign profile.credit the difference
+    # Elif only 1 assoc Registration model, then mark it as partially paid
+    # Else: Mark all classes as underpaid? Mark highest level as missing amount? First in day?
+
+
+# @receiver(post_save, sender=Payment)
+# def update_registration(sender, instance, **kwargs):
+#     """ Update the Registrations if payment is changed """
+
+#     pass
+#     # end update_registration
+
 
 class Registration(models.Model):
     """ This is an intermediary model referenced by a user profile model
@@ -755,6 +764,16 @@ class Registration(models.Model):
     classoffer = models.ForeignKey(ClassOffer, on_delete=models.SET_NULL, null=True)
     payment = models.ForeignKey(Payment, on_delete=models.SET_NULL, null=True)
     paid = models.BooleanField(default=False)
+
+    @property
+    def owed(self):
+        """ How much is owed by this student currently in this classoffer. """
+        if not self.payment:
+            return None
+        owed = self.payment.total - self.payment.captured_amount
+        if owed > 0:
+            owed = self.payment.full_total - self.payment.captured_amount
+        return owed
 
     @property
     def first_name(self):
