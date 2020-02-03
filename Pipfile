@@ -11,6 +11,8 @@ django-compressor = "*"
 django-payments = "*"
 pillow = "*"
 stripe = "*"
+django-newsletter = "*"
+sorl-thumbnail = "*"
 
 [dev-packages]
 django-sass-processor = "*"

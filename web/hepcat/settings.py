@@ -33,12 +33,17 @@ INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
+    'django.contrib.sites',  # CUSTOM added for django-newsletter
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # 'rest_framework',
     # 'rest_framework.authtoken',
     'django_registration',  # CUSTOM
     'payments',  # CUSTOM for payment processing
+    # Imperavi (or tinymce) rich text editor is optional
+    # 'imperavi',
+    # 'sorl.thumbnail',  # CUSTOM required for newsletter
+    'newsletter',  # CUSTOM for email newsletters.
     'hepcat',  # CUSTOM: Project name
     'classwork',  # CUSTOM: App name
     'users',  # CUSTOM: App name
@@ -131,6 +136,16 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # CUSTOM Additional Settings for this Project
 
+# Django Newsletter
+# NEWSLETTER_CONFIRM_EMAIL = False
+# Using django-tinymce
+# NEWSLETTER_RICHTEXT_WIDGET = "tinymce.widgets.TinyMCE"
+# Amount of seconds to wait between each email. Here 100ms is used.
+NEWSLETTER_EMAIL_DELAY = 0.1
+# Amount of seconds to wait between each batch. Here one minute is used.
+NEWSLETTER_BATCH_DELAY = 60
+# Number of emails in one batch
+NEWSLETTER_BATCH_SIZE = 100
 # Django Registration
 AUTH_USER_MODEL = 'users.UserHC'
 LOGIN_REDIRECT_URL = '/profile/'
