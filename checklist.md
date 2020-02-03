@@ -87,7 +87,8 @@ Current Status:
 - [s] Stripe payment integration
 - [x] Update Subject (or ClassOffer) models to have price fields
 - [x] Update price fields to auto-populate based on class type
-- [ ] Maybe combine Checkin view with ClassOfferListView - differences in sort and templates.
+- [ ] Maybe combine Checkin view with ClassOfferListView - diff in sort and templates.
+- [ ] Add items as Many-to-Many field to make Payments easier to use a orders.
 - [ ] Mark All associated Registration models when payment captured in full.
 - [ ] Handle partial payment structure, especially if multi-class discount was given.
 - [ ] Update multi-class discount based on Subject/ClassOffer settings

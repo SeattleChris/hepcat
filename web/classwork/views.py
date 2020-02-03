@@ -1,20 +1,19 @@
 from django.views.generic import ListView, CreateView, DetailView, UpdateView
 # from django.contrib.auth.mixins import LoginRequiredMixin
 # from django.urls import reverse_lazy
-from collections import OrderedDict
-from django.contrib.auth import get_user_model
-from .models import (SiteContent, Resource, Location, ClassOffer, Subject,  # ? Session,
-                     Profile, Payment, Registration)
+# from collections import OrderedDict
 from .forms import RegisterForm, PaymentForm, decide_session  # , ProfileForm, UserForm
 from django.shortcuts import get_object_or_404, redirect  # used for Payments
 from django.template.response import TemplateResponse  # used for Payments
 from payments import get_payment_model, RedirectNeeded  # used for Payments
 from django.db.models import Q
 from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth import get_user_model
+from .models import (SiteContent, Resource, Location, ClassOffer, Subject,  # ? Session,
+                     Profile, Payment, Registration)
 User = get_user_model()
 
 # TODO: Clean out excessive print lines telling us where we are.
-# Create your views here.
 
 
 class AboutUsListView(ListView):
@@ -141,8 +140,6 @@ class Checkin(ListView):
         context['display_session'] = ', '.join(sess_names)
         return context
 
-    # end class Checkin
-
 
 class ResourceDetailView(DetailView):
     """ Each Resource can be viewed if the user has permission """
@@ -220,15 +217,6 @@ class RegisterView(CreateView):
     test_url = '../payment/done/'
     # TODO: We will need to adjust the payment url stuff later.
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        print('========== RegisterView.get_context_data =============')
-        # context['user'] = self.request.user
-        # sess = context['session'] if context['session'] else None
-        # date = context['display_date'] if context['display_date'] else None
-        # context['class_choices'] = ClassOffer.objects.filter(session__in=decide_session(sess=sess, display_date=date))
-        return context
-
     # unsure how to accurately call this one
     # def as_view(**initkwargs):
     #     print('================ as_view =================')
@@ -282,9 +270,14 @@ class RegisterView(CreateView):
         print('================ get_prefix =================')
         return super().get_prefix()
 
-    # def get_context_data(self, **kwargs):
-    #     print('================ get_context_data =================')
-    #     return super().get_context_data(**kwargs)
+    def get_context_data(self, **kwargs):
+        print('========== RegisterView.get_context_data =============')
+        context = super().get_context_data(**kwargs)
+        # context['user'] = self.request.user
+        # sess = context['session'] if context['session'] else None
+        # date = context['display_date'] if context['display_date'] else None
+        # context['class_choices'] = ClassOffer.objects.filter(session__in=decide_session(sess=sess, display_date=date))
+        return context
 
     def render_to_response(self, context, **response_kwargs):
         print('================ render_to_response =================')
@@ -294,11 +287,12 @@ class RegisterView(CreateView):
         print('================ get_template_names =================')
         return super().get_template_names()
 
-    # def form_valid(self, form):
-    #     # Inside the following is when the form is called
-    #     # to be verified.
-    #     # if successful, will return a self.get_success_url
-    #     return super(RegisterView, self).form_valid(form)
+    def form_valid(self, form):
+        print('======== RegisterView.form_valid ========')
+        print('---- Docs say handle unauthorized users in this form_valid ----')
+        fv = super(RegisterView, self).form_valid(form)
+        print(fv)
+        return fv
 
     def get_success_url(self):
         print('================ RegisterView.get_success_url =================')
@@ -346,25 +340,6 @@ class RegisterView(CreateView):
         print('================ get_slug_field =================')
         return super().get_slug_field()
 
-    def form_valid(self, form):
-        # TODO: Extra logic steps done here for our modifications.
-        print('======== RegisterView.form_valid ========')
-        # print('-------- self --------------')
-        # print(self)
-        # print('------ Self has: ------')
-        # for ea in dir(self):
-        #     print(ea)
-        # print('----------- form ---------------')
-        # print(form)
-
-        print('---- Docs say handle unauthorized users in this form_valid ----')
-        print('------- calling super form_valid ----- ')
-        fv = super(RegisterView, self).form_valid(form)
-        print('------- printing super RegisterView.form_valid -------')
-        print(fv)
-        print('==== End RegisterView.form_valid =======')
-        return fv
-
     # end class RegisterView
 
 
@@ -407,13 +382,6 @@ class PaymentProcessView(UpdateView):
         if payment.status == 'preauth':
             print('------------ Payment Capture -------------------')
             payment.capture()
-            owed = payment.total - payment.captured_amount
-            if owed < 0:
-                student = payment.student
-                student.credit += owed
-                # student.save()
-            
-
         # TODO: put in logic for handling refunds, release, etc.
         context['payment_done'] = True if payment.status == 'confirmed' else False
         context['student_name'] = f'{payment.student.user.first_name} {payment.student.user.last_name}'

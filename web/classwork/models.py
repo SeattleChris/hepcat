@@ -413,23 +413,22 @@ class ClassOffer(models.Model):
                 move = min(dif, complement)
         start += timedelta(days=move)
         if short:
-            return start
-
+            return start  # Update if we create a short version.
         return start
 
     @property
     def start_date_short(self):
         """ Same as start_date, but returns shorter text in the string. """
-        return self.start_date()
+        return self.start_date(short=True)
 
-    def end_date(self):
+    def end_date(self, short=False):
         """ Returns the computed end date for this class offer. """
-        return self.start_date() + timedelta(days=7*self.subject.num_weeks)
+        return self.start_date(short=short) + timedelta(days=7*self.subject.num_weeks)
 
     @property
     def end_date_short(self):
         """ Same as end_date, but returns a shorter text in the string. """
-        return self.end_date()
+        return self.end_date(short=True)
 
     def set_num_level(self):
         """ When we want a sortable level number. """
@@ -535,15 +534,15 @@ class Profile(models.Model):
     def __repr__(self):
         return self.user.get_full_name()
 
-    @property
-    def checkin_list(self):
-        return [
-            self.user.first_name,
-            self.user.last_name,
-            self.beg_finished,
-            self.l2_finished,
-            self.credit,
-        ]
+    # @property
+    # def checkin_list(self):
+    #     return [
+    #         self.user.first_name,
+    #         self.user.last_name,
+    #         self.beg_finished,
+    #         self.l2_finished,
+    #         self.credit,
+    #     ]
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
@@ -566,7 +565,6 @@ class PaymentManager(models.Manager):
         print(student)
 
         full_price, pre_pay_discount, credit_applied = 0, 0, 0
-        # multiple_discount_count = 0
         description = ''
         multi_discount_list = []
         register = register if isinstance(register, list) else list(register)
@@ -710,7 +708,6 @@ class Payment(BasePayment):
         # TODO: Write this method.
         # you'll probably want to retrieve these from an associated order
         print('====== Payment.get_purchased_items ===========')
-        # print(f"items list: {self.items_list}")
         # registrations = Registration.objects.filter(payment=self.id)
         # items, multi_discount_list, pre_pay_total = [], [], 0
         # for ea in registrations:
@@ -740,20 +737,6 @@ class Payment(BasePayment):
     #     return 'payment by ' + str(self.paid_by) + 'for ' + str(self.student) + 'attending ' + self.description
 
     # end class Payment
-
-# use a signal to trigger when Payment.capture happens. This function should:
-    # If payment.capture_amount == payment.total: mark all assoc Registration models paid
-    # Elif payment.capture_amount > payment.total: assign profile.credit the difference
-    # Elif only 1 assoc Registration model, then mark it as partially paid
-    # Else: Mark all classes as underpaid? Mark highest level as missing amount? First in day?
-
-
-# @receiver(post_save, sender=Payment)
-# def update_registration(sender, instance, **kwargs):
-#     """ Update the Registrations if payment is changed """
-
-#     pass
-#     # end update_registration
 
 
 class Registration(models.Model):
