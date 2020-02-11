@@ -33,8 +33,11 @@ urlpatterns = [
     path('user/', include('django.contrib.auth.urls')),
     path('user/', include('users.urls')),
     path('payments/', include('payments.urls')),
+    # path('newsletter/', include('newsletter.urls')),  # subscribe, unsubscribe, archive features
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
+# Thanks to django-newsletter, the following paths are set:
+# newsletter/ ???
 # Thanks to django-payments, the following paths are set:
 # payments/process/<token-regex>/ [name=process_data]
 # payments/process/<variant-regex>/ [static_process_payment]
