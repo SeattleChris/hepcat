@@ -829,12 +829,22 @@ class Notify(EmailMessage):
     @classmethod
     def register(cls, selected=None, student=None, paid_by=None, **kwargs):
         """ This is for when a user is registered for a ClassOffer. """
+        from django.core.mail import send_mail
+
         print("========== Notify.register ==============")
-
+        if not student and not paid_by:
+            # raise error
+            pass
+        user = paid_by.user if paid_by else student.user
+        to_email = user.email
+        from_email = settings.DEFAULT_FROM_EMAIL
+        subject = "Your Class Registration"
+        class_list = [str(ea) for ea in selected]
+        purchase_list = ', '.join(class_list)
+        body = f"You signed up {student} to attend {purchase_list}"
+        mail_sent = send_mail(subject, body, from_email, [to_email])
         # instantiate a new Notify to send an email
-
-        return True
-    pass
+        return mail_sent
 
 
 # end models.py
