@@ -9,7 +9,6 @@ cryptography==2.8
 Django==3.0.3
 django-appconf==1.0.3
 django-compressor==2.4
-django-newsletter==0.7
 django-payments==0.13.0
 django-registration==3.1
 django-sass-processor==0.7.2

@@ -25,7 +25,6 @@ SECRET_KEY = os.environ.get('SECRET_KEY', None)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = strtobool(os.environ.get('DEBUG', False))
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split()
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -33,7 +32,7 @@ INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
-    'django.contrib.sites',  # CUSTOM added for django-newsletter
+    # 'django.contrib.sites',  # CUSTOM added for django-newsletter
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # 'rest_framework',
@@ -43,7 +42,7 @@ INSTALLED_APPS = [
     # Imperavi (or tinymce) rich text editor is optional
     # 'imperavi',
     # 'sorl.thumbnail',  # CUSTOM required for newsletter
-    'newsletter',  # CUSTOM for email newsletters.
+    # 'newsletter',  # CUSTOM for email newsletters.
     'hepcat',  # CUSTOM: Project name
     'classwork',  # CUSTOM: App name
     'users',  # CUSTOM: App name
@@ -136,6 +135,31 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # CUSTOM Additional Settings for this Project
 
+# Django Registration and email
+AUTH_USER_MODEL = 'users.UserHC'
+LOGIN_REDIRECT_URL = '/profile/'
+LOGOUT_REDIRECT_URL = 'home'
+ACCOUNT_ACTIVATION_DAYS = 1
+DOMAIN = os.environ.get('DOMAIN', 'localhost')
+ADMIN_ID = os.environ.get('ADMIN_ID', 'webmaster')
+admin_ids = ADMIN_ID.split((','))
+ADMINS = [(ea, f"{ea}@{DOMAIN}") for ea in admin_ids]
+manager_ids = os.environ.get('MANAGER_ID', '').split(',')
+MANAGERS = [(ea, f"{ea}@{DOMAIN}") for ea in manager_ids if ea]
+MANAGERS.extend(ADMINS)  # TODO: Create a flag in ENV settings to decide if all ADMINS are also MANAGERS
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', ADMINS[0][1])  # TODO: ? Different process needed?
+EMAIL_HOST = os.environ.get('EMAIL_HOST')
+EMAIL_PORT = os.environ.get('EMAIL_PORT')
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS')
+EMAIL_USE_SSL = os.environ.get('EMAIL_USE_SSL')
+
+if DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# else:
+#     Handle all of the configs for a real email SMTPBackend
+
 # Django Newsletter
 # NEWSLETTER_CONFIRM_EMAIL = False
 # Using django-tinymce
@@ -146,16 +170,6 @@ NEWSLETTER_EMAIL_DELAY = 0.1
 NEWSLETTER_BATCH_DELAY = 60
 # Number of emails in one batch
 NEWSLETTER_BATCH_SIZE = 100
-# Django Registration
-AUTH_USER_MODEL = 'users.UserHC'
-LOGIN_REDIRECT_URL = '/profile/'
-LOGOUT_REDIRECT_URL = 'home'
-ACCOUNT_ACTIVATION_DAYS = 1
-if DEBUG:
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-# else:
-#     Handle all of the configs for a real email SMTPBackend
-
 # CUSTOM Settings for Payment Processing
 STRIPE_KEY = os.environ.get('STRIPE_KEY', None)
 STRIPE_PUBLIC_KEY = os.environ.get('STRIPE_PUBLIC_KEY', None)

@@ -33,7 +33,7 @@ urlpatterns = [
     path('user/', include('django.contrib.auth.urls')),
     path('user/', include('users.urls')),
     path('payments/', include('payments.urls')),
-    path('newsletter/', include('newsletter.urls')),  # subscribe, unsubscribe, archive features
+    # path('newsletter/', include('newsletter.urls')),  # subscribe, unsubscribe, archive features
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # Thanks to django-newsletter, the following paths are set:

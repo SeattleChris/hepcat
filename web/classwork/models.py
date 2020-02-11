@@ -2,6 +2,7 @@
 from django.db import models
 # from django.utils.translation import ugettext_lazy as _
 from datetime import date, timedelta, datetime as dt
+from django.core.mail import EmailMessage
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from decimal import Decimal  # used for Payments
@@ -593,6 +594,7 @@ class PaymentManager(models.Manager):
         user = paid_by.user
         # TODO: If billing address info added to user Profile, let
         # Payment.objects.classRegister get that info from user profile
+
         # print("------ Check some pricing processesing ")
         # print(full_price)
         # print(multiple_purchase_discount)
@@ -819,6 +821,20 @@ def resource_filepath(instance, filename):
     avail = str(instance.avail)
     path += f'subject/{level}/{avail}/{ct}/{sess}_{version}_{filename}'
     return path
+
+
+class Notify(EmailMessage):
+    """ Usually used for sending emails, or other communcation methods, to users. """
+
+    @classmethod
+    def register(cls, selected=None, student=None, paid_by=None, **kwargs):
+        """ This is for when a user is registered for a ClassOffer. """
+        print("========== Notify.register ==============")
+
+        # instantiate a new Notify to send an email
+
+        return True
+    pass
 
 
 # end models.py

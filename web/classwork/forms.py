@@ -1,5 +1,5 @@
 from django import forms
-from .models import ClassOffer, Profile, Payment, Registration, Session
+from .models import ClassOffer, Profile, Payment, Registration, Notify, Session
 # from django.urls import reverse_lazy
 # from django.shortcuts import render
 from datetime import datetime
@@ -229,7 +229,7 @@ class RegisterForm(forms.ModelForm):
         return cleaned_data
 
     def save(self, commit=True):
-        print('======== Inside RegisterForm ===========')
+        print('======== Inside RegisterForm.save ===========')
         # student = self.cleaned_data.get('student')
         # print(f'student: {student}')
         # paid_by = self.cleaned_data.get('paid_by')
@@ -243,10 +243,20 @@ class RegisterForm(forms.ModelForm):
         # then pass that instead of each billing item below.
         # however neither approach needed if we put billing info
         # into the user Profile.
+        class_selected = self.cleaned_data.get('class_selected')
+        student = self.cleaned_data.get('student')  # Profile for the User taking the ClassOffer
+        paid_by = self.cleaned_data.get('paid_by')  # Profile for the User paying for the ClassOffer
+        # TODO: Send confirmation email here? Or maybe do so with a decorator after save?
+        email = Notify.register(selected=class_selected, student=student, paid_by=paid_by)
+        if email:
+            print(f"Email was sent for register of {student} paid by {paid_by}")
+        else:
+            print(f"Email ERROR for registering {student}")
+        # Create payment for all, then a Registration for each class they selected.
         payment = Payment.objects.classRegister(
-            register=self.cleaned_data['class_selected'],
-            student=self.cleaned_data['student'],
-            paid_by=self.cleaned_data.get('paid_by'),
+            register=class_selected,
+            student=student,
+            paid_by=paid_by,
             billing_address_1=self.cleaned_data['billing_address_1'],
             billing_address_2=self.cleaned_data['billing_address_2'],
             billing_city=self.cleaned_data['billing_city'],
@@ -254,10 +264,10 @@ class RegisterForm(forms.ModelForm):
             billing_postcode=self.cleaned_data['billing_postcode'],
             )
         # We can not use objects.bulk_create due to Many-to-Many relationships
-        for each in self.cleaned_data['class_selected']:
+        for each in class_selected:
             print(each)
             Registration.objects.create(
-                student=self.cleaned_data['student'],
+                student=student,
                 classoffer=each,
                 payment=payment
                 )
