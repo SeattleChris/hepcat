@@ -5,7 +5,7 @@ cffi==1.12.3
 chardet==3.0.4
 confusable-homoglyphs==3.2.0
 cryptography==2.6.1
-Django==2.2.8
+Django==2.2.10
 django-appconf==1.0.3
 django-compressor==2.2
 django-payments==0.13.0
