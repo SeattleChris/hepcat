@@ -833,10 +833,13 @@ class Notify(EmailMessage):
 
         print("========== Notify.register ==============")
         if not student and not paid_by:
-            # raise error
-            pass
+            # TODO: raise error or other catch
+            return False
         user = paid_by.user if paid_by else student.user
-        to_email = user.email
+        to_email = getattr(user, 'email', None)
+        if not to_email:
+            # TODO: raise error or other catch
+            return False
         from_email = settings.DEFAULT_FROM_EMAIL
         subject = "Your Class Registration"
         class_list = [str(ea) for ea in selected]
