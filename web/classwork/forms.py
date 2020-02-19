@@ -63,7 +63,8 @@ class RegisterForm(forms.ModelForm):
     # registration form for someone else,
 
     # Find the acceptable ClassOffers to show
-    class_choices = ClassOffer.objects.filter(session__in=decide_session())
+    # class_choices = ClassOffer.objects.filter(session__in=decide_session())  # TODO: FIX HERE
+    class_choices = ClassOffer.objects
     user_answers = (('', 'Please Select an Answer'), ('T', 'This is my first'), ('F', 'I am a returning student'),)
     # TODO: Change to CheckboxSelectMultiple and make sure it works
 
