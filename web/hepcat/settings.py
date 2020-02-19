@@ -137,8 +137,10 @@ admin_ids = ADMIN_ID.split((','))
 ADMINS = [(ea, f"{ea}@{DOMAIN}") for ea in admin_ids]
 manager_ids = os.environ.get('MANAGER_ID', '').split(',')
 MANAGERS = [(ea, f"{ea}@{DOMAIN}") for ea in manager_ids if ea]
-MANAGERS.extend(ADMINS)  # TODO: Create a flag in ENV settings to decide if all ADMINS are also MANAGERS
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', ADMINS[0][1])  # TODO: ? Different process needed?
+EMAIL_ADMIN_ARE_MANAGERS = strtobool(os.environ.get('EMAIL_ADMIN_ARE_MANAGERS', 'False'))
+if EMAIL_ADMIN_ARE_MANAGERS:
+    MANAGERS.extend(ADMINS)
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', ADMINS[0][1])
 EMAIL_HOST = os.environ.get('EMAIL_HOST', 'localhost')
 EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '25'))
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
