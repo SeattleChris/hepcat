@@ -15,6 +15,7 @@ from distutils.util import strtobool
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+LOCAL = True if BASE_DIR == '/home/chris/newcode/hepcat/web' else False
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
@@ -23,8 +24,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = os.environ.get('SECRET_KEY', None)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = strtobool(os.environ.get('DEBUG', False))
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split()
+DEBUG = strtobool(os.environ.get('DEBUG', 'False'))
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS' if LOCAL else 'LIVE_HOST', '').split()
 # Application definition
 
 INSTALLED_APPS = [
@@ -79,7 +80,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'hepcat.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
@@ -87,11 +87,11 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         # 'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.environ.get('DB_NAME'),
-        'HOST': os.environ.get('DB_HOST'),
-        'USER': os.environ.get('DB_USER'),
-        'PASSWORD': os.environ.get('DB_PASS', 'postgres'),
-        'PORT': os.environ.get('DB_PORT', '5432'),
+        'NAME': os.environ.get('LOCAL_DB_NAME' if LOCAL else 'LIVE_DB_NAME', os.environ.get('DB_NAME', 'postgres')),
+        'HOST': os.environ.get('LOCAL_DB_HOST' if LOCAL else 'LIVE_DB_HOST', os.environ.get('DB_HOST', '')),
+        'USER': os.environ.get('LOCAL_DB_USER' if LOCAL else 'LIVE_DB_USER', os.environ.get('DB_USER', 'postgres')),
+        'PASSWORD': os.environ.get('LOCAL_DB_PASS' if LOCAL else 'LIVE_DB_PASS', os.environ.get('DB_PASS', 'postgres')),
+        'PORT': os.environ.get('LOCAL_DB_PORT' if LOCAL else 'LIVE_DB_PORT', os.environ.get('DB_PORT', '5432')),
         'TEST': {
             'NAME': 'test_db'
         }
@@ -102,25 +102,16 @@ DATABASES = {
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator', },
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator', },
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator', },
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator', },
 ]
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'America/Los_Angeles'
+LANGUAGE_CODE = os.environ.get('LANGUAGE_CODE', 'en-us')
+TIME_ZONE = os.environ.get('TIME_ZONE', 'America/Los_Angeles')
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
@@ -146,14 +137,17 @@ admin_ids = ADMIN_ID.split((','))
 ADMINS = [(ea, f"{ea}@{DOMAIN}") for ea in admin_ids]
 manager_ids = os.environ.get('MANAGER_ID', '').split(',')
 MANAGERS = [(ea, f"{ea}@{DOMAIN}") for ea in manager_ids if ea]
-MANAGERS.extend(ADMINS)  # TODO: Create a flag in ENV settings to decide if all ADMINS are also MANAGERS
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', ADMINS[0][1])  # TODO: ? Different process needed?
-EMAIL_HOST = os.environ.get('EMAIL_HOST')
-EMAIL_PORT = os.environ.get('EMAIL_PORT')
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
-EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS')
-EMAIL_USE_SSL = os.environ.get('EMAIL_USE_SSL')
+EMAIL_ADMIN_ARE_MANAGERS = strtobool(os.environ.get('EMAIL_ADMIN_ARE_MANAGERS', 'False'))
+if EMAIL_ADMIN_ARE_MANAGERS:
+    MANAGERS.extend(ADMINS)
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', ADMINS[0][1])
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'localhost')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '25'))
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+EMAIL_USE_TLS = strtobool(os.environ.get('EMAIL_USE_TLS', 'False'))
+EMAIL_USE_SSL = strtobool(os.environ.get('EMAIL_USE_SSL', 'False'))
+EMAIL_SUBJECT_PREFIX = '[' + os.environ.get('EMAIL_ADMIN_PREFIX', 'Django') + '] '
 
 if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
