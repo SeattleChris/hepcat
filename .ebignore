@@ -6,6 +6,7 @@ mockup/
 env/old/
 .env
 .env_template
+.ebextensions/*.template
 *.md
 .eslintignore
 .eslintrc
