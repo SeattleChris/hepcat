@@ -68,7 +68,7 @@
 - [s] Stretch Goal. Not for current feature plan.
 
 Current Status:
-2020-02-21 18:27:43
+2020-02-22 01:51:49
 <!-- Ctrl-Shift-I to generate timestamp -->
 
 ### Deployment on AWS
@@ -78,8 +78,12 @@ Current Status:
 - [x] Setup application to work with local DB
 - [x] Deploy application without database setup (to EC2)
 - [ ] Setup Elastic Beanstalk with a Database (DB) Instance
-  - [ ] Temp solution: DB instance deleted when environment terminated
+  - [x] Temp solution: DB instance deleted when environment terminated
   - [ ] Setup [Amazon RDS](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/AWSHowTo.RDS.html)
+- [ ] Setup Static files
+  - [ ] Temp solution: static files in the EC2 server
+  - [ ] Better solution: [use S3](https://realpython.com/deploying-a-django-app-to-aws-elastic-beanstalk/#static-files)
+  - [ ] [Use package for S3](https://django-storages.readthedocs.io/en/latest/index.html)
 
 ### Payment Processing
 
