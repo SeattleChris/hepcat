@@ -150,6 +150,8 @@ class UserHC(AbstractUser):
     """ This will be the custom Users model for the site
         Inherits from: AbstractUser, AbstractBaseUser, models.Model, ModelBase, ...
     """
+
+    # is_superuser exists from inherited models.
     is_student = models.BooleanField('student', default=True)
     is_teacher = models.BooleanField('teacher', default=False)
     is_admin = models.BooleanField('admin', default=False)

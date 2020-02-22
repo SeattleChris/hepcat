@@ -81,9 +81,12 @@ Current Status:
   - [x] Temp solution: DB instance deleted when environment terminated
   - [ ] Setup [Amazon RDS](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/AWSHowTo.RDS.html)
 - [ ] Setup Static files
-  - [ ] Temp solution: static files in the EC2 server
+  - [c] Temp solution: static files in the EC2 server
   - [ ] Better solution: [use S3](https://realpython.com/deploying-a-django-app-to-aws-elastic-beanstalk/#static-files)
   - [ ] [Use package for S3](https://django-storages.readthedocs.io/en/latest/index.html)
+  - [ ] Change PayPal and Stripe secrets
+  - [ ] Change EMAIL_HOST_PASSWORD, maybe EMAIL_HOST_USER
+  - [x] Change SECRET_KEY
 
 ### Payment Processing
 

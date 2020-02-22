@@ -1,0 +1,27 @@
+option_settings:
+  aws:elasticbeanstalk:application:environment:
+    "PYTHONPATH": "/opt/python/current/app/web:$PYTHONPATH"
+    SECRET_KEY: "" # Alphanumeric and _ . : / = + \ - @
+    DEBUG: "False"
+    LIVE_ALLOWED_HOSTS: "<resource>.<region>.elasticbeanstalk.com"
+    SUPERUSER_PASS: ""
+    EMAIL_ADMIN_ID: "admin"
+    EMAIL_DOMAIN: "website.com"
+    EMAIL_HOST: "smtp.website.com"
+    EMAIL_PORT: 587
+    EMAIL_HOST_USER: "test@website.com"
+    EMAIL_HOST_PASSWORD: ""
+    EMAIL_USE_TLS: "False"
+    EMAIL_USE_SSL: "False"
+    EMAIL_ADMIN_PREFIX: "Django"
+    EMAIL_ADMIN_ARE_MANAGERS: "True"
+    STRIPE_PUBLIC_KEY: ""
+    STRIPE_KEY: ""
+    PAYPAL_BUYER: "<user>-buyer@<domain>"
+    PAYPAL_EMAIL: "<user>-facilitator@<domain>"
+    PAYPAL_CLIENT_ID: ""
+    PAYPAL_SECRET: ""
+    DEFAULT_CLASS_PRICE: 90.0
+    DEFAULT_PRE_DISCOUNT: 5.0
+    MULTI_DISCOUNT: 10.0
+    DJANGO_SETTINGS_MODULE: "<app_name>.settings"
