@@ -23,7 +23,6 @@ SECRET_KEY = os.environ.get('SECRET_KEY', None)
 DEBUG = strtobool(os.environ.get('DEBUG', 'False'))
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS' if LOCAL else 'LIVE_ALLOWED_HOSTS', '').split()
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -141,13 +140,15 @@ EMAIL_DOMAIN = os.environ.get('EMAIL_DOMAIN', 'localhost')
 EMAIL_ADMIN_ID = os.environ.get('EMAIL_ADMIN_ID', 'webmaster')
 admin_ids = EMAIL_ADMIN_ID.split((','))
 ADMINS = [(ea, f"{ea}@{EMAIL_DOMAIN}") for ea in admin_ids]
+print('============ admins ============')
+print(ADMINS)
 manager_ids = os.environ.get('EMAIL_MANAGER_ID', '').split(',')
 MANAGERS = [(ea, f"{ea}@{EMAIL_DOMAIN}") for ea in manager_ids if ea]
 EMAIL_ADMIN_ARE_MANAGERS = strtobool(os.environ.get('EMAIL_ADMIN_ARE_MANAGERS', 'False'))
 if EMAIL_ADMIN_ARE_MANAGERS:
     MANAGERS.extend(ADMINS)
 DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_DEFAULT_FROM', ADMINS[0][1])
-EMAIL_HOST = os.environ.get('EMAIL_HOST', ALLOWED_HOSTS[0])
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'localhost')
 EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '25'))
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
@@ -177,7 +178,7 @@ PAYPAL_EMAIL = os.environ.get('PAYPAL_EMAIL', None)
 PAYPAL_CLIENT_ID = os.environ.get('PAYPAL_CLIENT_ID', None)
 PAYPAL_SECRET = os.environ.get('PAYPAL_SECRET', None)
 PAYPAL_URL = os.environ.get('PAYPAL_URL', 'https://api.sandbox.paypal.com')  # https://api.paypal.com for production
-PAYMENT_HOST = os.environ.get('PAYMENT_HOST', ALLOWED_HOSTS[0])
+PAYMENT_HOST = os.environ.get('PAYMENT_HOST', 'localhost')
 PAYMENT_USES_SSL = False
 PAYMENT_MODEL = 'classwork.Payment'
 PAYMENT_VARIANTS = {
