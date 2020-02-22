@@ -4,8 +4,9 @@
 test/
 mockup/
 env/old/
+.env
+.env_template
 *.md
 .eslintignore
 .eslintrc
 .editorconfig
-.env_template
