@@ -1,0 +1,11 @@
+.git/
+.vscode/
+.idea/
+test/
+mockup/
+env/old/
+*.md
+.eslintignore
+.eslintrc
+.editorconfig
+.env_template
