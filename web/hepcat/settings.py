@@ -140,8 +140,6 @@ EMAIL_DOMAIN = os.environ.get('EMAIL_DOMAIN', 'localhost')
 EMAIL_ADMIN_ID = os.environ.get('EMAIL_ADMIN_ID', 'webmaster')
 admin_ids = EMAIL_ADMIN_ID.split((','))
 ADMINS = [(ea, f"{ea}@{EMAIL_DOMAIN}") for ea in admin_ids]
-print('============ admins ============')
-print(ADMINS)
 manager_ids = os.environ.get('EMAIL_MANAGER_ID', '').split(',')
 MANAGERS = [(ea, f"{ea}@{EMAIL_DOMAIN}") for ea in manager_ids if ea]
 EMAIL_ADMIN_ARE_MANAGERS = strtobool(os.environ.get('EMAIL_ADMIN_ARE_MANAGERS', 'False'))
