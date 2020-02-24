@@ -84,9 +84,10 @@ Current Status:
   - [x] Temp solution: static files in the EC2 server
   - [ ] Better solution: [use S3](https://realpython.com/deploying-a-django-app-to-aws-elastic-beanstalk/#static-files)
   - [ ] [Use package for S3](https://django-storages.readthedocs.io/en/latest/index.html)
+- [ ] Setup a superuser account command on deploy.
+- [ ] Check if Media files are working, or should be setup like static (02_django.config)
 - [ ] Change PayPal and Stripe secrets
 - [ ] Change EMAIL_HOST_PASSWORD, maybe EMAIL_HOST_USER
-- [ ] Setup a superuser account command on deploy.
 - [x] Change SECRET_KEY
 
 ### Payment Processing
