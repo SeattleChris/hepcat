@@ -114,12 +114,14 @@ Current Status:
 - [c] Mark All associated Registration models when payment captured in full.
 - [ ] Handle partial payment structure, especially if multi-class discount was given.
 - [c] Update multi-class discount based on Subject/ClassOffer settings
-- [ ] Instead of field saying 'billing_country_area' it should say 'State'
-  - [ ] Simple fix: Change property to state, but modify when authorizing payments
-  - [ ] Find some override: Displays as state, but tracks as field name.
-  - [ ] Fix in fields list (add 'state'), then clean_state turns into field name
-  - [ ] JS changes display based on country code or other field inputs
-  - [ ] Create a Mixin: somehow fixes it whenever it comes up
+- [x] Instead of field saying 'billing_country_area' it should say 'State'
+  - [n] Simple fix: Change property to state, but modify when authorizing payments
+  - [x] Use verbose_name: Displays as state, but tracks as field name.
+  - [n] Fix in fields list (add 'state'), then clean_state turns into field name
+  - [n] JS changes display based on country code or other field inputs
+  - [x] Use help_text: Gives extra variations of state, territory, province and zip vs postal code.
+  - [n] Create a Mixin: somehow fixes it whenever it comes up
+- [ ] Update verbose_name and help_text in users/models.py
 
 ## Email Features
 

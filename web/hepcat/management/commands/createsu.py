@@ -24,7 +24,7 @@ class Command(BaseCommand):
         if not User.objects.filter(email=email).exists():
             try:
                 user = User.objects.create_superuser(username, email, password)
-                self.stdout.write(user)
+                self.stdout.write(user.username)
             except Exception as e:
                 self.stderr.write(f"Error: {e} ")
         else:

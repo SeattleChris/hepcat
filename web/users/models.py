@@ -23,7 +23,8 @@ class UserManagerHC(UserManager):
     # from Django's UserManager
     # use_in_migrations = True
 
-    def normalize_email(cls, email):
+    @staticmethod
+    def normalize_email(email):
         """ While uppercase characters are technically allowed for the username
             portion of an email address, we are deciding to not allow uppercase
             characters with the understanding that many email systems do not
@@ -42,48 +43,67 @@ class UserManagerHC(UserManager):
             email = email_name.casefold() + '@' + domain_part.casefold()
         return email
 
-    def set_username(self, username=None, email=None, password=None, **extra_fields):
-        """ This method is an inserted intermediary step before the inherited
-            self._create_user method and after the normal user creation
-            called methods of either create_user or create_superuser
+    def set_user(self, username=None, email=None, password=None, **extra_fields):
+        """ Called for all user creation methods (create_user, create_superuser).
+            Email addresses and login usernames are normalized, allowing no uppercase characters.
+            A user must have a unique login username (usually their email address).
+            Unless the 'uses_email_username' was explicitly set to False, we will use the email as username.
+            If a user with that email already exists (or 'uses_email_username' is False), and no username was provided,
+            then it will create one based on their 'first_name' and 'last_name'.
+            Raises Error if a unique username cannot be formed, or otherwise cannot create the user.
+            Returns a user instance created with the inherited self._create_user method if successful.
         """
         from django.db.utils import IntegrityError
-        print('===== UserManagerHC.set_username was called ========')
-        email = self.normalize_email(email)
-        user = None
-        if extra_fields.get('uses_email_username') is True:
-            if email is None:
-                raise ValueError('You must either have a unique email address, or set a username')
-            username = email
+        print('===== UserManagerHC.set_user was called ========')
+        user, message = None, ''
+        if not email:
+            message += "An email address is preferred to ensure confirmation, "
+            message += "but we can create an account without one. "
+            if extra_fields.setdefault('uses_email_username', False):
+                message += "You requested to use email as your login username, but did not provide an email address. "
+                raise ValueError(message)
+        else:
+            email = self.normalize_email(email)
+
+        if extra_fields.get('uses_email_username', True):
+            attempt_username = email
+            try:
+                user = self._create_user(attempt_username, email, password, **extra_fields)
+            except IntegrityError:
+                message += "A unique email address is preferred, but a user already exists with that email address. "
+                extra_fields['uses_email_username'] = False
+        if extra_fields.get('uses_email_username') is False:
+            username = username or extra_fields.get('first_name', '') + '_' + extra_fields.get('last_name', '')
+            if username == '_':
+                message += "If you are not using your email as your username/login, "
+                message += "then you must either set a username or provide a first and last name. "
+                raise ValueError(message)
+            username = username.casefold()
             try:
                 user = self._create_user(username, email, password, **extra_fields)
             except IntegrityError:
-                extra_fields.setdefault('uses_email_username', False)
-        if extra_fields.get('uses_email_username') is False:
-            temp = extra_fields.get('first_name') + '_' + extra_fields.get('last_name')
-            username = temp.casefold()
-            user = self._create_user(username, email, password, **extra_fields)
+                message += "A user already exists with that username, or matching first and last name. "
+                message += "Please provide some form of unique user information (email address, username, or name). "
+                raise ValueError(message)
         return user
 
     def create_user(self, username=None, email=None, password=None, **extra_fields):
-        print('================================')
-        print('UserManagerHC method create_user method was called')
-        extra_fields.setdefault('is_superuser', False)
+        print('================== UserManagerHC.create_user ========================')
+        extra_fields['is_superuser'] = False
         if extra_fields.get('is_teacher') is True or extra_fields.get('is_admin') is True:
-            extra_fields.setdefault('is_staff', True)
+            extra_fields['is_staff'] = True
+            extra_fields['is_student'] = False
         else:
-            extra_fields.setdefault('is_staff', False)
-            extra_fields.setdefault('is_student', True)
-        return self.set_username(username, email, password, **extra_fields)
+            extra_fields['is_staff'] = False
+            extra_fields['is_student'] = True
+        return self.set_user(username, email, password, **extra_fields)
 
     def create_superuser(self, username, email, password, **extra_fields):
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
-        if extra_fields.get('is_staff') is not True:
+        if not extra_fields.setdefault('is_staff', True):
             raise ValueError('Superuser must have is_staff=True.')
-        if extra_fields.get('is_superuser') is not True:
+        if not extra_fields.setdefault('is_superuser', True):
             raise ValueError('Superuser must have is_superuser=True.')
-        return self.set_username(username, email, password, **extra_fields)
+        return self.set_user(username, email, password, **extra_fields)
 
     def find_or_create_for_anon(self, email=None, possible_users=None, **kwargs):
         """ This is called when someone registers when they are not logged in.
@@ -111,7 +131,6 @@ class UserManagerHC(UserManager):
             # create a new user with this data
             print('----- Creating a new user! -----')
             return self.create_user(self, email=email, **kwargs)
-
         # end find_or_create_for_anon
 
     def find_or_create_by_name(self, email=None, possible_users=None, **kwargs):
@@ -160,7 +179,11 @@ class UserHC(AbstractUser):
     billing_address_2 = models.CharField(max_length=255, blank=True)
     billing_city = models.CharField(max_length=255, blank=True)
     billing_country_area = models.CharField(max_length=2, default='WA', blank=True)  # State, if in US
+    # verbose_name='State'
+    # help_text='State, Territory, or Province'
     billing_postcode = models.CharField(max_length=255, blank=True)
+    # verbose_name='Zip Code'
+    # help_text='Zip or Postal Code'
     billing_country_code = models.CharField(max_length=2, default='US', blank=True)
     # # user.profile holds the linked profile for this user.
     objects = UserManagerHC()
