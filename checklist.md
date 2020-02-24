@@ -5,22 +5,22 @@
 | Complete           | Task                                      |
 | ------------------ |:-----------------------------------------:|
 |                    | **Start of Project**                      |
-| :heavy_check_mark: | Research Django and needed packages. Overview site structure and features |
-| :heavy_check_mark: | Setup: Docker, postgresql, Django, core packages, DB migrations, proof-of-life site |
+| :heavy_check_mark: | Research Django and needed packages. Overview site structure and features             |
+| :heavy_check_mark: | Setup: Docker, postgresql, Django, core packages, DB migrations, proof-of-life site   |
 |                    | **Milestone 1 Completion**                |
-| :heavy_check_mark: | Models: User model module - student, teacher, admin.                |
-| :heavy_check_mark: | Models: Subject, ClassOffer, Session - core product structure and inter-connections |
-| :heavy_check_mark: | Models: Resource - allows both temporary or repeated resources |
-| :heavy_check_mark: | Models: Profile & connected Resources - students get resources from their classoffers |
-| :heavy_check_mark: | Admin Views: interface for Subject structure and planning specific ClassOffers.
-| :heavy_check_mark: | Admin Views: interface for Session - planning future products, assigning publish times.
-| :heavy_check_mark: | Admin Views: teacher/admin interface assigning resources (populates to students Profile)|
-| :heavy_check_mark: | User Views: ClassOffer list (only currently open to join are shown), Register (join class)
+| :heavy_check_mark: | Models: User model module - student, teacher, admin.                                       |
+| :heavy_check_mark: | Models: Subject, ClassOffer, Session - core product structure and inter-connections        |
+| :heavy_check_mark: | Models: Resource - allows both temporary or repeated resources                             |
+| :heavy_check_mark: | Models: Profile & connected Resources - students get resources from their classoffers      |
+| :heavy_check_mark: | Admin Views: interface for Subject structure and planning specific ClassOffers.            |
+| :heavy_check_mark: | Admin Views: interface for Session - planning future products, assigning publish times.    |
+| :heavy_check_mark: | Admin Views: teacher/admin interface assigning resources (populates to students Profile)   |
+| :heavy_check_mark: | User Views: ClassOffer list (only currently open to join are shown), Register (join class) |
 | :heavy_check_mark: | User Views: Profile for user - see resources granted them, and class history.
 |                    | **Milestone 2 Completion**           |
-| :heavy_check_mark: | Models: Location - connect locations to ClassOffer |
-| :heavy_check_mark: | User Views: AboutUs, ClassOffer details, Locations (directions) - core structure stubbed out |
-| :heavy_check_mark: | Admin Views: Admin can assign class credit to any student (tracked in student Profile) |
+| :heavy_check_mark: | Models: Location - connect locations to ClassOffer                                         |
+| :heavy_check_mark: | User Views: AboutUs, ClassOffer details, Locations (directions) - core structure stubbed out|
+| :heavy_check_mark: | Admin Views: Admin can assign class credit to any student (tracked in student Profile)      |
 | :heavy_check_mark: | Existing user joining a ClassOffer: Prompted to login. Catches if they already have account |
 | :heavy_check_mark: | User onboarding: Can join ClassOffer, account created afterwards. No friction onboarding    |
 | :heavy_check_mark: | User onboarding: Existing user can sign-up and/or pay for other users (existing or not)     |
@@ -68,7 +68,7 @@
 - [s] Stretch Goal. Not for current feature plan.
 
 Current Status:
-2020-02-23 17:53:44
+2020-02-24 02:18:30
 <!-- Ctrl-Shift-I to generate timestamp -->
 
 ### Deployment on AWS
@@ -84,11 +84,15 @@ Current Status:
   - [x] Temp solution: static files in the EC2 server
   - [ ] Better solution: [use S3](https://realpython.com/deploying-a-django-app-to-aws-elastic-beanstalk/#static-files)
   - [ ] [Use package for S3](https://django-storages.readthedocs.io/en/latest/index.html)
-- [ ] Setup a superuser account command on deploy.
-- [ ] Check if Media files are working, or should be setup like static (02_django.config)
+- [x] Setup a superuser account command on deploy.
+- [ ] Get Media files working like static (02_django.config)
 - [ ] Change PayPal and Stripe secrets
 - [ ] Change EMAIL_HOST_PASSWORD, maybe EMAIL_HOST_USER
 - [x] Change SECRET_KEY
+- [ ] Decide make migrations approach
+  - [ ] Always do the command locally, then when pushing to deployed it does the migrations
+  - [ ] Make it another command in the `03_db-and-static.config` file.
+- [ ] Get local dev setup to connect to live DB server.
 
 ### Payment Processing
 
