@@ -68,7 +68,7 @@
 - [s] Stretch Goal. Not for current feature plan.
 
 Current Status:
-2020-02-22 01:51:49
+2020-02-23 17:53:44
 <!-- Ctrl-Shift-I to generate timestamp -->
 
 ### Deployment on AWS
@@ -81,12 +81,13 @@ Current Status:
   - [x] Temp solution: DB instance deleted when environment terminated
   - [ ] Setup [Amazon RDS](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/AWSHowTo.RDS.html)
 - [ ] Setup Static files
-  - [c] Temp solution: static files in the EC2 server
+  - [x] Temp solution: static files in the EC2 server
   - [ ] Better solution: [use S3](https://realpython.com/deploying-a-django-app-to-aws-elastic-beanstalk/#static-files)
   - [ ] [Use package for S3](https://django-storages.readthedocs.io/en/latest/index.html)
-  - [ ] Change PayPal and Stripe secrets
-  - [ ] Change EMAIL_HOST_PASSWORD, maybe EMAIL_HOST_USER
-  - [x] Change SECRET_KEY
+- [ ] Change PayPal and Stripe secrets
+- [ ] Change EMAIL_HOST_PASSWORD, maybe EMAIL_HOST_USER
+- [ ] Setup a superuser account command on deploy.
+- [x] Change SECRET_KEY
 
 ### Payment Processing
 
@@ -134,6 +135,9 @@ Current Status:
 ## General Site
 
 - [ ] Layout student Profile Resources & class history
+- [ ] Login Page should say email instead of username
+- [ ] On Profile, add link to update profile/user details (billing, email, etc)
+- [ ] Hi message should use name instead of username (email)
 - [ ] Profile model: update highest_level to not include "current" classoffer.
 - [ ] Auto-Login new user if created on their first ClassOffer sign up.
 - [ ] User: create update view and method
