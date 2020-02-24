@@ -27,32 +27,34 @@
 | :heavy_check_mark: | Admin Views: Checkin - Each page for a day/location. Sections/class. Sorted by student name |
 | :heavy_check_mark: | Metrics: Categorize students on their class progression - completed Beg and/or L2? (Profile)|
 | :heavy_check_mark: | Design: Home page / landing site design. General pages layout design                        |
-|                    | **Milestone 3 Completion**           |
-|                    | Payment Processing: PayPal integration       |
-|                    | Email Features: send register confirmations, weekly class emails         |
+|                    | **Milestone 3 Completion**                                                                  |
+| :heavy_check_mark: | Payment Processing: PayPal integration (sandbox)                                            |
+|                    | Deployment Setup: Get App & DB on AWS (probably using Elastic Beanstalk)                    |
+|                    | Email Features: send register confirmations, weekly class emails                            |
+|                    | Payment & Student Sign Up: PayPal live working, email confirmations, added to checkin       |
 |                    | User Views: more filled out - student Profile structure, visual & layout of ClassOffers     |
 |                    | User Views: About Us - show profile info for only teachers and staff, plus general business |
 |                    | User Views: Contact Us (including contact form), Info - general site resources, sub-pages   |
 |                    | User Views: General site clean up before first launch                                       |
 |                    | Deploy Version 1.0: List classes, register, payment, manage resources, user onboarding      |
-|                    | **Launch Version 1.0**           |
-|                    | **Upcoming Features**           |
-|                    | Interest tracking: update Profile model, forms for students, prompts sent to users.  |
-|                    | Social Media connections on website: FB business page, FB group page, Twitter, etc.        |
-|                    | Payment Processing: Square integration - on-site (in person) payments       |
-|                    | Payment Processing: Stripe integration       |
+|                    | **Launch Version 1.0**                                                                      |
+|                    | **Upcoming Features**                                                                       |
+|                    | Interest tracking: update Profile model, forms for students, prompts sent to users.         |
+|                    | Social Media connections on website: FB business page, FB group page, Twitter, etc.         |
+|                    | Payment Processing: Square integration - on-site (in person) payments                       |
+|                    | Payment Processing: Stripe integration                                                      |
 |                    | User onboarding: integrate user accounts with Facebook/Google/etc login                     |
-|                    | Email Features: Manage general customer emailing list        |
+|                    | Email Features: Manage general customer emailing list                                       |
 |                    | Metrics: Update class progression - include repeated L2, and higher levels                  |
-|                    | Metrics: Typical follow-through rates in expected progression (at each step) |
+|                    | Metrics: Typical follow-through rates in expected progression (at each step)                |
 |                    | Email Features: Better targeted messaging (depending on student's classoffer history)       |
-|                    | Metrics: Identify groups outside of expected class progression |
-|                    | Metrics: Identify customers "dropping off" to focus to re-gain them |
+|                    | Metrics: Identify groups outside of expected class progression                              |
+|                    | Metrics: Identify customers "dropping off" to focus to re-gain them                         |
 |                    | Email Features: Better targeted messaging (depending on other metrics analysis)             |
 |                    | Email Features: improved weekly class emails, new resources available on profile, etc.      |
-|                    | Email Features: Manage "contact us" messaging history        |
+|                    | Email Features: Manage "contact us" messaging history                                       |
 |                    | Metrics: Identify influencer customers - who improves likelihood of others also joining     |
-|                    | Metrics Exploration: Are there other statistical groupings? |
+|                    | Metrics Exploration: Are there other statistical groupings?                                 |
 
 ## Checklist
 
@@ -61,12 +63,31 @@
 - [x] Completed.
 - [N] No: does not work or decided against.
 - [ ] Still needs to be done.
+- [c] Likely completed, but needs to be Confirmed.
 - [?] Unsure if needed.
 - [s] Stretch Goal. Not for current feature plan.
 
 Current Status:
-2020-01-30 14:17:45
+2020-02-23 17:53:44
 <!-- Ctrl-Shift-I to generate timestamp -->
+
+### Deployment on AWS
+
+- [x] Setup Elastic Beanstalk with EC2 Instance
+- [x] Refactor old docker-compose to plain Django app setup
+- [x] Setup application to work with local DB
+- [x] Deploy application without database setup (to EC2)
+- [ ] Setup Elastic Beanstalk with a Database (DB) Instance
+  - [x] Temp solution: DB instance deleted when environment terminated
+  - [ ] Setup [Amazon RDS](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/AWSHowTo.RDS.html)
+- [ ] Setup Static files
+  - [x] Temp solution: static files in the EC2 server
+  - [ ] Better solution: [use S3](https://realpython.com/deploying-a-django-app-to-aws-elastic-beanstalk/#static-files)
+  - [ ] [Use package for S3](https://django-storages.readthedocs.io/en/latest/index.html)
+- [ ] Change PayPal and Stripe secrets
+- [ ] Change EMAIL_HOST_PASSWORD, maybe EMAIL_HOST_USER
+- [ ] Setup a superuser account command on deploy.
+- [x] Change SECRET_KEY
 
 ### Payment Processing
 
@@ -78,9 +99,9 @@ Current Status:
   - [ ] ?Should a single User account be allowed secondary associated email addresses?
 - [x] Fix: correctly identify if paid_by vs user signed up for class are different.
 - [x] Can take authorization, then capture amount through PayPal
-- [ ] Can update student and checkin records with the completed payment amount
+- [c] Can update student and checkin records with the completed payment amount
 - [ ] If payment amount refunded or revoked, our records are also updated
-- [ ] Checkin sheet is automatically updated with all online payment processes
+- [c] Checkin sheet is automatically updated with all online payment processes
 - [ ] Manual process for managing on-site payments (with Square, Check, Cash)
 - [ ] Login to newly created User account after they pay for their first ClassOffer
 - [s] Automatically manage on-site credit card (via Square?) processing
@@ -89,9 +110,9 @@ Current Status:
 - [x] Update price fields to auto-populate based on class type
 - [ ] Maybe combine Checkin view with ClassOfferListView - diff in sort and templates.
 - [ ] Add items as Many-to-Many field to make Payments easier to use a orders.
-- [ ] Mark All associated Registration models when payment captured in full.
+- [c] Mark All associated Registration models when payment captured in full.
 - [ ] Handle partial payment structure, especially if multi-class discount was given.
-- [ ] Update multi-class discount based on Subject/ClassOffer settings
+- [c] Update multi-class discount based on Subject/ClassOffer settings
 - [ ] Instead of field saying 'billing_country_area' it should say 'State'
   - [ ] Simple fix: Change property to state, but modify when authorizing payments
   - [ ] Find some override: Displays as state, but tracks as field name.
@@ -114,6 +135,9 @@ Current Status:
 ## General Site
 
 - [ ] Layout student Profile Resources & class history
+- [ ] Login Page should say email instead of username
+- [ ] On Profile, add link to update profile/user details (billing, email, etc)
+- [ ] Hi message should use name instead of username (email)
 - [ ] Profile model: update highest_level to not include "current" classoffer.
 - [ ] Auto-Login new user if created on their first ClassOffer sign up.
 - [ ] User: create update view and method
