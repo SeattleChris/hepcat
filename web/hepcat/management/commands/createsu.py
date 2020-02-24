@@ -7,13 +7,17 @@ User = get_user_model()
 
 
 class Command(BaseCommand):
+    """ Allows the creation of a superuser with a password set in the environment variables. """
 
     def handle(self, *args, **options):
+        self.stderr.write("================================================")
+        self.stderr.write(f"========== Make SUPERUSER =====================")
         if not User.objects.filter(is_superuser="t").exists():
             username = os.environ.get('SUPERUSER_NAME', settings.ADMINS[0][0])
             email = os.environ.get('SUPERUSER_EMAIL', settings.ADMINS[0][1])
             password = os.environ.get('SUPERUSER_PASS', None)
-            self.stderr.write("================================================")
-            self.stderr.write(f"========== Make SUPERUSER =====================")
             self.stderr.write(f"username: {username}, email: {email}, pw: {password}")
-            User.objects.create_superuser(username, email, password)
+            user = User.objects.create_superuser(username, email, password)
+            self.stderr.write(user)
+        else:
+            self.stderr.write("SuperUser already existed. ")
