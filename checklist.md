@@ -140,16 +140,30 @@ Current Status:
 - [s] Manage "Contact Us" messaging history
 - [s] Manage general student email subscriptions
 
-## General Site
+## Style & Layout
 
 - [ ] Layout student Profile Resources & class history
-- [ ] Registration Form should have initial values for user that is logged in.
-- [ ] Registration Form should have initial value for state based on the User model default.
+- [ ] Improve Class Sign Up - Registration form.
+- [ ] Update instructions and method for "If you want to register a different person then ..."
+  - [x] Registration Form should have initial values for user that is logged in.
+  - [ ] Registration Form should have initial value for state based on the User model default.
+  - [ ] CSS Style of save/submit button
+  - [ ] Alignment of input fields
+    - [ ] Field boxes all line up, field names on left with align right
+    - [ ] ? Address formatted like normal address lines?
+    - [ ] Move returning student question lower in form
+    - [ ] Field 'help_text' adjusted in CSS
+      - [ ] less prominent text (smaller? lighter font?)
+      - [ ] placed under the input box?
+
+## General Site
+
 - [ ] 'About Us' page should only show staff members.
 - [ ] Deal with when admin has no name (such as a superuser), it may break the 'About Us' page.
 - [ ] Login Page should say email instead of username
-- [ ] On Profile, add link to update profile/user details (billing, email, etc)
 - [ ] Hi message should use name instead of username (email)
+- [ ] On Profile, add link to update profile/user details (billing, email, etc)
+- [ ] Add content and connect to "Info" link button.
 - [ ] Profile model: update highest_level to not include "current" classoffer.
 - [ ] Auto-Login new user if created on their first ClassOffer sign up.
 - [ ] User: create update view and method

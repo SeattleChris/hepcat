@@ -268,7 +268,7 @@ class RegisterView(CreateView):
         initial['email'] = getattr(user, 'email', 'Email')
         initial['billing_address_1'] = getattr(user, 'billing_address_1', 'Street Address')
         initial['billing_address_2'] = getattr(user, 'billing_address_2', '')
-        initial['billing_country_area'] = getattr(user, 'billing_country_ara', 'WA')
+        initial['billing_country_area'] = getattr(user, 'billing_country_area', 'WA')
         # TODO: instead of 'WA' string, use whatever is the default value as set in the User model.
         initial['billing_postcode'] = getattr(user, 'billing_postcode', 'zipcode')
 
