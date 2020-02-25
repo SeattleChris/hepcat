@@ -175,17 +175,27 @@ class UserHC(AbstractUser):
     is_teacher = models.BooleanField('teacher', default=False)
     is_admin = models.BooleanField('admin', default=False)
     uses_email_username = models.BooleanField('Using Email', default=True)
-    billing_address_1 = models.CharField(max_length=255, blank=True)
-    billing_address_2 = models.CharField(max_length=255, blank=True)
-    billing_city = models.CharField(max_length=255, blank=True)
-    billing_country_area = models.CharField(max_length=2, default='WA', blank=True)  # State, if in US
-    # verbose_name='State'
-    # help_text='State, Territory, or Province'
-    billing_postcode = models.CharField(max_length=255, blank=True)
-    # verbose_name='Zip Code'
-    # help_text='Zip or Postal Code'
-    billing_country_code = models.CharField(max_length=2, default='US', blank=True)
-    # # user.profile holds the linked profile for this user.
+    billing_address_1 = models.CharField(verbose_name='Street Address (line 1)', max_length=255, blank=True)
+    billing_address_2 = models.CharField(verbose_name='Street Address (continued)', max_length=255, blank=True)
+    billing_city = models.CharField(verbose_name='City', max_length=255, blank=True)
+    billing_country_area = models.CharField(verbose_name='State', help_text='State, Territory, or Province', max_length=2, default='WA', blank=True)
+    billing_postcode = models.CharField(verbose_name='Zip Code', help_text='Zip or Postal Code', max_length=255, blank=True)
+    billing_country_code = models.CharField(verbose_name='Country', default='USA', max_length=255, blank=True)
+    # is_student = models.BooleanField('student', default=True)
+    # is_teacher = models.BooleanField('teacher', default=False)
+    # is_admin = models.BooleanField('admin', default=False)
+    # uses_email_username = models.BooleanField('Using Email', default=True)
+    # billing_address_1 = models.CharField(max_length=255, blank=True)
+    # billing_address_2 = models.CharField(max_length=255, blank=True)
+    # billing_city = models.CharField(max_length=255, blank=True)
+    # billing_country_area = models.CharField(max_length=2, default='WA', blank=True)  # State, if in US
+    # # verbose_name='State'
+    # # help_text='State, Territory, or Province'
+    # billing_postcode = models.CharField(max_length=255, blank=True)
+    # # verbose_name='Zip Code'
+    # # help_text='Zip or Postal Code'
+    # billing_country_code = models.CharField(max_length=2, default='US', blank=True)
+    # # # user.profile holds the linked profile for this user.
     objects = UserManagerHC()
 
     class Meta(AbstractUser.Meta):

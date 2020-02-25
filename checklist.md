@@ -89,10 +89,11 @@ Current Status:
 - [ ] Change PayPal and Stripe secrets
 - [ ] Change EMAIL_HOST_PASSWORD, maybe EMAIL_HOST_USER
 - [x] Change SECRET_KEY
-- [ ] Decide make migrations approach
-  - [ ] Always do the command locally, then when pushing to deployed it does the migrations
-  - [ ] Make it another command in the `03_db-and-static.config` file.
-- [ ] Get local dev setup to connect to live DB server.
+- [c] Decide make migrations approach
+  - [x] Always do the command locally, then when pushing to deployed it does the migrations
+  - [n] Make it another command in the `03_db-and-static.config` file.
+- [x] Get local dev setup to connect to live DB server.
+- [ ] Improve DB settings for local dev connecting to live DB server.
 
 ### Payment Processing
 

@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 
 import os
 from distutils.util import strtobool
+from pprint import pprint
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -97,12 +98,13 @@ else:
             'NAME': os.environ.get('LOCAL_DB_NAME' if LOCAL else 'LIVE_DB_NAME', os.environ.get('DB_NAME', 'postgres')),
             'USER': os.environ.get('LOCAL_DB_USER' if LOCAL else 'LIVE_DB_USER', os.environ.get('DB_USER', 'postgres')),
             'PASSWORD': os.environ.get('LOCAL_DB_PASS' if LOCAL else 'LIVE_DB_PASS', os.environ.get('DB_PASS', '')),
-            'TEST': {
-                'NAME': 'test_db'
-            }
+            # 'TEST': {
+            #     'NAME': 'test_db'
+            # }
         }
     }
-
+print('=============== Database Settings ========================')
+pprint(DATABASES)
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
 AUTH_PASSWORD_VALIDATORS = [
