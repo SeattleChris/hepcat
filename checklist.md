@@ -143,6 +143,8 @@ Current Status:
 ## General Site
 
 - [ ] Layout student Profile Resources & class history
+- [ ] Registration Form should have initial values for user that is logged in.
+- [ ] Registration Form should have initial value for state based on the User model default.
 - [ ] 'About Us' page should only show staff members.
 - [ ] Deal with when admin has no name (such as a superuser), it may break the 'About Us' page.
 - [ ] Login Page should say email instead of username
