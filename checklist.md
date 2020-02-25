@@ -143,6 +143,8 @@ Current Status:
 ## General Site
 
 - [ ] Layout student Profile Resources & class history
+- [ ] 'About Us' page should only show staff members.
+- [ ] Deal with when admin has no name (such as a superuser), it may break the 'About Us' page.
 - [ ] Login Page should say email instead of username
 - [ ] On Profile, add link to update profile/user details (billing, email, etc)
 - [ ] Hi message should use name instead of username (email)

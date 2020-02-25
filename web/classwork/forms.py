@@ -86,6 +86,13 @@ class RegisterForm(forms.ModelForm):
             'billing_country_area',
             'billing_postcode',
         )
+        labels = {
+            'billing_address_1': 'Street Address (line 1)',
+            'billing_address_2': 'Street Address (continued)',
+            'billing_city': 'City',
+            'billing_country_area': 'State (or Territory, or Province)',
+            'billing_postcode': 'Zipcode (or Postal Code)',
+        }
 
     field_order = [*new_fields, *Meta.fields]
     # Cleaning data is done by:
