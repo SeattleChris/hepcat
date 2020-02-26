@@ -66,15 +66,16 @@ class RegisterForm(forms.ModelForm):
     # class_choices = ClassOffer.objects.filter(session__in=decide_session())  # TODO: FIX HERE
     class_choices = ClassOffer.objects
     user_answers = (('', 'Please Select an Answer'), ('T', 'This is my first'), ('F', 'I am a returning student'),)
+    # payment_answers = (('F', 'Paid by the student named above'), ('T', 'Paid by someone other than student listed above'))
     # TODO: Change to CheckboxSelectMultiple and make sure it works
 
     new_user = forms.ChoiceField(label='Have you had classes with us before?', choices=(user_answers))
-    first_name = forms.CharField(max_length=User._meta.get_field('first_name').max_length)
-    last_name = forms.CharField(max_length=User._meta.get_field('last_name').max_length)
+    first_name = forms.CharField(label='First Name', max_length=User._meta.get_field('first_name').max_length)
+    last_name = forms.CharField(label='Last Name', max_length=User._meta.get_field('last_name').max_length)
     email = forms.CharField(max_length=User._meta.get_field('email').max_length, widget=forms.EmailInput())
     # password = forms.CharField(min_length=6, max_length=16, widget=forms.PasswordInput())
-    class_selected = forms.ModelMultipleChoiceField(queryset=class_choices)
-    paid_by_other = forms.BooleanField(required=False)
+    class_selected = forms.ModelMultipleChoiceField(label='Choose your class(es)', queryset=class_choices)
+    paid_by_other = forms.BooleanField(label='paid by a different person', required=False)
     new_fields = ['new_user', 'first_name', 'last_name', 'email', 'class_selected', 'paid_by_other']
 
     class Meta:
@@ -86,8 +87,42 @@ class RegisterForm(forms.ModelForm):
             'billing_country_area',
             'billing_postcode',
         )
+        labels = {
+            'billing_address_1': 'Street Address (line 1)',
+            'billing_address_2': 'Street Address (continued)',
+            'billing_city': 'City',
+            'billing_country_area': 'State',
+            'billing_postcode': 'Zip',
+        }
+        help_texts = {
+            'billing_country_area': 'State, Territory, or Province',
+            'billing_postcode': 'Zipcode, or Postal Code',
+        }
 
     field_order = [*new_fields, *Meta.fields]
+
+    # def get_initial(self):
+    #     print('========== RegistrationForm.get_initial ===================')
+    #     home_state = User.billing_country_area.default
+    #     print(home_state)
+    #     initial = super(RegisterForm, self).get_initial()
+    #     user = self.request.user
+    #     temp = {
+    #         'first_name': getattr(user, 'first_name', 'First Name'),
+    #         'last_name': getattr(user, 'last_name', 'Last Name'),
+    #         'email': getattr(user, 'email', 'Email'),
+    #         'billing_address_1': getattr(user, 'billing_address_1', 'Street Address'),
+    #         'billing_address_2': getattr(user, 'billing_address_2', ''),
+    #         'billing_country_area': getattr(user, 'billing_country_ara', 'WA'),
+    #         # TODO: instead of 'WA' string, use whatever is the default value as set in the User model.
+    #         'billing_postcode': getattr(user, 'billing_postcode', 'zipcode'),
+    #     }
+    #     # update initial field defaults with custom set default values:
+    #     initial.update(temp)
+    #     print(temp)
+    #     print('-----------------------------')
+    #     print(initial)
+    #     return initial
     # Cleaning data is done by:
     # 1) Field.clean() which will populate cleaned_data, and has 3 parts:
     #     a) to_python() to coerce datatype or raise ValidationError if impossible

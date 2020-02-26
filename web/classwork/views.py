@@ -222,17 +222,17 @@ class RegisterView(CreateView):
     #     print('================ as_view =================')
     #     return super().as_view(**initkwargs)
 
-    def dispatch(request, *args, **kwargs):
+    def dispatch(self, *args, **kwargs):
         print('================ dispatch =================')
-        return super(RegisterView, request).dispatch(*args, **kwargs)
+        return super(RegisterView, self).dispatch(*args, **kwargs)
 
-    def get(request, *args, **kwargs):
+    def get(self, *args, **kwargs):
         print('================ get =================')
-        return super(RegisterView, request).get(*args, **kwargs)
+        return super(RegisterView, self).get(*args, **kwargs)
 
-    def post(request, *args, **kwargs):
+    def post(self, *args, **kwargs):
         print('================ post =================')
-        return super().post(request, *args, **kwargs)
+        return super().post(self, *args, **kwargs)
 
     def put(self, *args, **kwargs):
         print('================ put =================')
@@ -258,12 +258,21 @@ class RegisterView(CreateView):
         class_choices = ClassOffer.objects.filter(session__in=decide_session(sess=sess, display_date=date))
         initial['class_choices'] = class_choices
         user = self.request.user
+        # home_state = User.billing_country_area.default
+        # print(home_state)
         initial['user'] = user
         print(user)
-        if not user.is_anonymous:
-            initial['first_name'] = user.first_name
-            initial['last_name'] = user.last_name
-            initial['email'] = user.email
+        print('------- Update initial Values --------------')
+        initial['first_name'] = getattr(user, 'first_name', 'First Name')
+        initial['last_name'] = getattr(user, 'last_name', 'Last Name')
+        initial['email'] = getattr(user, 'email', 'Email')
+        initial['billing_address_1'] = getattr(user, 'billing_address_1', 'Street Address')
+        initial['billing_address_2'] = getattr(user, 'billing_address_2', '')
+        initial['billing_country_area'] = getattr(user, 'billing_country_area', 'WA')
+        # TODO: instead of 'WA' string, use whatever is the default value as set in the User model.
+        initial['billing_postcode'] = getattr(user, 'billing_postcode', 'zipcode')
+
+        print(initial)
         return initial
 
     def get_prefix(self):
@@ -312,7 +321,7 @@ class RegisterView(CreateView):
         print(f'Form: {form}')
         return super().form_invalid(form)
 
-    def get_object(queryset=None):
+    def get_object(self, queryset=None):
         print('================ get_object =================')
         return super().get_object(queryset)
 
@@ -320,13 +329,13 @@ class RegisterView(CreateView):
     #     print('================ head =================')
     #     return super().head(**initkwargs)
 
-    def http_method_not_allowed(request, *args, **kwargs):
+    def http_method_not_allowed(self, *args, **kwargs):
         print('================ http_method_not_allowed =================')
-        return super(RegisterView, request).http_method_not_allowed(*args, **kwargs)
+        return super(RegisterView, self).http_method_not_allowed(*args, **kwargs)
 
-    def setup(request, *args, **kwargs):
+    def setup(self, *args, **kwargs):
         print('================ setup =================')
-        return super(RegisterView, request).setup(*args, **kwargs)
+        return super(RegisterView, self).setup(*args, **kwargs)
 
     def get_context_object_name(self, obj):
         print('================ get_context_object_name =================')
@@ -401,15 +410,15 @@ class PaymentProcessView(UpdateView):
     # end class PaymentProcessView
 
 
-def payment_details(request, id):
+def payment_details(self, id):
     """ The route for this function is called by django-payments after a registration is submitted. """
     print('========== views function - payment_details ==============')
     payment = get_object_or_404(get_payment_model(), id=id)
     try:
-        form = payment.get_form(data=request.POST or None)
+        form = payment.get_form(data=self.POST or None)
     except RedirectNeeded as redirect_to:
         print('---- payment_details redirected -------')
         return redirect(str(redirect_to))
     print('------ payment_details TemplateResponse ---------')
-    return TemplateResponse(request, 'payment/payment.html',
+    return TemplateResponse(self, 'payment/payment.html',
                             {'form': form, 'payment': payment})

@@ -30,17 +30,17 @@ class TempCreateView(CreateView):
     #     print('================ as_view =================')
     #     return super().as_view(**initkwargs)
 
-    def dispatch(request, *args, **kwargs):
+    def dispatch(self, *args, **kwargs):
         print('================ dispatch =================')
-        return super(TempCreateView, request).dispatch(*args, **kwargs)
+        return super(TempCreateView, self).dispatch(*args, **kwargs)
 
-    def get(request, *args, **kwargs):
+    def get(self, *args, **kwargs):
         print('================ get =================')
-        return super(TempCreateView, request).get(*args, **kwargs)
+        return super(TempCreateView, self).get(*args, **kwargs)
 
-    def post(request, *args, **kwargs):
+    def post(self, *args, **kwargs):
         print('================ post =================')
-        return super(TempCreateView, request).post(*args, **kwargs)
+        return super(TempCreateView, self).post(*args, **kwargs)
 
     def put(self, *args, **kwargs):
         print('================ put =================')
@@ -115,13 +115,13 @@ class TempCreateView(CreateView):
     #     print('================ head =================')
     #     return super().head(**initkwargs)
 
-    def http_method_not_allowed(request, *args, **kwargs):
+    def http_method_not_allowed(self, *args, **kwargs):
         print('================ http_method_not_allowed =================')
-        return super(TempCreateView, request).http_method_not_allowed(*args, **kwargs)
+        return super(TempCreateView, self).http_method_not_allowed(*args, **kwargs)
 
-    def setup(request, *args, **kwargs):
+    def setup(self, *args, **kwargs):
         print('================ setup =================')
-        return super(TempCreateView, request).setup(*args, **kwargs)
+        return super(TempCreateView, self).setup(*args, **kwargs)
 
     def get_context_object_name(self, obj):
         print('================ get_context_object_name =================')
