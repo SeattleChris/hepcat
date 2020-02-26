@@ -80,13 +80,11 @@ Current Status:
 - [ ] Setup Elastic Beanstalk with a Database (DB) Instance
   - [x] Temp solution: DB instance deleted when environment terminated
   - [ ] Setup [Amazon RDS](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/AWSHowTo.RDS.html)
-- [ ] Setup Static files
+- [x] Setup Static files
   - [x] Temp solution: static files in the EC2 server
-  - [ ] 
-  - [ ] Better solution: [use S3](https://realpython.com/deploying-a-django-app-to-aws-elastic-beanstalk/#static-files)
-    - [ ] Eventually leads to the following package.
-  - [ ] [Use package for S3](https://django-storages.readthedocs.io/en/latest/index.html)
-
+  - [x] Better solution: [use S3](https://realpython.com/deploying-a-django-app-to-aws-elastic-beanstalk/#static-files)
+  - [x] It seems many online sources suggest using the following package
+  - [x] [Use package for S3](https://django-storages.readthedocs.io/en/latest/index.html)
 - [x] Setup a superuser account command on deploy.
 - [ ] Get Media files working like static (02_django.config)
 - [ ] Change PayPal and Stripe secrets

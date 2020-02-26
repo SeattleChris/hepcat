@@ -123,28 +123,32 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images) https://docs.djangoproject.com/en/2.1/howto/static-files/
 USE_S3 = strtobool(os.environ.get('USE_S3', 'False'))
 if USE_S3:
-    # aws settings
     AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
     AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
     AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
     AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME')
-    AWS_DEFAULT_ACL = 'public-read'
+    AWS_DEFAULT_ACL = None  # 'public-read'
     # AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3-website-{AWS_S3_REGION_NAME}.amazonaws.com'
-    # AWS_S3_ENDPOINT_URL = AWS_S3_CUSTOM_DOMAIN
+    # ?# AWS_S3_ENDPOINT_URL = AWS_S3_CUSTOM_DOMAIN
+    AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
     AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
     # s3 static settings
-    AWS_LOCATION = 'www/static'
-    STATIC_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3-website-{AWS_S3_REGION_NAME}.amazonaws.com/{AWS_LOCATION}/'
-    STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    # BASE_S3_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3-website-{AWS_S3_REGION_NAME}.amazonaws.com'
+    STATIC_LOCATION = 'www/static'
+    STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/{STATIC_LOCATION}/'
+    # STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    STATICFILES_STORAGE = 'hepcat.storage_backends.StaticStorage'
+    PUBLIC_MEDIA_LOCATION = 'www/media'
+    MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/{PUBLIC_MEDIA_LOCATION}/'
+    DEFAULT_FILE_STORAGE = 'hepcat.storage_backends.PublicMediaStorage'
 else:
     STATIC_URL = '/static/'
     # STATIC_ROOT = os.path.join(BASE_DIR, 'static')
     STATIC_ROOT = os.path.join(BASE_DIR, '..', 'www', 'static')
-
+    MEDIA_URL = '/media/'  # Media files (as uploaded by users who have permission)
+    # MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+    MEDIA_ROOT = os.path.join(BASE_DIR, '..', 'www', 'media')
 STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
-MEDIA_URL = '/media/'  # Media files (as uploaded by users who have permission)
-# MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-MEDIA_ROOT = os.path.join(BASE_DIR, '..', 'www', 'media')
 
 # CUSTOM Additional Settings for this Project
 
