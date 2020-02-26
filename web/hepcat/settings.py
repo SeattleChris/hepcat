@@ -134,13 +134,13 @@ if USE_S3:
     AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
     # s3 static settings
     BASE_S3_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3-website-{AWS_S3_REGION_NAME}.amazonaws.com'
-    AWS_S3_CUSTOM_DOMAIN = BASE_S3_DOMAIN
+    # AWS_S3_CUSTOM_DOMAIN = BASE_S3_DOMAIN
     STATIC_LOCATION = 'www/static'
-    STATIC_URL = f'https://{BASE_S3_DOMAIN}/{STATIC_LOCATION}/'
+    # STATIC_URL = f'https://{BASE_S3_DOMAIN}/{STATIC_LOCATION}/'
     # STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
     STATICFILES_STORAGE = 'web.storage_backends.StaticStorage'
     PUBLIC_MEDIA_LOCATION = 'www/media'
-    MEDIA_URL = f'https://{BASE_S3_DOMAIN}/{PUBLIC_MEDIA_LOCATION}/'
+    # MEDIA_URL = f'https://{BASE_S3_DOMAIN}/{PUBLIC_MEDIA_LOCATION}/'
     DEFAULT_FILE_STORAGE = 'web.storage_backends.PublicMediaStorage'
 else:
     STATIC_URL = '/static/'
