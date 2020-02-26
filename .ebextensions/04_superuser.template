@@ -1,4 +1,0 @@
-container_commands:
-  03_createsu:
-    command: "source /opt/python/run/venv/bin/activate && python /opt/python/current/app/web/manage.py createsu"
-    leader_only: true

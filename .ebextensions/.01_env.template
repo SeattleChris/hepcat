@@ -29,3 +29,6 @@ option_settings:
     DEFAULT_PRE_DISCOUNT: 5.0
     MULTI_DISCOUNT: 10.0
     DJANGO_SETTINGS_MODULE: "<app_name>.settings"
+  aws:elasticbeanstalk:container:python:staticfiles:
+    "/static/": "www/static/"
+    "/media/": "www/media/"
