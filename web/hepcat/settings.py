@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     # 'django.contrib.sites',  # CUSTOM added for django-newsletter
     'django.contrib.messages',
+    'storages',  # CUSTOM django-storages for using AWS S3 for static files
     'django.contrib.staticfiles',
     # 'rest_framework',
     # 'rest_framework.authtoken',
@@ -123,11 +124,26 @@ USE_L10N = True
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images) https://docs.djangoproject.com/en/2.1/howto/static-files/
-STATIC_URL = '/static/'
-# STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-STATIC_ROOT = os.path.join(BASE_DIR, '..', 'www', 'static')
-# Media files (as uploaded by users who have permission)
-MEDIA_URL = '/media/'
+USE_S3 = strtobool(os.environ.get('USE_S3', 'False'))
+if USE_S3:
+    # aws settings
+    AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+    AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME')
+    AWS_DEFAULT_ACL = 'public-read'
+    AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+    AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
+    # s3 static settings
+    AWS_LOCATION = 'static'
+    STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_LOCATION}/'
+    STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+else:
+    STATIC_URL = '/static/'
+    # STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+    STATIC_ROOT = os.path.join(BASE_DIR, '..', 'www', 'static')
+
+STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
+MEDIA_URL = '/media/'  # Media files (as uploaded by users who have permission)
 # MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_ROOT = os.path.join(BASE_DIR, '..', 'www', 'media')
 

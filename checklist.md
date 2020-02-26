@@ -68,7 +68,7 @@
 - [s] Stretch Goal. Not for current feature plan.
 
 Current Status:
-2020-02-24 02:18:30
+2020-02-25 12:30:43
 <!-- Ctrl-Shift-I to generate timestamp -->
 
 ### Deployment on AWS
@@ -82,8 +82,11 @@ Current Status:
   - [ ] Setup [Amazon RDS](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/AWSHowTo.RDS.html)
 - [ ] Setup Static files
   - [x] Temp solution: static files in the EC2 server
+  - [ ] 
   - [ ] Better solution: [use S3](https://realpython.com/deploying-a-django-app-to-aws-elastic-beanstalk/#static-files)
+    - [ ] Eventually leads to the following package.
   - [ ] [Use package for S3](https://django-storages.readthedocs.io/en/latest/index.html)
+
 - [x] Setup a superuser account command on deploy.
 - [ ] Get Media files working like static (02_django.config)
 - [ ] Change PayPal and Stripe secrets
@@ -93,7 +96,7 @@ Current Status:
   - [x] Always do the command locally, then when pushing to deployed it does the migrations
   - [n] Make it another command in the `03_db-and-static.config` file.
 - [x] Get local dev setup to connect to live DB server.
-- [ ] Improve DB settings for local dev connecting to live DB server.
+- [ ] Security improvement - Fix DB security group settings far too open (allowing any local dev to connect)
 
 ### Payment Processing
 
