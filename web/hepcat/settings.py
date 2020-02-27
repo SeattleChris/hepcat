@@ -139,11 +139,11 @@ if USE_S3:
     AWS_LOCATION = 'www'
     STATICFILES_LOCATION = 'static'
     STATIC_URL = f'https://{BASE_S3_DOMAIN}/{AWS_LOCATION}/{STATICFILES_LOCATION}/'
-    # STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-    STATICFILES_STORAGE = 'web.storage_backends.StaticStorage'
-    MEDIAFILES_LOCATION = 'media'
-    MEDIA_URL = f'https://{BASE_S3_DOMAIN}/{AWS_LOCATION}/{MEDIAFILES_LOCATION}/'
-    DEFAULT_FILE_STORAGE = 'web.storage_backends.PublicMediaStorage'
+    STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    # STATICFILES_STORAGE = 'web.storage_backends.StaticStorage'
+    # MEDIAFILES_LOCATION = 'media'
+    # MEDIA_URL = f'https://{BASE_S3_DOMAIN}/{AWS_LOCATION}/{MEDIAFILES_LOCATION}/'
+    # DEFAULT_FILE_STORAGE = 'web.storage_backends.PublicMediaStorage'
 else:
     STATIC_URL = '/static/'
     # STATIC_ROOT = os.path.join(BASE_DIR, 'static')
