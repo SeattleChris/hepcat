@@ -136,12 +136,12 @@ if USE_S3:
     # AWS_S3_ENDPOINT_URL = BASE_S3_DOMAIN
     # AWS_S3_CUSTOM_DOMAIN = BASE_S3_DOMAIN
     AWS_LOCATION = 'www'
-    # STATIC_LOCATION = 'www/static'
+    # STATIC_LOCATION = 'static'
     STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_LOCATION}/'
     # STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
     STATICFILES_STORAGE = 'web.storage_backends.StaticStorage'
     PUBLIC_MEDIA_LOCATION = 'media'
-    # MEDIA_URL = f'https://{BASE_S3_DOMAIN}/{AWS_LOCATION}/{PUBLIC_MEDIA_LOCATION}/'
+    MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_LOCATION}/{PUBLIC_MEDIA_LOCATION}/'
     DEFAULT_FILE_STORAGE = 'web.storage_backends.PublicMediaStorage'
 else:
     STATIC_URL = '/static/'
