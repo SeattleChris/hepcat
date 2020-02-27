@@ -12,6 +12,8 @@ django-payments = "*"
 pillow = "*"
 stripe = "*"
 sorl-thumbnail = "*"
+django-storages = "*"
+boto3 = "*"
 
 [dev-packages]
 django-sass-processor = "*"

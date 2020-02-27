@@ -263,14 +263,14 @@ class RegisterView(CreateView):
         initial['user'] = user
         print(user)
         print('------- Update initial Values --------------')
-        initial['first_name'] = getattr(user, 'first_name', 'First Name')
-        initial['last_name'] = getattr(user, 'last_name', 'Last Name')
-        initial['email'] = getattr(user, 'email', 'Email')
-        initial['billing_address_1'] = getattr(user, 'billing_address_1', 'Street Address')
-        initial['billing_address_2'] = getattr(user, 'billing_address_2', '')
+        initial['first_name'] = user.first_name
+        initial['last_name'] = user.last_name
+        initial['email'] = user.email
+        initial['billing_address_1'] = user.billing_address_1
+        initial['billing_address_2'] = user.billing_address_2
         initial['billing_country_area'] = getattr(user, 'billing_country_area', 'WA')
         # TODO: instead of 'WA' string, use whatever is the default value as set in the User model.
-        initial['billing_postcode'] = getattr(user, 'billing_postcode', 'zipcode')
+        initial['billing_postcode'] = user.billing_postcode
 
         print(initial)
         return initial
