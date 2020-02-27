@@ -133,7 +133,7 @@ if USE_S3:
     AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
     # s3 static settings
     # BASE_S3_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3-website-{AWS_S3_REGION_NAME}.amazonaws.com'
-    BASE_S3_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+    # BASE_S3_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
     # AWS_S3_ENDPOINT_URL = BASE_S3_DOMAIN
     # AWS_S3_CUSTOM_DOMAIN = BASE_S3_DOMAIN
     AWS_LOCATION = 'www'
