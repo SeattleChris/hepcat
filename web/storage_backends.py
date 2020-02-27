@@ -3,7 +3,7 @@ from django.conf import settings
 
 
 class StaticStorage(S3Boto3Storage):
-    location = settings.STATICFILES_LOCATION
+    # location = settings.STATICFILES_LOCATION
     # AWS_S3_CUSTOM_DOMAIN = settings.BASE_S3_DOMAIN
     default_acl = 'public-read'
 
