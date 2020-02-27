@@ -135,7 +135,7 @@ if USE_S3:
     STATICFILES_LOCATION = 'static'
     STATICFILES_STORAGE = 'web.storage_backends.StaticStorage'
     MEDIAFILES_LOCATION = 'media'
-    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # TODO: Seems to still keep them on EC2 not S3
     DEFAULT_FILE_STORAGE = 'web.storage_backends.PublicMediaStorage'
 else:
     STATIC_URL = '/static/'
