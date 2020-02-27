@@ -135,7 +135,7 @@ if USE_S3:
     STATICFILES_LOCATION = 'static'
     STATICFILES_STORAGE = 'web.storage_backends.StaticStorage'
     MEDIAFILES_LOCATION = 'media'
-    DEFAULT_FILE_STORAGE = 'web.storage_backends.PublicMediaStorage'
+    # DEFAULT_FILE_STORAGE = 'web.storage_backends.PublicMediaStorage'
 else:
     STATIC_URL = '/static/'
     STATIC_ROOT = os.path.join(BASE_DIR, 'static')
