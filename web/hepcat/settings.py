@@ -9,7 +9,6 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 
 import os
 from distutils.util import strtobool
-from pprint import pprint
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -31,6 +30,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     # 'django.contrib.sites',  # CUSTOM added for django-newsletter
     'django.contrib.messages',
+    'storages',  # CUSTOM django-storages for using AWS S3 for static files
     'django.contrib.staticfiles',
     # 'rest_framework',
     # 'rest_framework.authtoken',
@@ -103,8 +103,6 @@ else:
             # }
         }
     }
-print('=============== Database Settings ========================')
-pprint(DATABASES)
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
 AUTH_PASSWORD_VALIDATORS = [
@@ -123,13 +121,37 @@ USE_L10N = True
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images) https://docs.djangoproject.com/en/2.1/howto/static-files/
-STATIC_URL = '/static/'
-# STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-STATIC_ROOT = os.path.join(BASE_DIR, '..', 'www', 'static')
-# Media files (as uploaded by users who have permission)
-MEDIA_URL = '/media/'
-# MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-MEDIA_ROOT = os.path.join(BASE_DIR, '..', 'www', 'media')
+USE_S3 = strtobool(os.environ.get('USE_S3', 'False'))
+if USE_S3:
+    AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+    AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+    AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME')
+    AWS_DEFAULT_ACL = None
+    # AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3-website-{AWS_S3_REGION_NAME}.amazonaws.com'
+    # AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+    AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
+    # s3 static settings
+    # BASE_S3_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3-website-{AWS_S3_REGION_NAME}.amazonaws.com'
+    BASE_S3_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+    # AWS_S3_ENDPOINT_URL = BASE_S3_DOMAIN
+    # AWS_S3_CUSTOM_DOMAIN = BASE_S3_DOMAIN
+    AWS_LOCATION = 'www'
+    STATICFILES_LOCATION = 'static'
+    STATIC_URL = f'https://{BASE_S3_DOMAIN}/{AWS_LOCATION}/{STATICFILES_LOCATION}/'
+    STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    # STATICFILES_STORAGE = 'web.storage_backends.StaticStorage'
+    # MEDIAFILES_LOCATION = 'media'
+    # MEDIA_URL = f'https://{BASE_S3_DOMAIN}/{AWS_LOCATION}/{MEDIAFILES_LOCATION}/'
+    # DEFAULT_FILE_STORAGE = 'web.storage_backends.PublicMediaStorage'
+else:
+    STATIC_URL = '/static/'
+    # STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+    STATIC_ROOT = os.path.join(BASE_DIR, '..', 'www', 'static')
+    MEDIA_URL = '/media/'  # Media files (as uploaded by users who have permission)
+    # MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+    MEDIA_ROOT = os.path.join(BASE_DIR, '..', 'www', 'media')
+STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
 
 # CUSTOM Additional Settings for this Project
 

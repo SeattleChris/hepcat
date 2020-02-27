@@ -5,6 +5,11 @@ option_settings:
     DEBUG: "False"
     LIVE_ALLOWED_HOSTS: "<resource>.<region>.elasticbeanstalk.com"
     SUPERUSER_PASS: ""
+    USE_S3: "True"
+    AWS_ACCESS_KEY_ID: "UPDATE_ME"
+    AWS_SECRET_ACCESS_KEY: "UPDATE_ME"
+    AWS_STORAGE_BUCKET_NAME: "UPDATE_ME"
+    AWS_S3_REGION_NAME: "us-west-2 OR UPDATE ME"
     EMAIL_ADMIN_ID: "admin"
     EMAIL_DOMAIN: "website.com"
     EMAIL_HOST: "smtp.website.com"
@@ -25,3 +30,6 @@ option_settings:
     DEFAULT_PRE_DISCOUNT: 5.0
     MULTI_DISCOUNT: 10.0
     DJANGO_SETTINGS_MODULE: "<app_name>.settings"
+  aws:elasticbeanstalk:container:python:staticfiles:
+    "/static/": "www/static/"
+    "/media/": "www/media/"
