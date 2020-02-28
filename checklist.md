@@ -98,6 +98,7 @@ Current Status:
   - [x] [Use package for S3](https://django-storages.readthedocs.io/en/latest/index.html)
 - [x] Setup a superuser account command on deploy.
 - [ ] Get Media files working like static (02_django.config)
+- [ ] Confirm it works with Debug is False.
 - [ ] Change PayPal and Stripe secrets
 - [ ] Change EMAIL_HOST_PASSWORD, maybe EMAIL_HOST_USER
 - [x] Change SECRET_KEY
