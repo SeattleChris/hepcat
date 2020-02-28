@@ -60,7 +60,6 @@ ROOT_URLCONF = 'hepcat.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        # 'DIRS': [],
         'DIRS': [os.path.join(BASE_DIR, 'templates')],  # CUSTOM: Added when adding users model app
         'APP_DIRS': True,
         'OPTIONS': {
@@ -130,7 +129,6 @@ if USE_S3:
     AWS_DEFAULT_ACL = None
     # AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3-website-{AWS_S3_REGION_NAME}.amazonaws.com'
     AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
-    # s3 static settings
     AWS_LOCATION = 'www'
     STATICFILES_LOCATION = 'static'
     STATICFILES_STORAGE = 'web.storage_backends.StaticStorage'
