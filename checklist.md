@@ -95,6 +95,7 @@ Current Status:
   - [n] Make it another command in the `03_db-and-static.config` file.
 - [x] Get local dev setup to connect to live DB server.
 - [ ] [gzip via Apache Config](https://realpython.com/deploying-a-django-app-to-aws-elastic-beanstalk/)
+  - [ ] Seems to break?
 - [ ] gzip Static (and Media) files? done by: AWS_IS_GZIPPED = True
 - [ ] Security improvement - Fix DB security group settings far too open (allowing any local dev to connect)
 
