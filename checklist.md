@@ -68,7 +68,7 @@
 - [s] Stretch Goal. Not for current feature plan.
 
 Current Status:
-2020-02-27 15:13:10
+2020-02-27 17:24:49
 <!-- Ctrl-Shift-I to generate timestamp -->
 
 ### Deployment on AWS
@@ -80,6 +80,17 @@ Current Status:
 - [ ] Setup Elastic Beanstalk with a Database (DB) Instance
   - [x] Temp solution: DB instance deleted when environment terminated
   - [ ] Setup [Amazon RDS](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/AWSHowTo.RDS.html)
+  - [ ] [Decouple DB](https://aws.amazon.com/premiumsupport/knowledge-center/decouple-rds-from-beanstalk/)
+    - [x] Create an RDS DB snapshot
+    - [x] Safeguard your Amazon RDS DB instance from deletion
+    - [ ] Create a new Elastic Beanstalk environment
+      - [x] Create environment B.
+      - [ ] Connect environment B to the existing Amazon RDS instance of environment A.
+      - [ ] Verify that environment B can connect to the existing Amazon RDS instance and that your application functions as expected.
+    - [ ] Perform a blue/green deployment to avoid downtime
+    - [ ] Remove the security group rule for the old Elastic Beanstalk environment
+    - [ ] Delete the stack
+    - [ ] Confirm working
 - [x] Setup Static files
   - [x] Temp solution: static files in the EC2 server
   - [x] Better solution: [use S3](https://realpython.com/deploying-a-django-app-to-aws-elastic-beanstalk/#static-files)
@@ -95,7 +106,7 @@ Current Status:
   - [n] Make it another command in the `03_db-and-static.config` file.
 - [x] Get local dev setup to connect to live DB server.
 - [ ] [gzip via Apache Config](https://realpython.com/deploying-a-django-app-to-aws-elastic-beanstalk/)
-  - [ ] Seems to break?
+  - [?] Seems to break?
 - [ ] gzip Static (and Media) files? done by: AWS_IS_GZIPPED = True
 - [ ] Security improvement - Fix DB security group settings far too open (allowing any local dev to connect)
 
