@@ -54,9 +54,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
 ROOT_URLCONF = 'hepcat.urls'
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -72,7 +70,6 @@ TEMPLATES = [
         },
     },
 ]
-
 WSGI_APPLICATION = 'hepcat.wsgi.application'
 
 # Database https://docs.djangoproject.com/en/2.1/ref/settings/#databases
@@ -109,7 +106,6 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator', },
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator', },
 ]
-
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
 LANGUAGE_CODE = os.environ.get('LANGUAGE_CODE', 'en-us')
@@ -117,7 +113,6 @@ TIME_ZONE = os.environ.get('TIME_ZONE', 'America/Los_Angeles')
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
-
 # Static files (CSS, JavaScript, Images) https://docs.djangoproject.com/en/2.1/howto/static-files/
 USE_S3 = strtobool(os.environ.get('USE_S3', 'False'))
 if USE_S3:
