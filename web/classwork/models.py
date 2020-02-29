@@ -529,6 +529,9 @@ class Profile(models.Model):
     def username(self):
         return self.user.username
 
+    def full_name(self):
+        return self.user.full_name()
+
     def __str__(self):
         name = self.user.get_full_name() or "Name Not Found"
         return name

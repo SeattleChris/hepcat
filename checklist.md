@@ -178,17 +178,17 @@ Current Status:
 ## General Site
 
 - [x] 'About Us' page should only show staff members.
+- [ ] About Us page shows only teacher & staff profile info, plus business info. Links to Contact Us.
+- [ ] Contact Us page w/ contact form (send to email)
 - [x] Deal with when admin has no name (such as a superuser), it may break the 'About Us' page.
 - [ ] Login Page should say email instead of username
-- [ ] Hi message should use name instead of username (email)
+- [x] Hi message should use name instead of username (email)
 - [ ] On Profile, add link to update profile/user details (billing, email, etc)
 - [ ] Add content and connect to "Info" link button.
 - [ ] Profile model: update highest_level to not include "current" classoffer.
 - [ ] Auto-Login new user if created on their first ClassOffer sign up.
 - [ ] User: create update view and method
 - [ ] Profile details view: add note for completed Beg and/or L2
-- [ ] About Us page shows only teacher & staff profile info, plus business info. Links to Contact Us.
-- [ ] Contact Us page w/ contact form (send to email)
 - [ ] Add interesting dance images to ClassOffer list view, maybe detail view also
 - [ ] Decide if we host a weekly current class page (as old site), or refactor to student's Profile view?
 - [ ] Create space for "Info" page: general site resources and sub-pages

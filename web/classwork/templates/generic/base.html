@@ -28,7 +28,7 @@
   <nav role="navigation">
     <label for="user-login">
       {% if user.is_authenticated %}
-      Hi {{ user.username }}
+      Hi {{ user }}
       {% else %}
       Account
       {% endif %}
