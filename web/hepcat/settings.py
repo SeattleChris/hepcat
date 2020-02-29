@@ -132,12 +132,12 @@ if USE_S3:
     # DEFAULT_FILE_STORAGE = 'web.storage_backends.PublicMediaStorage'
 else:
     STATIC_URL = '/static/'
-    STATIC_ROOT = os.path.join(BASE_DIR, 'static')
     # STATIC_ROOT = os.path.join(BASE_DIR, '..', 'www', 'static')
     MEDIA_URL = '/media/'
-    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
     # MEDIA_ROOT = os.path.join(BASE_DIR, '..', 'www', 'media')
-STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
+# STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # CUSTOM Additional Settings for this Project
 

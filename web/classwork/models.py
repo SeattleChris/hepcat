@@ -530,10 +530,11 @@ class Profile(models.Model):
         return self.user.username
 
     def __str__(self):
-        return self.user.get_full_name()
+        name = self.user.get_full_name() or "Name Not Found"
+        return name
 
     def __repr__(self):
-        return self.user.get_full_name()
+        return f"Profile id: {self.id} | User id: {self.user.id} | Name: {self.user.get_full_name()}"
 
     # @property
     # def checkin_list(self):
