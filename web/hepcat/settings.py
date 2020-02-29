@@ -21,6 +21,7 @@ LOCAL = True if BASE_DIR == os.environ.get('LOCAL_BASE_DIR') else False
 SECRET_KEY = os.environ.get('SECRET_KEY', None)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = strtobool(os.environ.get('DEBUG', 'False'))
+# Update LIVE_ALLOWED_HOSTS in ENV settings if adding another environment.
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS' if LOCAL else 'LIVE_ALLOWED_HOSTS', '').split()
 # Application definition
 INSTALLED_APPS = [
