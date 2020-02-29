@@ -33,10 +33,9 @@ class AboutUsListView(ListView):
 
     def get_queryset(self):
         all = super().get_queryset()
-        # TODO: only retrieve the staff profiles we want.
-        # Profile.objects.filter()
+        staff = all.filter(user__is_staff=True)
         # TODO: sort them in some desired order.
-        return all
+        return staff
 
     # end AboutUs
 
@@ -263,15 +262,14 @@ class RegisterView(CreateView):
         initial['user'] = user
         print(user)
         print('------- Update initial Values --------------')
-        initial['first_name'] = user.first_name
-        initial['last_name'] = user.last_name
-        initial['email'] = user.email
-        initial['billing_address_1'] = user.billing_address_1
-        initial['billing_address_2'] = user.billing_address_2
+        initial['first_name'] = getattr(user, 'first_name', '')
+        initial['last_name'] = getattr(user, 'last_name', '')
+        initial['email'] = getattr(user, 'email', '')
+        initial['billing_address_1'] = getattr(user, 'billing_address_1', '')
+        initial['billing_address_2'] = getattr(user, 'billing_address_2', '')
         initial['billing_country_area'] = getattr(user, 'billing_country_area', 'WA')
         # TODO: instead of 'WA' string, use whatever is the default value as set in the User model.
-        initial['billing_postcode'] = user.billing_postcode
-
+        initial['billing_postcode'] = getattr(user, 'billing_postcode', '')
         print(initial)
         return initial
 

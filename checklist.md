@@ -68,7 +68,7 @@
 - [s] Stretch Goal. Not for current feature plan.
 
 Current Status:
-2020-02-25 12:30:43
+2020-02-29 12:11:23
 <!-- Ctrl-Shift-I to generate timestamp -->
 
 ### Deployment on AWS
@@ -77,9 +77,20 @@ Current Status:
 - [x] Refactor old docker-compose to plain Django app setup
 - [x] Setup application to work with local DB
 - [x] Deploy application without database setup (to EC2)
-- [ ] Setup Elastic Beanstalk with a Database (DB) Instance
+- [x] Setup Elastic Beanstalk with a Database (DB) Instance
   - [x] Temp solution: DB instance deleted when environment terminated
-  - [ ] Setup [Amazon RDS](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/AWSHowTo.RDS.html)
+  - [x] Setup [Amazon RDS](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/AWSHowTo.RDS.html)
+  - [x] [Decouple DB](https://aws.amazon.com/premiumsupport/knowledge-center/decouple-rds-from-beanstalk/)
+    - [x] Create an RDS DB snapshot
+    - [x] Safeguard your Amazon RDS DB instance from deletion
+    - [x] Create a new Elastic Beanstalk environment
+      - [x] Create environment B.
+      - [x] Connect environment B to the existing Amazon RDS instance of environment A.
+      - [x] Verify that environment B can connect to the existing Amazon RDS instance and that your application functions as expected.
+    - [x] Perform a blue/green deployment to avoid downtime
+    - [x] Remove the security group rule for the old Elastic Beanstalk environment
+    - [x] Delete the stack
+    - [x] Confirm working
 - [x] Setup Static files
   - [x] Temp solution: static files in the EC2 server
   - [x] Better solution: [use S3](https://realpython.com/deploying-a-django-app-to-aws-elastic-beanstalk/#static-files)
@@ -87,6 +98,7 @@ Current Status:
   - [x] [Use package for S3](https://django-storages.readthedocs.io/en/latest/index.html)
 - [x] Setup a superuser account command on deploy.
 - [ ] Get Media files working like static (02_django.config)
+- [ ] Confirm it works with Debug is False.
 - [ ] Change PayPal and Stripe secrets
 - [ ] Change EMAIL_HOST_PASSWORD, maybe EMAIL_HOST_USER
 - [x] Change SECRET_KEY
@@ -94,12 +106,17 @@ Current Status:
   - [x] Always do the command locally, then when pushing to deployed it does the migrations
   - [n] Make it another command in the `03_db-and-static.config` file.
 - [x] Get local dev setup to connect to live DB server.
+- [x] [gzip via Apache Config](https://realpython.com/deploying-a-django-app-to-aws-elastic-beanstalk/)
+  - [?] Seems to break?
+- [ ] gzip Static (and Media) files? done by: AWS_IS_GZIPPED = True
 - [ ] Security improvement - Fix DB security group settings far too open (allowing any local dev to connect)
+- [ ] Save DB and other settings in S3. Setup ebextensions rules to retrieve from S3.
 
 ### Payment Processing
 
 - [x] Can send needed data to PayPal payment site for user to complete payment process
 - [x] Can receive authorization from PayPal (success url)
+- [x] Update register form to use blank defaults if we have an Anonymous user
 - [ ] Can check what email they used on PayPal for confirmation
   - [n] NO - ?Should a mis-match mean we change their email on file?
   - [ ] ?Should a mis-match change the 'paid by' field?
@@ -107,9 +124,9 @@ Current Status:
 - [x] Fix: correctly identify if paid_by vs user signed up for class are different.
 - [x] Can take authorization, then capture amount through PayPal
 - [c] Can update student and checkin records with the completed payment amount
-- [ ] If payment amount refunded or revoked, our records are also updated
+- [s] If payment amount refunded or revoked, our records are also updated
 - [c] Checkin sheet is automatically updated with all online payment processes
-- [ ] Manual process for managing on-site payments (with Square, Check, Cash)
+- [s] Manual process for managing on-site payments (with Square, Check, Cash)
 - [ ] Login to newly created User account after they pay for their first ClassOffer
 - [s] Automatically manage on-site credit card (via Square?) processing
 - [s] Stripe payment integration
@@ -118,7 +135,7 @@ Current Status:
 - [ ] Maybe combine Checkin view with ClassOfferListView - diff in sort and templates.
 - [ ] Add items as Many-to-Many field to make Payments easier to use a orders.
 - [c] Mark All associated Registration models when payment captured in full.
-- [ ] Handle partial payment structure, especially if multi-class discount was given.
+- [s] Handle partial payment structure, especially if multi-class discount was given.
 - [c] Update multi-class discount based on Subject/ClassOffer settings
 - [x] Instead of field saying 'billing_country_area' it should say 'State'
   - [n] Simple fix: Change property to state, but modify when authorizing payments
@@ -127,7 +144,8 @@ Current Status:
   - [n] JS changes display based on country code or other field inputs
   - [x] Use help_text: Gives extra variations of state, territory, province and zip vs postal code.
   - [n] Create a Mixin: somehow fixes it whenever it comes up
-- [ ] Update verbose_name and help_text in users/models.py
+- [x] Update verbose_name and help_text in users/models.py
+- [x] Update verbose_name and help_text for payments
 
 ## Email Features
 
@@ -159,8 +177,8 @@ Current Status:
 
 ## General Site
 
-- [ ] 'About Us' page should only show staff members.
-- [ ] Deal with when admin has no name (such as a superuser), it may break the 'About Us' page.
+- [x] 'About Us' page should only show staff members.
+- [x] Deal with when admin has no name (such as a superuser), it may break the 'About Us' page.
 - [ ] Login Page should say email instead of username
 - [ ] Hi message should use name instead of username (email)
 - [ ] On Profile, add link to update profile/user details (billing, email, etc)

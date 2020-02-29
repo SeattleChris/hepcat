@@ -4,6 +4,11 @@ option_settings:
     SECRET_KEY: "" # Alphanumeric and _ . : / = + \ - @
     DEBUG: "False"
     LIVE_ALLOWED_HOSTS: "<resource>.<region>.elasticbeanstalk.com"
+    LIVE_DB_HOST: "<db-id>.<region>.rds.amazonaws.com"
+    LIVE_DB_PORT: "5432"
+    LIVE_DB_NAME: "ebdb"
+    LIVE_DB_USER: ""
+    LIVE_DB_PASS: ""
     SUPERUSER_PASS: ""
     USE_S3: "True"
     AWS_ACCESS_KEY_ID: "UPDATE_ME"
@@ -33,3 +38,5 @@ option_settings:
   aws:elasticbeanstalk:container:python:staticfiles:
     "/static/": "www/static/"
     "/media/": "www/media/"
+  04_setup_apache:
+    command: "cp .ebextensions/enable_mod_deflate.conf /etc/httpd/conf.d/enable_mod_deflate.conf"

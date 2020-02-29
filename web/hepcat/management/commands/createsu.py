@@ -16,15 +16,11 @@ class Command(BaseCommand):
         username = email.casefold()
         password = os.environ.get('SUPERUSER_PASS', None)
         self.stdout.write(f"username: {username}, email: {email}, pw: {password}")
-        try:
-            user = User.objects.get(username=username)
-        except user.DoesNotExist:
-            user = None
-        if not user:
+        if not User.objects.filter(username=username).exists():
             try:
                 user = User.objects.create_superuser(username, email, password)
+                self.stdout.write(str(user))
             except Exception as e:
                 self.stderr.write(f"Error: {e} ")
         else:
             self.stdout.write('That user already existed. ')
-        self.stdout.write(str(user))

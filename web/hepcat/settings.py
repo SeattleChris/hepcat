@@ -21,6 +21,7 @@ LOCAL = True if BASE_DIR == os.environ.get('LOCAL_BASE_DIR') else False
 SECRET_KEY = os.environ.get('SECRET_KEY', None)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = strtobool(os.environ.get('DEBUG', 'False'))
+# Update LIVE_ALLOWED_HOSTS in ENV settings if adding another environment.
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS' if LOCAL else 'LIVE_ALLOWED_HOSTS', '').split()
 # Application definition
 INSTALLED_APPS = [
@@ -54,13 +55,10 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
 ROOT_URLCONF = 'hepcat.urls'
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        # 'DIRS': [],
         'DIRS': [os.path.join(BASE_DIR, 'templates')],  # CUSTOM: Added when adding users model app
         'APP_DIRS': True,
         'OPTIONS': {
@@ -73,36 +71,34 @@ TEMPLATES = [
         },
     },
 ]
-
 WSGI_APPLICATION = 'hepcat.wsgi.application'
 
 # Database https://docs.djangoproject.com/en/2.1/ref/settings/#databases
-if 'RDS_HOSTNAME' in os.environ:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'NAME': os.environ['RDS_DB_NAME'],
-            'USER': os.environ['RDS_USERNAME'],
-            'PASSWORD': os.environ['RDS_PASSWORD'],
-            'HOST': os.environ['RDS_HOSTNAME'],
-            'PORT': os.environ['RDS_PORT'],
-        }
+# if 'RDS_HOSTNAME' in os.environ:
+#     DATABASES = {
+#         'default': {
+#             'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#             'NAME': os.environ['RDS_DB_NAME'],
+#             'USER': os.environ['RDS_USERNAME'],
+#             'PASSWORD': os.environ['RDS_PASSWORD'],
+#             'HOST': os.environ['RDS_HOSTNAME'],
+#             'PORT': os.environ['RDS_PORT'],
+#         }
+#     }
+# else:
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'HOST': os.environ.get('LOCAL_DB_HOST' if LOCAL else 'LIVE_DB_HOST', os.environ.get('DB_HOST', '')),
+        'PORT': os.environ.get('LOCAL_DB_PORT' if LOCAL else 'LIVE_DB_PORT', os.environ.get('DB_PORT', '5432')),
+        'NAME': os.environ.get('LOCAL_DB_NAME' if LOCAL else 'LIVE_DB_NAME', os.environ.get('DB_NAME', 'postgres')),
+        'USER': os.environ.get('LOCAL_DB_USER' if LOCAL else 'LIVE_DB_USER', os.environ.get('DB_USER', 'postgres')),
+        'PASSWORD': os.environ.get('LOCAL_DB_PASS' if LOCAL else 'LIVE_DB_PASS', os.environ.get('DB_PASS', '')),
+        # 'TEST': {
+        #     'NAME': 'test_db'
+        # }
     }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            # 'ENGINE': 'django.db.backends.postgresql',
-            'HOST': os.environ.get('LOCAL_DB_HOST' if LOCAL else 'LIVE_DB_HOST', os.environ.get('DB_HOST', '')),
-            'PORT': os.environ.get('LOCAL_DB_PORT' if LOCAL else 'LIVE_DB_PORT', os.environ.get('DB_PORT', '5432')),
-            'NAME': os.environ.get('LOCAL_DB_NAME' if LOCAL else 'LIVE_DB_NAME', os.environ.get('DB_NAME', 'postgres')),
-            'USER': os.environ.get('LOCAL_DB_USER' if LOCAL else 'LIVE_DB_USER', os.environ.get('DB_USER', 'postgres')),
-            'PASSWORD': os.environ.get('LOCAL_DB_PASS' if LOCAL else 'LIVE_DB_PASS', os.environ.get('DB_PASS', '')),
-            # 'TEST': {
-            #     'NAME': 'test_db'
-            # }
-        }
-    }
+}
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
 AUTH_PASSWORD_VALIDATORS = [
@@ -111,7 +107,6 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator', },
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator', },
 ]
-
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
 LANGUAGE_CODE = os.environ.get('LANGUAGE_CODE', 'en-us')
@@ -119,7 +114,6 @@ TIME_ZONE = os.environ.get('TIME_ZONE', 'America/Los_Angeles')
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
-
 # Static files (CSS, JavaScript, Images) https://docs.djangoproject.com/en/2.1/howto/static-files/
 USE_S3 = strtobool(os.environ.get('USE_S3', 'False'))
 if USE_S3:
@@ -130,21 +124,20 @@ if USE_S3:
     AWS_DEFAULT_ACL = None
     # AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3-website-{AWS_S3_REGION_NAME}.amazonaws.com'
     AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
-    # s3 static settings
     AWS_LOCATION = 'www'
     STATICFILES_LOCATION = 'static'
     STATICFILES_STORAGE = 'web.storage_backends.StaticStorage'
     MEDIAFILES_LOCATION = 'media'
-    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-    DEFAULT_FILE_STORAGE = 'web.storage_backends.PublicMediaStorage'
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # TODO: Seems to still keep them on EC2 not S3
+    # DEFAULT_FILE_STORAGE = 'web.storage_backends.PublicMediaStorage'
 else:
     STATIC_URL = '/static/'
-    STATIC_ROOT = os.path.join(BASE_DIR, 'static')
     # STATIC_ROOT = os.path.join(BASE_DIR, '..', 'www', 'static')
     MEDIA_URL = '/media/'
-    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
     # MEDIA_ROOT = os.path.join(BASE_DIR, '..', 'www', 'media')
-STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
+# STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # CUSTOM Additional Settings for this Project
 
