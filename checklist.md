@@ -29,7 +29,7 @@
 | :heavy_check_mark: | Design: Home page / landing site design. General pages layout design                        |
 |                    | **Milestone 3 Completion**                                                                  |
 | :heavy_check_mark: | Payment Processing: PayPal integration (sandbox)                                            |
-|                    | Deployment Setup: Get App & DB on AWS (probably using Elastic Beanstalk)                    |
+| :heavy_check_mark: | Deployment Setup: Get App & DB on AWS (probably using Elastic Beanstalk)                    |
 |                    | Email Features: send register confirmations, weekly class emails                            |
 |                    | Payment & Student Sign Up: PayPal live working, email confirmations, added to checkin       |
 |                    | User Views: more filled out - student Profile structure, visual & layout of ClassOffers     |
@@ -68,7 +68,7 @@
 - [s] Stretch Goal. Not for current feature plan.
 
 Current Status:
-2020-02-29 12:11:23
+2020-02-29 13:07:07
 <!-- Ctrl-Shift-I to generate timestamp -->
 
 ### Deployment on AWS
@@ -117,6 +117,7 @@ Current Status:
 - [x] Can send needed data to PayPal payment site for user to complete payment process
 - [x] Can receive authorization from PayPal (success url)
 - [x] Update register form to use blank defaults if we have an Anonymous user
+- [x] Sign up form only shows current published classes.
 - [ ] Can check what email they used on PayPal for confirmation
   - [n] NO - ?Should a mis-match mean we change their email on file?
   - [ ] ?Should a mis-match change the 'paid by' field?
