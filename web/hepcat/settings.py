@@ -165,9 +165,10 @@ EMAIL_USE_SSL = strtobool(os.environ.get('EMAIL_USE_SSL', 'False'))
 EMAIL_SUBJECT_PREFIX = '[' + os.environ.get('EMAIL_ADMIN_PREFIX', 'Django') + '] '
 if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-# else:
-#     Handle all of the configs for a real email SMTPBackend
-
+else:
+    EMAIL_BACKEND = 'django_ses.SESBackend'
+    AWS_SES_REGION_NAME = os.environ.get('AWS_SES_REGION_NAME')
+    AWS_SES_REGION_ENDPOINT = os.environ.get('AWS_SES_REGION_ENDPOINT')
 # Django Newsletter
 # NEWSLETTER_CONFIRM_EMAIL = False
 # Using django-tinymce
