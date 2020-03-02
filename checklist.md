@@ -115,6 +115,7 @@ Current Status:
 ### Payment Processing
 
 - [x] Can send needed data to PayPal payment site for user to complete payment process
+- [ ] Fix PayPal return url.
 - [x] Can receive authorization from PayPal (success url)
 - [x] Update register form to use blank defaults if we have an Anonymous user
 - [x] Sign up form only shows current published classes.
