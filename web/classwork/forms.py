@@ -96,7 +96,7 @@ class RegisterForm(forms.ModelForm):
         }
         help_texts = {
             'billing_country_area': 'State, Territory, or Province',
-            'billing_postcode': 'Zipcode, or Postal Code',
+            'billing_postcode': 'Zip or Postal Code',
         }
 
     field_order = [*new_fields, *Meta.fields]

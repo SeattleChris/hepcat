@@ -152,6 +152,7 @@ Current Status:
 ## Email Features
 
 - [ ] Setup email handling for the site/app
+- [x] Setup 6swing1.com email
 - [ ] Send confirmation on register
 - [ ] Send weekly class emails on a schedule (wait for confirmation/adjustment?)
 - [ ] Allow Teacher or Admin to send an unexpected class email (what if Snow closure)
