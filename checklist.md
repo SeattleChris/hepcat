@@ -154,6 +154,9 @@ Current Status:
 - [ ] Setup email handling for the site/app
 - [x] Setup 6swing1.com email
 - [ ] Send confirmation on register
+  - [x] Running Local (with DEBUG = False)
+  - [x] Running on Server, to and from verified email addresses.
+  - [ ] Live, from admin to external email address
 - [ ] Send weekly class emails on a schedule (wait for confirmation/adjustment?)
 - [ ] Allow Teacher or Admin to send an unexpected class email (what if Snow closure)
 - [ ] Subscribe the current teacher and appropriate admin to current class email list
@@ -161,6 +164,16 @@ Current Status:
 - [ ] Send emails submitted to Contact Us page
 - [s] Manage "Contact Us" messaging history
 - [s] Manage general student email subscriptions
+
+## Sign Up & User Accounts
+
+- [ ] Class sign up as anonymous process:
+  - [x] Create the account, sign-up for class, allow payment
+  - [ ] User is logged in on account creation?
+  - [ ] User has a randomly generated password, prompted to change on next login
+  - [ ] User confirms with email link. Prompted for password from the link
+  - [ ] If user never confirms, it does not stop them from joining future class.
+  - [ ] 
 
 ## Style & Layout
 

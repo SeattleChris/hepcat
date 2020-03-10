@@ -857,7 +857,11 @@ class Notify(EmailMessage):
             "from_email": from_email,
             "to_email": to_email
         })
-        mail_sent = send_mail(subject, body, from_email, [to_email])
+        mail_sent = 0
+        try:
+            mail_sent = send_mail(subject, body, from_email, [to_email])
+        except Exception as e:
+            print("Send Mail Error", e)
         # instantiate a new Notify to send an email
         print(f"Mail Sent: {mail_sent}")
         return mail_sent
