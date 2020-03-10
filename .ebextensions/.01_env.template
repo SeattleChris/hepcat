@@ -19,6 +19,8 @@ option_settings:
     EMAIL_DOMAIN: "website.com"
     EMAIL_HOST: "smtp.website.com"
     EMAIL_PORT: 587
+    AWS_SES_REGION_NAME: "<region>"
+    AWS_SES_REGION_ENDPOINT: "email.<region>.amazonaws.com"
     EMAIL_HOST_USER: "test@website.com"
     EMAIL_HOST_PASSWORD: ""
     EMAIL_USE_TLS: "False"

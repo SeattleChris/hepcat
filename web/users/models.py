@@ -189,7 +189,8 @@ class UserHC(AbstractUser):
         swappable = 'AUTH_USER_MODEL'
 
     def __str__(self):
-        return self.username
+        name = self.get_full_name() or "Name Not Found"
+        return name
 
     def make_username(self):
         """ Instead of user selecting a username, we will generate it from their

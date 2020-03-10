@@ -529,6 +529,9 @@ class Profile(models.Model):
     def username(self):
         return self.user.username
 
+    def full_name(self):
+        return self.user.full_name()
+
     def __str__(self):
         name = self.user.get_full_name() or "Name Not Found"
         return name
@@ -831,6 +834,7 @@ class Notify(EmailMessage):
     def register(cls, selected=None, student=None, paid_by=None, **kwargs):
         """ This is for when a user is registered for a ClassOffer. """
         from django.core.mail import send_mail
+        from pprint import pprint
 
         print("========== Notify.register ==============")
         if not student and not paid_by:
@@ -846,8 +850,20 @@ class Notify(EmailMessage):
         class_list = [str(ea) for ea in selected]
         purchase_list = ', '.join(class_list)
         body = f"You signed up {student} to attend {purchase_list}"
-        mail_sent = send_mail(subject, body, from_email, [to_email])
+        pprint({
+            "***send_email***": "============================",
+            "subject": subject,
+            "body": body,
+            "from_email": from_email,
+            "to_email": to_email
+        })
+        mail_sent = 0
+        try:
+            mail_sent = send_mail(subject, body, from_email, [to_email])
+        except Exception as e:
+            print("Send Mail Error", e)
         # instantiate a new Notify to send an email
+        print(f"Mail Sent: {mail_sent}")
         return mail_sent
 
 

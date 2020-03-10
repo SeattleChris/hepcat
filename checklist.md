@@ -29,7 +29,7 @@
 | :heavy_check_mark: | Design: Home page / landing site design. General pages layout design                        |
 |                    | **Milestone 3 Completion**                                                                  |
 | :heavy_check_mark: | Payment Processing: PayPal integration (sandbox)                                            |
-|                    | Deployment Setup: Get App & DB on AWS (probably using Elastic Beanstalk)                    |
+| :heavy_check_mark: | Deployment Setup: Get App & DB on AWS (probably using Elastic Beanstalk)                    |
 |                    | Email Features: send register confirmations, weekly class emails                            |
 |                    | Payment & Student Sign Up: PayPal live working, email confirmations, added to checkin       |
 |                    | User Views: more filled out - student Profile structure, visual & layout of ClassOffers     |
@@ -68,7 +68,7 @@
 - [s] Stretch Goal. Not for current feature plan.
 
 Current Status:
-2020-02-29 12:11:23
+2020-02-29 13:07:07
 <!-- Ctrl-Shift-I to generate timestamp -->
 
 ### Deployment on AWS
@@ -115,8 +115,10 @@ Current Status:
 ### Payment Processing
 
 - [x] Can send needed data to PayPal payment site for user to complete payment process
+- [ ] Fix PayPal return url.
 - [x] Can receive authorization from PayPal (success url)
 - [x] Update register form to use blank defaults if we have an Anonymous user
+- [x] Sign up form only shows current published classes.
 - [ ] Can check what email they used on PayPal for confirmation
   - [n] NO - ?Should a mis-match mean we change their email on file?
   - [ ] ?Should a mis-match change the 'paid by' field?
@@ -150,7 +152,11 @@ Current Status:
 ## Email Features
 
 - [ ] Setup email handling for the site/app
+- [x] Setup 6swing1.com email
 - [ ] Send confirmation on register
+  - [x] Running Local (with DEBUG = False)
+  - [x] Running on Server, to and from verified email addresses.
+  - [ ] Live, from admin to external email address
 - [ ] Send weekly class emails on a schedule (wait for confirmation/adjustment?)
 - [ ] Allow Teacher or Admin to send an unexpected class email (what if Snow closure)
 - [ ] Subscribe the current teacher and appropriate admin to current class email list
@@ -158,6 +164,16 @@ Current Status:
 - [ ] Send emails submitted to Contact Us page
 - [s] Manage "Contact Us" messaging history
 - [s] Manage general student email subscriptions
+
+## Sign Up & User Accounts
+
+- [ ] Class sign up as anonymous process:
+  - [x] Create the account, sign-up for class, allow payment
+  - [ ] User is logged in on account creation?
+  - [ ] User has a randomly generated password, prompted to change on next login
+  - [ ] User confirms with email link. Prompted for password from the link
+  - [ ] If user never confirms, it does not stop them from joining future class.
+  - [ ] 
 
 ## Style & Layout
 
@@ -178,17 +194,17 @@ Current Status:
 ## General Site
 
 - [x] 'About Us' page should only show staff members.
+- [ ] About Us page shows only teacher & staff profile info, plus business info. Links to Contact Us.
+- [ ] Contact Us page w/ contact form (send to email)
 - [x] Deal with when admin has no name (such as a superuser), it may break the 'About Us' page.
 - [ ] Login Page should say email instead of username
-- [ ] Hi message should use name instead of username (email)
+- [x] Hi message should use name instead of username (email)
 - [ ] On Profile, add link to update profile/user details (billing, email, etc)
 - [ ] Add content and connect to "Info" link button.
 - [ ] Profile model: update highest_level to not include "current" classoffer.
 - [ ] Auto-Login new user if created on their first ClassOffer sign up.
 - [ ] User: create update view and method
 - [ ] Profile details view: add note for completed Beg and/or L2
-- [ ] About Us page shows only teacher & staff profile info, plus business info. Links to Contact Us.
-- [ ] Contact Us page w/ contact form (send to email)
 - [ ] Add interesting dance images to ClassOffer list view, maybe detail view also
 - [ ] Decide if we host a weekly current class page (as old site), or refactor to student's Profile view?
 - [ ] Create space for "Info" page: general site resources and sub-pages

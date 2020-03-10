@@ -165,9 +165,10 @@ EMAIL_USE_SSL = strtobool(os.environ.get('EMAIL_USE_SSL', 'False'))
 EMAIL_SUBJECT_PREFIX = '[' + os.environ.get('EMAIL_ADMIN_PREFIX', 'Django') + '] '
 if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-# else:
-#     Handle all of the configs for a real email SMTPBackend
-
+else:
+    EMAIL_BACKEND = 'django_ses.SESBackend'
+    AWS_SES_REGION_NAME = os.environ.get('AWS_SES_REGION_NAME')
+    AWS_SES_REGION_ENDPOINT = os.environ.get('AWS_SES_REGION_ENDPOINT')
 # Django Newsletter
 # NEWSLETTER_CONFIRM_EMAIL = False
 # Using django-tinymce
@@ -186,7 +187,7 @@ PAYPAL_EMAIL = os.environ.get('PAYPAL_EMAIL', None)
 PAYPAL_CLIENT_ID = os.environ.get('PAYPAL_CLIENT_ID', None)
 PAYPAL_SECRET = os.environ.get('PAYPAL_SECRET', None)
 PAYPAL_URL = os.environ.get('PAYPAL_URL', 'https://api.sandbox.paypal.com')  # https://api.paypal.com for production
-PAYMENT_HOST = os.environ.get('PAYMENT_HOST', 'localhost')
+PAYMENT_HOST = os.environ.get('PAYMENT_HOST', ALLOWED_HOSTS[0])
 PAYMENT_USES_SSL = False
 PAYMENT_MODEL = 'classwork.Payment'
 PAYMENT_VARIANTS = {

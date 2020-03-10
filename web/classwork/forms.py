@@ -63,8 +63,8 @@ class RegisterForm(forms.ModelForm):
     # registration form for someone else,
 
     # Find the acceptable ClassOffers to show
-    # class_choices = ClassOffer.objects.filter(session__in=decide_session())  # TODO: FIX HERE
-    class_choices = ClassOffer.objects
+    class_choices = ClassOffer.objects.filter(session__in=decide_session())  # TODO: FIX HERE
+    # class_choices = ClassOffer.objects  # Use this instead to make ALL classes available to select.
     user_answers = (('', 'Please Select an Answer'), ('T', 'This is my first'), ('F', 'I am a returning student'),)
     # payment_answers = (('F', 'Paid by the student named above'), ('T', 'Paid by someone other than student listed above'))
     # TODO: Change to CheckboxSelectMultiple and make sure it works
@@ -96,7 +96,7 @@ class RegisterForm(forms.ModelForm):
         }
         help_texts = {
             'billing_country_area': 'State, Territory, or Province',
-            'billing_postcode': 'Zipcode, or Postal Code',
+            'billing_postcode': 'Zip or Postal Code',
         }
 
     field_order = [*new_fields, *Meta.fields]
