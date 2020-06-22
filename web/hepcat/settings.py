@@ -86,9 +86,14 @@ WSGI_APPLICATION = 'hepcat.wsgi.application'
 #         }
 #     }
 # else:
+DB_LOOKUP = {
+    'postgres': 'django.db.backends.postgresql_psycopg2',
+    'mysql': 'django.db.backends.mysql',  # Support for MySQL 5.6+
+    None: 'django.db.backends.postgresql_psycopg2'
+    }
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'ENGINE': DB_LOOKUP[os.environ.get('DB_TYPE')],
         'HOST': os.environ.get('LOCAL_DB_HOST' if LOCAL else 'LIVE_DB_HOST', os.environ.get('DB_HOST', '')),
         'PORT': os.environ.get('LOCAL_DB_PORT' if LOCAL else 'LIVE_DB_PORT', os.environ.get('DB_PORT', '5432')),
         'NAME': os.environ.get('LOCAL_DB_NAME' if LOCAL else 'LIVE_DB_NAME', os.environ.get('DB_NAME', 'postgres')),
@@ -99,6 +104,10 @@ DATABASES = {
         # }
     }
 }
+# if os.environ.get('DB_TYPE') == 'mysql':
+#     DATABASES['default']['OPTIONS'] = {'charset': 'utf8mb4'}
+# MAX_INDEX_CHARACTER_SIZE = 191
+
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
 AUTH_PASSWORD_VALIDATORS = [

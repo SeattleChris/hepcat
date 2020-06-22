@@ -15,10 +15,11 @@ sorl-thumbnail = "*"
 django-storages = "*"
 boto3 = "*"
 django-ses = "*"
+mysqlclient = "*"
 
 [dev-packages]
 django-sass-processor = "*"
 libsass = "*"
 
 [requires]
-python_version = "3.6"
+python_version = "3.7"
