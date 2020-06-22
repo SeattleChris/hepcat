@@ -17,6 +17,8 @@ def decide_session(sess=None, display_date=None):
     print('======= forms function - decide_session ==========')
     sess_data = []
     # TODO: Test alternative data input. Default happy path is working.
+    # TODO: Fix for when we do not yet have Session table created.
+    # TODO: Memcache session. Don't call the DB all the time.
     if sess is None:
         target = display_date or datetime.now()
         sess_data = Session.objects.filter(publish_date__lte=target, expire_date__gte=target)
