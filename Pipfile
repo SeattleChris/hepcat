@@ -15,6 +15,7 @@ sorl-thumbnail = "*"
 django-storages = "*"
 boto3 = "*"
 django-ses = "*"
+mysqlclient = "*"
 
 [dev-packages]
 django-sass-processor = "*"
