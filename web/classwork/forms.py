@@ -65,7 +65,8 @@ class RegisterForm(forms.ModelForm):
     # registration form for someone else,
 
     # Find the acceptable ClassOffers to show
-    class_choices = ClassOffer.objects.filter(session__in=decide_session())  # TODO: FIX HERE
+    print("============ RegisterForm ================")
+    # class_choices = ClassOffer.objects.filter(session__in=decide_session())  # TODO: FIX HERE called on server startup
     # class_choices = ClassOffer.objects  # Use this instead to make ALL classes available to select.
     user_answers = (('', 'Please Select an Answer'), ('T', 'This is my first'), ('F', 'I am a returning student'),)
     # payment_answers = (('F', 'Paid by the student named above'), ('T', 'Paid by someone other than student listed above'))
@@ -76,7 +77,9 @@ class RegisterForm(forms.ModelForm):
     last_name = forms.CharField(label='Last Name', max_length=User._meta.get_field('last_name').max_length)
     email = forms.CharField(max_length=User._meta.get_field('email').max_length, widget=forms.EmailInput())
     # password = forms.CharField(min_length=6, max_length=16, widget=forms.PasswordInput())
-    class_selected = forms.ModelMultipleChoiceField(label='Choose your class(es)', queryset=class_choices)
+    # DUMMY_CHOICES = (("1", "First"), ("2", "Second"))
+    class_selected = forms.ModelMultipleChoiceField(label='Choose your class(es)', queryset=None)
+    # class_selected = forms.ModelMultipleChoiceField(label='Choose your class(es)', queryset=class_choices)
     paid_by_other = forms.BooleanField(label='paid by a different person', required=False)
     new_fields = ['new_user', 'first_name', 'last_name', 'email', 'class_selected', 'paid_by_other']
 
@@ -103,11 +106,20 @@ class RegisterForm(forms.ModelForm):
 
     field_order = [*new_fields, *Meta.fields]
 
-    # def get_initial(self):
-    #     print('========== RegistrationForm.get_initial ===================')
+    def __init__(self, *args, **kwargs):
+        print('========= RegistrationForm.__init__========================')
+        sess = kwargs.pop('sess', None)
+        date = kwargs.pop('display_date', None)
+        class_choices = ClassOffer.objects.filter(session__in=decide_session(sess=sess, display_date=date))
+        print(class_choices)
+        super(RegisterForm, self).__init__(*args, **kwargs)
+        self.fields['class_selected'].queryset = class_choices
+
+    def get_initial(self):
+        print('========== RegistrationForm.get_initial ===================')
     #     home_state = User.billing_country_area.default
     #     print(home_state)
-    #     initial = super(RegisterForm, self).get_initial()
+        initial = super(RegisterForm, self).get_initial()
     #     user = self.request.user
     #     temp = {
     #         'first_name': getattr(user, 'first_name', 'First Name'),
@@ -123,8 +135,8 @@ class RegisterForm(forms.ModelForm):
     #     initial.update(temp)
     #     print(temp)
     #     print('-----------------------------')
-    #     print(initial)
-    #     return initial
+        print(initial)
+        return initial
     # Cleaning data is done by:
     # 1) Field.clean() which will populate cleaned_data, and has 3 parts:
     #     a) to_python() to coerce datatype or raise ValidationError if impossible
