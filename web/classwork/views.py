@@ -270,9 +270,7 @@ class RegisterView(CreateView):
         print('================ RegisterView.get_initial ====================')
         initial = super().get_initial()
         user = self.request.user
-        # TODO: instead of 'WA' string, use whatever is the default value as set in the User model.
-        home_state = 'WA'  # User.billing_country_area.default
-        print(home_state)
+        home_state = User._meta.get_field('billing_country_area').get_default()
         initial['user'] = user
         print(user)
         print('------- Update initial Values --------------')
