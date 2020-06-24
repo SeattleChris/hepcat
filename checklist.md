@@ -68,7 +68,7 @@
 - [s] Stretch Goal. Not for current feature plan.
 
 Current Status:
-2020-02-29 13:07:07
+2020-06-23 23:19:17
 <!-- Ctrl-Shift-I to generate timestamp -->
 
 ### Deployment on AWS
@@ -173,7 +173,7 @@ Current Status:
   - [ ] User has a randomly generated password, prompted to change on next login
   - [ ] User confirms with email link. Prompted for password from the link
   - [ ] If user never confirms, it does not stop them from joining future class.
-  - [ ] 
+  - [ ]
 
 ## Style & Layout
 
