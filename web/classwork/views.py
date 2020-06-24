@@ -97,6 +97,8 @@ class ClassOfferListView(ListView):
     template_name = 'classwork/classoffer_list.html'
     model = ClassOffer
     context_object_name = 'classoffers'
+    display_session = None
+    display_date = None
     # TODO: Make more DRY between get_queryset & get_context_data. Determine
     # which is used first and if the info is accessible to the other.
 
@@ -104,16 +106,19 @@ class ClassOfferListView(ListView):
         """ We can limit the classes list by class level """
         print("============ ClassOfferListView.get_queryset ================")
         display_session = self.kwargs.get('display_session', None)
-        session = decide_session(sess=display_session)
-        return ClassOffer.objects.filter(session__in=session).order_by('num_level')
+        display_date = self.kwargs.get('display_date', None)
+        sessions = decide_session(sess=display_session, display_date=display_date)
+        self.kwargs['sessions'] = sessions
+        return ClassOffer.objects.filter(session__in=sessions).order_by('num_level')
 
     def get_context_data(self, **kwargs):
         """ Get the context of the current published classes from Session table """
-        print("============ ClassOfferListView.get_queryset ================")
+        print("============ ClassOfferListView.get_context_data ================")
         context = super().get_context_data(**kwargs)
-        display_session = context.get('display_session', None)
-        sess_names = [ea.name for ea in decide_session(display_session)]
-        context['display_session'] = ', '.join(sess_names)
+        sessions = self.kwargs.pop('sessions', None)
+        context['sessions'] = ', '.join([ea.name for ea in sessions])
+        context['display_session'] = self.kwargs.pop('display_session', None)
+        context['display_date'] = self.kwargs.pop('display_date', None)
         return context
 
 
@@ -129,16 +134,19 @@ class Checkin(ListView):
         """
         print("============ Checkin.get_queryset ================")
         display_session = self.kwargs.get('display_session', None)
-        session = decide_session(sess=display_session)
-        selected_classes = ClassOffer.objects.filter(session__in=session).order_by('-class_day', 'start_time')
+        display_date = self.kwargs.get('display_date', None)
+        sessions = decide_session(sess=display_session, display_date=display_date)
+        self.kwargs['sessions'] = sessions
+        selected_classes = ClassOffer.objects.filter(session__in=sessions).order_by('-class_day', 'start_time')
         return selected_classes
 
     def get_context_data(self, **kwargs):
         """ Get the context of the current, or selected, class session student list """
         context = super().get_context_data(**kwargs)
-        display_session = context.get('display_session', None)
-        sess_names = [ea.name for ea in decide_session(display_session)]
-        context['display_session'] = ', '.join(sess_names)
+        sessions = self.kwargs.pop('sessions', None)
+        context['sessions'] = ', '.join([ea.name for ea in sessions])
+        context['display_session'] = self.kwargs.pop('display_session', None)
+        context['display_date'] = self.kwargs.pop('display_date', None)
         return context
 
 
