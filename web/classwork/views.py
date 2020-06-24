@@ -102,12 +102,14 @@ class ClassOfferListView(ListView):
 
     def get_queryset(self):
         """ We can limit the classes list by class level """
+        print("============ ClassOfferListView.get_queryset ================")
         display_session = self.kwargs.get('display_session', None)
         session = decide_session(sess=display_session)
         return ClassOffer.objects.filter(session__in=session).order_by('num_level')
 
     def get_context_data(self, **kwargs):
         """ Get the context of the current published classes from Session table """
+        print("============ ClassOfferListView.get_queryset ================")
         context = super().get_context_data(**kwargs)
         display_session = context.get('display_session', None)
         sess_names = [ea.name for ea in decide_session(display_session)]
@@ -222,40 +224,50 @@ class RegisterView(CreateView):
     #     return super().as_view(**initkwargs)
 
     def dispatch(self, *args, **kwargs):
-        print('================ dispatch =================')
+        print('================ RegisterView.dispatch =================')
         return super(RegisterView, self).dispatch(*args, **kwargs)
 
     def get(self, *args, **kwargs):
-        print('================ get =================')
+        print('================ RegisterView.get =================')
         return super(RegisterView, self).get(*args, **kwargs)
 
     def post(self, *args, **kwargs):
-        print('================ post =================')
+        print('================ RegisterView.post =================')
         return super().post(self, *args, **kwargs)
 
     def put(self, *args, **kwargs):
-        print('================ put =================')
+        print('================ RegisterView.put =================')
         return super().put(*args, **kwargs)
 
     def get_form(self, form_class=None):
-        print('================ get_form =================')
-        return super().get_form(form_class)
+        print('================ RegisterView.get_form =================')
+        temp = super().get_form(form_class)
+        print(temp)
+        return temp
+        # return super().get_form(form_class)
 
     def get_form_class(self):
-        print('================ get_form_class =================')
-        return super().get_form_class()
+        print('================ RegisterView.get_form_class =================')
+        temp = super().get_form_class()
+        # sess = self.cont
+        # temp.class_selected = ClassOffer.objects.filter(session__in=decide_session(sess=sess, display_date=date))
+        print(temp)
+        return temp
+        # return super().get_form_class()
 
     def get_form_kwargs(self):
-        print('================ get_form_kwargs =================')
-        return super(RegisterView, self).get_form_kwargs()
+        print('================ RegisterView.get_form_kwargs =================')
+        kwargs = super(RegisterView, self).get_form_kwargs()
+        return kwargs
+        # return super(RegisterView, self).get_form_kwargs()
 
     def get_initial(self):
-        print('================ get_initial ====================')
+        print('================ RegisterView.get_initial ====================')
         initial = super().get_initial()
-        sess = self.kwargs['session'] if hasattr(self.kwargs, 'session') else None
-        date = self.kwargs['display_date'] if hasattr(self.kwargs, 'display_date') else None
-        class_choices = ClassOffer.objects.filter(session__in=decide_session(sess=sess, display_date=date))
-        initial['class_choices'] = class_choices
+        # sess = self.kwargs['session'] if hasattr(self.kwargs, 'session') else None
+        # date = self.kwargs['display_date'] if hasattr(self.kwargs, 'display_date') else None
+        # class_choices = ClassOffer.objects.filter(session__in=decide_session(sess=sess, display_date=date))
+        # initial['class_choices'] = class_choices
         user = self.request.user
         # home_state = User.billing_country_area.default
         # print(home_state)
@@ -274,8 +286,11 @@ class RegisterView(CreateView):
         return initial
 
     def get_prefix(self):
-        print('================ get_prefix =================')
-        return super().get_prefix()
+        print('================ RegisterView.get_prefix =================')
+        temp = super().get_prefix()
+        # print(temp)
+        return temp
+        # return super().get_prefix()
 
     def get_context_data(self, **kwargs):
         print('========== RegisterView.get_context_data =============')
@@ -284,14 +299,15 @@ class RegisterView(CreateView):
         # sess = context['session'] if context['session'] else None
         # date = context['display_date'] if context['display_date'] else None
         # context['class_choices'] = ClassOffer.objects.filter(session__in=decide_session(sess=sess, display_date=date))
+        print(context)
         return context
 
     def render_to_response(self, context, **response_kwargs):
-        print('================ render_to_response =================')
+        print('================ RegisterView.render_to_response =================')
         return super(RegisterView, self).render_to_response(context, **response_kwargs)
 
     def get_template_names(self):
-        print('================ get_template_names =================')
+        print('================ RegisterView.get_template_names =================')
         return super().get_template_names()
 
     def form_valid(self, form):
@@ -312,7 +328,7 @@ class RegisterView(CreateView):
     # Unsure after this one.
 
     def form_invalid(self, form):
-        print('================ form_invalid =================')
+        print('================ RegisterView.form_invalid =================')
         print(f'Self: {self}')
         for ea in dir(self):
             print(ea)
@@ -320,7 +336,7 @@ class RegisterView(CreateView):
         return super().form_invalid(form)
 
     def get_object(self, queryset=None):
-        print('================ get_object =================')
+        print('================ RegisterView.get_object =================')
         return super().get_object(queryset)
 
     # def head():
@@ -328,23 +344,23 @@ class RegisterView(CreateView):
     #     return super().head(**initkwargs)
 
     def http_method_not_allowed(self, *args, **kwargs):
-        print('================ http_method_not_allowed =================')
+        print('================ RegisterView.http_method_not_allowed =================')
         return super(RegisterView, self).http_method_not_allowed(*args, **kwargs)
 
     def setup(self, *args, **kwargs):
-        print('================ setup =================')
+        print('================ RegisterView.setup =================')
         return super(RegisterView, self).setup(*args, **kwargs)
 
     def get_context_object_name(self, obj):
-        print('================ get_context_object_name =================')
+        print('================ RegisterView.get_context_object_name =================')
         return super().get_context_object_name(obj)
 
     def get_queryset(self):
-        print('================ get_queryset =================')
+        print('================ RegisterView.get_queryset =================')
         return super().get_queryset()
 
     def get_slug_field(self):
-        print('================ get_slug_field =================')
+        print('================ RegisterView.get_slug_field =================')
         return super().get_slug_field()
 
     # end class RegisterView

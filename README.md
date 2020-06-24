@@ -104,9 +104,18 @@ This is a specific subject, offered during a specific session. It includes infor
 
 * Make sure you have a processing account through stripe and/or PayPal
 * clone the repo
+* create the needed database, recording the connection details to be used in `.env` file.
 * make sure the file settings are correct.
 * make an `.env` file, following the example of `.env_template`
-* docker-compose up --build
+* from the `/web` directory, run `python manage.py migrate`
+* from the `/web` directory, run `python manage.py createsuperuser`
+  * input an admin username (this is temporary as it will be overwritten)
+  * input an email and password as prompted (the email will be used as the username)
+* from the `/web` directory, run `python manage.py runserver`
+  * From here you should be able to login, but the username will be the provided admin email.
+  * Go to the admin pages. Update the admin account with a first and last name.
+  * Input the initial class structure content for: Session, Subject, ClassOffer
+<!-- * docker-compose up --build -->
 * ... To Be Filled In Later ...
 
 Each organization installing this app while have some unique settings. Some of these depend on the deployment and development environments, and some of these depend on the business/organization structure. While some of these organization structure settings are created as an organization admin after the app is installed, some are handled elsewhere, most notably in the `.env` file (which should never be published or shared publicly). The following has some `.env` file settings explained:
