@@ -18,7 +18,6 @@ def decide_session(sess=None, display_date=None):
     sess_data = []
     if sess is None:
         target = display_date or datetime.now()
-        print(target)
         sess_data = Session.objects.filter(publish_date__lte=target, expire_date__gte=target)
     else:
         if display_date:
@@ -99,9 +98,7 @@ class RegisterForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         print('========= RegistrationForm.__init__========================')
-        sess = kwargs.pop('sess', None)
-        date = kwargs.pop('display_date', None)
-        class_choices = ClassOffer.objects.filter(session__in=decide_session(sess=sess, display_date=date))
+        class_choices = kwargs.pop('class_choices', None)
         print(class_choices)
         super(RegisterForm, self).__init__(*args, **kwargs)
         self.fields['class_selected'].queryset = class_choices

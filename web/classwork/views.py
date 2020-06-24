@@ -97,8 +97,8 @@ class ClassOfferListView(ListView):
     template_name = 'classwork/classoffer_list.html'
     model = ClassOffer
     context_object_name = 'classoffers'
-    display_session = None
-    display_date = None
+    display_session = None  # 'all' or <start_month>_<year> as stored in DB Session.name
+    display_date = None     # <year>-<month>-<day>
 
     def get_queryset(self):
         """ We can limit the classes list by class level """
@@ -217,6 +217,8 @@ class RegisterView(CreateView):
     template_name = 'classwork/register.html'
     model = Payment
     form_class = RegisterForm
+    display_session = None  # 'all' or <start_month>_<year> as stored in DB Session.name
+    display_date = None     # <year>-<month>-<day>
     # TODO: Can success_url take in payment/registration details?
     # success_url = reverse_lazy('payment_done')
     # finish_url = reverse_lazy('payment_success')
@@ -255,15 +257,21 @@ class RegisterView(CreateView):
 
     def get_form_kwargs(self):
         print('================ RegisterView.get_form_kwargs =================')
-        # kwargs = super(RegisterView, self).get_form_kwargs()
-        # return kwargs
-        return super(RegisterView, self).get_form_kwargs()
+        kwargs = super(RegisterView, self).get_form_kwargs()
+        sess = self.kwargs.get('display_session', None)
+        date = self.kwargs.get('display_date', None)
+        # sessions = decide_session(sess=display_session, display_date=display_date)
+        class_choices = ClassOffer.objects.filter(session__in=decide_session(sess=sess, display_date=date))
+        kwargs['class_choices'] = class_choices
+        return kwargs
+        # return super(RegisterView, self).get_form_kwargs()
 
     def get_initial(self):
         print('================ RegisterView.get_initial ====================')
         initial = super().get_initial()
         user = self.request.user
-        home_state = User.billing_country_area.default
+        # TODO: instead of 'WA' string, use whatever is the default value as set in the User model.
+        home_state = 'WA'  # User.billing_country_area.default
         print(home_state)
         initial['user'] = user
         print(user)
@@ -274,7 +282,6 @@ class RegisterView(CreateView):
         initial['billing_address_1'] = getattr(user, 'billing_address_1', '')
         initial['billing_address_2'] = getattr(user, 'billing_address_2', '')
         initial['billing_country_area'] = getattr(user, 'billing_country_area', home_state)
-        # TODO: instead of 'WA' string, use whatever is the default value as set in the User model.
         initial['billing_postcode'] = getattr(user, 'billing_postcode', '')
         print(initial)
         return initial
