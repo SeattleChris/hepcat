@@ -12,7 +12,7 @@
     <h1>Swing Dance - Lindy Hop Classes</h1>
     <p>Registration is open for these scheduled classes.</p>
     {% if user.is_staff %}
-    <p> {{ display_session }} </p>
+    <p> {{ sessions }} | Display Session: {{ display_session}} | Display Date: {{ display_date }}</p>
     {% endif %}
   </header>
 

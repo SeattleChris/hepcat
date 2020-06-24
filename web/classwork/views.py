@@ -99,8 +99,6 @@ class ClassOfferListView(ListView):
     context_object_name = 'classoffers'
     display_session = None
     display_date = None
-    # TODO: Make more DRY between get_queryset & get_context_data. Determine
-    # which is used first and if the info is accessible to the other.
 
     def get_queryset(self):
         """ We can limit the classes list by class level """
@@ -249,36 +247,24 @@ class RegisterView(CreateView):
 
     def get_form(self, form_class=None):
         print('================ RegisterView.get_form =================')
-        temp = super().get_form(form_class)
-        print(temp)
-        return temp
-        # return super().get_form(form_class)
+        return super().get_form(form_class)
 
     def get_form_class(self):
         print('================ RegisterView.get_form_class =================')
-        temp = super().get_form_class()
-        # sess = self.cont
-        # temp.class_selected = ClassOffer.objects.filter(session__in=decide_session(sess=sess, display_date=date))
-        print(temp)
-        return temp
-        # return super().get_form_class()
+        return super().get_form_class()
 
     def get_form_kwargs(self):
         print('================ RegisterView.get_form_kwargs =================')
-        kwargs = super(RegisterView, self).get_form_kwargs()
-        return kwargs
-        # return super(RegisterView, self).get_form_kwargs()
+        # kwargs = super(RegisterView, self).get_form_kwargs()
+        # return kwargs
+        return super(RegisterView, self).get_form_kwargs()
 
     def get_initial(self):
         print('================ RegisterView.get_initial ====================')
         initial = super().get_initial()
-        # sess = self.kwargs['session'] if hasattr(self.kwargs, 'session') else None
-        # date = self.kwargs['display_date'] if hasattr(self.kwargs, 'display_date') else None
-        # class_choices = ClassOffer.objects.filter(session__in=decide_session(sess=sess, display_date=date))
-        # initial['class_choices'] = class_choices
         user = self.request.user
-        # home_state = User.billing_country_area.default
-        # print(home_state)
+        home_state = User.billing_country_area.default
+        print(home_state)
         initial['user'] = user
         print(user)
         print('------- Update initial Values --------------')
@@ -287,7 +273,7 @@ class RegisterView(CreateView):
         initial['email'] = getattr(user, 'email', '')
         initial['billing_address_1'] = getattr(user, 'billing_address_1', '')
         initial['billing_address_2'] = getattr(user, 'billing_address_2', '')
-        initial['billing_country_area'] = getattr(user, 'billing_country_area', 'WA')
+        initial['billing_country_area'] = getattr(user, 'billing_country_area', home_state)
         # TODO: instead of 'WA' string, use whatever is the default value as set in the User model.
         initial['billing_postcode'] = getattr(user, 'billing_postcode', '')
         print(initial)
@@ -295,10 +281,7 @@ class RegisterView(CreateView):
 
     def get_prefix(self):
         print('================ RegisterView.get_prefix =================')
-        temp = super().get_prefix()
-        # print(temp)
-        return temp
-        # return super().get_prefix()
+        return super().get_prefix()
 
     def get_context_data(self, **kwargs):
         print('========== RegisterView.get_context_data =============')
