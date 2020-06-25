@@ -121,24 +121,36 @@ class SessiontAdmin(admin.ModelAdmin):
     ordering = ('expire_date',)
 
     def formfield_for_dbfield(self, db_field, **kwargs):
+        from pprint import pprint
         modified_fields = ('key_day_date', 'publish_date')
         field = super().formfield_for_dbfield(db_field, **kwargs)
         if db_field.name not in modified_fields:
             return field
-        initial = getattr(field, 'initial', None)
-        if initial:
-            print(initial)
-            return field
+        print('================ SessionAdmin formfield =========================')
+        pprint(dir(field))
+        print('-----------------------------------------------------------------')
+        print(db_field.name)
+        print(field.clean)
+        print(field.bound_data)
+        print(field.prepare_value)
+        print(field.empty_values)
+        print(field.get_bound_field)
+        print('-----------------------------------------------------------------')
+        pprint(field.__dict__)
+        print('-----------------------------------------------------------------')
+        # initial = getattr(field, 'initial', None)
+        # if initial:
+        #     print(initial)
+        #     return field
         final_session = Session.objects.order_by('-key_day_date').first()
         if not final_session:
             return field
         if db_field.name == 'key_day_date':
-            new_date = final_session.key_day_date + timedelta(days=7 * final_session.num_weeks)
+            new_date = final_session.key_day_date + timedelta(days=7*final_session.num_weeks)
             field.initial = new_date
         elif db_field.name == 'publish_date':
             new_date = getattr(final_session, 'expire_date', None)
             if not new_date:
-                # half_weeks = getattr(final_session, 'num_weeks', 0) // 2
                 if final_session.num_weeks > 3:
                     days_from_end = 1 - 7 * (final_session.num_weeks - 2)
                     day_after_week2_class = final_session.end_date + timedelta(days=days_from_end)
