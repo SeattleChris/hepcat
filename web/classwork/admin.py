@@ -115,10 +115,9 @@ class ClassOfferAdmin(admin.ModelAdmin):
 
 
 class SessiontAdmin(admin.ModelAdmin):
-    """
-    """
+    """ Admin manage of Session models. New Sessions will populate initial values based on last Session. """
     model = Session
-    ordering = ('expire_date',)
+    ordering = ('key_day_date',)
 
     def formfield_for_dbfield(self, db_field, **kwargs):
         modified_fields = ('key_day_date', 'publish_date')
