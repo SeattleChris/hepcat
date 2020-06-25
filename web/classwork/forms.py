@@ -18,6 +18,7 @@ def decide_session(sess=None, display_date=None):
     sess_data = []
     if sess is None:
         target = display_date or datetime.now()
+        # TODO: Fix for dealing with Sessions do not have an expire_date
         sess_data = Session.objects.filter(publish_date__lte=target, expire_date__gte=target)
     else:
         if display_date:
@@ -30,6 +31,8 @@ def decide_session(sess=None, display_date=None):
             sess_data = Session.objects.filter(name__in=sess)
         except TypeError:
             sess_data = []
+    if not sess_data:
+        sess_data = Session.objects.order_by('-key_day_date').first()
     print(sess_data)
     return sess_data  # a list of Session records, even if only 0-1 session
 
