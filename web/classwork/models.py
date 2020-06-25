@@ -283,7 +283,7 @@ class Session(models.Model):
     def end_date(self):
         """ What is the actual last class day for the session?
         """
-        last_date = self.key_day_date + timedelta(days=7*self.num_weeks)
+        last_date = self.key_day_date + timedelta(days=7*(self.num_weeks - 1))
         if self.max_day_shift > 0:
             last_date += timedelta(days=self.max_day_shift)
         return last_date
@@ -303,13 +303,6 @@ class Session(models.Model):
         later = Session.objects.filter(key_day_date__gt=self.key_day_date)
         next_one_or_none = later.order_by('key_day_date').first()
         return next_one_or_none
-
-    def prev_expire_date(self):
-        """ Query for the Session in DB that comes before the current Session.
-            Return this previous Session expire_date.
-        """
-        # TODO: Get the previous session expire date. Helps to populate publish_date.
-        pass
 
     date_added = models.DateField(auto_now_add=True)
     date_modified = models.DateField(auto_now=True)
