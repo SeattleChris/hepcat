@@ -270,6 +270,7 @@ class Session(models.Model):
     expire_date = models.DateField(blank=True, null=True)
     # TODO: Make sure class session publish times can NOT overlap
 
+    @property
     def start_date(self):
         """ What is the actual first class day for the session?
         """
@@ -278,6 +279,7 @@ class Session(models.Model):
             first_date += timedelta(days=self.max_day_shift)
         return first_date
 
+    @property
     def end_date(self):
         """ What is the actual last class day for the session?
         """
@@ -286,6 +288,7 @@ class Session(models.Model):
             last_date += timedelta(days=self.max_day_shift)
         return last_date
 
+    @property
     def prev_session(self):
         """ Query for the Session in DB that comes before the current Session. """
         # TODO: Get the previous session. Helps checkin to view previous session.
@@ -293,6 +296,7 @@ class Session(models.Model):
         previous_one_or_none = prior.order_by('-key_day_date').first()
         return previous_one_or_none
 
+    @property
     def next_session(self):
         """ Query for the Session in DB that comes after the current Session. """
         # TODO: Get the next session. Helps checkin to view next session.
