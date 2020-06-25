@@ -4,7 +4,7 @@
 
 <section>
   <article>
-    <h2>{{ display_session }}</h2>
+    <h2>{{ sessions }}</h2>
     {% for ea in class_list %}
     <h3>{{ ea.subject }}: {{ ea.subject.title }} </h3>
     <ul>
@@ -34,6 +34,18 @@
     {% endfor %}
     <hr />
     <p>End of list of Students</p>
+    <p>
+      {% if prev_session %}
+      <a href="{% url 'checkin_session' display_session=prev_session %}">Previous Session</a> |
+      {% else %}
+      No Previous Session |
+      {% endif %}
+      {% if next_session %}
+      <a href="{% url 'checkin_session' display_session=next_session %}">Next Session</a>
+      {% else %}
+      No Next Session
+      {% endif %}
+    </p>
   </article>
 </section>
 

@@ -1,5 +1,5 @@
 from django import forms
-from .models import ClassOffer, Profile, Payment, Registration, Notify, Session
+from .models import Profile, Payment, Registration, Notify, Session  # , ClassOffer
 # from django.urls import reverse_lazy
 # from django.shortcuts import render
 from datetime import datetime

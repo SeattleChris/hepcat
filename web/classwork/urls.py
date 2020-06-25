@@ -14,6 +14,7 @@ urlpatterns = [  # All following are in root
     path('classes/date/<str:display_date>', ClassOfferListView.as_view(), name='classoffer_display_date'),
     path('location/<int:id>', LocationDetailView.as_view(), name='location_detail'),
     path('location/', LocationListView.as_view(), name='location_list'),
+    path('checkin/<str:display_session>', Checkin.as_view(), name='checkin_session'),
     path('checkin/', Checkin.as_view(), name='checkin'),
     path('register/', RegisterView.as_view(), name='register'),
     path('payment/<int:id>', payment_details, name='payment'),
