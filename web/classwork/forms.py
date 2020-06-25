@@ -1,5 +1,5 @@
 from django import forms
-from .models import ClassOffer, Profile, Payment, Registration, Notify, Session
+from .models import Profile, Payment, Registration, Notify, Session  # , ClassOffer
 # from django.urls import reverse_lazy
 # from django.shortcuts import render
 from datetime import datetime
@@ -16,9 +16,6 @@ def decide_session(sess=None, display_date=None):
     """
     print('======= forms function - decide_session ==========')
     sess_data = []
-    # TODO: Test alternative data input. Default happy path is working.
-    # TODO: Fix for when we do not yet have Session table created.
-    # TODO: Memcache session. Don't call the DB all the time.
     if sess is None:
         target = display_date or datetime.now()
         sess_data = Session.objects.filter(publish_date__lte=target, expire_date__gte=target)
@@ -28,7 +25,7 @@ def decide_session(sess=None, display_date=None):
         if sess == 'all':
             return Session.objects.all()
         if not isinstance(sess, list):
-            sess = [].append(sess)
+            sess = [sess]
         try:
             sess_data = Session.objects.filter(name__in=sess)
         except TypeError:
@@ -64,22 +61,15 @@ class RegisterForm(forms.ModelForm):
     # TODO: Create the workflow for when (if) the user wants to fill out the
     # registration form for someone else,
 
-    # Find the acceptable ClassOffers to show
-    print("============ RegisterForm ================")
-    # class_choices = ClassOffer.objects.filter(session__in=decide_session())  # TODO: FIX HERE called on server startup
-    # class_choices = ClassOffer.objects  # Use this instead to make ALL classes available to select.
     user_answers = (('', 'Please Select an Answer'), ('T', 'This is my first'), ('F', 'I am a returning student'),)
     # payment_answers = (('F', 'Paid by the student named above'), ('T', 'Paid by someone other than student listed above'))
-    # TODO: Change to CheckboxSelectMultiple and make sure it works
-
     new_user = forms.ChoiceField(label='Have you had classes with us before?', choices=(user_answers))
     first_name = forms.CharField(label='First Name', max_length=User._meta.get_field('first_name').max_length)
     last_name = forms.CharField(label='Last Name', max_length=User._meta.get_field('last_name').max_length)
     email = forms.CharField(max_length=User._meta.get_field('email').max_length, widget=forms.EmailInput())
     # password = forms.CharField(min_length=6, max_length=16, widget=forms.PasswordInput())
-    # DUMMY_CHOICES = (("1", "First"), ("2", "Second"))
+    # TODO: Change to CheckboxSelectMultiple and make sure it works
     class_selected = forms.ModelMultipleChoiceField(label='Choose your class(es)', queryset=None)
-    # class_selected = forms.ModelMultipleChoiceField(label='Choose your class(es)', queryset=class_choices)
     paid_by_other = forms.BooleanField(label='paid by a different person', required=False)
     new_fields = ['new_user', 'first_name', 'last_name', 'email', 'class_selected', 'paid_by_other']
 
@@ -108,35 +98,11 @@ class RegisterForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         print('========= RegistrationForm.__init__========================')
-        sess = kwargs.pop('sess', None)
-        date = kwargs.pop('display_date', None)
-        class_choices = ClassOffer.objects.filter(session__in=decide_session(sess=sess, display_date=date))
+        class_choices = kwargs.pop('class_choices', None)
         print(class_choices)
         super(RegisterForm, self).__init__(*args, **kwargs)
         self.fields['class_selected'].queryset = class_choices
 
-    def get_initial(self):
-        print('========== RegistrationForm.get_initial ===================')
-    #     home_state = User.billing_country_area.default
-    #     print(home_state)
-        initial = super(RegisterForm, self).get_initial()
-    #     user = self.request.user
-    #     temp = {
-    #         'first_name': getattr(user, 'first_name', 'First Name'),
-    #         'last_name': getattr(user, 'last_name', 'Last Name'),
-    #         'email': getattr(user, 'email', 'Email'),
-    #         'billing_address_1': getattr(user, 'billing_address_1', 'Street Address'),
-    #         'billing_address_2': getattr(user, 'billing_address_2', ''),
-    #         'billing_country_area': getattr(user, 'billing_country_ara', 'WA'),
-    #         # TODO: instead of 'WA' string, use whatever is the default value as set in the User model.
-    #         'billing_postcode': getattr(user, 'billing_postcode', 'zipcode'),
-    #     }
-    #     # update initial field defaults with custom set default values:
-    #     initial.update(temp)
-    #     print(temp)
-    #     print('-----------------------------')
-        print(initial)
-        return initial
     # Cleaning data is done by:
     # 1) Field.clean() which will populate cleaned_data, and has 3 parts:
     #     a) to_python() to coerce datatype or raise ValidationError if impossible
@@ -149,25 +115,20 @@ class RegisterForm(forms.ModelForm):
         first_name = self.cleaned_data.get('first_name')
         if first_name is None:
             raise forms.ValidationError("First Name is required")
-        value = first_name.capitalize()
-        print(f'Modified first_name: "{value}"')
-        return value
+        return first_name.capitalize()
 
     def clean_last_name(self):
         value = self.cleaned_data.get('last_name')
-        print('unmodified last_name:', value)
         if value is None:
             raise forms.ValidationError("Last Name is required")
         if value.isupper() or value.islower():
             # If they gave all caps, or all lower, assume this is not desired.
-            print('Modified Last Name: ', value.capitalize())
             return value.capitalize()
         # However, some names have capitols in the middle, so leave unmodified.
         return value
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
-        print('unmodified email:', email)
         if email is None:
             raise forms.ValidationError("Email is required")
         # TODO: We could/should use an external email validator that uses our

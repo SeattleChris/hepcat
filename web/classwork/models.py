@@ -286,11 +286,25 @@ class Session(models.Model):
             last_date += timedelta(days=self.max_day_shift)
         return last_date
 
+    def prev_session(self):
+        """ Query for the Session in DB that comes before the current Session. """
+        # TODO: Get the previous session. Helps checkin to view previous session.
+        prior = Session.objects.filter(key_day_date__lt=self.key_day_date)
+        previous_one_or_none = prior.order_by('-key_day_date').first()
+        return previous_one_or_none
+
+    def next_session(self):
+        """ Query for the Session in DB that comes after the current Session. """
+        # TODO: Get the next session. Helps checkin to view next session.
+        later = Session.objects.filter(key_day_date__gt=self.key_day_date)
+        next_one_or_none = later.order_by('key_day_date').first()
+        return next_one_or_none
+
     def prev_expire_date(self):
         """ Query for the Session in DB that comes before the current Session.
             Return this previous Session expire_date.
         """
-        # TODO: Get the previous session due date. Helps to compute expire_date.
+        # TODO: Get the previous session expire date. Helps to populate publish_date.
         pass
 
     date_added = models.DateField(auto_now_add=True)

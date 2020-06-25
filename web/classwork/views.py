@@ -97,13 +97,11 @@ class ClassOfferListView(ListView):
     template_name = 'classwork/classoffer_list.html'
     model = ClassOffer
     context_object_name = 'classoffers'
-    display_session = None
-    display_date = None
-    # TODO: Make more DRY between get_queryset & get_context_data. Determine
-    # which is used first and if the info is accessible to the other.
+    display_session = None  # 'all' or <start_month>_<year> as stored in DB Session.name
+    display_date = None     # <year>-<month>-<day>
 
     def get_queryset(self):
-        """ We can limit the classes list by class level """
+        """ We can limit the classes list by session, what is published on a given date, or currently published. """
         print("============ ClassOfferListView.get_queryset ================")
         display_session = self.kwargs.get('display_session', None)
         display_date = self.kwargs.get('display_date', None)
@@ -112,7 +110,7 @@ class ClassOfferListView(ListView):
         return ClassOffer.objects.filter(session__in=sessions).order_by('num_level')
 
     def get_context_data(self, **kwargs):
-        """ Get the context of the current published classes from Session table """
+        """ Get context of class list we are showing, typically currently published or modified by URL parameters """
         print("============ ClassOfferListView.get_context_data ================")
         context = super().get_context_data(**kwargs)
         sessions = self.kwargs.pop('sessions', None)
@@ -127,6 +125,7 @@ class Checkin(ListView):
     model = Registration
     template_name = 'classwork/checkin.html'
     context_object_name = 'class_list'
+    display_session = None  # 'all' or <start_month>_<year> as stored in DB Session.name
 
     def get_queryset(self):
         """ List all the students from all the classes (grouped in days, then
@@ -147,6 +146,12 @@ class Checkin(ListView):
         context['sessions'] = ', '.join([ea.name for ea in sessions])
         context['display_session'] = self.kwargs.pop('display_session', None)
         context['display_date'] = self.kwargs.pop('display_date', None)
+        earliest, latest = None, None
+        if context['display_session'] != 'all':
+            earliest = sessions.order_by('key_day_date').first()
+            latest = sessions.order_by('-key_day_date').first()
+        context['prev_session'] = earliest.prev_session if earliest else None
+        context['next_session'] = latest.next_session if latest else None
         return context
 
 
@@ -219,6 +224,8 @@ class RegisterView(CreateView):
     template_name = 'classwork/register.html'
     model = Payment
     form_class = RegisterForm
+    display_session = None  # 'all' or <start_month>_<year> as stored in DB Session.name
+    display_date = None     # <year>-<month>-<day>
     # TODO: Can success_url take in payment/registration details?
     # success_url = reverse_lazy('payment_done')
     # finish_url = reverse_lazy('payment_success')
@@ -230,6 +237,10 @@ class RegisterView(CreateView):
     # def as_view(**initkwargs):
     #     print('================ as_view =================')
     #     return super().as_view(**initkwargs)
+
+    def setup(self, *args, **kwargs):
+        print('================ RegisterView.setup =================')
+        return super(RegisterView, self).setup(*args, **kwargs)
 
     def dispatch(self, *args, **kwargs):
         print('================ RegisterView.dispatch =================')
@@ -247,38 +258,34 @@ class RegisterView(CreateView):
         print('================ RegisterView.put =================')
         return super().put(*args, **kwargs)
 
+    def get_context_data(self, **kwargs):
+        print('========== RegisterView.get_context_data =============')
+        context = super().get_context_data(**kwargs)
+        print(context)
+        return context
+
     def get_form(self, form_class=None):
         print('================ RegisterView.get_form =================')
-        temp = super().get_form(form_class)
-        print(temp)
-        return temp
-        # return super().get_form(form_class)
+        return super().get_form(form_class)
 
     def get_form_class(self):
         print('================ RegisterView.get_form_class =================')
-        temp = super().get_form_class()
-        # sess = self.cont
-        # temp.class_selected = ClassOffer.objects.filter(session__in=decide_session(sess=sess, display_date=date))
-        print(temp)
-        return temp
-        # return super().get_form_class()
+        return super().get_form_class()
 
     def get_form_kwargs(self):
         print('================ RegisterView.get_form_kwargs =================')
         kwargs = super(RegisterView, self).get_form_kwargs()
+        sess = self.kwargs.get('display_session', None)
+        date = self.kwargs.get('display_date', None)
+        class_choices = ClassOffer.objects.filter(session__in=decide_session(sess=sess, display_date=date))
+        kwargs['class_choices'] = class_choices
         return kwargs
-        # return super(RegisterView, self).get_form_kwargs()
 
     def get_initial(self):
         print('================ RegisterView.get_initial ====================')
         initial = super().get_initial()
-        # sess = self.kwargs['session'] if hasattr(self.kwargs, 'session') else None
-        # date = self.kwargs['display_date'] if hasattr(self.kwargs, 'display_date') else None
-        # class_choices = ClassOffer.objects.filter(session__in=decide_session(sess=sess, display_date=date))
-        # initial['class_choices'] = class_choices
         user = self.request.user
-        # home_state = User.billing_country_area.default
-        # print(home_state)
+        home_state = User._meta.get_field('billing_country_area').get_default()
         initial['user'] = user
         print(user)
         print('------- Update initial Values --------------')
@@ -287,28 +294,14 @@ class RegisterView(CreateView):
         initial['email'] = getattr(user, 'email', '')
         initial['billing_address_1'] = getattr(user, 'billing_address_1', '')
         initial['billing_address_2'] = getattr(user, 'billing_address_2', '')
-        initial['billing_country_area'] = getattr(user, 'billing_country_area', 'WA')
-        # TODO: instead of 'WA' string, use whatever is the default value as set in the User model.
+        initial['billing_country_area'] = getattr(user, 'billing_country_area', home_state)
         initial['billing_postcode'] = getattr(user, 'billing_postcode', '')
         print(initial)
         return initial
 
     def get_prefix(self):
         print('================ RegisterView.get_prefix =================')
-        temp = super().get_prefix()
-        # print(temp)
-        return temp
-        # return super().get_prefix()
-
-    def get_context_data(self, **kwargs):
-        print('========== RegisterView.get_context_data =============')
-        context = super().get_context_data(**kwargs)
-        # context['user'] = self.request.user
-        # sess = context['session'] if context['session'] else None
-        # date = context['display_date'] if context['display_date'] else None
-        # context['class_choices'] = ClassOffer.objects.filter(session__in=decide_session(sess=sess, display_date=date))
-        print(context)
-        return context
+        return super().get_prefix()
 
     def render_to_response(self, context, **response_kwargs):
         print('================ RegisterView.render_to_response =================')
@@ -354,10 +347,6 @@ class RegisterView(CreateView):
     def http_method_not_allowed(self, *args, **kwargs):
         print('================ RegisterView.http_method_not_allowed =================')
         return super(RegisterView, self).http_method_not_allowed(*args, **kwargs)
-
-    def setup(self, *args, **kwargs):
-        print('================ RegisterView.setup =================')
-        return super(RegisterView, self).setup(*args, **kwargs)
 
     def get_context_object_name(self, obj):
         print('================ RegisterView.get_context_object_name =================')
