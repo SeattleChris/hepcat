@@ -267,7 +267,7 @@ class Session(models.Model):
     # TODO: Later on we will do some logic to auto-populate the publish and expire dates
     # TODO: Does the session settings need to account for mid-session break weeks?
     publish_date = models.DateField(blank=True)
-    expire_date = models.DateField(blank=True)
+    expire_date = models.DateField(blank=True, null=True)
     # TODO: Make sure class session publish times can NOT overlap
 
     def start_date(self):

@@ -3,6 +3,7 @@ from django.forms import Textarea
 from django.db import models
 from .models import (SiteContent, Resource, Subject, Session, ClassOffer,
                      Profile, Payment, Registration, Location)
+from datetime import timedelta
 # from django.utils.functional import curry
 
 # Register your models here.
@@ -118,6 +119,35 @@ class SessiontAdmin(admin.ModelAdmin):
     """
     model = Session
     ordering = ('expire_date',)
+
+    def formfield_for_dbfield(self, db_field, **kwargs):
+        modified_fields = ('key_day_date', 'publish_date')
+        field = super().formfield_for_dbfield(db_field, **kwargs)
+        if db_field.name not in modified_fields:
+            return field
+        initial = getattr(field, 'initial', None)
+        if initial:
+            print(initial)
+            return field
+        final_session = Session.objects.order_by('-key_day_date').first()
+        if not final_session:
+            return field
+        if db_field.name == 'key_day_date':
+            new_date = final_session.key_day_date + timedelta(days=7 * final_session.num_weeks)
+            field.initial = new_date
+        elif db_field.name == 'publish_date':
+            new_date = getattr(final_session, 'expire_date', None)
+            if not new_date:
+                # half_weeks = getattr(final_session, 'num_weeks', 0) // 2
+                if final_session.num_weeks > 3:
+                    days_from_end = 1 - 7 * (final_session.num_weeks - 2)
+                    day_after_week2_class = final_session.end_date + timedelta(days=days_from_end)
+                    new_date = day_after_week2_class
+                else:
+                    new_date = getattr(final_session.prev_session, 'expire_date', None)
+            field.initial = new_date
+            final_session.expire_date = new_date
+        return field
 
     # def get_queryset(self, request):
     #     queryset = super().get_queryset(request)
