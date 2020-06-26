@@ -169,22 +169,37 @@ def session_save_handler(sender, instance, *args, **kwargs):
     from pprint import pprint
     print('================ Pre Save =========================')
     pprint(args)
-    print('---------------------------------------------------')
     pprint(kwargs)
-    if instance.expire_date is None or instance.expire_date == "":
+    print('---------------------------------------------------')
+    if instance.expire_date is None:
+        # print('---------------------------------------------------')
+        # pprint(dir(instance))
+        # pprint(instance.clean)
+        # pprint(instance.clean_fields)
+        # pprint(instance.from_db)
+        # pprint(instance.full_clean)
+        # pprint(instance.check)
+        # pprint(instance.get_deferred_fields)
+        # pprint(instance.prepare_database_save)
+        # print('---------------------------------------------------')
         target = 2 if instance.num_weeks > 3 else 1
         num_days_target_from_end = 1 - 7 * (instance.num_weeks - target)
         new_date = instance.end_date + timedelta(days=num_days_target_from_end)
         instance.expire_date = new_date
-    # else:
-    #     try:
-    #         old_data = Session.objects.get(id=instance.id)
-    #     except Session.DoesNotExist:
-    #         old_data = None
-    #     next_sess = instance.next_session
-    #     if next_sess and old_data and next_sess.publish_date == old_data.expire_date:
-    #         next_sess.publish_date = instance.expire_date
-    #         next_sess.save()
+    else:
+        print('The expire_date was not blank')
+        # print(instance.expire_date)
+        # print(type(instance.expire_date))
+        # pprint(dir(instance))
+        try:
+            old_instance = Session.objects.get(id=instance.id)
+            old_date = old_instance.expire_date
+        except Session.DoesNotExist:
+            old_date = None
+        next_sess = instance.next_session
+        if next_sess and next_sess.publish_date == old_date:
+            next_sess.publish_date = instance.expire_date
+            next_sess.save()
 
 
 class StudentClassInline(admin.TabularInline):
