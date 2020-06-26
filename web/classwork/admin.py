@@ -172,6 +172,7 @@ def session_save_handler(sender, instance, *args, **kwargs):
     pprint(kwargs)
     print('---------------------------------------------------')
     if instance.expire_date is None:
+        print('The expire_date was blank. ')
         # print('---------------------------------------------------')
         # pprint(dir(instance))
         # pprint(instance.clean)
@@ -191,16 +192,20 @@ def session_save_handler(sender, instance, *args, **kwargs):
         # print(instance.expire_date)
         # print(type(instance.expire_date))
         # pprint(dir(instance))
+        # print('---------------------------------------------------')
+        # pprint(instance._state)
         try:
             old_instance = Session.objects.get(id=instance.id)
             old_date = old_instance.expire_date
         except Session.DoesNotExist:
             old_date = None
         next_sess = instance.next_session
-        if next_sess and next_sess.publish_date == old_date:
+        if next_sess and instance.expire_date != old_date == next_sess.publish_date:
+            print('Modified expire_date, and there is a next session that had matching publish_date .')
             next_sess.publish_date = instance.expire_date
             next_sess.save()
-
+        else:
+            print("The expire_date has a value, but did not meet important conditions. ")
 
 class StudentClassInline(admin.TabularInline):
     model = Registration
