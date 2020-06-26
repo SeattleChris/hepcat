@@ -137,63 +137,18 @@ class SessiontAdmin(admin.ModelAdmin):
         field.initial = new_date
         return field
 
-    # def clean_expire_date(self):
-    #     """ If expire_date was not explicitly set, compute the desired value. """
-    #     data = super().clean()
-    #     if not data.get('expire_date', None):
-    #         num_weeks = data.get('num_weeks', 0)
-    #         target = 2 if num_weeks > 3 else 1
-    #         num_days_target_from_end = 1 - 7 * (num_weeks - target)
-    #         new_date = obj.end_date + timedelta(days=num_days_target_from_end)
-
-    # def save_model(self, request, obj, form, change):
-    #     if not getattr(obj, 'expire_date', None):
-
-    #         target = 2 if obj.num_weeks > 3 else 1
-    #         num_days_target_from_end = 1 - 7 * (obj.num_weeks - target)
-    #         new_date = obj.end_date + timedelta(days=num_days_target_from_end)
-    #         obj.expire_date = new_date
-
-    #     super().save_model(request, obj, form, change)
-
-    # def get_queryset(self, request):
-    #     queryset = super().get_queryset(request)
-    #     return queryset
-
 
 @receiver(pre_save, sender=Session)
 def session_save_handler(sender, instance, *args, **kwargs):
     """ If expire_date was not explicitly set, compute the desired value.
-        If expire_date is manually changed, update the following Session publish_date.
+        If expire_date is manually changed, update the following Session publish_date if matching.
     """
-    from pprint import pprint
-    print('================ Pre Save =========================')
-    pprint(args)
-    pprint(kwargs)
-    print('---------------------------------------------------')
     if instance.expire_date is None:
-        print('The expire_date was blank. ')
-        # print('---------------------------------------------------')
-        # pprint(dir(instance))
-        # pprint(instance.clean)
-        # pprint(instance.clean_fields)
-        # pprint(instance.from_db)
-        # pprint(instance.full_clean)
-        # pprint(instance.check)
-        # pprint(instance.get_deferred_fields)
-        # pprint(instance.prepare_database_save)
-        # print('---------------------------------------------------')
         target = 2 if instance.num_weeks > 3 else 1
         num_days_target_from_end = 1 - 7 * (instance.num_weeks - target)
         new_date = instance.end_date + timedelta(days=num_days_target_from_end)
         instance.expire_date = new_date
     else:
-        print('The expire_date was not blank')
-        # print(instance.expire_date)
-        # print(type(instance.expire_date))
-        # pprint(dir(instance))
-        # print('---------------------------------------------------')
-        # pprint(instance._state)
         try:
             old_instance = Session.objects.get(id=instance.id)
             old_date = old_instance.expire_date
@@ -201,11 +156,9 @@ def session_save_handler(sender, instance, *args, **kwargs):
             old_date = None
         next_sess = instance.next_session
         if next_sess and instance.expire_date != old_date == next_sess.publish_date:
-            print('Modified expire_date, and there is a next session that had matching publish_date .')
             next_sess.publish_date = instance.expire_date
             next_sess.save()
-        else:
-            print("The expire_date has a value, but did not meet important conditions. ")
+
 
 class StudentClassInline(admin.TabularInline):
     model = Registration
