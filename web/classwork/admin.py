@@ -1,6 +1,8 @@
 from django.contrib import admin
 from django.forms import Textarea
 from django.db import models
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
 from .models import (SiteContent, Resource, Subject, Session, ClassOffer,
                      Profile, Payment, Registration, Location)
 from datetime import timedelta
@@ -115,10 +117,9 @@ class ClassOfferAdmin(admin.ModelAdmin):
 
 
 class SessiontAdmin(admin.ModelAdmin):
-    """
-    """
+    """ Admin manage of Session models. New Sessions will populate initial values based on last Session. """
     model = Session
-    ordering = ('expire_date',)
+    ordering = ('key_day_date',)
 
     def formfield_for_dbfield(self, db_field, **kwargs):
         modified_fields = ('key_day_date', 'publish_date')
@@ -131,21 +132,74 @@ class SessiontAdmin(admin.ModelAdmin):
         elif db_field.name == 'key_day_date':
             new_date = final_session.key_day_date + timedelta(days=7*final_session.num_weeks)
         elif db_field.name == 'publish_date':
-            new_date = getattr(final_session, 'expire_date', None)
-            if not new_date:
-                if final_session.num_weeks > 3:
-                    days_from_end = 1 - 7 * (final_session.num_weeks - 2)
-                    day_after_week2_class = final_session.end_date + timedelta(days=days_from_end)
-                    new_date = day_after_week2_class
-                else:
-                    new_date = getattr(final_session.prev_session, 'expire_date', None)
+            target_session = final_session if final_session.num_weeks > 3 else final_session.prev_session
+            new_date = getattr(target_session, 'expire_date', None)
         field.initial = new_date
         return field
 
+    # def clean_expire_date(self):
+    #     """ If expire_date was not explicitly set, compute the desired value. """
+    #     data = super().clean()
+    #     if not data.get('expire_date', None):
+    #         num_weeks = data.get('num_weeks', 0)
+    #         target = 2 if num_weeks > 3 else 1
+    #         num_days_target_from_end = 1 - 7 * (num_weeks - target)
+    #         new_date = obj.end_date + timedelta(days=num_days_target_from_end)
+
+    # def save_model(self, request, obj, form, change):
+    #     if not getattr(obj, 'expire_date', None):
+
+    #         target = 2 if obj.num_weeks > 3 else 1
+    #         num_days_target_from_end = 1 - 7 * (obj.num_weeks - target)
+    #         new_date = obj.end_date + timedelta(days=num_days_target_from_end)
+    #         obj.expire_date = new_date
+
+    #     super().save_model(request, obj, form, change)
+
     # def get_queryset(self, request):
     #     queryset = super().get_queryset(request)
-
     #     return queryset
+
+
+@receiver(pre_save, sender=Session)
+def session_save_handler(sender, instance, *args, **kwargs):
+    """ If expire_date was not explicitly set, compute the desired value.
+        If expire_date is manually changed, update the following Session publish_date.
+    """
+    from pprint import pprint
+    print('================ Pre Save =========================')
+    pprint(args)
+    pprint(kwargs)
+    print('---------------------------------------------------')
+    if instance.expire_date is None:
+        # print('---------------------------------------------------')
+        # pprint(dir(instance))
+        # pprint(instance.clean)
+        # pprint(instance.clean_fields)
+        # pprint(instance.from_db)
+        # pprint(instance.full_clean)
+        # pprint(instance.check)
+        # pprint(instance.get_deferred_fields)
+        # pprint(instance.prepare_database_save)
+        # print('---------------------------------------------------')
+        target = 2 if instance.num_weeks > 3 else 1
+        num_days_target_from_end = 1 - 7 * (instance.num_weeks - target)
+        new_date = instance.end_date + timedelta(days=num_days_target_from_end)
+        instance.expire_date = new_date
+    else:
+        print('The expire_date was not blank')
+        # print(instance.expire_date)
+        # print(type(instance.expire_date))
+        # pprint(dir(instance))
+        try:
+            old_instance = Session.objects.get(id=instance.id)
+            old_date = old_instance.expire_date
+        except Session.DoesNotExist:
+            old_date = None
+        next_sess = instance.next_session
+        if next_sess and next_sess.publish_date == old_date:
+            next_sess.publish_date = instance.expire_date
+            next_sess.save()
 
 
 class StudentClassInline(admin.TabularInline):
