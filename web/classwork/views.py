@@ -141,6 +141,7 @@ class Checkin(ListView):
 
     def get_context_data(self, **kwargs):
         """ Get the context of the current, or selected, class session student list """
+        print("============ Checkin.get_context_data ================")
         context = super().get_context_data(**kwargs)
         sessions = self.kwargs.pop('sessions', None)
         context['sessions'] = ', '.join([ea.name for ea in sessions])
