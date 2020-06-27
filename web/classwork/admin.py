@@ -126,7 +126,7 @@ class SessiontAdmin(admin.ModelAdmin):
         field = super().formfield_for_dbfield(db_field, **kwargs)
         if db_field.name not in modified_fields:
             return field
-        final_session = Session.objects.order_by('-key_day_date').first()
+        final_session = Session.last_session()
         if not final_session:
             new_date = None
         elif db_field.name == 'key_day_date':

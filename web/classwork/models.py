@@ -267,7 +267,7 @@ class Session(models.Model):
     # TODO: Later on we will do some logic to auto-populate the publish and expire dates
     # TODO: Does the session settings need to account for mid-session break weeks?
     publish_date = models.DateField(blank=True)
-    expire_date = models.DateField(blank=True, null=True)
+    expire_date = models.DateField(blank=True)
     # TODO: Make sure class session publish times can NOT overlap
 
     @property
@@ -291,21 +291,42 @@ class Session(models.Model):
     @property
     def prev_session(self):
         """ Query for the Session in DB that comes before the current Session. """
-        # TODO: Get the previous session. Helps checkin to view previous session.
-        prior = Session.objects.filter(key_day_date__lt=self.key_day_date)
-        previous_one_or_none = prior.order_by('-key_day_date').first()
-        return previous_one_or_none
+        return self.last_session(since=self.key_day_date)
 
     @property
     def next_session(self):
         """ Query for the Session in DB that comes after the current Session. """
-        # TODO: Get the next session. Helps checkin to view next session.
         later = Session.objects.filter(key_day_date__gt=self.key_day_date)
         next_one_or_none = later.order_by('key_day_date').first()
         return next_one_or_none
 
     date_added = models.DateField(auto_now_add=True)
     date_modified = models.DateField(auto_now=True)
+
+    @classmethod
+    def last_session(cls, since=None):
+        """ Returns the Session starting the latest, or latest prior to given 'since' date. """
+        query = cls.objects
+        if since:
+            # TODO: Check isinstance an appropriate datetime obj
+            query = query.filter(key_day_date__lt=since)
+        return query.order_by('-key_day_date').first()
+
+    # @classmethod
+    # def default_date(cls, field):
+    #     """ Compute a default value for key_day_date field. """
+    #     allowed_fields = ('key_day_date', 'publish_date')
+    #     if field not in allowed_fields:
+    #         raise ValueError(f"Not a valid field parameter. ")
+    #     final_session = cls.last_session()
+    #     if not final_session:
+    #         new_date = None
+    #     elif field == 'key_day_date':
+    #         new_date = final_session.key_day_date + timedelta(days=7*final_session.num_weeks)
+    #     elif field == 'publish_date':
+    #         target_session = final_session if final_session.num_weeks > 3 else final_session.prev_session
+    #         new_date = getattr(target_session, 'expire_date', None)
+    #     return new_date
 
     def __str__(self):
         return f'{self.name}'
