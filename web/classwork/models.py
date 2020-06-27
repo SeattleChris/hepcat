@@ -264,16 +264,14 @@ class Session(models.Model):
     key_day_date = models.DateField(verbose_name='Main Class Start Date')
     max_day_shift = models.SmallIntegerField(verbose_name='Number of days other classes are away from Main Class')
     num_weeks = models.PositiveSmallIntegerField(default=5)
-    # TODO: Later on we will do some logic to auto-populate the publish and expire dates
     # TODO: Does the session settings need to account for mid-session break weeks?
-    publish_date = models.DateField(blank=True)
+    publish_date = models.DateField(blank=True)  # , default=lambda: Session.default_publish
     expire_date = models.DateField(blank=True)
     # TODO: Make sure class session publish times can NOT overlap
 
     @property
     def start_date(self):
-        """ What is the actual first class day for the session?
-        """
+        """ Return the date for whichever is the actual first class day. """
         first_date = self.key_day_date
         if self.max_day_shift < 0:
             first_date += timedelta(days=self.max_day_shift)
@@ -281,8 +279,7 @@ class Session(models.Model):
 
     @property
     def end_date(self):
-        """ What is the actual last class day for the session?
-        """
+        """ Return the date for whichever is the actual last class day. """
         last_date = self.key_day_date + timedelta(days=7*(self.num_weeks - 1))
         if self.max_day_shift > 0:
             last_date += timedelta(days=self.max_day_shift)
@@ -290,12 +287,12 @@ class Session(models.Model):
 
     @property
     def prev_session(self):
-        """ Query for the Session in DB that comes before the current Session. """
+        """ Return the Session that comes before the current Session, or 'None' if none exists. """
         return self.last_session(since=self.key_day_date)
 
     @property
     def next_session(self):
-        """ Query for the Session in DB that comes after the current Session. """
+        """ Returns the Session that comes after the current Session, or 'None' if none exists. """
         later = Session.objects.filter(key_day_date__gt=self.key_day_date)
         next_one_or_none = later.order_by('key_day_date').first()
         return next_one_or_none
@@ -313,11 +310,11 @@ class Session(models.Model):
         return query.order_by('-key_day_date').first()
 
     # @classmethod
-    # def default_date(cls, field):
+    # def _default_date(cls, field):
     #     """ Compute a default value for key_day_date field. """
     #     allowed_fields = ('key_day_date', 'publish_date')
     #     if field not in allowed_fields:
-    #         raise ValueError(f"Not a valid field parameter. ")
+    #         raise ValueError(f"Not a valid field parameter: {field} ")
     #     final_session = cls.last_session()
     #     if not final_session:
     #         new_date = None
@@ -327,6 +324,10 @@ class Session(models.Model):
     #         target_session = final_session if final_session.num_weeks > 3 else final_session.prev_session
     #         new_date = getattr(target_session, 'expire_date', None)
     #     return new_date
+
+    # @classmethod
+    # def default_publish(cls):
+    #     return cls._default_date('publish_date')
 
     def __str__(self):
         return f'{self.name}'
