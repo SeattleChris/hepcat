@@ -1,4 +1,3 @@
-# from __future__ import unicode_literals
 from django.db import models
 # from django.utils.translation import ugettext_lazy as _
 from datetime import date, timedelta, datetime as dt
@@ -9,7 +8,6 @@ from decimal import Decimal  # used for Payments
 from payments import PurchasedItem
 from payments.models import BasePayment
 from django.conf import settings
-# from django.http import HttpResponseRedirect
 from django.urls import reverse
 # from django.contrib.auth import get_user_model
 # User = get_user_model()
@@ -211,8 +209,8 @@ class Subject(models.Model):
     version = models.CharField(max_length=1, choices=VERSION_CHOICES)
     title = models.CharField(max_length=125, default='Untitled')
     short_desc = models.CharField(max_length=100)
-    num_weeks = models.PositiveSmallIntegerField(default=5)
-    num_minutes = models.PositiveSmallIntegerField(default=60)
+    num_weeks = models.PositiveSmallIntegerField(default=settings.DEFAULT_SESSION_WEEKS)
+    num_minutes = models.PositiveSmallIntegerField(default=settings.DEFAULT_CLASS_MINUTES)
     description = models.TextField()
     # TODO: Do we want some ForeignKey references for some common Resources:
     # syllabus, teacher_plan, weekly emails and videos, etc.
@@ -269,19 +267,13 @@ class Session(models.Model):
                                                  verbose_name='Number of Class Weeks')
     skip_weeks = models.PositiveSmallIntegerField(default=0,
                                                   verbose_name='How many class weeks are skipped mid-session?')
-    # skip_key_day = models.BooleanField(default=False,
-    #                                    verbose_name='Is the key day affected by skipped weeks?')
-    # skip_other_day = models.BooleanField(default=False,
-    #                                      verbose_name='Does skipped weeks affect days besides the key day?')
     flip_last_day = models.BooleanField(default=False,
                                         verbose_name='Due to skipped weeks, does the session ending switch between a non-key vs key day?',
                                         help_text='This is probably only true if the skipped class is not on the weekday that normally is the end of the session.')
     break_weeks = models.PositiveSmallIntegerField(default=0,
                                                    verbose_name='Break weeks after this session')
-    # TODO: Does the session settings need to account for mid-session break weeks?
     publish_date = models.DateField(blank=True)  # , default=lambda: Session.default_publish
     expire_date = models.DateField(blank=True, help_text='If blank, this will be computed')
-    # TODO: Make sure class session publish times can NOT overlap
 
     @property
     def start_date(self):
@@ -293,11 +285,8 @@ class Session(models.Model):
 
     @property
     def end_date(self):
-        """ Return the date for whichever is the actual last class day. """
+        """ Return the date for the last class day. """
         last_date = self.key_day_date + timedelta(days=7*(self.num_weeks + self.skip_weeks - 1))
-        # flip_last_day = True
-        # if self.skip_weeks > 0:
-        #     flip_last_day = not self.skip_other_day if self.max_day_shift > 0 else not self.skip_key_day
         if self.max_day_shift < 0 and self.flip_last_day:
             last_date += self.max_day_shift + 7
         elif self.max_day_shift > 0 and not self.flip_last_day:
@@ -338,7 +327,11 @@ class Session(models.Model):
     #     if not final_session:
     #         new_date = None
     #     elif field == 'key_day_date':
-    #         new_date = final_session.key_day_date + timedelta(days=7*final_session.num_weeks)
+    #         known_weeks = final_session.num_weeks + final_session.skip_weeks + final_session.break_weeks
+    #         later = final_session.max_day_shift > 0
+    #         if (final_session.flip_last_day and not later) or (later and not final_session.flip_last_day):
+    #             known_weeks -= 1
+    #         new_date = final_session.key_day_date + timedelta(days=7*known_weeks)
     #     elif field == 'publish_date':
     #         target_session = final_session if final_session.num_weeks > 3 else final_session.prev_session
     #         new_date = getattr(target_session, 'expire_date', None)
@@ -347,6 +340,10 @@ class Session(models.Model):
     # @classmethod
     # def default_publish(cls):
     #     return cls._default_date('publish_date')
+
+    # @classmethod
+    # def default_key_day(cls):
+    #     return cls._default_date('key_day_date')
 
     def __str__(self):
         return f'{self.name}'

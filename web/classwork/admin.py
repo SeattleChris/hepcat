@@ -3,6 +3,7 @@ from django.forms import Textarea
 from django.db import models
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
+from django.conf import settings
 from .models import (SiteContent, Resource, Subject, Session, ClassOffer,
                      Profile, Payment, Registration, Location)
 from datetime import timedelta
@@ -112,14 +113,27 @@ class ClassOfferAdmin(admin.ModelAdmin):
 
     # def get_queryset(self, request):
     #     queryset = super().get_queryset(request)
-
     #     return queryset
 
 
 class SessiontAdmin(admin.ModelAdmin):
     """ Admin manage of Session models. New Sessions will populate initial values based on last Session. """
     model = Session
+    list_display = ('name', 'start_day', 'end_day', 'publish_day', 'expire_day')
     ordering = ('key_day_date',)
+    fields = ('name', ('key_day_date', 'max_day_shift'), 'num_weeks', ('skip_weeks', 'flip_last_day'), 'break_weeks', ('publish_date', 'expire_date'))
+
+    def date_with_day(self, obj, field=None):
+        """ Will format the obj.field datefield to include the day of the week. """
+        date = getattr(obj, field, None)
+        return date.strftime('%A %B %-d, %Y') if date else ''  # django template language for date: 'l N j, Y'
+
+    def start_day(self, obj): return self.date_with_day(obj, field='start_date')
+    def end_day(self, obj): return self.date_with_day(obj, field='end_date')
+    def publish_day(self, obj): return self.date_with_day(obj, field='publish_date')
+    def expire_day(self, obj): return self.date_with_day(obj, field='expire_date')
+    publish_day.admin_order_field = 'publish_date'
+    expire_day.admin_order_field = 'expire_date'
 
     def formfield_for_dbfield(self, db_field, **kwargs):
         modified_fields = ('key_day_date', 'publish_date')
@@ -192,6 +206,9 @@ class RegistrationAdmin(admin.ModelAdmin):
     # ordering = ('reg_class', )
 
 
+admin.site.site_header = settings.BUSINESS_NAME + ' Admin'
+admin.site.site_title = settings.BUSINESS_NAME + ' Admin'
+admin.site.index_title = 'Admin Home'
 admin.site.register(Subject, SubjectAdmin)
 admin.site.register(ClassOffer, ClassOfferAdmin)
 admin.site.register(Session, SessiontAdmin)
