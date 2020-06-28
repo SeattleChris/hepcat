@@ -121,6 +121,7 @@ class SessiontAdmin(admin.ModelAdmin):
     model = Session
     list_display = ('name', 'start_day', 'end_day', 'publish_day', 'expire_day')
     ordering = ('key_day_date',)
+    fields = ('name', ('key_day_date', 'max_day_shift'), 'num_weeks', ('skip_weeks', 'flip_last_day'), 'break_weeks', ('publish_date', 'expire_date'))
 
     def date_with_day(self, obj, field=None):
         """ Will format the obj.field datefield to include the day of the week. """
