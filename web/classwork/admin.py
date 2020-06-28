@@ -130,7 +130,11 @@ class SessiontAdmin(admin.ModelAdmin):
         if not final_session:
             new_date = None
         elif db_field.name == 'key_day_date':
-            new_date = final_session.key_day_date + timedelta(days=7*final_session.num_weeks)
+            known_weeks = final_session.num_weeks + final_session.skip_weeks + final_session.break_weeks
+            later = final_session.max_day_shift > 0
+            if (final_session.flip_last_day and not later) or (later and not final_session.flip_last_day):
+                known_weeks -= 1
+            new_date = final_session.key_day_date + timedelta(days=7*known_weeks)
         elif db_field.name == 'publish_date':
             target_session = final_session if final_session.num_weeks > 3 else final_session.prev_session
             new_date = getattr(target_session, 'expire_date', None)
@@ -144,14 +148,15 @@ def session_save_handler(sender, instance, *args, **kwargs):
         If expire_date is manually changed, update the following Session publish_date if matching.
     """
     if instance.expire_date is None:
-        target = 2 if instance.num_weeks > 3 else 1
-        num_days_target_from_end = 1 - 7 * (instance.num_weeks - target)
-        new_date = instance.end_date + timedelta(days=num_days_target_from_end)
+        # Typically after week 2, but short 'sessions' expire after week 1.
+        adj = instance.max_day_shift + 1 if instance.max_day_shift > 0 else 1
+        adj += 7 if instance.num_weeks > 3 else 1
+        new_date = instance.key_day_date + timedelta(days=adj)
         instance.expire_date = new_date
     else:
         try:
             old_instance = Session.objects.get(id=instance.id)
-            old_date = old_instance.expire_date
+            old_date = getattr(old_instance, 'expire_date', None)
         except Session.DoesNotExist:
             old_date = None
         next_sess = instance.next_session
