@@ -213,6 +213,7 @@ PAYMENT_VARIANTS = {
     }
 
 # CUSTOM Global variables
+BUSINESS_NAME = os.environ.get('BUSINESS_NAME', 'School Site')
 DEFAULT_CLASS_PRICE = os.environ.get('DEFAULT_CLASS_PRICE', None)
 DEFAULT_PRE_DISCOUNT = os.environ.get('DEFAULT_PRE_DISCOUNT', None)
 MULTI_DISCOUNT = os.environ.get('MULTI_DISCOUNT', None)

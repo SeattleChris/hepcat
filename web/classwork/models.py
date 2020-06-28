@@ -278,10 +278,8 @@ class Session(models.Model):
                                         help_text='This is probably only true if the skipped class is not on the weekday that normally is the end of the session.')
     break_weeks = models.PositiveSmallIntegerField(default=0,
                                                    verbose_name='Break weeks after this session')
-    # TODO: Does the session settings need to account for mid-session break weeks?
     publish_date = models.DateField(blank=True)  # , default=lambda: Session.default_publish
     expire_date = models.DateField(blank=True, help_text='If blank, this will be computed')
-    # TODO: Make sure class session publish times can NOT overlap
 
     @property
     def start_date(self):
