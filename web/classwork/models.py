@@ -327,7 +327,11 @@ class Session(models.Model):
     #     if not final_session:
     #         new_date = None
     #     elif field == 'key_day_date':
-    #         new_date = final_session.key_day_date + timedelta(days=7*final_session.num_weeks)
+    #         known_weeks = final_session.num_weeks + final_session.skip_weeks + final_session.break_weeks
+    #         later = final_session.max_day_shift > 0
+    #         if (final_session.flip_last_day and not later) or (later and not final_session.flip_last_day):
+    #             known_weeks -= 1
+    #         new_date = final_session.key_day_date + timedelta(days=7*known_weeks)
     #     elif field == 'publish_date':
     #         target_session = final_session if final_session.num_weeks > 3 else final_session.prev_session
     #         new_date = getattr(target_session, 'expire_date', None)
@@ -336,6 +340,10 @@ class Session(models.Model):
     # @classmethod
     # def default_publish(cls):
     #     return cls._default_date('publish_date')
+
+    # @classmethod
+    # def default_key_day(cls):
+    #     return cls._default_date('key_day_date')
 
     def __str__(self):
         return f'{self.name}'
