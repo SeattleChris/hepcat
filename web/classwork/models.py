@@ -266,7 +266,7 @@ class Session(models.Model):
     num_weeks = models.PositiveSmallIntegerField(default=settings.DEFAULT_SESSION_WEEKS,
                                                  verbose_name='Number of Class Weeks')
     skip_weeks = models.PositiveSmallIntegerField(default=0,
-                                                  verbose_name='How many class weeks are skipped mid-session?')
+                                                  verbose_name='Skipped mid-session class weeks')
     flip_last_day = models.BooleanField(default=False,
                                         verbose_name='Due to skipped weeks, does the session ending switch between a non-key vs key day?',
                                         help_text='This is probably only true if the skipped class is not on the weekday that normally is the end of the session.')
