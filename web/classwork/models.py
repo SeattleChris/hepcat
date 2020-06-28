@@ -262,18 +262,30 @@ class Session(models.Model):
     # id = auto-created
     name = models.CharField(max_length=15)
     key_day_date = models.DateField(verbose_name='Main Class Start Date')
-    max_day_shift = models.SmallIntegerField(verbose_name='Number of days other classes are away from Main Class')
-    num_weeks = models.PositiveSmallIntegerField(default=5)
-    # TODO: Later on we will do some logic to auto-populate the publish and expire dates
+    max_day_shift = models.SmallIntegerField(default=settings.DEFAULT_MAX_DAY_SHIFT,
+                                             verbose_name='Number of days other classes are away from Main Class',
+                                             help_text='Use negative numbers if others are before the main class day.')
+    num_weeks = models.PositiveSmallIntegerField(default=settings.DEFAULT_SESSION_WEEKS,
+                                                 verbose_name='Number of Class Weeks')
+    skip_weeks = models.PositiveSmallIntegerField(default=0,
+                                                  verbose_name='How many class weeks are skipped mid-session?')
+    # skip_key_day = models.BooleanField(default=False,
+    #                                    verbose_name='Is the key day affected by skipped weeks?')
+    # skip_other_day = models.BooleanField(default=False,
+    #                                      verbose_name='Does skipped weeks affect days besides the key day?')
+    flip_last_day = models.BooleanField(default=False,
+                                        verbose_name='Due to skipped weeks, does the session ending switch between a non-key vs key day?',
+                                        help_text='This is probably only true if the skipped class is not on the weekday that normally is the end of the session.')
+    break_weeks = models.PositiveSmallIntegerField(default=0,
+                                                   verbose_name='Break weeks after this session')
     # TODO: Does the session settings need to account for mid-session break weeks?
-    publish_date = models.DateField(blank=True)
-    expire_date = models.DateField(blank=True, null=True)
+    publish_date = models.DateField(blank=True)  # , default=lambda: Session.default_publish
+    expire_date = models.DateField(blank=True, help_text='If blank, this will be computed')
     # TODO: Make sure class session publish times can NOT overlap
 
     @property
     def start_date(self):
-        """ What is the actual first class day for the session?
-        """
+        """ Return the date for whichever is the actual first class day. """
         first_date = self.key_day_date
         if self.max_day_shift < 0:
             first_date += timedelta(days=self.max_day_shift)
@@ -281,31 +293,60 @@ class Session(models.Model):
 
     @property
     def end_date(self):
-        """ What is the actual last class day for the session?
-        """
-        last_date = self.key_day_date + timedelta(days=7*(self.num_weeks - 1))
-        if self.max_day_shift > 0:
+        """ Return the date for whichever is the actual last class day. """
+        last_date = self.key_day_date + timedelta(days=7*(self.num_weeks + self.skip_weeks - 1))
+        # flip_last_day = True
+        # if self.skip_weeks > 0:
+        #     flip_last_day = not self.skip_other_day if self.max_day_shift > 0 else not self.skip_key_day
+        if self.max_day_shift < 0 and self.flip_last_day:
+            last_date += self.max_day_shift + 7
+        elif self.max_day_shift > 0 and not self.flip_last_day:
             last_date += timedelta(days=self.max_day_shift)
         return last_date
 
     @property
     def prev_session(self):
-        """ Query for the Session in DB that comes before the current Session. """
-        # TODO: Get the previous session. Helps checkin to view previous session.
-        prior = Session.objects.filter(key_day_date__lt=self.key_day_date)
-        previous_one_or_none = prior.order_by('-key_day_date').first()
-        return previous_one_or_none
+        """ Return the Session that comes before the current Session, or 'None' if none exists. """
+        return self.last_session(since=self.key_day_date)
 
     @property
     def next_session(self):
-        """ Query for the Session in DB that comes after the current Session. """
-        # TODO: Get the next session. Helps checkin to view next session.
+        """ Returns the Session that comes after the current Session, or 'None' if none exists. """
         later = Session.objects.filter(key_day_date__gt=self.key_day_date)
         next_one_or_none = later.order_by('key_day_date').first()
         return next_one_or_none
 
     date_added = models.DateField(auto_now_add=True)
     date_modified = models.DateField(auto_now=True)
+
+    @classmethod
+    def last_session(cls, since=None):
+        """ Returns the Session starting the latest, or latest prior to given 'since' date. """
+        query = cls.objects
+        if since:
+            # TODO: Check isinstance an appropriate datetime obj
+            query = query.filter(key_day_date__lt=since)
+        return query.order_by('-key_day_date').first()
+
+    # @classmethod
+    # def _default_date(cls, field):
+    #     """ Compute a default value for key_day_date field. """
+    #     allowed_fields = ('key_day_date', 'publish_date')
+    #     if field not in allowed_fields:
+    #         raise ValueError(f"Not a valid field parameter: {field} ")
+    #     final_session = cls.last_session()
+    #     if not final_session:
+    #         new_date = None
+    #     elif field == 'key_day_date':
+    #         new_date = final_session.key_day_date + timedelta(days=7*final_session.num_weeks)
+    #     elif field == 'publish_date':
+    #         target_session = final_session if final_session.num_weeks > 3 else final_session.prev_session
+    #         new_date = getattr(target_session, 'expire_date', None)
+    #     return new_date
+
+    # @classmethod
+    # def default_publish(cls):
+    #     return cls._default_date('publish_date')
 
     def __str__(self):
         return f'{self.name}'
