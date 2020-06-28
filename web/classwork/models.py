@@ -262,11 +262,25 @@ class Session(models.Model):
     # id = auto-created
     name = models.CharField(max_length=15)
     key_day_date = models.DateField(verbose_name='Main Class Start Date')
-    max_day_shift = models.SmallIntegerField(verbose_name='Number of days other classes are away from Main Class')
-    num_weeks = models.PositiveSmallIntegerField(default=5)
+    max_day_shift = models.SmallIntegerField(default=settings.DEFAULT_MAX_DAY_SHIFT,
+                                             verbose_name='Number of days other classes are away from Main Class',
+                                             help_text='Use negative numbers if others are before the main class day.')
+    num_weeks = models.PositiveSmallIntegerField(default=settings.DEFAULT_SESSION_WEEKS,
+                                                 verbose_name='Number of Class Weeks')
+    skip_weeks = models.PositiveSmallIntegerField(default=0,
+                                                  verbose_name='How many class weeks are skipped mid-session?')
+    # skip_key_day = models.BooleanField(default=False,
+    #                                    verbose_name='Is the key day affected by skipped weeks?')
+    # skip_other_day = models.BooleanField(default=False,
+    #                                      verbose_name='Does skipped weeks affect days besides the key day?')
+    flip_last_day = models.BooleanField(default=False,
+                                        verbose_name='Due to skipped weeks, does the session ending switch between a non-key vs key day?',
+                                        help_text='This is probably only true if the skipped class is not on the weekday that normally is the end of the session.')
+    break_weeks = models.PositiveSmallIntegerField(default=0,
+                                                   verbose_name='Break weeks after this session')
     # TODO: Does the session settings need to account for mid-session break weeks?
     publish_date = models.DateField(blank=True)  # , default=lambda: Session.default_publish
-    expire_date = models.DateField(blank=True)
+    expire_date = models.DateField(blank=True, help_text='If blank, this will be computed')
     # TODO: Make sure class session publish times can NOT overlap
 
     @property
@@ -280,8 +294,13 @@ class Session(models.Model):
     @property
     def end_date(self):
         """ Return the date for whichever is the actual last class day. """
-        last_date = self.key_day_date + timedelta(days=7*(self.num_weeks - 1))
-        if self.max_day_shift > 0:
+        last_date = self.key_day_date + timedelta(days=7*(self.num_weeks + self.skip_weeks - 1))
+        # flip_last_day = True
+        # if self.skip_weeks > 0:
+        #     flip_last_day = not self.skip_other_day if self.max_day_shift > 0 else not self.skip_key_day
+        if self.max_day_shift < 0 and self.flip_last_day:
+            last_date += self.max_day_shift + 7
+        elif self.max_day_shift > 0 and not self.flip_last_day:
             last_date += timedelta(days=self.max_day_shift)
         return last_date
 
