@@ -167,16 +167,20 @@ def session_save_handler(sender, instance, *args, **kwargs):
         adj += 7 if instance.num_weeks > 3 else 1
         new_date = instance.key_day_date + timedelta(days=adj)
         instance.expire_date = new_date
-    else:
-        try:
-            old_instance = Session.objects.get(id=instance.id)
-            old_date = getattr(old_instance, 'expire_date', None)
-        except Session.DoesNotExist:
-            old_date = None
-        next_sess = instance.next_session
-        if next_sess and instance.expire_date != old_date == next_sess.publish_date:
-            next_sess.publish_date = instance.expire_date
-            next_sess.save()
+    # else:
+    #     try:
+    #         old_instance = Session.objects.get(id=instance.id)
+    #         old_date = getattr(old_instance, 'expire_date', None)
+    #     except Session.DoesNotExist:
+    #         old_date = None
+    #     next_sess = instance.next_session
+    #     if next_sess and instance.expire_date != old_date == next_sess.publish_date:
+    #         next_sess.publish_date = instance.expire_date
+    #         next_sess.save()
+    next_sess = instance.next_session
+    if next_sess:
+        next_sess.publish_date = instance.expire_date
+        next_sess.save()
 
 
 class StudentClassInline(admin.TabularInline):
