@@ -1,12 +1,12 @@
 from django.contrib import admin
 from django.forms import Textarea
 from django.db import models
-from django.db.models.signals import pre_save
-from django.dispatch import receiver
+# from django.db.models.signals import pre_save
+# from django.dispatch import receiver
 from django.conf import settings
 from .models import (SiteContent, Resource, Subject, Session, ClassOffer,
                      Profile, Payment, Registration, Location)
-from datetime import timedelta
+# from datetime import timedelta
 # from django.utils.functional import curry
 
 # Register your models here.
@@ -156,31 +156,44 @@ class SessiontAdmin(admin.ModelAdmin):
     #     return field
 
 
-@receiver(pre_save, sender=Session)
-def session_save_handler(sender, instance, *args, **kwargs):
-    """ If expire_date was not explicitly set, compute the desired value.
-        If expire_date is manually changed, update the following Session publish_date if matching.
-    """
-    if instance.expire_date is None:
-        # Typically after week 2, but short 'sessions' expire after week 1.
-        adj = instance.max_day_shift + 1 if instance.max_day_shift > 0 else 1
-        adj += 7 if instance.num_weeks > 3 else 1
-        new_date = instance.key_day_date + timedelta(days=adj)
-        instance.expire_date = new_date
-    # else:
-    #     try:
-    #         old_instance = Session.objects.get(id=instance.id)
-    #         old_date = getattr(old_instance, 'expire_date', None)
-    #     except Session.DoesNotExist:
-    #         old_date = None
-    #     next_sess = instance.next_session
-    #     if next_sess and instance.expire_date != old_date == next_sess.publish_date:
-    #         next_sess.publish_date = instance.expire_date
-    #         next_sess.save()
-    next_sess = instance.next_session
-    if next_sess:
-        next_sess.publish_date = instance.expire_date
-        next_sess.save()
+# @receiver(pre_save, sender=Session)
+# def session_save_handler(sender, instance, *args, **kwargs):
+#     """ If expire_date was not explicitly set, compute the desired value.
+#         If expire_date is manually changed, update the following Session publish_date if matching.
+#     """
+#     key_day = instance.key_day_date
+#     key_day = key_day() if callable(key_day) else key_day
+#     print("================ session_save_handler ===================")
+#     print(f"Instance Key Day: {key_day} {type(key_day)} ")
+#     if instance.expire_date is None:
+#         # Typically after week 2, but short 'sessions' expire after week 1.
+#         print(f"========= compute expire_date for {instance} =========")
+#         adj = instance.max_day_shift + 1 if instance.max_day_shift > 0 else 1
+#         adj += 7 if instance.num_weeks > 3 else 1
+#         new_date = key_day + timedelta(days=adj)
+#         instance.expire_date = new_date
+#     # else:
+#     #     try:
+#     #         old_instance = Session.objects.get(id=instance.id)
+#     #         old_date = getattr(old_instance, 'expire_date', None)
+#     #     except Session.DoesNotExist:
+#     #         old_date = None
+#     #     next_sess = instance.next_session
+#     #     if next_sess and instance.expire_date != old_date == next_sess.publish_date:
+#     #         next_sess.publish_date = instance.expire_date
+#     #         next_sess.save()
+#     next_sess = instance.next_session
+#     # print(sender)
+#     # print(args)
+#     # print(kwargs)
+#     print(f'---------------- Session_save_handler {instance} ---------------')
+#     print(f"expire_date: {instance.expire_date} {type(instance.expire_date)} ")
+#     if next_sess:
+#         print(f'update next_sess: {next_sess} ')
+#         next_sess.publish_date = instance.expire_date
+#         next_sess.save(update_fields=['publish_date'])
+#     else:
+#         print(f'No extra save because no next_sess: {next_sess} ')
 
 
 class StudentClassInline(admin.TabularInline):
