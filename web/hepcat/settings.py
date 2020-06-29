@@ -99,9 +99,9 @@ DATABASES = {
         'NAME': os.environ.get('LOCAL_DB_NAME' if LOCAL else 'LIVE_DB_NAME', os.environ.get('DB_NAME', 'postgres')),
         'USER': os.environ.get('LOCAL_DB_USER' if LOCAL else 'LIVE_DB_USER', os.environ.get('DB_USER', 'postgres')),
         'PASSWORD': os.environ.get('LOCAL_DB_PASS' if LOCAL else 'LIVE_DB_PASS', os.environ.get('DB_PASS', '')),
-        # 'TEST': {
-        #     'NAME': 'test_db'
-        # }
+        'TEST': {
+            'NAME': 'test_db'
+        }
     }
 }
 # if os.environ.get('DB_TYPE') == 'mysql':
