@@ -35,7 +35,7 @@ class SessionModelTests(TestCase):
 
     def test_01_setup(self):
         """ Did the setup happen? """
-        # self.setup()
+        self.setup()
         count_sess = Session.objects.all().count()
         # first_sess = Session.objects.get(name='test_1_no_shift')
         # second_sess = Session.objects.get(name='test_2_no_shift')

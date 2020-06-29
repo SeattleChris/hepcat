@@ -135,25 +135,25 @@ class SessiontAdmin(admin.ModelAdmin):
     publish_day.admin_order_field = 'publish_date'
     expire_day.admin_order_field = 'expire_date'
 
-    def formfield_for_dbfield(self, db_field, **kwargs):
-        modified_fields = ('key_day_date', 'publish_date')
-        field = super().formfield_for_dbfield(db_field, **kwargs)
-        if db_field.name not in modified_fields:
-            return field
-        final_session = Session.last_session()
-        if not final_session:
-            new_date = None
-        elif db_field.name == 'key_day_date':
-            known_weeks = final_session.num_weeks + final_session.skip_weeks + final_session.break_weeks
-            later = final_session.max_day_shift > 0
-            if (final_session.flip_last_day and not later) or (later and not final_session.flip_last_day):
-                known_weeks -= 1
-            new_date = final_session.key_day_date + timedelta(days=7*known_weeks)
-        elif db_field.name == 'publish_date':
-            target_session = final_session if final_session.num_weeks > 3 else final_session.prev_session
-            new_date = getattr(target_session, 'expire_date', None)
-        field.initial = new_date
-        return field
+    # def formfield_for_dbfield(self, db_field, **kwargs):
+    #     modified_fields = ('key_day_date', 'publish_date')
+    #     field = super().formfield_for_dbfield(db_field, **kwargs)
+    #     if db_field.name not in modified_fields:
+    #         return field
+    #     final_session = Session.last_session()
+    #     if not final_session:
+    #         new_date = None
+    #     elif db_field.name == 'key_day_date':
+    #         known_weeks = final_session.num_weeks + final_session.skip_weeks + final_session.break_weeks
+    #         later = final_session.max_day_shift > 0
+    #         if (final_session.flip_last_day and not later) or (later and not final_session.flip_last_day):
+    #             known_weeks -= 1
+    #         new_date = final_session.key_day_date + timedelta(days=7*known_weeks)
+    #     elif db_field.name == 'publish_date':
+    #         target_session = final_session if final_session.num_weeks > 3 else final_session.prev_session
+    #         new_date = getattr(target_session, 'expire_date', None)
+    #     field.initial = new_date
+    #     return field
 
 
 @receiver(pre_save, sender=Session)
