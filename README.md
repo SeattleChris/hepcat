@@ -102,21 +102,30 @@ This is a specific subject, offered during a specific session. It includes infor
 
 ## Getting Started
 
-* Make sure you have a processing account through stripe and/or PayPal
-* clone the repo
+* Make sure you have a processing account through stripe and/or PayPal.
+* clone the repository.
 * create the needed database, recording the connection details to be used in `.env` file.
 * make sure the file settings are correct.
 * make an `.env` file, following the example of `.env_template`
 * from the `/web` directory, run `python manage.py migrate`
 * from the `/web` directory, run `python manage.py createsuperuser`
-  * input an admin username (this is temporary as it will be overwritten)
-  * input an email and password as prompted (the email will be used as the username)
+  * input an admin username (this is temporary as it will be overwritten).
+  * input an email and password as prompted (the email will be used as the username).
 * from the `/web` directory, run `python manage.py runserver`
   * From here you should be able to login, but the username will be the provided admin email.
   * Go to the admin pages. Update the admin account with a first and last name.
   * Input the initial class structure content for: Session, Subject, ClassOffer
-<!-- * docker-compose up --build -->
-* ... To Be Filled In Later ...
+* Confirm the tests directory is where it is expected.
+* Create database test fixture from the basic starter models put into the live database.
+  * `./manage.py dumpdata --indent 4 --exclude admin --exclude contenttypes > tests/db_basic.json`
+  * Confirm the contents, possibly editing as needed, of `tests/db_basic.json`
+  * Confirm all appropriate test classes load fixtures: `fixtures = ['tests/db_basic.json']`
+  * Create other fixtures as needed and add them to the fixtures array in the appropriate tests class
+* Run tests to confirm tests and basic structure is setup correctly.
+  * `./manage.py test`
+* ... More to be added later ...
+
+<!-- **Alternative Setup Using Docker** -->
 
 Each organization installing this app while have some unique settings. Some of these depend on the deployment and development environments, and some of these depend on the business/organization structure. While some of these organization structure settings are created as an organization admin after the app is installed, some are handled elsewhere, most notably in the `.env` file (which should never be published or shared publicly). The following has some `.env` file settings explained:
 
