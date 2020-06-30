@@ -1,13 +1,29 @@
-from django.test import TestCase, TransactionTestCase
-# from classwork.models import Session, Subject, ClassOffer
+from django.test import TestCase  # , TransactionTestCase
 from classwork.models import Location  # , Resource, SiteContent
+# from classwork.models import Session, Subject, ClassOffer
 # from classwork.models import Profile, Payment, Registration, Notify
 # from users.models import UserHC
 from datetime import date, timedelta
+from django.utils import timezone
+# from django.core.urlresolvers import reverse
+# from location.forms import WhateverForm
 
 # Create your tests here.
 NOW = date.today()
 FIRST_KEY_DAY = NOW - timedelta(days=1)
+
+# models test
+
+
+class LocationCoverageTests(TestCase):
+
+    def create_location(self, name="only a test", code="tst", address='123 Some St, #42', zipcode='98112', **kwargs):
+        return Location.objects.create(name=name, code=code, address=address, zipcode=zipcode, **kwargs)
+
+    def test_location_creation(self):
+        w = self.create_location()
+        self.assertTrue(isinstance(w, Location))
+        self.assertEqual(w.__unicode__(), w.title)
 
 
 class LocationTests(TestCase):

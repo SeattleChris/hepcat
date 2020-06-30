@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
+    'coverage',
     # 'django.contrib.sites',  # CUSTOM added for django-newsletter
     'django.contrib.messages',
     'storages',  # CUSTOM django-storages for using AWS S3 for static files
