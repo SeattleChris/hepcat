@@ -1,5 +1,5 @@
 from django.test import TestCase, TransactionTestCase
-from .models import Location, Session  # , Subject, ClassOffer, Profile, Registration, Payment
+from classwork.models import Location, Session  # , Subject, ClassOffer, Profile, Registration, Payment
 from datetime import date, timedelta
 
 # Create your tests here.
@@ -9,97 +9,83 @@ FIRST_KEY_DAY = NOW - timedelta(days=1)
 
 class SessionModelTests(TransactionTestCase):
 
-    def setUp(self):
-        """ Initial models needed in the database. """
+    # def setUp(self):
+    #     """ Initial models needed in the database. """
+    #     day_adjust, duration = 0, 5
+    #     publish = FIRST_KEY_DAY - timedelta(days=7*(duration - 1)+1)
+    #     try:
+    #         self.first_sess = Session.objects.create(
+    #             name='t1_no_shift',
+    #             key_day_date=FIRST_KEY_DAY,
+    #             max_day_shift=day_adjust,
+    #             num_weeks=duration,
+    #             publish_date=publish,
+    #             )
+    #     except TypeError as e:
+    #         print(f"TEST SETUP _1_ TYPEERROR EXCEPTION: {e} ")
+    #         raise e
+    #     print(f'TEST SETUP: First Session made: {self.first_sess} ')
+    #     print(getattr(self.first_sess, 'key_day_date', 'NOT FOUND KEY DAY'))
+    #     print('------------ mid setUp -------------------')
+    #     try:
+    #         self.second_sess = Session.objects.create(
+    #             name='t2_no_shift',
+    #             max_day_shift=day_adjust,
+    #             num_weeks=duration,
+    #             )
+    #     except TypeError as e:
+    #         from pprint import pprint
+    #         print(f"TEST SETUP _2_ TYPEERROR EXCEPTION: {e} ")
+    #         pprint(dir(e))
+    #         print('-------------------------------------')
+    #         raise e
+    #     print(f'TEST SETUP Second made: {self.second_sess} ')
+    #     print('TEST SETUP END')
+
+    # def test_01_setup(self):
+    #     """ Did the setup happen? """
+    #     self.assertIsNotNone(NOW)
+    #     self.assertIsInstance(NOW, date)
+    #     self.assertIsInstance(FIRST_KEY_DAY, date)
+    #     self.assertIsInstance(self.first_sess, Session)
+    #     self.assertIsInstance(self.second_sess, Session)
+
+    def test_dates_01_no_shift_no_skips(self):
+        """ The end date should be when the last class of this session is held.
+            First, this depends on what is the latest a class could start:
+            If max_day_shift is negative or 0, then start on key_day_date.
+            If it is positive, then we start that many days after key_date.
+            Assume no skipped weeks and no break weeks for this test.
+            Therefore, the end_date will be duration number of weeks after this latest starting class.
+            Testing: start_date, end_date, key_day_date, publish_date, expire_date
+        """
         day_adjust, duration = 0, 5
+        first_expire = FIRST_KEY_DAY + timedelta(days=8)
+        last_class = FIRST_KEY_DAY + timedelta(days=7*(duration - 1))
+        # last_class = last_class + timedelta(days=day_adjust) if day_adjust > 0 else last_class
+        second_key_day = FIRST_KEY_DAY + timedelta(days=7*duration)
         publish = FIRST_KEY_DAY - timedelta(days=7*(duration - 1)+1)
-        try:
-            self.first_sess = Session.objects.create(
-                name='t1_no_shift',
-                key_day_date=FIRST_KEY_DAY,
-                max_day_shift=day_adjust,
-                num_weeks=duration,
-                publish_date=publish,
-                )
-        except TypeError as e:
-            print(f"TEST SETUP _1_ TYPEERROR EXCEPTION: {e} ")
-            raise e
-        print(f'TEST SETUP: First Session made: {self.first_sess} ')
-        print(getattr(self.first_sess, 'key_day_date', 'NOT FOUND KEY DAY'))
-        print('------------ mid setUp -------------------')
-        try:
-            self.second_sess = Session.objects.create(
-                name='t2_no_shift',
-                max_day_shift=day_adjust,
-                num_weeks=duration,
-                )
-        except TypeError as e:
-            from pprint import pprint
-            print(f"TEST SETUP _2_ TYPEERROR EXCEPTION: {e} ")
-            pprint(dir(e))
-            print('-------------------------------------')
-            # print(dict(e))
-            # print(e.__context__)
-            # pprint(e.__doc__)
-            # pprint(e.with_traceback())
-            raise e
-        # second_sess = Session.objects.get(name='t2_no_shift')
-        # print(f'TEST SETUP Second made: {second_sess} ')
-        print('TEST SETUP END')
-
-    def test_01_setup(self):
-        """ Did the setup happen? """
-        self.assertIsNotNone(NOW)
-        self.assertIsInstance(NOW, date)
-        self.assertIsInstance(FIRST_KEY_DAY, date)
-        self.assertIsInstance(self.first_sess, Session)
-        self.assertIsInstance(self.second_sess, Session)
-
-    # def test_dates_01_no_shift_no_skips(self):
-    #     """ The end date should be when the last class of this session is held.
-    #         First, this depends on what is the latest a class could start:
-    #         If max_day_shift is negative or 0, then start on key_day_date.
-    #         If it is positive, then we start that many days after key_date.
-    #         Assume no skipped weeks and no break weeks for this test.
-    #         Therefore, the end_date will be duration number of weeks after this latest starting class.
-    #         Testing: start_date, end_date, key_day_date, publish_date, expire_date
-    #     """
-    #     duration = 5
-    #     first_expire = FIRST_KEY_DAY + timedelta(days=8)
-    #     last_class = FIRST_KEY_DAY + timedelta(days=7*(duration - 1))
-    #     second_key_day = FIRST_KEY_DAY + timedelta(days=7*duration)
-    #     # last_class = last_class + timedelta(days=day_adjust) if day_adjust > 0 else last_class
-
-    #     # now = date.today()
-    #     # key_day = now - timedelta(days=1)
-    #     # day_adjust = 0
-    #     # duration = 5
-    #     # publish = key_day - timedelta(days=7*(duration - 1)+1)
-    #     # first_expire = key_day + timedelta(days=8)
-    #     # last_class = key_day + timedelta(days=7*(duration - 1))
-    #     # # last_class = last_class + timedelta(days=day_adjust) if day_adjust > 0 else last_class
-    #     # test_first_sess = Session.objects.create(
-    #     #     name='test_1_no_shift',
-    #     #     key_day_date=key_day,
-    #     #     max_day_shift=day_adjust,
-    #     #     num_weeks=duration,
-    #     #     publish_date=publish,
-    #     #     )
-    #     # second_key_day = key_day + timedelta(days=7*duration)
-    #     # test_second_sess = Session.objects.create(
-    #     #     name='test_2_no_shift',
-    #     #     max_day_shift=day_adjust,
-    #     #     num_weeks=duration,
-    #     # )
-    #     test_first_sess = Session.objects.get(name='test_1_no_shift')
-    #     test_second_sess = Session.objects.get(name='test_2_no_shift')
-    #     self.assertEquals(test_first_sess.start_date, FIRST_KEY_DAY)
-    #     self.assertEquals(test_first_sess.start_date, test_first_sess.key_day_date)
-    #     self.assertEquals(test_first_sess.end_date, last_class)
-    #     self.assertEquals(test_first_sess.expire_date, first_expire)
-    #     self.assertEquals(test_second_sess.key_day_date, second_key_day)
-    #     self.assertEquals(test_second_sess.publish_date, first_expire)
-    #     self.assertGreater(test_first_sess.end_date, test_second_sess.start_date)
+        test_first_sess = Session.objects.create(
+            name='test_1_no_shift',
+            key_day_date=FIRST_KEY_DAY,
+            max_day_shift=day_adjust,
+            num_weeks=duration,
+            publish_date=publish,
+            )
+        test_second_sess = Session.objects.create(
+            name='test_2_no_shift',
+            max_day_shift=day_adjust,
+            num_weeks=duration,
+            )
+        test_first_sess = Session.objects.get(name='test_1_no_shift')
+        test_second_sess = Session.objects.get(name='test_2_no_shift')
+        self.assertEquals(test_first_sess.start_date, FIRST_KEY_DAY)
+        self.assertEquals(test_first_sess.start_date, test_first_sess.key_day_date)
+        self.assertEquals(test_first_sess.end_date, last_class)
+        self.assertEquals(test_first_sess.expire_date, first_expire)
+        self.assertEquals(test_second_sess.key_day_date, second_key_day)
+        self.assertEquals(test_second_sess.publish_date, first_expire)
+        self.assertGreater(test_first_sess.end_date, test_second_sess.start_date)
 
     # def test_dates_early_shift_no_skips(self):
     #     """ The end date should be when the last class of this session is held.
