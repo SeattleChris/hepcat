@@ -7,7 +7,7 @@ NOW = date.today()
 FIRST_KEY_DAY = NOW - timedelta(days=1)
 
 
-class SessionModelTests(TransactionTestCase):
+# class SessionModelTests(TransactionTestCase):
 
     # def setUp(self):
     #     """ Initial models needed in the database. """
@@ -50,42 +50,42 @@ class SessionModelTests(TransactionTestCase):
     #     self.assertIsInstance(self.first_sess, Session)
     #     self.assertIsInstance(self.second_sess, Session)
 
-    def test_dates_01_no_shift_no_skips(self):
-        """ The end date should be when the last class of this session is held.
-            First, this depends on what is the latest a class could start:
-            If max_day_shift is negative or 0, then start on key_day_date.
-            If it is positive, then we start that many days after key_date.
-            Assume no skipped weeks and no break weeks for this test.
-            Therefore, the end_date will be duration number of weeks after this latest starting class.
-            Testing: start_date, end_date, key_day_date, publish_date, expire_date
-        """
-        day_adjust, duration = 0, 5
-        first_expire = FIRST_KEY_DAY + timedelta(days=8)
-        last_class = FIRST_KEY_DAY + timedelta(days=7*(duration - 1))
-        # last_class = last_class + timedelta(days=day_adjust) if day_adjust > 0 else last_class
-        second_key_day = FIRST_KEY_DAY + timedelta(days=7*duration)
-        publish = FIRST_KEY_DAY - timedelta(days=7*(duration - 1)+1)
-        test_first_sess = Session.objects.create(
-            name='test_1_no_shift',
-            key_day_date=FIRST_KEY_DAY,
-            max_day_shift=day_adjust,
-            num_weeks=duration,
-            publish_date=publish,
-            )
-        test_second_sess = Session.objects.create(
-            name='test_2_no_shift',
-            max_day_shift=day_adjust,
-            num_weeks=duration,
-            )
-        test_first_sess = Session.objects.get(name='test_1_no_shift')
-        test_second_sess = Session.objects.get(name='test_2_no_shift')
-        self.assertEquals(test_first_sess.start_date, FIRST_KEY_DAY)
-        self.assertEquals(test_first_sess.start_date, test_first_sess.key_day_date)
-        self.assertEquals(test_first_sess.end_date, last_class)
-        self.assertEquals(test_first_sess.expire_date, first_expire)
-        self.assertEquals(test_second_sess.key_day_date, second_key_day)
-        self.assertEquals(test_second_sess.publish_date, first_expire)
-        self.assertGreater(test_first_sess.end_date, test_second_sess.start_date)
+    # def test_dates_01_no_shift_no_skips(self):
+    #     """ The end date should be when the last class of this session is held.
+    #         First, this depends on what is the latest a class could start:
+    #         If max_day_shift is negative or 0, then start on key_day_date.
+    #         If it is positive, then we start that many days after key_date.
+    #         Assume no skipped weeks and no break weeks for this test.
+    #         Therefore, the end_date will be duration number of weeks after this latest starting class.
+    #         Testing: start_date, end_date, key_day_date, publish_date, expire_date
+    #     """
+    #     day_adjust, duration = 0, 5
+    #     first_expire = FIRST_KEY_DAY + timedelta(days=8)
+    #     last_class = FIRST_KEY_DAY + timedelta(days=7*(duration - 1))
+    #     # last_class = last_class + timedelta(days=day_adjust) if day_adjust > 0 else last_class
+    #     second_key_day = FIRST_KEY_DAY + timedelta(days=7*duration)
+    #     publish = FIRST_KEY_DAY - timedelta(days=7*(duration - 1)+1)
+    #     test_first_sess = Session.objects.create(
+    #         name='test_1_no_shift',
+    #         key_day_date=FIRST_KEY_DAY,
+    #         max_day_shift=day_adjust,
+    #         num_weeks=duration,
+    #         publish_date=publish,
+    #         )
+    #     test_second_sess = Session.objects.create(
+    #         name='test_2_no_shift',
+    #         max_day_shift=day_adjust,
+    #         num_weeks=duration,
+    #         )
+    #     test_first_sess = Session.objects.get(name='test_1_no_shift')
+    #     test_second_sess = Session.objects.get(name='test_2_no_shift')
+    #     self.assertEquals(test_first_sess.start_date, FIRST_KEY_DAY)
+    #     self.assertEquals(test_first_sess.start_date, test_first_sess.key_day_date)
+    #     self.assertEquals(test_first_sess.end_date, last_class)
+    #     self.assertEquals(test_first_sess.expire_date, first_expire)
+    #     self.assertEquals(test_second_sess.key_day_date, second_key_day)
+    #     self.assertEquals(test_second_sess.publish_date, first_expire)
+    #     self.assertGreater(test_first_sess.end_date, test_second_sess.start_date)
 
     # def test_dates_early_shift_no_skips(self):
     #     """ The end date should be when the last class of this session is held.
