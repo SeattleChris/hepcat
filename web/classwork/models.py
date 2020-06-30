@@ -259,25 +259,26 @@ class Session(models.Model):
     """
     # id = auto-created
     name = models.CharField(max_length=15)
-    key_day_date = models.DateField(verbose_name='Main Class Start Date')
+    key_day_date = models.DateField(verbose_name='Main Class Start Date', default=lambda: Session.default_key_day)
     max_day_shift = models.SmallIntegerField(default=settings.DEFAULT_MAX_DAY_SHIFT,
                                              verbose_name='Number of days other classes are away from Main Class',
                                              help_text='Use negative numbers if others are before the main class day.')
     num_weeks = models.PositiveSmallIntegerField(default=settings.DEFAULT_SESSION_WEEKS,
                                                  verbose_name='Number of Class Weeks')
     skip_weeks = models.PositiveSmallIntegerField(default=0,
-                                                  verbose_name='How many class weeks are skipped mid-session?')
+                                                  verbose_name='Skipped mid-session class weeks')
     flip_last_day = models.BooleanField(default=False,
                                         verbose_name='Due to skipped weeks, does the session ending switch between a non-key vs key day?',
                                         help_text='This is probably only true if the skipped class is not on the weekday that normally is the end of the session.')
     break_weeks = models.PositiveSmallIntegerField(default=0,
                                                    verbose_name='Break weeks after this session')
-    publish_date = models.DateField(blank=True)  # , default=lambda: Session.default_publish
+    publish_date = models.DateField(blank=True, default=lambda: Session.default_publish)
     expire_date = models.DateField(blank=True, help_text='If blank, this will be computed')
 
     @property
     def start_date(self):
         """ Return the date for whichever is the actual first class day. """
+        print(f"========== Session.start_date - {self} ==========")
         first_date = self.key_day_date
         if self.max_day_shift < 0:
             first_date += timedelta(days=self.max_day_shift)
@@ -286,9 +287,10 @@ class Session(models.Model):
     @property
     def end_date(self):
         """ Return the date for the last class day. """
+        print(f"========== Session.end_date - {self} ==========")
         last_date = self.key_day_date + timedelta(days=7*(self.num_weeks + self.skip_weeks - 1))
         if self.max_day_shift < 0 and self.flip_last_day:
-            last_date += self.max_day_shift + 7
+            last_date += timedelta(self.max_day_shift + 7)
         elif self.max_day_shift > 0 and not self.flip_last_day:
             last_date += timedelta(days=self.max_day_shift)
         return last_date
@@ -296,13 +298,21 @@ class Session(models.Model):
     @property
     def prev_session(self):
         """ Return the Session that comes before the current Session, or 'None' if none exists. """
+        print(f"========== Session.prev_session - {self} ==========")
         return self.last_session(since=self.key_day_date)
 
     @property
     def next_session(self):
         """ Returns the Session that comes after the current Session, or 'None' if none exists. """
-        later = Session.objects.filter(key_day_date__gt=self.key_day_date)
+        print(f"============== Session.next_session for {self} ==============")
+        key_day = self.key_day_date
+        key_day = key_day() if callable(key_day) else key_day
+        print(f"self Key Day: {key_day} {type(key_day)} ")
+        # TODO: PROBABLY NOT: later = Session.objects.filter(key_day_date__date__gt=key_day)
+        later = Session.objects.filter(key_day_date__gt=key_day)
         next_one_or_none = later.order_by('key_day_date').first()
+        # print('-------------------------------------')
+        print(next_one_or_none)
         return next_one_or_none
 
     date_added = models.DateField(auto_now_add=True)
@@ -310,40 +320,65 @@ class Session(models.Model):
 
     @classmethod
     def last_session(cls, since=None):
-        """ Returns the Session starting the latest, or latest prior to given 'since' date. """
+        """ Returns the Session starting the latest, or latest prior to given 'since' date. Return None if none. """
         query = cls.objects
+        # TODO: Look into get_next_by_FOO() and get_previous_by_FOO(), they raise Model.DoesNotExist
         if since:
             # TODO: Check isinstance an appropriate datetime obj
+            # TODO: should following be: query = query.filter(key_day_date__date__lt=since)
             query = query.filter(key_day_date__lt=since)
         return query.order_by('-key_day_date').first()
 
-    # @classmethod
-    # def _default_date(cls, field):
-    #     """ Compute a default value for key_day_date field. """
-    #     allowed_fields = ('key_day_date', 'publish_date')
-    #     if field not in allowed_fields:
-    #         raise ValueError(f"Not a valid field parameter: {field} ")
-    #     final_session = cls.last_session()
-    #     if not final_session:
-    #         new_date = None
-    #     elif field == 'key_day_date':
-    #         known_weeks = final_session.num_weeks + final_session.skip_weeks + final_session.break_weeks
-    #         later = final_session.max_day_shift > 0
-    #         if (final_session.flip_last_day and not later) or (later and not final_session.flip_last_day):
-    #             known_weeks -= 1
-    #         new_date = final_session.key_day_date + timedelta(days=7*known_weeks)
-    #     elif field == 'publish_date':
-    #         target_session = final_session if final_session.num_weeks > 3 else final_session.prev_session
-    #         new_date = getattr(target_session, 'expire_date', None)
-    #     return new_date
+    @classmethod
+    def _default_date(cls, field):
+        """ Compute a default value for key_day_date field. """
+        allowed_fields = ('key_day_date', 'publish_date')
+        if field not in allowed_fields:
+            raise ValueError(f"Not a valid field parameter: {field} ")
+        final_session = cls.last_session()
+        if not final_session:
+            new_date = None
+        elif field == 'key_day_date':
+            known_weeks = final_session.num_weeks + final_session.skip_weeks + final_session.break_weeks
+            later = final_session.max_day_shift > 0
+            if (final_session.flip_last_day and not later) or (later and not final_session.flip_last_day):
+                known_weeks -= 1
+            new_date = final_session.key_day_date + timedelta(days=7*known_weeks)
+            print(f"Session.key_day_date default computed: {new_date} ")
+        elif field == 'publish_date':
+            target_session = final_session if final_session.num_weeks > 3 else final_session.prev_session
+            new_date = getattr(target_session, 'expire_date', None)
+        return new_date
 
-    # @classmethod
-    # def default_publish(cls):
-    #     return cls._default_date('publish_date')
+    @classmethod
+    def default_publish(cls):
+        return cls._default_date('publish_date')
 
-    # @classmethod
-    # def default_key_day(cls):
-    #     return cls._default_date('key_day_date')
+    @classmethod
+    def default_key_day(cls):
+        return cls._default_date('key_day_date')
+
+    def save(self, *args, **kwargs):
+        print(f"============= Session.save Overwrite for {self} ================")
+        key_day = self.key_day_date
+        key_day = key_day() if callable(key_day) else key_day
+        if self.expire_date is None:
+            # Typically after week 2, but short 'sessions' expire after week 1.
+            adj = self.max_day_shift + 1 if self.max_day_shift > 0 else 1
+            adj += 7 if self.num_weeks > 3 else 1
+            self.expire_date = key_day + timedelta(days=adj)
+        print(f'--------- Session.save expire and next_sess for {self} --------')
+        print(f"expire_date: {self.expire_date} {type(self.expire_date)} ")
+        next_sess = self.next_session
+        if next_sess:
+            print(f'update next_sess: {next_sess} ')
+            next_sess.publish_date = self.expire_date
+            next_sess.save(update_fields=['publish_date'])
+        else:
+            print(f'No extra save because no next_sess: {next_sess} ')
+        # try: self.objects.get_next_by_key_day_date().update(publish_date=self.expire_date)
+        # except Session.DoesNotExist as e: print(f"There is no next session: {e} ")
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f'{self.name}'
