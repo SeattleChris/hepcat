@@ -517,6 +517,7 @@ class ClassOffer(models.Model):
 
     def set_num_level(self):
         """ When we want a sortable level number. """
+        # TODO: Make this an automatic setter function, remove other code calling it manually.
         level_dict = Subject.LEVEL_ORDER
         print('======= ClassOffer.set_num_level ========')
         print(level_dict.values())

@@ -1,6 +1,6 @@
-from django.test import TestCase  # , TransactionTestCase
+from django.test import TestCase, TransactionTestCase
 from classwork.models import Location  # , Resource, SiteContent
-from classwork.models import Session  #, Subject, ClassOffer
+from classwork.models import Session  # , Subject, ClassOffer
 # from classwork.models import Profile, Payment, Registration, Notify
 # from users.models import UserHC
 from datetime import date, timedelta
@@ -15,7 +15,8 @@ FIRST_KEY_DAY = NOW - timedelta(days=1)
 # models test
 
 
-class LocationCoverageTests(TestCase):
+class LocationCoverageTests(TransactionTestCase):
+    fixtures = ['tests/db_basic.json']
 
     def create_location(self, name="only a test", code="tst", address='123 Some St, #42', zipcode='98112', **kwargs):
         return Location.objects.create(name=name, code=code, address=address, zipcode=zipcode, **kwargs)
@@ -26,7 +27,8 @@ class LocationCoverageTests(TestCase):
         self.assertEqual(w.__str__(), w.name)
 
 
-class SessionCoverageTests(TestCase):
+class SessionCoverageTests(TransactionTestCase):
+    fixtures = ['tests/db_basic.json']
 
     def create_session(self, **kwargs):
         return Session.objects.create(**kwargs)
@@ -43,17 +45,17 @@ class SessionCoverageTests(TestCase):
         )
         self.assertTrue(isinstance(first_sess, Session))
         self.assertEqual(first_sess.__str__(), first_sess.name)
-        print("============ Second Session Creation ====================")
-        second_sess = self.create_session(
-            name='t2_no_shift',
-            max_day_shift=day_adjust,
-            num_weeks=duration,
-            # key_day_date=FIRST_KEY_DAY,
-            # num_weeks=duration,
-            # publish_date=publish,
-        )
-        self.assertTrue(isinstance(second_sess, Session))
-        self.assertEqual(second_sess.__str__(), second_sess.name)
+        # print("============ Second Session Creation ====================")
+        # second_sess = self.create_session(
+        #     name='t2_no_shift',
+        #     max_day_shift=day_adjust,
+        #     num_weeks=duration,
+        #     # key_day_date=FIRST_KEY_DAY,
+        #     # num_weeks=duration,
+        #     # publish_date=publish,
+        # )
+        # self.assertTrue(isinstance(second_sess, Session))
+        # self.assertEqual(second_sess.__str__(), second_sess.name)
 
 
 # class LocationTests(TestCase):
