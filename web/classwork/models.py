@@ -291,7 +291,6 @@ class Session(models.Model):
     @property
     def start_date(self):
         """ Return the date for whichever is the actual first class day. """
-        # print(f"========== Session.start_date - {self} ==========")
         first_date = self.key_day_date
         if self.max_day_shift < 0:
             first_date += timedelta(days=self.max_day_shift)
@@ -300,24 +299,21 @@ class Session(models.Model):
     @property
     def end_date(self):
         """ Return the date for the last class day. """
-        # print(f"========== Session.end_date - {self} ==========")
         last_date = self.key_day_date + timedelta(days=7*(self.num_weeks + self.skip_weeks - 1))
         if self.max_day_shift < 0 and self.flip_last_day:
-            last_date += timedelta(self.max_day_shift + 7)
+            last_date += timedelta(self.max_day_shift)  # Adjust because now non-key day was skipped past key day.
         elif self.max_day_shift > 0 and not self.flip_last_day:
-            last_date += timedelta(days=self.max_day_shift)
+            last_date += timedelta(days=self.max_day_shift)  # Use later class days unless skips made the key day last
         return last_date
 
     @property
     def prev_session(self):
         """ Return the Session that comes before the current Session, or 'None' if none exists. """
-        # print(f"========== Session.prev_session - {self} ==========")
         return self.last_session(since=self.key_day_date)
 
     @property
     def next_session(self):
         """ Returns the Session that comes after the current Session, or 'None' if none exists. """
-        # print(f"============== Session.next_session for {self} ==============")
         key_day = self.key_day_date
         key_day = key_day() if callable(key_day) else key_day
         key_day = key_day.isoformat() if isinstance(key_day, (date, dt)) else key_day
@@ -325,8 +321,6 @@ class Session(models.Model):
         # TODO: PROBABLY NOT: later = Session.objects.filter(key_day_date__date__gt=key_day)
         later = Session.objects.filter(key_day_date__gt=key_day)
         next_one_or_none = later.order_by('key_day_date').first()
-        # print('-------------------------------------')
-        # print(next_one_or_none)
         return next_one_or_none
 
     date_added = models.DateField(auto_now_add=True)
@@ -357,14 +351,15 @@ class Session(models.Model):
             later = final_session.max_day_shift > 0
             if final_session.skip_weeks > 0 and \
                ((final_session.flip_last_day and not later) or (later and not final_session.flip_last_day)):
-                known_weeks -= 1  # The key day class had one week fewer skip weeks.
+                known_weeks -= 1  # One fewer skips since key day class did not have critical skip_weeks
             new_date = final_session.key_day_date + timedelta(days=7*known_weeks)
             # print(f"Session.key_day_date default computed: {new_date} ")
         elif field == 'publish_date':
             while final_session is not None and final_session.num_weeks < 4:
                 final_session = final_session.prev_session
             new_date = getattr(final_session, 'expire_date', None)
-        return new_date.isoformat() if isinstance(new_date, (date, dt)) else date.today().isoformat()
+        # return new_date.isoformat() if isinstance(new_date, (date, dt)) else date.today().isoformat()
+        return new_date
 
     @classmethod
     def default_publish(cls):
@@ -380,11 +375,11 @@ class Session(models.Model):
                 return super().save(*args, **kwargs)
         key_day = self.key_day_date
         key_day = key_day() if callable(key_day) else key_day
-        key_day = date.fromisoformat(key_day) if isinstance(key_day, str) else key_day
+        # key_day = date.fromisoformat(key_day) if isinstance(key_day, str) else key_day
         self.key_day_date = key_day
         publish = self.publish_date
         publish = publish() if callable(publish) else publish
-        publish = date.fromisoformat(publish) if isinstance(publish, str) else publish
+        # publish = date.fromisoformat(publish) if isinstance(publish, str) else publish
         self.publish_date = publish
         expire = self.expire_date
         if expire is None:
@@ -397,8 +392,6 @@ class Session(models.Model):
         if next_sess:
             next_sess.publish_date = expire
             next_sess.save(update_fields=['publish_date'])
-        # else:
-        #     print(f'No extra save because no next_sess: {next_sess} ')
         # try: self.objects.get_next_by_key_day_date().update(publish_date=self.expire_date)
         # except Session.DoesNotExist as e: print(f"There is no next session: {e} ")
         super().save(*args, **kwargs)
