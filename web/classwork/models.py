@@ -255,7 +255,19 @@ class Subject(models.Model):
 
 class Session(models.Model):
     """ Classes are offered and published according to which session they belong.
-        Each session starts on a given date of the key day of the week.
+        Each session start date is computed based on 'key_day_date' and the earliest class day.
+        - If 'max_day_shift' is zero or positive, the earliest day will be the 'key_day_date'.
+        - If 'max_day_shift' is negative, then earliest day is that many days before 'key_day_date.
+        Each session may have a determined break number of weeks after the session ends.
+        Each session can have some class days that may skip a week of classes (holiday, or other reasons).
+        Due to skipped weeks, this can change which day of the week is the last day of classes.
+        - Most critically, this can change what is the earliest day the next session can start.
+        Each session end date is computed based on all of these values.
+        A default value for 'key_day_date' and 'publish_date' are determined based on existing sessions.
+        If not manually set, the 'expire_date' will typically set to after the second week of all class days.
+        If a session is only three weeks or shorter, it will be treated differently than other sessions.
+            - The 'expire_date' will be two days after all possible first class days.
+            - Later sessions will skip to previous session for determining computed values.
     """
     # id = auto-created
     name = models.CharField(max_length=15)

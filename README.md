@@ -1,7 +1,7 @@
 # hepcat
 
 **Author**: Chris L Chapman
-**Version**: 0.2.0
+**Version**: 0.3.0
 
 ## Overview
 
@@ -66,11 +66,16 @@ Primarily this is designed for the needs of HepCat Productions - www.SeattleSwin
 * An admin can deactivate the weekly class emails, or referral feature, as appropriate for the school.
 * An admin can create new sessions (periods of time a class is offered) and assign start dates.
   * Many automatic publish times for classes offered, resources, emails, etc are determined by this.
+  * A 'key day' should be determined as the one day that is most authoritative to determine dates.
+    * This affects the default value for following class session, as well as other computed dates.
+    * If there is a day that more reliably has classes for every session, this should be the key day.
+    * If there are many reliable days, then slight advantage to set key day to the last week day.
 * An admin can create new subjects (categories of offered classes), and various subject versions.
   * class levels are managed through subjects, as well as topics that don't fit as a class level.
   * A class level (subject) can have multiple versions.
         * Versions can be taken in any order, but all are expected before moving on to the next level.
-* All proposed offered classes must be flagged as accepted before they are published to the public.
+* All approved classes will automatically be published on the appropriate day, determined by session.
+* [Future] All proposed offered classes must approved before they are published to the public.
 * An admin has a report for offered classes listing student names and payment status.
   * Most of the payment reconciliation should be automatically handled by the site.
   * Admins are given access to reconcile any unclear payments.
@@ -92,7 +97,7 @@ Primarily this is designed for the needs of HepCat Productions - www.SeattleSwin
 ## How Offered Classes are Organized
 
 Sessions:
-Sessions are periods of time that classes are offered. The offered class publish dates, the release of promotional material, publishing the weekly new resources for students of a given class, and many features are keyed off of the start of the class session (and also modified by other settings for offered classes). A key date is chosen for a session, but different classes during that session can start before or after it, which can be limited in range by a setting for the given session. Sessions are also set to last for a certain duration (usually the same duration of the offered classes), have a publish date, and an expiration date (for when to no longer publish these classes).
+Sessions are periods of time that classes are offered. The offered class publish dates, the release of promotional material, publishing the weekly new resources for students of a given class, and many features are keyed off of the start of the class session (and also modified by other settings for offered classes). A key date is chosen for a session, but different classes during that session can start before or after it, which can be limited in range by a setting for the given session. Sessions are also set to last for a certain duration (usually the same duration of the offered classes), have a publish date, and an expiration date (for when to no longer publish these classes). The start and end dates are computed based on the settings for a session.
 
 Subjects:
 This is where most of the information is for an offered class is held, except for the details of what session (when it is offered), or any details that only apply to a specific instance/time that a class was offered. This includes the number of weeks it lasts, how long each class day is (in minutes), title, description, short description, promotional image, what class level (or if it is a non-level class) it is, etc. Class levels and versions are handled by Subject. At each level, there can be multiple versions. A student can expect that all these versions are at about the same level, so it does not matter which one they initially take or what order they take them in, but they should take all versions (except classes marked as NA version) before moving on to the next level. Higher level subjects (classes) will assume a student is familiar with the material of all of these lower level subject versions.
@@ -129,40 +134,52 @@ This is a specific subject, offered during a specific session. It includes infor
 
 Each organization installing this app while have some unique settings. Some of these depend on the deployment and development environments, and some of these depend on the business/organization structure. While some of these organization structure settings are created as an organization admin after the app is installed, some are handled elsewhere, most notably in the `.env` file (which should never be published or shared publicly). The following has some `.env` file settings explained:
 
-SECRET_KEY: a unique, unpublished, key used by Django
-DEBUG: True during development. False for production deployment
-ALLOWED_HOSTS: space separated list - usually for development: 127.0.0.1 localhost 0.0.0.0
-DB_NAME: connection to the database (ie: postgres)
-DB_USER, DB_PASS, DB_HOST, DB_PORT: for connecting to the database
-EMAIL_HOST_USER, EMAIL_HOST_PASSWORD: allowing the app to send email
-STRIPE_PUBLIC_KEY, STRIPE_KEY: Public and Private keys, only needed if implementing stripe payment processing
-PAYPAL_EMAIL: If implementing PayPal payments, the email payments send their funds
-PAYPAL_SECRET: As given from PayPal developer dashboard credentials
-PAYPAL_CLIENT_ID: As given from PayPal developer dashboard credentials
-PAYPAL_URL: something like https://api.sandbox.paypal.com for development or https://api.paypal.com for production
-DEFAULT_CLASS_PRICE: Optional - Can set the common base price for most products (ClassOffer)
-DEFAULT_PRE_DISCOUNT: Optional - Can set the typical discount for paying in advanced (per product)
-MULTI_DISCOUNT: Optional - If offering a discount for multiple classes, this is the default value
-*Note: The above 3 are the pre-populated values, overwritable per product. Whole numbers should have '.0' at the end.
+* SECRET_KEY: a unique, unpublished, key used by Django
+* DEBUG: True during development. False for production deployment
+* ALLOWED_HOSTS: space separated list - usually for development: 127.0.0.1 localhost 0.0.0.0
+* DB_NAME: connection to the database (ie: postgres)
+* DB_USER, DB_PASS, DB_HOST, DB_PORT: for connecting to the database
+* EMAIL_HOST_USER, EMAIL_HOST_PASSWORD: allowing the app to send email
+* STRIPE_PUBLIC_KEY, STRIPE_KEY: Public & Private keys, only needed if using stripe processing
+* PAYPAL_EMAIL: If implementing PayPal payments, the email payments send their funds
+* PAYPAL_SECRET: As given from PayPal developer dashboard credentials
+* PAYPAL_CLIENT_ID: As given from PayPal developer dashboard credentials
+* PAYPAL_URL: something like:
+  * https://api.sandbox.paypal.com for development or
+  * https://api.paypal.com for production
+* BUSINESS_NAME: Optional - Can be used for templates in Admin site as well as main site.
+* DEFAULT_CLASS_PRICE: Can set the common base price for most products (ClassOffer)
+* DEFAULT_PRE_DISCOUNT: Can set the typical discount for paying in advanced (per product)
+* MULTI_DISCOUNT: If offering a discount for multiple classes, this is the default value
+* DEFAULT_MAX_DAY_SHIFT:
+* DEFAULT_SESSION_WEEKS: The typical duration of class weeks for most Sessions.
+* DEFAULT_CLASS_MINUTES: The typical length of time of a single class day.
+
+*Note: The last 6 are all optional pre-populated values, overwritable per product. For DEFAULT_CLASS_PRICE, DEFAULT_PRE_DISCOUNT, MULTI_DISCOUNT - whole numbers should have '.0' at the end. The last three are expected to be integers.
 
 ## Architecture
 
-* python 3.6-slim
-* Django 3.0.2
-* psycopg2-binary 2.8.4
-* django-registration 3.0.1
+* python 3.7+
+* boto3 1.14+
+* Django 3.0+
+  * django-registration 3.1+
+  * django-payments 0.13.0
+  * django-storages 1.9+
+  * django-compressor 2.4
+  * django-ses 1.0+
+* psycopg2-binary 2.8+
 * nginx
-* postgres
-* django-compressor 2.4
-* django-payments 0.13.0
-* Pillow 7.0.0
-* PayPal integration (django-payments)
-* Future Features: stripe 2.42.0
+* postgres or MySQL
+* Pillow 7+
+* PayPal integration (django-payments 0.13+)
+* stripe 2.48+
+* coverage and django.test for tests.
 
 Dev:
 
 * django-sass-processor 0.7.5
 * libsass 0.19.4
+* coverage and django.test for tests.
 
 ## Development Progress
 
