@@ -15,8 +15,8 @@ FIRST_KEY_DAY = NOW - timedelta(days=1)
 # models test
 
 
-class LocationCoverageTests(TransactionTestCase):
-    fixtures = ['tests/db_basic.json']
+class LocationCoverageTests(TestCase):
+    # fixtures = ['tests/db_basic.json']
 
     def create_location(self, name="only a test", code="tst", address='123 Some St, #42', zipcode='98112', **kwargs):
         return Location.objects.create(name=name, code=code, address=address, zipcode=zipcode, **kwargs)
@@ -31,29 +31,54 @@ class SessionCoverageTests(TransactionTestCase):
     fixtures = ['tests/db_basic.json']
 
     def create_session(self, **kwargs):
-        return Session.objects.create(**kwargs)
+        obj = Session.objects.create(**kwargs)
+        obj.refresh_from_db()
+        return obj
 
     def test_session_creation(self):
         day_adjust, duration = 0, 5
         publish = FIRST_KEY_DAY - timedelta(days=7*(duration - 1)+1)
-        first_sess = self.create_session(
+        expire = FIRST_KEY_DAY + timedelta(days=8)
+        sess = self.create_session(
             name='t1_no_shift',
             key_day_date=FIRST_KEY_DAY,
             max_day_shift=day_adjust,
             num_weeks=duration,
             publish_date=publish,
         )
-        self.assertTrue(isinstance(first_sess, Session))
-        self.assertEqual(first_sess.__str__(), first_sess.name)
+        self.assertTrue(isinstance(sess, Session))
+        self.assertEqual(sess.__str__(), sess.name)
+        self.assertEquals(sess.publish_date, publish)
+        self.assertEquals(sess.expire_date, expire)
+
+    def test_session_defaults_on_creation(self):
+        day_adjust, duration = 0, 5
+        initial = {
+            "name": "May_2020",
+            "key_day_date": "2020-04-30",
+            "max_day_shift": -2,
+            "num_weeks": 5,
+            "expire_date": "2020-05-08",
+        }
+        key_day = date.fromisoformat(initial['key_day_date']) + timedelta(days=7*initial['num_weeks'])
+        new_publish_date = date.fromisoformat(initial['expire_date'])
+        expire = key_day + timedelta(days=8)
+        end = key_day + timedelta(days=7*(duration - 1))
+        sess = self.create_session(
+            name='t2_no_shift',
+            max_day_shift=day_adjust,
+            num_weeks=duration,
+            # key_day_date=FIRST_KEY_DAY,
+            # publish_date=publish,
+        )
+        self.assertEquals(sess.key_day_date, key_day)
+        self.assertEquals(sess.start_date, key_day)
+        self.assertEquals(sess.publish_date, new_publish_date)
+        self.assertEquals(sess.expire_date, expire)
+        self.assertEquals(sess.end_date, end)
+        self.assertEquals(sess.prev_session.name, 'May_2020')
+
         # print("============ Second Session Creation ====================")
-        # second_sess = self.create_session(
-        #     name='t2_no_shift',
-        #     max_day_shift=day_adjust,
-        #     num_weeks=duration,
-        #     # key_day_date=FIRST_KEY_DAY,
-        #     # num_weeks=duration,
-        #     # publish_date=publish,
-        # )
         # self.assertTrue(isinstance(second_sess, Session))
         # self.assertEqual(second_sess.__str__(), second_sess.name)
 
