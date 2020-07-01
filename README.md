@@ -108,19 +108,26 @@ This is a specific subject, offered during a specific session. It includes infor
 ## Getting Started
 
 * Make sure you have a processing account through stripe and/or PayPal.
-* clone the repository.
-* create the needed database, recording the connection details to be used in `.env` file.
-* make sure the file settings are correct.
-* make an `.env` file, following the example of `.env_template`
-* from the `/web` directory, run `python manage.py migrate`
-* from the `/web` directory, run `python manage.py createsuperuser`
+* Clone the repository.
+* Create the needed database, recording the connection details to be used in `.env` file.
+* Make sure the file settings are correct.
+* Make an `.env` file, following the example of `.env_template`
+* Create a virtual environment and install packages.
+  * Using Pipenv:
+    * `pipenv shell`
+    * `pipenv install`
+  * Using other virtual environments, as their typical usage.
+* Move to `/web` directory for any of the following commands or locations for files and directories.
+* Give execute privileges to the manage.py file. Make sure it executes using Python 3.
+* Run `./manage.py migrate`
+* Run `./manage.py createsuperuser`
   * input an admin username (this is temporary as it will be overwritten).
   * input an email and password as prompted (the email will be used as the username).
-* from the `/web` directory, run `python manage.py runserver`
+* Run `./manage.py runserver`
   * From here you should be able to login, but the username will be the provided admin email.
   * Go to the admin pages. Update the admin account with a first and last name.
   * Input the initial class structure content for: Session, Subject, ClassOffer
-* Confirm the tests directory is where it is expected.
+* Confirm `tests` directory is in the expected location.
 * Create database test fixture from the basic starter models put into the live database.
   * `./manage.py dumpdata --indent 4 --exclude admin --exclude contenttypes > tests/db_basic.json`
   * Confirm the contents, possibly editing as needed, of `tests/db_basic.json`
@@ -128,6 +135,10 @@ This is a specific subject, offered during a specific session. It includes infor
   * Create other fixtures as needed and add them to the fixtures array in the appropriate tests class
 * Run tests to confirm tests and basic structure is setup correctly.
   * `./manage.py test`
+  * Or with coverage, if your virtual environment setup a `venv` directory:
+    * `coverage run --omit='*/venv/*' manage.py test -v 2`
+  * Or with coverage, if using Pipenv for virtual environment.
+    * `coverage run manage.py test -v 2`
 * ... More to be added later ...
 
 <!-- **Alternative Setup Using Docker** -->
