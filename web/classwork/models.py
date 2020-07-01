@@ -1,6 +1,5 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-# from django.utils.translation import ugettext_lazy as _
 from datetime import date, timedelta, datetime as dt
 from django.core.mail import EmailMessage
 from django.db.models.signals import post_save
