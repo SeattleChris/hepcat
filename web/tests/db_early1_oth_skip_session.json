@@ -1,7 +1,7 @@
 [
 {
     "model": "classwork.session",
-    "pk": 12,
+    "pk": 3,
     "fields": {
         "name": "early1_oth_skip",
         "key_day_date": "2020-06-04",
