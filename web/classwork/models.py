@@ -376,11 +376,18 @@ class Session(models.Model):
         key_day = self.key_day_date
         key_day = key_day() if callable(key_day) else key_day
         # key_day = date.fromisoformat(key_day) if isinstance(key_day, str) else key_day
+        prev_sess = Session.last_session(since=key_day)
+        day_shift = self.max_day_shift
+        early_day = key_day + timedelta(days=day_shift) if day_shift < 0 else key_day
+        if prev_sess and prev_sess.end_date >= early_day:
+            # TODO: Check the logic and possible backup solutions
+            raise ValueError("Overlapping class dates. Possibly change the max_day_shift, or add a Break Week. ")
         self.key_day_date = key_day
         publish = self.publish_date
         publish = publish() if callable(publish) else publish
         # publish = date.fromisoformat(publish) if isinstance(publish, str) else publish
         self.publish_date = publish
+        self.flip_last_day = False if self.skip_weeks == 0 else self.flip_last_day
         expire = self.expire_date
         if expire is None:
             # Typically 1 day after week 2, but short 'sessions' expire 2 days after after week 1.
