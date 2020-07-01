@@ -1,0 +1,19 @@
+[
+{
+    "model": "classwork.session",
+    "pk": 2,
+    "fields": {
+        "name": "early_no_skip",
+        "key_day_date": "2020-06-04",
+        "max_day_shift": -2,
+        "num_weeks": 5,
+        "skip_weeks": 0,
+        "flip_last_day": false,
+        "break_weeks": 0,
+        "publish_date": "2020-05-08",
+        "expire_date": "2020-06-12",
+        "date_added": "2020-07-01",
+        "date_modified": "2020-07-01"
+    }
+}
+]
