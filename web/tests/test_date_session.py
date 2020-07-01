@@ -31,12 +31,14 @@ class SessionDateAfterNoSkip(TransactionTestCase):
     def test_dates_skips_key_date_early_shift(self):
         """ Session with early shift and 1 skip week on the key day. """
         skips, day_adjust, duration = 1, -2, INITIAL['num_weeks']
-        key_day = date.fromisoformat(INITIAL['key_day_date']) + timedelta(days=7*2*duration)
+        last_sess = Session.last_session()
+        key_day = last_sess.key_day_date + timedelta(days=7*duration)
+        prev_end = last_sess.end_date
         publish = date.fromisoformat(INITIAL['expire_date']) + timedelta(days=7*duration)
         expire = key_day + timedelta(days=8)
         start = key_day + timedelta(days=day_adjust)
         end = key_day + timedelta(days=7*(duration + skips - 1))
-        prev_end = date.fromisoformat(INITIAL['key_day_date']) + timedelta(days=7*(2 * duration - 1))
+        # prev_end = date.fromisoformat(INITIAL['key_day_date']) + timedelta(days=7*(2 * duration - 1))
         sess = Session.objects.create(
             name='early_key_skip',
             max_day_shift=day_adjust,
@@ -56,12 +58,15 @@ class SessionDateAfterNoSkip(TransactionTestCase):
     def test_dates_skips_key_date_late_shift(self):
         """ Session with late shift and 1 skip week on the key day, flipping last class day. """
         skips, day_adjust, duration = 1, 5, INITIAL['num_weeks']
-        key_day = date.fromisoformat(INITIAL['key_day_date']) + timedelta(days=7*2*duration)
+        # key_day = date.fromisoformat(INITIAL['key_day_date']) + timedelta(days=7*2*duration)
+        last_sess = Session.last_session()
+        key_day = last_sess.key_day_date + timedelta(days=7*duration)
         publish = date.fromisoformat(INITIAL['expire_date']) + timedelta(days=7*duration)
         expire = key_day + timedelta(days=8+day_adjust)
         start = key_day
         end = key_day + timedelta(days=7*(duration + skips - 1))
-        prev_end = date.fromisoformat(INITIAL['key_day_date']) + timedelta(days=7*(2 * duration - 1))
+        # prev_end = date.fromisoformat(INITIAL['key_day_date']) + timedelta(days=7*(2 * duration - 1))
+        prev_end = last_sess.end_date
         sess = Session.objects.create(
             name='late_key_skip',
             max_day_shift=day_adjust,
@@ -81,12 +86,15 @@ class SessionDateAfterNoSkip(TransactionTestCase):
     def test_dates_skips_other_date_early_shift(self):
         """ Session with early shift and 1 skip week NOT on the key day, flipping last class day. """
         skips, day_adjust, duration = 1, -2, INITIAL['num_weeks']
-        key_day = date.fromisoformat(INITIAL['key_day_date']) + timedelta(days=7*2*duration)
+        last_sess = Session.last_session()
+        key_day = last_sess.key_day_date + timedelta(days=7*duration)
+        # key_day = date.fromisoformat(INITIAL['key_day_date']) + timedelta(days=7*2*duration)
         publish = date.fromisoformat(INITIAL['expire_date']) + timedelta(days=7*duration)
         expire = key_day + timedelta(days=8)
         start = key_day + timedelta(days=day_adjust)
         end = key_day + timedelta(days=7*(duration + skips - 1)+day_adjust)
-        prev_end = date.fromisoformat(INITIAL['key_day_date']) + timedelta(days=7*(2 * duration - 1))
+        # prev_end = date.fromisoformat(INITIAL['key_day_date']) + timedelta(days=7*(2 * duration - 1))
+        prev_end = last_sess.end_date
         sess = Session.objects.create(
             name='early2_oth_skip',
             max_day_shift=day_adjust,
@@ -106,12 +114,15 @@ class SessionDateAfterNoSkip(TransactionTestCase):
     def test_dates_skips_other_date_late_shift(self):
         """ Session with late shift and 1 skip week NOT on the key_day. """
         skips, day_adjust, duration = 1, 5, INITIAL['num_weeks']
-        key_day = date.fromisoformat(INITIAL['key_day_date']) + timedelta(days=7*2*duration)
+        last_sess = Session.last_session()
+        key_day = last_sess.key_day_date + timedelta(days=7*duration)
+        # key_day = date.fromisoformat(INITIAL['key_day_date']) + timedelta(days=7*2*duration)
         publish = date.fromisoformat(INITIAL['expire_date']) + timedelta(days=7*duration)
         expire = key_day + timedelta(days=8+day_adjust)
         start = key_day
         end = key_day + timedelta(days=7*(duration + skips - 1)+day_adjust)
-        prev_end = date.fromisoformat(INITIAL['key_day_date']) + timedelta(days=7*(2 * duration - 1))
+        # prev_end = date.fromisoformat(INITIAL['key_day_date']) + timedelta(days=7*(2 * duration - 1))
+        prev_end = last_sess.end_date
         sess = Session.objects.create(
             name='late_oth_skip',
             max_day_shift=day_adjust,
