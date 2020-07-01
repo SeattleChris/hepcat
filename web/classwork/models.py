@@ -375,43 +375,32 @@ class Session(models.Model):
         return cls._default_date('key_day_date')
 
     def save(self, *args, **kwargs):
-        # print(f"============= Session.save Overwrite for {self} ================")
         if 'update_fields' in kwargs:
             if not all('expire_date' in kwargs['update_fields'], self.expire_date is None):
                 return super().save(*args, **kwargs)
+        key_day = self.key_day_date
+        key_day = key_day() if callable(key_day) else key_day
+        key_day = date.fromisoformat(key_day) if isinstance(key_day, str) else key_day
+        self.key_day_date = key_day
+        publish = self.publish_date
+        publish = publish() if callable(publish) else publish
+        publish = date.fromisoformat(publish) if isinstance(publish, str) else publish
+        self.publish_date = publish
         expire = self.expire_date
         if expire is None:
-            # Typically after week 2, but short 'sessions' expire 2 days after after week 1.
-            key_day = self.key_day_date
-            key_day = key_day() if callable(key_day) else key_day
-            key_day = date.fromisoformat(key_day) if isinstance(key_day, str) else key_day
+            # Typically 1 day after week 2, but short 'sessions' expire 2 days after after week 1.
             adj = self.max_day_shift + 1 if self.max_day_shift > 0 else 1
             adj += 7 if self.num_weeks > 3 else 1
             expire = key_day + timedelta(days=adj)
-            self.expire_date = expire.isoformat()
-        # print(f'--------- Session.save expire and next_sess for {self} --------')
-        # print(f"expire_date: {self.expire_date} {type(self.expire_date)} ")
+            self.expire_date = expire
         next_sess = self.next_session
         if next_sess:
-            # print(f'update next_sess: {next_sess} ')
-            print('=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=')
-            # print(f"{self.expire_date} {type(self.expire_date)} ")
-            # temp = self.expire_date.isoformat()
-            # print(f"{temp} {type(temp)} ")
-            # next_sess.publish_date = self.expire_date.isoformat()
-            expire = expire.isoformat() if isinstance(expire, (date, dt)) else expire
             next_sess.publish_date = expire
             next_sess.save(update_fields=['publish_date'])
         # else:
         #     print(f'No extra save because no next_sess: {next_sess} ')
         # try: self.objects.get_next_by_key_day_date().update(publish_date=self.expire_date)
         # except Session.DoesNotExist as e: print(f"There is no next session: {e} ")
-        print('================= Call the Super Save =================')
-        pprint(dir(self))
-        print('-----------------------------------------')
-        pprint(self.key_day_date)
-        pprint(self.publish_date)
-        pprint(self.expire_date)
         super().save(*args, **kwargs)
 
     def __str__(self):
