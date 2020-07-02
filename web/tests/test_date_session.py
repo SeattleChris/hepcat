@@ -1,4 +1,5 @@
 from django.test import TransactionTestCase  # , TestCase
+from django.forms import ValidationError
 from classwork.models import Session  # , Subject, ClassOffer, Location, Profile, Registration, Payment
 from datetime import date, timedelta
 
@@ -44,6 +45,7 @@ class NoSkipToOneSkipSessionDates(TransactionTestCase):
 
     def create_session(self, **kwargs):
         obj = Session.objects.create(**kwargs)
+        # TODO: Handle if creating object raises a ValidationError, as sometimes expected.
         return obj
 
     def test_skip_key_date_early_shift(self):
