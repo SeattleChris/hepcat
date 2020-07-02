@@ -1,5 +1,5 @@
 from django.db import models
-# from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from datetime import date, timedelta, datetime as dt
 from django.core.mail import EmailMessage
 from django.db.models.signals import post_save
@@ -9,6 +9,7 @@ from payments import PurchasedItem
 from payments.models import BasePayment
 from django.conf import settings
 from django.urls import reverse
+# from pprint import pprint
 # from django.contrib.auth import get_user_model
 # User = get_user_model()
 # TODO: Should we be using get_user_model() instead of settings.AUTH_USER_MODEL ?
@@ -26,8 +27,8 @@ from django.urls import reverse
 class SiteContent(models.Model):
     """ Public content for different sections of the site. """
     # id = auto-created
-    name = models.CharField(max_length=120, help_text='Descriptive name used to find this content')
-    text = models.TextField(blank=True, help_text='Text chunk used in page or email publication')
+    name = models.CharField(max_length=120, help_text=_('Descriptive name used to find this content'))
+    text = models.TextField(blank=True, help_text=_('Text chunk used in page or email publication'))
 
     date_added = models.DateField(auto_now_add=True)
     date_modified = models.DateField(auto_now=True)
@@ -76,35 +77,35 @@ class Resource(models.Model):
     # TODO: Add sending email feature.
 
     MODEL_CHOICES = (
-        ('Subject', 'Subject'),
-        ('ClassOffer', 'ClassOffer'),
-        ('Other', 'Other')
+        ('Subject', _('Subject')),
+        ('ClassOffer', _('ClassOffer')),
+        ('Other', _('Other'))
     )
     CONTENT_CHOICES = (
-        ('url', 'External Link'),
-        ('file', 'Formatted Text File'),
-        ('text', 'Plain Text'),
-        ('video', 'Video file on our site'),
-        ('image', 'Image file on our site'),
-        ('link', 'Webpage on our site'),
-        ('email', 'Email file')
+        ('url', _('External Link')),
+        ('file', _('Formatted Text File')),
+        ('text', _('Plain Text')),
+        ('video', _('Video file on our site')),
+        ('image', _('Image file on our site')),
+        ('link', _('Webpage on our site')),
+        ('email', _('Email file'))
     )
     USER_CHOICES = (
-        (1, 'Student'),
-        (2, 'Teacher'),
-        (4, 'Admin'),
-        (8, 'Public')
+        (1, _('Student')),
+        (2, _('Teacher')),
+        (4, _('Admin')),
+        (8, _('Public'))
     )
     PUBLISH_CHOICES = (
-        (0, 'On Sign-up, before week 1'),
-        (1, 'After week 1'),
-        (2, 'After week 2'),
-        (3, 'After week 3'),
-        (4, 'After week 4'),
-        (5, 'After week 5'),
+        (0, _('On Sign-up, before week 1)')),
+        (1, _('After week 1')),
+        (2, _('After week 2')),
+        (3, _('After week 3')),
+        (4, _('After week 4')),
+        (5, _('After week 5')),
         # TODO: Make this adaptable to any class duration.
         # TODO: Make options for weekly vs. daily classes?
-        (200, 'After completion')
+        (200, _('After completion'))
     )
 
     # id = auto-created
@@ -112,13 +113,13 @@ class Resource(models.Model):
     subject = models.ForeignKey('Subject', on_delete=models.SET_NULL, null=True)
     classoffer = models.ForeignKey('ClassOffer', on_delete=models.SET_NULL, null=True, blank=True)
     content_type = models.CharField(max_length=15, choices=CONTENT_CHOICES)
-    user_type = models.PositiveSmallIntegerField(choices=USER_CHOICES, help_text='Who is this for?')
-    avail = models.PositiveSmallIntegerField(choices=PUBLISH_CHOICES, help_text='When is this resource available?')
-    expire = models.PositiveSmallIntegerField(default=0, help_text='Number of weeks it stays published? (0 for always)')
-    imagepath = models.ImageField(upload_to='resource/', help_text='If an image, upload here', blank=True)
-    filepath = models.FileField(upload_to='resource/', help_text='If a file, upload here', blank=True)
-    link = models.CharField(max_length=255, help_text='External or Internal links go here', blank=True)
-    text = models.TextField(blank=True, help_text='Text chunk used in page or email publication')
+    user_type = models.PositiveSmallIntegerField(choices=USER_CHOICES, help_text=_('Who is this for?'))
+    avail = models.PositiveSmallIntegerField(choices=PUBLISH_CHOICES, help_text=_('When is this resource available?'))
+    expire = models.PositiveSmallIntegerField(default=0, help_text=_('Number of weeks it stays published? (0 for always)'))
+    imagepath = models.ImageField(upload_to='resource/', help_text=_('If an image, upload here'), blank=True)
+    filepath = models.FileField(upload_to='resource/', help_text=_('If a file, upload here'), blank=True)
+    link = models.CharField(max_length=255, help_text=_('External or Internal links go here'), blank=True)
+    text = models.TextField(blank=True, help_text=_('Text chunk used in page or email publication'))
     title = models.CharField(max_length=60)
     description = models.TextField(blank=True)
 
@@ -177,16 +178,16 @@ class Subject(models.Model):
         instances of when it is offered, which will be in the Classes model.
     """
     LEVEL_CHOICES = (
-        ('Beg', 'Beginning'),
-        ('L2', 'Lindy 2'),
+        ('Beg', _('Beginning')),
+        ('L2', _('Lindy 2')),
         # Elsewhere our code expects the first 2 elements to be however we
         # represent our Beginning and Level 2 class series
-        ('L3', 'Lindy 3'),
-        ('Spec', 'Special Focus'),
-        ('WS', 'Workshop'),
-        ('Priv', 'Private Lesson'),
-        ('PrivSet', 'Private - Multiple Lessons'),
-        ('Other', 'Other')
+        ('L3', _('Lindy 3')),
+        ('Spec', _('Special Focus')),
+        ('WS', _('Workshop')),
+        ('Priv', _('Private Lesson')),
+        ('PrivSet', _('Private - Multiple Lessons')),
+        ('Other', _('Other'))
     )
     LEVEL_ORDER = {
         'Beg': 1,
@@ -207,7 +208,7 @@ class Subject(models.Model):
     # id = auto-created
     level = models.CharField(max_length=8, choices=LEVEL_CHOICES, default='Spec')
     version = models.CharField(max_length=1, choices=VERSION_CHOICES)
-    title = models.CharField(max_length=125, default='Untitled')
+    title = models.CharField(max_length=125, default=_('Untitled'))
     short_desc = models.CharField(max_length=100)
     num_weeks = models.PositiveSmallIntegerField(default=settings.DEFAULT_SESSION_WEEKS)
     num_minutes = models.PositiveSmallIntegerField(default=settings.DEFAULT_CLASS_MINUTES)
@@ -255,30 +256,44 @@ class Subject(models.Model):
 
 class Session(models.Model):
     """ Classes are offered and published according to which session they belong.
-        Each session starts on a given date of the key day of the week.
+        Each session start date is computed based on 'key_day_date' and the earliest class day.
+        - If 'max_day_shift' is zero or positive, the earliest day will be the 'key_day_date'.
+        - If 'max_day_shift' is negative, then earliest day is that many days before 'key_day_date.
+        Each session may have a determined break number of weeks after the session ends.
+        Each session can have some class days that may skip a week of classes (holiday, or other reasons).
+        Due to skipped weeks, this can change which day of the week is the last day of classes.
+        - Most critically, this can change what is the earliest day the next session can start.
+        Each session end date is computed based on all of these values.
+        A default value for 'key_day_date' and 'publish_date' are determined based on existing sessions.
+        If not manually set, the 'expire_date' will typically set to after the second week of all class days.
+        If a session is only three weeks or shorter, it will be treated differently than other sessions.
+            - The 'expire_date' will be two days after all possible first class days.
+            - Later sessions will skip to previous session for determining computed values.
     """
     # id = auto-created
     name = models.CharField(max_length=15)
-    key_day_date = models.DateField(verbose_name='Main Class Start Date', default=lambda: Session.default_key_day)
-    max_day_shift = models.SmallIntegerField(default=settings.DEFAULT_MAX_DAY_SHIFT,
-                                             verbose_name='Number of days other classes are away from Main Class',
-                                             help_text='Use negative numbers if others are before the main class day.')
-    num_weeks = models.PositiveSmallIntegerField(default=settings.DEFAULT_SESSION_WEEKS,
-                                                 verbose_name='Number of Class Weeks')
-    skip_weeks = models.PositiveSmallIntegerField(default=0,
-                                                  verbose_name='Skipped mid-session class weeks')
-    flip_last_day = models.BooleanField(default=False,
-                                        verbose_name='Due to skipped weeks, does the session ending switch between a non-key vs key day?',
-                                        help_text='This is probably only true if the skipped class is not on the weekday that normally is the end of the session.')
-    break_weeks = models.PositiveSmallIntegerField(default=0,
-                                                   verbose_name='Break weeks after this session')
+    key_day_date = models.DateField(verbose_name=_('main class start date'), default=lambda: Session.default_key_day)
+    max_day_shift = models.SmallIntegerField(
+        default=settings.DEFAULT_MAX_DAY_SHIFT,
+        verbose_name=_('number of days other classes are away from main class'),
+        help_text=_('Use negative numbers if others are before the main class day.'))
+    num_weeks = models.PositiveSmallIntegerField(
+        default=settings.DEFAULT_SESSION_WEEKS,
+        verbose_name=_('number of class weeks'))
+    skip_weeks = models.PositiveSmallIntegerField(
+        default=0,
+        verbose_name=_('skipped mid-session class weeks'))
+    flip_last_day = models.BooleanField(
+        default=False,
+        verbose_name=_('due to skipped weeks, does the session ending switch between a non-key vs key day?'),
+        help_text=_('This is probably only true if the skipped class is not on the weekday that normally is the end of the session.'))
+    break_weeks = models.PositiveSmallIntegerField(default=0, verbose_name=_('break weeks after this session'))
     publish_date = models.DateField(blank=True, default=lambda: Session.default_publish)
-    expire_date = models.DateField(blank=True, help_text='If blank, this will be computed')
+    expire_date = models.DateField(blank=True, help_text=_('If blank, this will be computed'))
 
     @property
     def start_date(self):
         """ Return the date for whichever is the actual first class day. """
-        print(f"========== Session.start_date - {self} ==========")
         first_date = self.key_day_date
         if self.max_day_shift < 0:
             first_date += timedelta(days=self.max_day_shift)
@@ -287,32 +302,28 @@ class Session(models.Model):
     @property
     def end_date(self):
         """ Return the date for the last class day. """
-        print(f"========== Session.end_date - {self} ==========")
         last_date = self.key_day_date + timedelta(days=7*(self.num_weeks + self.skip_weeks - 1))
         if self.max_day_shift < 0 and self.flip_last_day:
-            last_date += timedelta(self.max_day_shift + 7)
+            last_date += timedelta(self.max_day_shift)  # Adjust because now non-key day was skipped past key day.
         elif self.max_day_shift > 0 and not self.flip_last_day:
-            last_date += timedelta(days=self.max_day_shift)
+            last_date += timedelta(days=self.max_day_shift)  # Use later class days unless skips made the key day last
         return last_date
 
     @property
     def prev_session(self):
         """ Return the Session that comes before the current Session, or 'None' if none exists. """
-        print(f"========== Session.prev_session - {self} ==========")
         return self.last_session(since=self.key_day_date)
 
     @property
     def next_session(self):
         """ Returns the Session that comes after the current Session, or 'None' if none exists. """
-        print(f"============== Session.next_session for {self} ==============")
         key_day = self.key_day_date
         key_day = key_day() if callable(key_day) else key_day
-        print(f"self Key Day: {key_day} {type(key_day)} ")
+        key_day = key_day.isoformat() if isinstance(key_day, (date, dt)) else key_day
+        # print(f"self Key Day: {key_day} {type(key_day)} ")
         # TODO: PROBABLY NOT: later = Session.objects.filter(key_day_date__date__gt=key_day)
         later = Session.objects.filter(key_day_date__gt=key_day)
         next_one_or_none = later.order_by('key_day_date').first()
-        # print('-------------------------------------')
-        print(next_one_or_none)
         return next_one_or_none
 
     date_added = models.DateField(auto_now_add=True)
@@ -331,7 +342,7 @@ class Session(models.Model):
 
     @classmethod
     def _default_date(cls, field):
-        """ Compute a default value for key_day_date field. """
+        """ Compute a default value for 'key_day_date' or 'publish_date' field. """
         allowed_fields = ('key_day_date', 'publish_date')
         if field not in allowed_fields:
             raise ValueError(f"Not a valid field parameter: {field} ")
@@ -341,13 +352,16 @@ class Session(models.Model):
         elif field == 'key_day_date':
             known_weeks = final_session.num_weeks + final_session.skip_weeks + final_session.break_weeks
             later = final_session.max_day_shift > 0
-            if (final_session.flip_last_day and not later) or (later and not final_session.flip_last_day):
-                known_weeks -= 1
+            if final_session.skip_weeks > 0 and \
+               ((final_session.flip_last_day and not later) or (later and not final_session.flip_last_day)):
+                known_weeks -= 1  # One fewer skips since key day class did not have critical skip_weeks
             new_date = final_session.key_day_date + timedelta(days=7*known_weeks)
-            print(f"Session.key_day_date default computed: {new_date} ")
+            # print(f"Session.key_day_date default computed: {new_date} ")
         elif field == 'publish_date':
-            target_session = final_session if final_session.num_weeks > 3 else final_session.prev_session
-            new_date = getattr(target_session, 'expire_date', None)
+            while final_session is not None and final_session.num_weeks < 4:
+                final_session = final_session.prev_session
+            new_date = getattr(final_session, 'expire_date', None)
+        # return new_date.isoformat() if isinstance(new_date, (date, dt)) else date.today().isoformat()
         return new_date
 
     @classmethod
@@ -359,23 +373,28 @@ class Session(models.Model):
         return cls._default_date('key_day_date')
 
     def save(self, *args, **kwargs):
-        print(f"============= Session.save Overwrite for {self} ================")
+        # print("========================= Session.save ==========================")
+        if 'update_fields' in kwargs:
+            if not all(['expire_date' in kwargs['update_fields'], self.expire_date is None]):
+                return super().save(*args, **kwargs)
         key_day = self.key_day_date
         key_day = key_day() if callable(key_day) else key_day
-        if self.expire_date is None:
-            # Typically after week 2, but short 'sessions' expire after week 1.
+        self.key_day_date = key_day
+        publish = self.publish_date
+        publish = publish() if callable(publish) else publish
+        # publish = date.fromisoformat(publish) if isinstance(publish, str) else publish
+        self.publish_date = publish
+        expire = self.expire_date
+        if expire is None:
+            # Typically 1 day after week 2, but short Sessions expire 2 days after after week 1.
             adj = self.max_day_shift + 1 if self.max_day_shift > 0 else 1
             adj += 7 if self.num_weeks > 3 else 1
-            self.expire_date = key_day + timedelta(days=adj)
-        print(f'--------- Session.save expire and next_sess for {self} --------')
-        print(f"expire_date: {self.expire_date} {type(self.expire_date)} ")
+            expire = key_day + timedelta(days=adj)
+            self.expire_date = expire
         next_sess = self.next_session
         if next_sess:
-            print(f'update next_sess: {next_sess} ')
-            next_sess.publish_date = self.expire_date
+            next_sess.publish_date = expire
             next_sess.save(update_fields=['publish_date'])
-        else:
-            print(f'No extra save because no next_sess: {next_sess} ')
         # try: self.objects.get_next_by_key_day_date().update(publish_date=self.expire_date)
         # except Session.DoesNotExist as e: print(f"There is no next session: {e} ")
         super().save(*args, **kwargs)
@@ -393,13 +412,13 @@ class ClassOffer(models.Model):
             Subject, Session, Profile (for teacher association), Location
     """
     DOW_CHOICES = (
-        (0, 'Monday'),
-        (1, 'Tuesday'),
-        (2, 'Wednesday'),
-        (3, 'Thursday'),
-        (4, 'Friday'),
-        (5, 'Saturday'),
-        (6, 'Sunday')
+        (0, _('Monday')),
+        (1, _('Tuesday')),
+        (2, _('Wednesday')),
+        (3, _('Thursday')),
+        (4, _('Friday')),
+        (5, _('Saturday')),
+        (6, _('Sunday'))
     )
     # id = auto-created
     # self.students exists as the students signed up for this ClassOffer
@@ -517,6 +536,7 @@ class ClassOffer(models.Model):
 
     def set_num_level(self):
         """ When we want a sortable level number. """
+        # TODO: Make this an automatic setter function, remove other code calling it manually.
         level_dict = Subject.LEVEL_ORDER
         print('======= ClassOffer.set_num_level ========')
         print(level_dict.values())
@@ -547,10 +567,10 @@ class Profile(models.Model):
     # TODO: Allow users to modify their profile.
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True)
     bio = models.TextField(max_length=500, blank=True)
-    level = models.IntegerField(verbose_name='skill level', default=0)
+    level = models.IntegerField(verbose_name=_('skill level'), default=0)
     taken = models.ManyToManyField(ClassOffer, related_name='students', through='Registration')
     # interest = models.ManyToManyField(Subject, related_names='interests', through='Requests')
-    credit = models.FloatField(verbose_name='Class Payment Credit', default=0)
+    credit = models.FloatField(verbose_name=_('class payment credit'), default=0)
     # TODO: Implement self-referencing key for a 'refer-a-friend' discount.
     # refer = models.ForeignKey(User, symmetrical=False, on_delete=models.SET_NULL,
     #                           null=True, blank=True, related_names='referred')
@@ -617,7 +637,7 @@ class Profile(models.Model):
         return self.user.full_name()
 
     def __str__(self):
-        name = self.user.get_full_name() or "Name Not Found"
+        name = self.user.get_full_name() or _("Name Not Found")
         return name
 
     def __repr__(self):

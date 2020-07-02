@@ -1,0 +1,735 @@
+[
+{
+    "model": "auth.permission",
+    "pk": 1,
+    "fields": {
+        "name": "Can add log entry",
+        "content_type": 1,
+        "codename": "add_logentry"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 2,
+    "fields": {
+        "name": "Can change log entry",
+        "content_type": 1,
+        "codename": "change_logentry"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 3,
+    "fields": {
+        "name": "Can delete log entry",
+        "content_type": 1,
+        "codename": "delete_logentry"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 4,
+    "fields": {
+        "name": "Can view log entry",
+        "content_type": 1,
+        "codename": "view_logentry"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 5,
+    "fields": {
+        "name": "Can add permission",
+        "content_type": 2,
+        "codename": "add_permission"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 6,
+    "fields": {
+        "name": "Can change permission",
+        "content_type": 2,
+        "codename": "change_permission"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 7,
+    "fields": {
+        "name": "Can delete permission",
+        "content_type": 2,
+        "codename": "delete_permission"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 8,
+    "fields": {
+        "name": "Can view permission",
+        "content_type": 2,
+        "codename": "view_permission"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 9,
+    "fields": {
+        "name": "Can add group",
+        "content_type": 3,
+        "codename": "add_group"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 10,
+    "fields": {
+        "name": "Can change group",
+        "content_type": 3,
+        "codename": "change_group"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 11,
+    "fields": {
+        "name": "Can delete group",
+        "content_type": 3,
+        "codename": "delete_group"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 12,
+    "fields": {
+        "name": "Can view group",
+        "content_type": 3,
+        "codename": "view_group"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 13,
+    "fields": {
+        "name": "Can add content type",
+        "content_type": 4,
+        "codename": "add_contenttype"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 14,
+    "fields": {
+        "name": "Can change content type",
+        "content_type": 4,
+        "codename": "change_contenttype"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 15,
+    "fields": {
+        "name": "Can delete content type",
+        "content_type": 4,
+        "codename": "delete_contenttype"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 16,
+    "fields": {
+        "name": "Can view content type",
+        "content_type": 4,
+        "codename": "view_contenttype"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 17,
+    "fields": {
+        "name": "Can add session",
+        "content_type": 5,
+        "codename": "add_session"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 18,
+    "fields": {
+        "name": "Can change session",
+        "content_type": 5,
+        "codename": "change_session"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 19,
+    "fields": {
+        "name": "Can delete session",
+        "content_type": 5,
+        "codename": "delete_session"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 20,
+    "fields": {
+        "name": "Can view session",
+        "content_type": 5,
+        "codename": "view_session"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 21,
+    "fields": {
+        "name": "Can add class offer",
+        "content_type": 6,
+        "codename": "add_classoffer"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 22,
+    "fields": {
+        "name": "Can change class offer",
+        "content_type": 6,
+        "codename": "change_classoffer"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 23,
+    "fields": {
+        "name": "Can delete class offer",
+        "content_type": 6,
+        "codename": "delete_classoffer"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 24,
+    "fields": {
+        "name": "Can view class offer",
+        "content_type": 6,
+        "codename": "view_classoffer"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 25,
+    "fields": {
+        "name": "Can add location",
+        "content_type": 7,
+        "codename": "add_location"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 26,
+    "fields": {
+        "name": "Can change location",
+        "content_type": 7,
+        "codename": "change_location"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 27,
+    "fields": {
+        "name": "Can delete location",
+        "content_type": 7,
+        "codename": "delete_location"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 28,
+    "fields": {
+        "name": "Can view location",
+        "content_type": 7,
+        "codename": "view_location"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 29,
+    "fields": {
+        "name": "Can add payment",
+        "content_type": 8,
+        "codename": "add_payment"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 30,
+    "fields": {
+        "name": "Can change payment",
+        "content_type": 8,
+        "codename": "change_payment"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 31,
+    "fields": {
+        "name": "Can delete payment",
+        "content_type": 8,
+        "codename": "delete_payment"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 32,
+    "fields": {
+        "name": "Can view payment",
+        "content_type": 8,
+        "codename": "view_payment"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 33,
+    "fields": {
+        "name": "Can add profile",
+        "content_type": 9,
+        "codename": "add_profile"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 34,
+    "fields": {
+        "name": "Can change profile",
+        "content_type": 9,
+        "codename": "change_profile"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 35,
+    "fields": {
+        "name": "Can delete profile",
+        "content_type": 9,
+        "codename": "delete_profile"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 36,
+    "fields": {
+        "name": "Can view profile",
+        "content_type": 9,
+        "codename": "view_profile"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 37,
+    "fields": {
+        "name": "Can add session",
+        "content_type": 10,
+        "codename": "add_session"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 38,
+    "fields": {
+        "name": "Can change session",
+        "content_type": 10,
+        "codename": "change_session"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 39,
+    "fields": {
+        "name": "Can delete session",
+        "content_type": 10,
+        "codename": "delete_session"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 40,
+    "fields": {
+        "name": "Can view session",
+        "content_type": 10,
+        "codename": "view_session"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 41,
+    "fields": {
+        "name": "Can add site content",
+        "content_type": 11,
+        "codename": "add_sitecontent"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 42,
+    "fields": {
+        "name": "Can change site content",
+        "content_type": 11,
+        "codename": "change_sitecontent"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 43,
+    "fields": {
+        "name": "Can delete site content",
+        "content_type": 11,
+        "codename": "delete_sitecontent"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 44,
+    "fields": {
+        "name": "Can view site content",
+        "content_type": 11,
+        "codename": "view_sitecontent"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 45,
+    "fields": {
+        "name": "Can add subject",
+        "content_type": 12,
+        "codename": "add_subject"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 46,
+    "fields": {
+        "name": "Can change subject",
+        "content_type": 12,
+        "codename": "change_subject"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 47,
+    "fields": {
+        "name": "Can delete subject",
+        "content_type": 12,
+        "codename": "delete_subject"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 48,
+    "fields": {
+        "name": "Can view subject",
+        "content_type": 12,
+        "codename": "view_subject"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 49,
+    "fields": {
+        "name": "Can add resource",
+        "content_type": 13,
+        "codename": "add_resource"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 50,
+    "fields": {
+        "name": "Can change resource",
+        "content_type": 13,
+        "codename": "change_resource"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 51,
+    "fields": {
+        "name": "Can delete resource",
+        "content_type": 13,
+        "codename": "delete_resource"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 52,
+    "fields": {
+        "name": "Can view resource",
+        "content_type": 13,
+        "codename": "view_resource"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 53,
+    "fields": {
+        "name": "Can add registration",
+        "content_type": 14,
+        "codename": "add_registration"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 54,
+    "fields": {
+        "name": "Can change registration",
+        "content_type": 14,
+        "codename": "change_registration"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 55,
+    "fields": {
+        "name": "Can delete registration",
+        "content_type": 14,
+        "codename": "delete_registration"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 56,
+    "fields": {
+        "name": "Can view registration",
+        "content_type": 14,
+        "codename": "view_registration"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 57,
+    "fields": {
+        "name": "Can add user",
+        "content_type": 15,
+        "codename": "add_userhc"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 58,
+    "fields": {
+        "name": "Can change user",
+        "content_type": 15,
+        "codename": "change_userhc"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 59,
+    "fields": {
+        "name": "Can delete user",
+        "content_type": 15,
+        "codename": "delete_userhc"
+    }
+},
+{
+    "model": "auth.permission",
+    "pk": 60,
+    "fields": {
+        "name": "Can view user",
+        "content_type": 15,
+        "codename": "view_userhc"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "mpgv3d2xw9dkp13uw0pyhqtwbrb50d2q",
+    "fields": {
+        "session_data": "NjdmZTM2NDliOTJlN2U0MzI3MzVmYjRiNzg2YWZiNTU2Njg0YTBiZDp7Il9hdXRoX3VzZXJfaWQiOiIxIiwiX2F1dGhfdXNlcl9iYWNrZW5kIjoiZGphbmdvLmNvbnRyaWIuYXV0aC5iYWNrZW5kcy5Nb2RlbEJhY2tlbmQiLCJfYXV0aF91c2VyX2hhc2giOiIyZWZjNzIyYWY0ZmM2ZTlhZmU4ZWZjODRjMTNiMmQyZGM1ZjA2NDk5In0=",
+        "expire_date": "2020-07-06T09:07:37.238Z"
+    }
+},
+{
+    "model": "classwork.sitecontent",
+    "pk": 1,
+    "fields": {
+        "name": "Stuff",
+        "text": "site content text for the \"Stuff\" site content instance.",
+        "date_added": "2020-06-30",
+        "date_modified": "2020-06-30"
+    }
+},
+{
+    "model": "classwork.location",
+    "pk": 1,
+    "fields": {
+        "name": "Russian Center",
+        "code": "rc",
+        "address": "704 19th Ave E",
+        "city": "Seattle",
+        "state": "WA",
+        "zipcode": "98112",
+        "map_google": "https://goo.gl/maps/y9YgshubfpRg9GPp8",
+        "date_added": "2020-06-22",
+        "date_modified": "2020-06-22"
+    }
+},
+{
+    "model": "classwork.resource",
+    "pk": 1,
+    "fields": {
+        "related_type": "Subject",
+        "subject": 1,
+        "classoffer": 1,
+        "content_type": "text",
+        "user_type": 1,
+        "avail": 200,
+        "expire": 0,
+        "imagepath": "",
+        "filepath": "",
+        "link": "",
+        "text": "After class congrats! This is the text content.",
+        "title": "Congrats on Finishing class!",
+        "description": "description of post-class resource.",
+        "date_added": "2020-06-30",
+        "date_modified": "2020-06-30"
+    }
+},
+{
+    "model": "classwork.subject",
+    "pk": 1,
+    "fields": {
+        "level": "Beg",
+        "version": "A",
+        "title": "Beginning Swing Dance - Lindy Hop",
+        "short_desc": "No Partner Required! No Experience Needed!",
+        "num_weeks": 5,
+        "num_minutes": 60,
+        "description": "Beg Class Description",
+        "image": "",
+        "full_price": "70.00",
+        "pre_pay_discount": "5.00",
+        "multiple_purchase_discount": "10.00",
+        "qualifies_as_multi_class_discount": true,
+        "date_added": "2020-06-22",
+        "date_modified": "2020-06-22"
+    }
+},
+{
+    "model": "classwork.session",
+    "pk": 1,
+    "fields": {
+        "name": "May_2020",
+        "key_day_date": "2020-04-30",
+        "max_day_shift": -2,
+        "num_weeks": 5,
+        "skip_weeks": 0,
+        "flip_last_day": false,
+        "break_weeks": 0,
+        "publish_date": "2020-04-03",
+        "expire_date": "2020-05-08",
+        "date_added": "2020-06-22",
+        "date_modified": "2020-06-28"
+    }
+},
+{
+    "model": "classwork.classoffer",
+    "pk": 1,
+    "fields": {
+        "subject": 1,
+        "session": 1,
+        "num_level": 1,
+        "location": 1,
+        "teachers": "Chris Chapman",
+        "class_day": 3,
+        "start_time": "19:00:00",
+        "date_added": "2020-06-22",
+        "date_modified": "2020-06-22"
+    }
+},
+{
+    "model": "classwork.payment",
+    "pk": 1,
+    "fields": {
+        "variant": "paypal",
+        "status": "waiting",
+        "fraud_status": "unknown",
+        "fraud_message": "",
+        "created": "2020-06-22T21:58:48.044Z",
+        "modified": "2020-06-22T21:58:49.827Z",
+        "transaction_id": "PAYID-L3YSTGI3RF77833AV3219521",
+        "currency": "USD",
+        "total": "65.00",
+        "delivery": "0.00",
+        "tax": "0.00",
+        "description": "BegA - July_2020, ",
+        "billing_first_name": "Chris",
+        "billing_last_name": "Admin",
+        "billing_address_1": "",
+        "billing_address_2": "",
+        "billing_city": "",
+        "billing_postcode": "",
+        "billing_country_code": "US",
+        "billing_country_area": "WA",
+        "billing_email": "chris@seattlecode.dev",
+        "customer_ip_address": null,
+        "extra_data": "{\"auth_response\": {\"scope\": \"https://uri.paypal.com/services/invoicing https://uri.paypal.com/services/disputes/read-buyer https://uri.paypal.com/services/payments/realtimepayment https://uri.paypal.com/services/disputes/update-seller https://uri.paypal.com/services/payments/payment/authcapture openid https://uri.paypal.com/services/disputes/read-seller https://uri.paypal.com/services/payments/refund https://api.paypal.com/v1/vault/credit-card https://api.paypal.com/v1/payments/.* https://uri.paypal.com/payments/payouts https://api.paypal.com/v1/vault/credit-card/.* https://uri.paypal.com/services/subscriptions https://uri.paypal.com/services/applications/webhooks\", \"access_token\": \"A21AAEH2LOcqJAGm5wwLIvacwX4jRqPxicsG7OkfeO8LZe5CVA8NG0Kje4dlLU_srQTtd05sFp4SANGkE74SOQwuJkyqka29g\", \"token_type\": \"Bearer\", \"app_id\": \"APP-80W284485P519543T\", \"expires_in\": 32400, \"nonce\": \"2020-06-22T21:58:48ZvYJePYFTLegp_4H_v6ZQbozuEX4qEPXtKEhtwBLvgQ0\"}, \"response\": {\"id\": \"PAYID-L3YSTGI3RF77833AV3219521\", \"intent\": \"authorize\", \"state\": \"created\", \"payer\": {\"payment_method\": \"paypal\"}, \"transactions\": [{\"amount\": {\"total\": \"65.00\", \"currency\": \"USD\", \"details\": {\"subtotal\": \"65.00\", \"tax\": \"0.00\", \"shipping\": \"0.00\"}}, \"description\": \"BegA - July_2020, \", \"item_list\": {\"items\": [{\"name\": \"BegA - July_2020, \", \"sku\": \"HCRF\", \"price\": \"65.00\", \"currency\": \"USD\", \"quantity\": 1}]}, \"related_resources\": []}], \"create_time\": \"2020-06-22T21:58:49Z\", \"links\": [{\"href\": \"https://api.sandbox.paypal.com/v1/payments/payment/PAYID-L3YSTGI3RF77833AV3219521\", \"rel\": \"self\", \"method\": \"GET\"}, {\"href\": \"https://www.sandbox.paypal.com/cgi-bin/webscr?cmd=_express-checkout&token=EC-6LP43262T4843450W\", \"rel\": \"approval_url\", \"method\": \"REDIRECT\"}, {\"href\": \"https://api.sandbox.paypal.com/v1/payments/payment/PAYID-L3YSTGI3RF77833AV3219521/execute\", \"rel\": \"execute\", \"method\": \"POST\"}]}, \"links\": {\"self\": {\"href\": \"https://api.sandbox.paypal.com/v1/payments/payment/PAYID-L3YSTGI3RF77833AV3219521\", \"rel\": \"self\", \"method\": \"GET\"}, \"approval_url\": {\"href\": \"https://www.sandbox.paypal.com/cgi-bin/webscr?cmd=_express-checkout&token=EC-6LP43262T4843450W\", \"rel\": \"approval_url\", \"method\": \"REDIRECT\"}, \"execute\": {\"href\": \"https://api.sandbox.paypal.com/v1/payments/payment/PAYID-L3YSTGI3RF77833AV3219521/execute\", \"rel\": \"execute\", \"method\": \"POST\"}}}",
+        "message": "",
+        "token": "4e6e8406-9dc6-42ce-9d71-6038760a317e",
+        "captured_amount": "0.00",
+        "student": 1,
+        "paid_by": 1,
+        "full_price": "70.00",
+        "pre_pay_discount": "5.00",
+        "multiple_purchase_discount": "0.00",
+        "credit_applied": "0.00"
+    }
+},
+{
+    "model": "classwork.registration",
+    "pk": 1,
+    "fields": {
+        "student": 1,
+        "classoffer": 1,
+        "payment": 1,
+        "paid": false
+    }
+},
+{
+    "model": "users.userhc",
+    "pk": 1,
+    "fields": {
+        "password": "pbkdf2_sha256$180000$qUJdPxkg9GAp$5/BBEXY0XwM2poXUpXUuf2tRHRbDTO9jkiZ8/AdeiT4=",
+        "last_login": "2020-06-22T09:07:37Z",
+        "is_superuser": true,
+        "username": "chris@seattlecode.dev",
+        "first_name": "Chris",
+        "last_name": "Admin",
+        "email": "chris@seattlecode.dev",
+        "is_staff": true,
+        "is_active": true,
+        "date_joined": "2020-06-22T09:06:42Z",
+        "is_student": true,
+        "is_teacher": false,
+        "is_admin": false,
+        "uses_email_username": true,
+        "billing_address_1": "",
+        "billing_address_2": "",
+        "billing_city": "",
+        "billing_country_area": "WA",
+        "billing_postcode": "",
+        "billing_country_code": "USA",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "classwork.profile",
+    "pk": 1,
+    "fields": {
+        "bio": "",
+        "level": 0,
+        "credit": 0.0,
+        "date_added": "2020-06-22",
+        "date_modified": "2020-06-22"
+    }
+}
+]

@@ -1,19 +1,18 @@
 from django.contrib import admin
-from django.forms import Textarea
+from django.forms import ModelForm, Textarea, ValidationError
+from django.utils.translation import gettext_lazy as _
 from django.db import models
-# from django.db.models.signals import pre_save
-# from django.dispatch import receiver
 from django.conf import settings
 from .models import (SiteContent, Resource, Subject, Session, ClassOffer,
                      Profile, Payment, Registration, Location)
-# from datetime import timedelta
-# from django.utils.functional import curry
+from datetime import timedelta
 
 # Register your models here.
 # TODO: Make a ResourceAdmin? This could modify which are shown
 
 
 class ResourceInline(admin.StackedInline):
+    """ Admin can add a Resource while on the Subject or ClassOffer add/change form. """
     model = Resource
     extra = 5
 
@@ -85,10 +84,8 @@ class ResourceInline(admin.StackedInline):
 
 
 class SubjectAdmin(admin.ModelAdmin):
-    """
-    """
+    """ Admin change/add for Subjects. Has an inline for Resources. """
     model = Subject
-
     list_display = ('__str__', 'title', 'level', 'version', )
     list_display_links = ('__str__', 'title')
     inlines = (ResourceInline, )
@@ -101,10 +98,8 @@ class SubjectAdmin(admin.ModelAdmin):
 
 
 class ClassOfferAdmin(admin.ModelAdmin):
-    """
-    """
+    """ Admin change/add for ClassOffers. Has an inline for Resources. """
     model = Subject
-
     list_display = ('__str__', 'subject', 'session',)
     # ('subject', 'session', 'teachers', 'class_day', 'start_time',)
     list_display_links = ('__str__',)
@@ -116,17 +111,39 @@ class ClassOfferAdmin(admin.ModelAdmin):
     #     return queryset
 
 
+class AdminSessionForm(ModelForm):
+    def clean(self):
+        data = super().clean()
+        key_day = data.get('key_day_date')
+        prev_sess = Session.last_session(since=key_day)
+        day_shift = data.get('max_day_shift')
+        early_day = key_day + timedelta(days=day_shift) if day_shift < 0 else key_day
+        if prev_sess and prev_sess.end_date >= early_day:
+            # TODO: Check the logic and possible backup solutions
+            message = "Overlapping class dates with those settings. "
+            if early_day < key_day:
+                message += "You could move the other class days to happen after the main day, "
+            else:
+                message += "You could "
+            message += "add a break week on the previous session, or otherwise change when this session starts. "
+            raise ValidationError(_(message))
+        if data.get('flip_last_day') and data.get('skip_weeks') == 0:
+            data['flip_last_day'] = False
+        return data
+
+
 class SessiontAdmin(admin.ModelAdmin):
     """ Admin manage of Session models. New Sessions will populate initial values based on last Session. """
     model = Session
+    form = AdminSessionForm
     list_display = ('name', 'start_day', 'end_day', 'publish_day', 'expire_day')
     ordering = ('key_day_date',)
     fields = ('name', ('key_day_date', 'max_day_shift'), 'num_weeks', ('skip_weeks', 'flip_last_day'), 'break_weeks', ('publish_date', 'expire_date'))
 
     def date_with_day(self, obj, field=None):
         """ Will format the obj.field datefield to include the day of the week. """
-        date = getattr(obj, field, None)
-        return date.strftime('%A %B %-d, %Y') if date else ''  # django template language for date: 'l N j, Y'
+        date_day = getattr(obj, field, None)
+        return date_day.strftime('%A %B %-d, %Y') if date_day else ''  # django template language for date: 'l N j, Y'
 
     def start_day(self, obj): return self.date_with_day(obj, field='start_date')
     def end_day(self, obj): return self.date_with_day(obj, field='end_date')
@@ -135,73 +152,15 @@ class SessiontAdmin(admin.ModelAdmin):
     publish_day.admin_order_field = 'publish_date'
     expire_day.admin_order_field = 'expire_date'
 
-    # def formfield_for_dbfield(self, db_field, **kwargs):
-    #     modified_fields = ('key_day_date', 'publish_date')
-    #     field = super().formfield_for_dbfield(db_field, **kwargs)
-    #     if db_field.name not in modified_fields:
-    #         return field
-    #     final_session = Session.last_session()
-    #     if not final_session:
-    #         new_date = None
-    #     elif db_field.name == 'key_day_date':
-    #         known_weeks = final_session.num_weeks + final_session.skip_weeks + final_session.break_weeks
-    #         later = final_session.max_day_shift > 0
-    #         if (final_session.flip_last_day and not later) or (later and not final_session.flip_last_day):
-    #             known_weeks -= 1
-    #         new_date = final_session.key_day_date + timedelta(days=7*known_weeks)
-    #     elif db_field.name == 'publish_date':
-    #         target_session = final_session if final_session.num_weeks > 3 else final_session.prev_session
-    #         new_date = getattr(target_session, 'expire_date', None)
-    #     field.initial = new_date
-    #     return field
-
-
-# @receiver(pre_save, sender=Session)
-# def session_save_handler(sender, instance, *args, **kwargs):
-#     """ If expire_date was not explicitly set, compute the desired value.
-#         If expire_date is manually changed, update the following Session publish_date if matching.
-#     """
-#     key_day = instance.key_day_date
-#     key_day = key_day() if callable(key_day) else key_day
-#     print("================ session_save_handler ===================")
-#     print(f"Instance Key Day: {key_day} {type(key_day)} ")
-#     if instance.expire_date is None:
-#         # Typically after week 2, but short 'sessions' expire after week 1.
-#         print(f"========= compute expire_date for {instance} =========")
-#         adj = instance.max_day_shift + 1 if instance.max_day_shift > 0 else 1
-#         adj += 7 if instance.num_weeks > 3 else 1
-#         new_date = key_day + timedelta(days=adj)
-#         instance.expire_date = new_date
-#     # else:
-#     #     try:
-#     #         old_instance = Session.objects.get(id=instance.id)
-#     #         old_date = getattr(old_instance, 'expire_date', None)
-#     #     except Session.DoesNotExist:
-#     #         old_date = None
-#     #     next_sess = instance.next_session
-#     #     if next_sess and instance.expire_date != old_date == next_sess.publish_date:
-#     #         next_sess.publish_date = instance.expire_date
-#     #         next_sess.save()
-#     next_sess = instance.next_session
-#     # print(sender)
-#     # print(args)
-#     # print(kwargs)
-#     print(f'---------------- Session_save_handler {instance} ---------------')
-#     print(f"expire_date: {instance.expire_date} {type(instance.expire_date)} ")
-#     if next_sess:
-#         print(f'update next_sess: {next_sess} ')
-#         next_sess.publish_date = instance.expire_date
-#         next_sess.save(update_fields=['publish_date'])
-#     else:
-#         print(f'No extra save because no next_sess: {next_sess} ')
-
 
 class StudentClassInline(admin.TabularInline):
+    """ Admin can attach a class Registration while on the Profile add/change form. """
     model = Registration
     extra = 2
 
 
 class ProfileAdmin(admin.ModelAdmin):
+    """ Admin can modify and view Profiles of all users. """
     model = Profile
     list_display = ['__str__', 'username', 'highest_subject', 'level', 'beg_finished', 'l2_finished']
     list_display_links = ('__str__', 'username')
@@ -211,6 +170,7 @@ class ProfileAdmin(admin.ModelAdmin):
 
 
 class RegistrationAdmin(admin.ModelAdmin):
+    """ Admin change/add for Registrations, which are records of what students have signed up for. """
     model = Registration
     list_display = ['first_name', 'last_name', 'credit', 'reg_class', 'paid']
     list_display_links = ['first_name', 'last_name']
