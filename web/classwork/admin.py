@@ -1,13 +1,11 @@
 from django.contrib import admin
-from django.forms import Textarea
+from django.forms import ModelForm, Textarea, ValidationError
+from django.utils.translation import gettext_lazy as _
 from django.db import models
-# from django.db.models.signals import pre_save
-# from django.dispatch import receiver
 from django.conf import settings
 from .models import (SiteContent, Resource, Subject, Session, ClassOffer,
                      Profile, Payment, Registration, Location)
-from datetime import date, timedelta
-# from django.utils.functional import curry
+from datetime import timedelta
 
 # Register your models here.
 # TODO: Make a ResourceAdmin? This could modify which are shown
@@ -113,9 +111,31 @@ class ClassOfferAdmin(admin.ModelAdmin):
     #     return queryset
 
 
+class AdminSessionForm(ModelForm):
+    def clean(self):
+        data = super().clean()
+        key_day = data.get('key_day_date')
+        prev_sess = Session.last_session(since=key_day)
+        day_shift = data.get('max_day_shift')
+        early_day = key_day + timedelta(days=day_shift) if day_shift < 0 else key_day
+        if prev_sess and prev_sess.end_date >= early_day:
+            # TODO: Check the logic and possible backup solutions
+            message = "Overlapping class dates with those settings. "
+            if early_day < key_day:
+                message += "You could move the other class days to happen after the main day, "
+            else:
+                message += "You could "
+            message += "add a break week on the previous session, or otherwise change when this session starts. "
+            raise ValidationError(_(message))
+        if data.get('flip_last_day') and data.get('skip_weeks') == 0:
+            data['flip_last_day'] = False
+        return data
+
+
 class SessiontAdmin(admin.ModelAdmin):
     """ Admin manage of Session models. New Sessions will populate initial values based on last Session. """
     model = Session
+    form = AdminSessionForm
     list_display = ('name', 'start_day', 'end_day', 'publish_day', 'expire_day')
     ordering = ('key_day_date',)
     fields = ('name', ('key_day_date', 'max_day_shift'), 'num_weeks', ('skip_weeks', 'flip_last_day'), 'break_weeks', ('publish_date', 'expire_date'))
@@ -131,19 +151,6 @@ class SessiontAdmin(admin.ModelAdmin):
     def expire_day(self, obj): return self.date_with_day(obj, field='expire_date')
     publish_day.admin_order_field = 'publish_date'
     expire_day.admin_order_field = 'expire_date'
-
-    # def clean(self):
-    #     """ Processing a form, check for some potential data issues. """
-    #     cleaned_data = super().clean()
-    #     key_day = self.key_day_date
-    #     key_day = key_day() if callable(key_day) else key_day
-    #     prev_sess = Session.last_session(since=key_day)
-    #     day_shift = self.max_day_shift
-    #     early_day = key_day + timedelta(days=day_shift) if day_shift < 0 else key_day
-    #     if prev_sess and prev_sess.end_date >= early_day:
-
-    #         # TODO: Check the logic and possible backup solutions
-    #         raise ValueError("Overlapping class dates. Possibly change the max_day_shift, or add a Break Week. ")
 
 
 class StudentClassInline(admin.TabularInline):

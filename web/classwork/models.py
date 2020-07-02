@@ -373,28 +373,20 @@ class Session(models.Model):
         return cls._default_date('key_day_date')
 
     def save(self, *args, **kwargs):
+        # print("========================= Session.save ==========================")
         if 'update_fields' in kwargs:
-            if not all('expire_date' in kwargs['update_fields'], self.expire_date is None):
+            if not all(['expire_date' in kwargs['update_fields'], self.expire_date is None]):
                 return super().save(*args, **kwargs)
         key_day = self.key_day_date
         key_day = key_day() if callable(key_day) else key_day
-        # key_day = date.fromisoformat(key_day) if isinstance(key_day, str) else key_day
-        prev_sess = Session.last_session(since=key_day)
-        day_shift = self.max_day_shift
-        early_day = key_day + timedelta(days=day_shift) if day_shift < 0 else key_day
-        if prev_sess and prev_sess.end_date >= early_day:
-
-            # TODO: Check the logic and possible backup solutions
-            raise ValueError("Overlapping class dates. Possibly change the max_day_shift, or add a Break Week. ")
         self.key_day_date = key_day
         publish = self.publish_date
         publish = publish() if callable(publish) else publish
         # publish = date.fromisoformat(publish) if isinstance(publish, str) else publish
         self.publish_date = publish
-        self.flip_last_day = False if self.skip_weeks == 0 else self.flip_last_day
         expire = self.expire_date
         if expire is None:
-            # Typically 1 day after week 2, but short 'sessions' expire 2 days after after week 1.
+            # Typically 1 day after week 2, but short Sessions expire 2 days after after week 1.
             adj = self.max_day_shift + 1 if self.max_day_shift > 0 else 1
             adj += 7 if self.num_weeks > 3 else 1
             expire = key_day + timedelta(days=adj)
