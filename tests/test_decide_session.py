@@ -11,10 +11,6 @@ class NewSiteDecideSession(TestCase):
     def test_new_site_no_sessions(self):
         """ Before the admin has put any Sessions in, the site and app should not break """
         result = decide_session()
-        if isinstance(result, QuerySet):
-            result = list(result)
-        print('=================================================')
-        print(result)
         self.assertEqual(len(result), 0)
 
 
@@ -29,8 +25,6 @@ class CurrentSessionSelection(TransactionTestCase):
         expire_date = now + timedelta(days=7*1)
         sess = Session.objects.create(name='test', key_day_date=now, publish_date=publish_date, expire_date=expire_date)
         result = decide_session()
-        if isinstance(result, QuerySet):
-            result = list(result)
 
         self.assertIn(sess, result)
         self.assertTrue(len(result) == 1)
@@ -44,8 +38,6 @@ class CurrentSessionSelection(TransactionTestCase):
         expire_date = start + timedelta(days=7*2)
         sess = Session.objects.create(name='t1', key_day_date=start, publish_date=publish_date, expire_date=expire_date)
         result = decide_session()
-        if isinstance(result, QuerySet):
-            result = list(result)
 
         self.assertNotIn(sess, result)
         self.assertTrue(len(result) > 0)
@@ -57,8 +49,6 @@ class CurrentSessionSelection(TransactionTestCase):
         initial = Session.objects.first()
         sess = Session.objects.create(name='june')
         result = decide_session()
-        if isinstance(result, QuerySet):
-            result = list(result)
 
         self.assertIsNotNone(initial)
         self.assertGreater(now, sess.expire_date)
@@ -70,8 +60,6 @@ class CurrentSessionSelection(TransactionTestCase):
         initial = Session.objects.first()
         test_date = initial.publish_date + timedelta(days=2)
         result = decide_session(display_date=test_date)
-        if isinstance(result, QuerySet):
-            result = list(result)
 
         self.assertGreater(test_date, initial.publish_date)
         self.assertLess(test_date, initial.expire_date)
@@ -86,8 +74,6 @@ class CurrentSessionSelection(TransactionTestCase):
         overlap = Session.objects.create(name='overlap', key_day_date=key_day, publish_date=publish, expire_date=expire)
         test_date = publish + timedelta(days=3)
         result = decide_session(display_date=test_date)
-        if isinstance(result, QuerySet):
-            result = list(result)
 
         self.assertGreater(test_date, publish)
         self.assertLess(test_date, expire)
@@ -101,8 +87,6 @@ class CurrentSessionSelection(TransactionTestCase):
         initial = Session.objects.first()
         name = initial.name
         result = decide_session(sess=name)
-        if isinstance(result, QuerySet):
-            result = list(result)
 
         self.assertIn(initial, result)
         self.assertTrue(len(result) == 1)
@@ -112,10 +96,6 @@ class CurrentSessionSelection(TransactionTestCase):
         name = 'fake_1998'
         empty = Session.objects.filter(name__in=[name]).first()
         result = decide_session(sess=name)
-        if isinstance(result, QuerySet):
-            result = list(result)
-        print('=====================================================')
-        print(result)
         self.assertEqual(len(result), 0)
         self.assertIsNone(empty)
 
@@ -124,13 +104,11 @@ class CurrentSessionSelection(TransactionTestCase):
         sess = Session.objects.create(name='defaults')
         all_sess = Session.objects.all()
         result = decide_session(sess='all')
-        # if isinstance(result, QuerySet):
-        #     result = list(result)
 
         self.assertIn(sess, result)
         self.assertTrue(len(all_sess) > 1)
         self.assertTrue(len(result) > 1)
-        self.assertQuerysetEqual(all_sess, result)
+        self.assertCountEqual(all_sess, result)
 
     def test_requested_multiple_session_names(self):
         """ The 'sess' parameter can be a list of session names, return all of them """
@@ -139,8 +117,6 @@ class CurrentSessionSelection(TransactionTestCase):
         sess = Session.objects.create(name=names[0])
         names.append(initial.name)
         result = decide_session(sess=names)
-        if isinstance(result, QuerySet):
-            result = list(result)
 
         self.assertIn(initial, result)
         self.assertIn(sess, result)
