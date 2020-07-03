@@ -41,7 +41,7 @@ def decide_session(sess=None, display_date=None):
     sess_data = query.all()
     if not sess_data and not sess:
         # TODO: Filter out future but not yet published Sessions
-        result = Session.objects.order_by('-key_day_date').first()
+        result = Session.objects.filter(publish_date__lte=target).order_by('-key_day_date').first()
         sess_data = [result] if result else []
     # print(sess_data)
     return sess_data  # a list of Session records, even if only 0-1 session

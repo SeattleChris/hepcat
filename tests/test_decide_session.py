@@ -41,7 +41,7 @@ class CurrentSessionSelection(TransactionTestCase):
 
         self.assertNotIn(sess, result)
         self.assertTrue(len(result) > 0)
-        self.assertGreater(result[0].publish_date, now)
+        self.assertLess(result[0].publish_date, now)
 
     def test_all_sessions_expired(self):
         """ If all Sessions have expired, it should return the last expired session """
