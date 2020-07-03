@@ -133,16 +133,19 @@ This is a specific subject, offered during a specific session. It includes infor
   * Confirm the contents, possibly editing as needed, of `tests/db_basic.json`
   * Confirm all appropriate test classes load fixtures: `fixtures = ['tests/db_basic.json']`
   * Create other fixtures as needed and add them to the fixtures array in the appropriate tests class
-* Run tests to confirm tests and basic structure is setup correctly.
-  * `./manage.py test`
+* Move to top repo directory (if in '/web', then `cd ..`). Confirm tests work:
+  * `./web/manage.py test`
 * Run test coverage setup:
   * If using Pipenv for virtual environment.
-    * `coverage run --omit='*/virtualenvs/*' manage.py test -v 2`
+    * `coverage run --omit='*/virtualenvs/*' web/manage.py test -v 2`
   * Or if your virtual environment setup a `venv` directory:
-    * `coverage run --omit='*/venv/*' manage.py test -v 2`
+    * `coverage run --omit='*/venv/*' web/manage.py test -v 2`
   * View coverage report:
     * `coverage report`
-    * `coverage html` then view in browswer at 'htmlcov/' directory.
+    * `coverage html`
+  * Then view in browser at 'htmlcov/index.html'.
+    * `browse htmlcov/index.html`
+    * `chrome htmlcov/index.html`
 * ... More to be added later ...
 
 <!-- **Alternative Setup Using Docker** -->
