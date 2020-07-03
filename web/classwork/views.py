@@ -1,7 +1,6 @@
 from django.views.generic import ListView, CreateView, DetailView, UpdateView
 # from django.contrib.auth.mixins import LoginRequiredMixin
 # from django.urls import reverse_lazy
-# from collections import OrderedDict
 from django.shortcuts import get_object_or_404, redirect  # used for Payments
 from django.template.response import TemplateResponse  # used for Payments
 from payments import get_payment_model, RedirectNeeded  # used for Payments
@@ -22,28 +21,22 @@ def decide_session(sess=None, display_date=None):
         Sometimes we want to see a future session.
         Used by many views, generally those that need a list of ClassOffers
         that a user can view, sign up for, get a check-in sheet, pay for, etc.
+        Returns a list always, even if an empty list.
     """
-    # print('======= forms function - decide_session ==========')
-    sess_data = []
+    query = Session.objects
     if sess is None:
         target = display_date or datetime.now()
-        # TODO: Fix for dealing with Sessions do not have an expire_date
-        sess_data = Session.objects.filter(publish_date__lte=target, expire_date__gte=target)
-    else:
-        if display_date:
-            raise SyntaxError("You can't filter by both Session and Date")
-        if sess == 'all':
-            return Session.objects.all()
+        query = query.filter(publish_date__lte=target, expire_date__gte=target)
+    elif display_date:
+        raise SyntaxError("You can't filter by both Session and Display Date")
+    elif sess != 'all':
         if not isinstance(sess, list):
             sess = [sess]
-        try:
-            sess_data = Session.objects.filter(name__in=sess)
-        except TypeError:
-            sess_data = []
-    if not sess_data:
-        # TODO: Filter out future but not yet published Sessions
-        sess_data = [Session.objects.order_by('-key_day_date').first()]
-    # print(sess_data)
+        query = query.filter(name__in=sess)
+    sess_data = query.all()
+    if not sess_data and not sess:
+        result = Session.objects.filter(publish_date__lte=target).order_by('-key_day_date').first()
+        sess_data = [result] if result else []
     return sess_data  # a list of Session records, even if only 0-1 session
 
 
