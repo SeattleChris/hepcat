@@ -13,6 +13,12 @@ class NewSiteDecideSession(TestCase):
         result = decide_session()
         self.assertEqual(len(result), 0)
 
+    def test_raise_error_if_double_filter(self):
+        """ Should raise an error if trying to filter by both session name and display date. """
+        kwargs = {'sess': 'some_name', 'display_date': date.today()}
+        with self.assertRaises(SyntaxError):
+            decide_session(**kwargs)
+
 
 class CurrentSessionSelection(TransactionTestCase):
     """ Critical views of current classes and content depend on the decide_session function. """
