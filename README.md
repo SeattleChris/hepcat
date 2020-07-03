@@ -135,10 +135,14 @@ This is a specific subject, offered during a specific session. It includes infor
   * Create other fixtures as needed and add them to the fixtures array in the appropriate tests class
 * Run tests to confirm tests and basic structure is setup correctly.
   * `./manage.py test`
-  * Or with coverage, if your virtual environment setup a `venv` directory:
+* Run test coverage setup:
+  * If using Pipenv for virtual environment.
+    * `coverage run --omit='*/virtualenvs/*' manage.py test -v 2`
+  * Or if your virtual environment setup a `venv` directory:
     * `coverage run --omit='*/venv/*' manage.py test -v 2`
-  * Or with coverage, if using Pipenv for virtual environment.
-    * `coverage run manage.py test -v 2`
+  * View coverage report:
+    * `coverage report`
+    * `coverage html` then view in browswer at 'htmlcov/' directory.
 * ... More to be added later ...
 
 <!-- **Alternative Setup Using Docker** -->
