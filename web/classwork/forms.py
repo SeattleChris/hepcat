@@ -1,41 +1,10 @@
 from django import forms
-from .models import Profile, Payment, Registration, Notify, Session  # , ClassOffer
+from .models import Profile, Payment, Registration, Notify  # , Session, ClassOffer
 # from django.urls import reverse_lazy
 # from django.shortcuts import render
-from datetime import datetime
 # TODO: should we be using datetime.datetime or datetime.today ?
 from django.contrib.auth import get_user_model
 User = get_user_model()
-
-
-def decide_session(sess=None, display_date=None):
-    """ Typically we want to see the current session (returned if no params set)
-        Sometimes we want to see a future session.
-        Used by many views, generally those that need a list of ClassOffers
-        that a user can view, sign up for, get a check-in sheet, pay for, etc.
-    """
-    print('======= forms function - decide_session ==========')
-    sess_data = []
-    if sess is None:
-        target = display_date or datetime.now()
-        # TODO: Fix for dealing with Sessions do not have an expire_date
-        sess_data = Session.objects.filter(publish_date__lte=target, expire_date__gte=target)
-    else:
-        if display_date:
-            raise SyntaxError("You can't filter by both Session and Date")
-        if sess == 'all':
-            return Session.objects.all()
-        if not isinstance(sess, list):
-            sess = [sess]
-        try:
-            sess_data = Session.objects.filter(name__in=sess)
-        except TypeError:
-            sess_data = []
-    if not sess_data:
-        # TODO: Filter out future but not yet published Sessions
-        sess_data = [Session.objects.order_by('-key_day_date').first()]
-    print(sess_data)
-    return sess_data  # a list of Session records, even if only 0-1 session
 
 
 class UserForm(forms.ModelForm):
