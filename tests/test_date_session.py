@@ -1,9 +1,10 @@
-from django.test import TransactionTestCase  # , TestCase
+from django.test import TransactionTestCase, TestCase
 from django.forms import ValidationError
 from classwork.models import Session  # , Subject, ClassOffer, Location, Profile, Registration, Payment
+from classwork.admin import AdminSessionForm, SessiontAdmin
+from django.contrib import admin as default_admin
 from datetime import date, timedelta
 
-# Create your tests here.
 INITIAL = {
     "name": "May_2020",
     "key_day_date": "2020-04-30",
@@ -35,7 +36,7 @@ early1_oth_skip = {
     }
 # no_skip = 'tests/db_early_no_skip_session.json'  # max_day_shift=-2, skip_weeks=0, num_weeks=5
 # oth_skip = 'tests/db_early1_oth_skip_session.json'  # max_day_shift=-2, skip_weeks=1, flip_last_day=True, num_weeks=5
-# second_skips = 3
+# Create your tests here.
 
 
 class NoSkipToOneSkipSessionDates(TransactionTestCase):
@@ -44,6 +45,8 @@ class NoSkipToOneSkipSessionDates(TransactionTestCase):
     duration = 5
 
     def create_session(self, **kwargs):
+        kwargs['num_weeks'] = self.duration  # if 'num_weeks' not in kwargs else kwargs['num_weeks']
+        kwargs['skip_weeks'] = self.skips    # if 'skip_weeks' not in kwargs else kwargs['skip_weeks']
         obj = Session.objects.create(**kwargs)
         # TODO: Handle if creating object raises a ValidationError, as sometimes expected.
         return obj
@@ -59,7 +62,7 @@ class NoSkipToOneSkipSessionDates(TransactionTestCase):
         start = key_day + timedelta(days=day_adjust)
         end = key_day + timedelta(days=7*(self.duration + self.skips - 1))
         # prev_end = date.fromisoformat(INITIAL['key_day_date']) + timedelta(days=7*(2 * self.duration - 1))
-        sess = Session.objects.create(
+        sess = self.create_session(
             name='early_key_skip',
             max_day_shift=day_adjust,
             num_weeks=self.duration,
@@ -87,7 +90,7 @@ class NoSkipToOneSkipSessionDates(TransactionTestCase):
         end = key_day + timedelta(days=7*(self.duration + self.skips - 1))
         # prev_end = date.fromisoformat(INITIAL['key_day_date']) + timedelta(days=7*(2 * self.duration - 1))
         prev_end = last_sess.end_date
-        sess = Session.objects.create(
+        sess = self.create_session(
             name='late_key_skip',
             max_day_shift=day_adjust,
             num_weeks=self.duration,
@@ -115,7 +118,7 @@ class NoSkipToOneSkipSessionDates(TransactionTestCase):
         end = key_day + timedelta(days=7*(self.duration + self.skips - 1)+day_adjust)
         # prev_end = date.fromisoformat(INITIAL['key_day_date']) + timedelta(days=7*(2 * self.duration - 1))
         prev_end = last_sess.end_date
-        sess = Session.objects.create(
+        sess = self.create_session(
             name='early2_oth_skip',
             max_day_shift=day_adjust,
             num_weeks=self.duration,
@@ -143,7 +146,7 @@ class NoSkipToOneSkipSessionDates(TransactionTestCase):
         end = key_day + timedelta(days=7*(self.duration + self.skips - 1)+day_adjust)
         # prev_end = date.fromisoformat(INITIAL['key_day_date']) + timedelta(days=7*(2 * self.duration - 1))
         prev_end = last_sess.end_date
-        sess = Session.objects.create(
+        sess = self.create_session(
             name='late_oth_skip',
             max_day_shift=day_adjust,
             num_weeks=self.duration,
@@ -176,7 +179,7 @@ class OneOtherSkipEarlyToThreeSkip(NoSkipToOneSkipSessionDates):
 #     fixtures = ['tests/db_basic.json', 'tests/db_early1_oth_skip_session.json']
 
 #     def create_session(self, **kwargs):
-#         obj = Session.objects.create(**kwargs)
+#         obj = self.create_session(**kwargs)
 #         # obj.refresh_from_db()
 #         return obj
 

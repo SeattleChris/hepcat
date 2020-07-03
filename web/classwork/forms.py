@@ -32,6 +32,7 @@ def decide_session(sess=None, display_date=None):
         except TypeError:
             sess_data = []
     if not sess_data:
+        # TODO: Filter out future but not yet published Sessions
         sess_data = [Session.objects.order_by('-key_day_date').first()]
     print(sess_data)
     return sess_data  # a list of Session records, even if only 0-1 session
