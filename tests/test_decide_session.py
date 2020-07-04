@@ -1,5 +1,4 @@
 from django.test import TransactionTestCase, TestCase
-from django.db.models.query import QuerySet
 from classwork.views import decide_session
 from classwork.models import Session
 from datetime import date, timedelta
