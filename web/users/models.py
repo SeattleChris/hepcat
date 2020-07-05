@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser, UserManager  # , Group
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 
 def get_if_only_one(q, **kwargs):
@@ -61,7 +62,7 @@ class UserManagerHC(UserManager):
             message += "but we can create an account without one. "
             if extra_fields.setdefault('uses_email_username', False):
                 message += "You requested to use email as your login username, but did not provide an email address. "
-                raise ValueError(message)
+                raise ValueError(_(message))
         else:
             email = self.normalize_email(email)
 
@@ -77,14 +78,14 @@ class UserManagerHC(UserManager):
             if username == '_':
                 message += "If you are not using your email as your username/login, "
                 message += "then you must either set a username or provide a first and last name. "
-                raise ValueError(message)
+                raise ValueError(_(message))
             username = username.casefold()
             try:
                 user = self._create_user(username, email, password, **extra_fields)
             except IntegrityError:
                 message += "A user already exists with that username, or matching first and last name. "
                 message += "Please provide some form of unique user information (email address, username, or name). "
-                raise ValueError(message)
+                raise ValueError(_(message))
         return user
 
     def create_user(self, username=None, email=None, password=None, **extra_fields):
@@ -100,9 +101,9 @@ class UserManagerHC(UserManager):
 
     def create_superuser(self, username, email, password, **extra_fields):
         if not extra_fields.setdefault('is_staff', True):
-            raise ValueError('Superuser must have is_staff=True.')
+            raise ValueError(_('Superuser must have is_staff=True.'))
         if not extra_fields.setdefault('is_superuser', True):
-            raise ValueError('Superuser must have is_superuser=True.')
+            raise ValueError(_('Superuser must have is_superuser=True.'))
         return self.set_user(username, email, password, **extra_fields)
 
     def find_or_create_for_anon(self, email=None, possible_users=None, **kwargs):
@@ -170,11 +171,13 @@ class UserHC(AbstractUser):
         Inherits from: AbstractUser, AbstractBaseUser, models.Model, ModelBase, ...
     """
 
-    # is_superuser exists from inherited models.
-    # is_staff exists from inherited models.
+    # email, first_name, last_name, and id - all exist from inherited models.
+    # username (often not used directly) exists from inherited models.
     is_student = models.BooleanField('student', default=True)
     is_teacher = models.BooleanField('teacher', default=False)
     is_admin = models.BooleanField('admin', default=False)
+    # is_superuser exists from inherited models.
+    # is_staff exists from inherited models.
     uses_email_username = models.BooleanField('Using Email', default=True)
     billing_address_1 = models.CharField(verbose_name='Street Address (line 1)', max_length=255, blank=True)
     billing_address_2 = models.CharField(verbose_name='Street Address (continued)', max_length=255, blank=True)
@@ -209,7 +212,8 @@ class UserHC(AbstractUser):
         """ Take some actions before the actual saving of the instance
             is called with super().save(*args, **kwargs)
         """
-        self.username = self.make_username()
+        if not self.username:
+            self.username = self.make_username()
         if self.is_teacher or self.is_admin or self.is_superuser:
             self.is_staff = True
         else:
