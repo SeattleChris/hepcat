@@ -22,7 +22,10 @@ class ResourceInline(admin.StackedInline):
     # exclude = ('classoffer', )
     # get_changeform_initial_data is not for this context.
 
-    # fields = ('CONTENT_RENDER', 'MODEL_CHOICES', 'CONTENT_CHOICES', 'USER_CHOICES', 'PUBLISH_CHOICES', 'id', 'subject', 'classoffer', 'content_type', 'user_type', 'avail', 'expire', 'imagepath', 'filepath', 'link', 'text', 'title', 'description', 'date_added', 'date_modified', 'content_path', 'ct', )
+    # fields = ('CONTENT_RENDER', 'MODEL_CHOICES', 'CONTENT_CHOICES', 'USER_CHOICES',
+    #           'PUBLISH_CHOICES', 'id', 'subject', 'classoffer', 'content_type', 'user_type',
+    #           'avail', 'expire', 'imagepath', 'filepath', 'link', 'text', 'title',
+    #           'description', 'date_added', 'date_modified', 'content_path', 'ct', )
     fieldsets = (
         (None, {
             'fields': (('user_type', 'content_type',), ('avail', 'expire'), ('title', 'description')),
@@ -46,7 +49,7 @@ class ResourceInline(admin.StackedInline):
     #     return initial
 
     def get_formset(self, request, obj=None, **kwargs):
-        initial = []
+        # initial = []
         print('========== ResourceInline.get_formset ================')
         print(self)
         for ea in dir(self):
@@ -138,7 +141,8 @@ class SessiontAdmin(admin.ModelAdmin):
     form = AdminSessionForm
     list_display = ('name', 'start_day', 'end_day', 'publish_day', 'expire_day')
     ordering = ('key_day_date',)
-    fields = ('name', ('key_day_date', 'max_day_shift'), 'num_weeks', ('skip_weeks', 'flip_last_day'), 'break_weeks', ('publish_date', 'expire_date'))
+    fields = ('name', ('key_day_date', 'max_day_shift'), 'num_weeks',
+              ('skip_weeks', 'flip_last_day'), 'break_weeks', ('publish_date', 'expire_date'))
 
     def date_with_day(self, obj, field=None):
         """ Will format the obj.field datefield to include the day of the week. """

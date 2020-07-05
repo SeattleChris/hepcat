@@ -1,8 +1,8 @@
-from django.test import TransactionTestCase, TestCase
-from django.forms import ValidationError
+from django.test import TransactionTestCase  # , TestCase
+# from django.forms import ValidationError
 from classwork.models import Session  # , Subject, ClassOffer, Location, Profile, Registration, Payment
-from classwork.admin import AdminSessionForm, SessiontAdmin
-from django.contrib import admin as default_admin
+# from classwork.admin import AdminSessionForm, SessiontAdmin
+# from django.contrib import admin as default_admin
 from datetime import date, timedelta
 
 INITIAL = {
@@ -65,8 +65,6 @@ class NoSkipToOneSkipSessionDates(TransactionTestCase):
         sess = self.create_session(
             name='early_key_skip',
             max_day_shift=day_adjust,
-            num_weeks=self.duration,
-            skip_weeks=self.skips,
             flip_last_day=False,
             )
         self.assertEquals(sess.key_day_date, key_day)
@@ -93,8 +91,6 @@ class NoSkipToOneSkipSessionDates(TransactionTestCase):
         sess = self.create_session(
             name='late_key_skip',
             max_day_shift=day_adjust,
-            num_weeks=self.duration,
-            skip_weeks=self.skips,
             flip_last_day=True,
             )
         self.assertEquals(sess.key_day_date, key_day)
@@ -121,8 +117,6 @@ class NoSkipToOneSkipSessionDates(TransactionTestCase):
         sess = self.create_session(
             name='early2_oth_skip',
             max_day_shift=day_adjust,
-            num_weeks=self.duration,
-            skip_weeks=self.skips,
             flip_last_day=True,
             )
         self.assertEquals(sess.key_day_date, key_day)
@@ -149,8 +143,6 @@ class NoSkipToOneSkipSessionDates(TransactionTestCase):
         sess = self.create_session(
             name='late_oth_skip',
             max_day_shift=day_adjust,
-            num_weeks=self.duration,
-            skip_weeks=self.skips,
             flip_last_day=False,
             )
         self.assertEquals(sess.key_day_date, key_day)

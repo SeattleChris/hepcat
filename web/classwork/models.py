@@ -1,14 +1,15 @@
 from django.db import models
-from django.utils.translation import gettext_lazy as _
-from datetime import date, timedelta, datetime as dt
-from django.core.mail import EmailMessage
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils.translation import gettext_lazy as _
+# from django.core.exceptions import ValidationError
+from django.core.mail import EmailMessage
+from django.conf import settings
+from django.urls import reverse
 from decimal import Decimal  # used for Payments
 from payments import PurchasedItem
 from payments.models import BasePayment
-from django.conf import settings
-from django.urls import reverse
+from datetime import date, timedelta, datetime as dt
 # from pprint import pprint
 # from django.contrib.auth import get_user_model
 # User = get_user_model()
@@ -115,7 +116,7 @@ class Resource(models.Model):
     content_type = models.CharField(max_length=15, choices=CONTENT_CHOICES)
     user_type = models.PositiveSmallIntegerField(choices=USER_CHOICES, help_text=_('Who is this for?'))
     avail = models.PositiveSmallIntegerField(choices=PUBLISH_CHOICES, help_text=_('When is this resource available?'))
-    expire = models.PositiveSmallIntegerField(default=0, help_text=_('Number of weeks it stays published? (0 for always)'))
+    expire = models.PositiveSmallIntegerField(default=0, help_text=_('Number of published weeks? (0 for always)'))
     imagepath = models.ImageField(upload_to='resource/', help_text=_('If an image, upload here'), blank=True)
     filepath = models.FileField(upload_to='resource/', help_text=_('If a file, upload here'), blank=True)
     link = models.CharField(max_length=255, help_text=_('External or Internal links go here'), blank=True)
@@ -132,7 +133,7 @@ class Resource(models.Model):
     #         'url': self.link,
     #         'file': self.filepath,
     #         'text': self.text,
-    #         'video': self.fielpath,
+    #         'video': self.filepath,
     #         'image': self.imagepath,
     #         'link': self.link,
     #         'email': self.text
@@ -286,7 +287,7 @@ class Session(models.Model):
     flip_last_day = models.BooleanField(
         default=False,
         verbose_name=_('due to skipped weeks, does the session ending switch between a non-key vs key day?'),
-        help_text=_('This is probably only true if the skipped class is not on the weekday that normally is the end of the session.'))
+        help_text=_('Possibly true if the skipped class is not on the day that normally is the end of the session.'))
     break_weeks = models.PositiveSmallIntegerField(default=0, verbose_name=_('break weeks after this session'))
     publish_date = models.DateField(blank=True, default=lambda: Session.default_publish)
     expire_date = models.DateField(blank=True, help_text=_('If blank, this will be computed'))
@@ -371,6 +372,26 @@ class Session(models.Model):
     @classmethod
     def default_key_day(cls):
         return cls._default_date('key_day_date')
+
+    # def clean(self):
+    #     data = super().clean()
+    #     data = self.cleaned_data if not data else data
+    #     key_day = data.get('key_day_date')
+    #     prev_sess = Session.last_session(since=key_day)
+    #     day_shift = data.get('max_day_shift')
+    #     early_day = key_day + timedelta(days=day_shift) if day_shift < 0 else key_day
+    #     if prev_sess and prev_sess.end_date >= early_day:
+    #         # TODO: Check the logic and possible backup solutions
+    #         message = "Overlapping class dates with those settings. "
+    #         if early_day < key_day:
+    #             message += "You could move the other class days to happen after the main day, "
+    #         else:
+    #             message += "You could "
+    #         message += "add a break week on the previous session, or otherwise change when this session starts. "
+    #         raise ValidationError(_(message))
+    #     if data.get('flip_last_day') and data.get('skip_weeks') == 0:
+    #         data['flip_last_day'] = False
+    #     return data
 
     def save(self, *args, **kwargs):
         # print("========================= Session.save ==========================")
@@ -463,7 +484,6 @@ class ClassOffer(models.Model):
             Returns abbreviated form if short is True.
         """
         lookup_day = [value[:3] if short else value for key, value in ClassOffer.DOW_CHOICES]
-        # lookup_day = ['Mon', 'Tue', 'Wed', 'Thur', 'Fri', 'Sat', 'Sun'] if short else [value for key, value in ClassOffer.DOW_CHOICES]
         day = lookup_day[self.class_day]
         if self.subject.num_weeks > 1:
             day += '(s)' if short else 's'

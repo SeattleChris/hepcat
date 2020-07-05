@@ -7,13 +7,13 @@ from django.contrib.admin.models import LogEntry
 from django.contrib.auth.models import Permission
 from django.contrib.sessions.models import Session as Session_contrib
 from django.contrib.contenttypes.models import ContentType
+from django.forms import ValidationError
 # from django.contrib import admin as default_admin
 from classwork.admin import AdminSessionForm, SessiontAdmin, admin as main_admin
 from classwork.models import Session  # , Subject, ClassOffer, Location, Profile, Registration, Payment
 from datetime import date, timedelta
 from django.contrib.auth import get_user_model
 User = get_user_model()
-# from django.forms import ValidationError
 
 
 class AdminSetupTests(TestCase):
@@ -44,7 +44,7 @@ class AdminSessionModelManagement(TestCase):
     def test_admin_uses_expected_form(self):
         """ The admin SessiontAdmin utilizes the correct AdminSessionForm. """
         current_admin = SessiontAdmin(model=Session, admin_site=AdminSite())
-        c = Client()
+        # c = Client()
         form = getattr(current_admin, 'form', None)
         form_class = AdminSessionForm
         # self.assertTrue(isinstance(form, form_class))
@@ -96,18 +96,18 @@ class AdminSessionModelManagement(TestCase):
 
     def test_admin_can_create_first_session(self):
         """ The first Session can be made, even though later Sessions get defaults from existing ones. """
-        from pprint import pprint
+        # from pprint import pprint
         c = Client()
         add_url = '/admin/classwork/session/add/'
         login_kwargs = self.get_login_kwargs()
         login_try = c.login(**login_kwargs)
-        print('==================================================================')
-        pprint(login_try)
-        get_add_template = c.get(add_url)
+        # print('==================================================================')
+        # pprint(login_try)
+        # get_add_template = c.get(add_url)
         # get_add_template = self.response_after_login(add_url, c)
-        print('==================================================================')
-        pprint(get_add_template)
-        print('==================================================================')
+        # print('==================================================================')
+        # pprint(get_add_template)
+        # print('==================================================================')
         key_day, name = date.today(), 'test_create'
         kwargs = {'key_day_date': key_day, 'name': name}
         kwargs['max_day_shift'] = 2
@@ -117,35 +117,50 @@ class AdminSessionModelManagement(TestCase):
         kwargs['publish_date'] = key_day - timedelta(days=7*3+1)
         kwargs['expire_date'] = key_day + timedelta(days=7+1)
         post_response = c.post(add_url, kwargs, follow=True)
-        pprint(post_response)
-        print('==================================================================')
-        if 'url' in post_response:
-            redirect_response = c.get(post_response.url)
-            pprint(redirect_response)
+        # pprint(post_response)
+        # print('==================================================================')
+        # if 'url' in post_response:
+        #     redirect_response = c.get(post_response.url)
+        #     pprint(redirect_response)
         sess = Session.objects.filter(name=name).first()
 
+        self.assertTrue(login_try)
+        # self.assertIsInstance(get_add_template, get_add_template)
         self.assertEquals(post_response.status_code, 200)
         self.assertIsNotNone(sess)
         self.assertIsInstance(sess, Session)
 
-        # end test_admin_can_create_first_session
+    def test_validationerror_on_date_conflict(self):
+        """ Expect a ValidationError when Sessions have overlapping dates. """
+        from pprint import pprint
+        key_day, name = date.today(), 'first'
+        publish = key_day - timedelta(days=7*3+1)
+        first_sess = Session.objects.create(name=name, key_day_date=key_day, num_weeks=5, publish_date=publish)
+        sess = Session.objects.filter(name=name).first()
 
-    # def test_validationerror_on_date_conflict(self):
-    #     """ Expect a ValidationError when Sessions have overlapping dates. """
-        # current_admin = SessiontAdmin(model=Session, admin_site=AdminSite())
-        # form = current_admin.form
+        c = Client()
+        add_url = '/admin/classwork/session/add/'
+        login_kwargs = self.get_login_kwargs()
+        login_try = c.login(**login_kwargs)
+        key_day += timedelta(days=7)
+        kwargs = {'key_day_date': key_day, 'name': 'test_create'}
+        kwargs['max_day_shift'] = 2
+        kwargs['num_weeks'] = 5
+        kwargs['skip_weeks'] = 0
+        kwargs['break_weeks'] = 0
+        kwargs['publish_date'] = key_day - timedelta(days=7*3+1)
+        kwargs['expire_date'] = key_day + timedelta(days=7+1)
 
-        # day_adjust = -2
-        # last_sess = Session.last_session()
-        # key_day = last_sess.key_day_date + timedelta(days=7*self.duration)
-        # prev_end = last_sess.end_date
-        # error_day = key_day - timedelta(days=7)
-
-        # self.assertGreater(prev_end, error_day)
-        # sess = self.create_session(
-        #     name='overlap_err',
-        #     max_day_shift=day_adjust,
-        #     key_day_date=error_day
-        #     )
+        self.assertTrue(login_try)
+        self.assertIsNotNone(sess)
+        self.assertIsInstance(sess, Session)
+        self.assertEquals(first_sess, sess)
+        # self.assertEquals(post_response.status_code, 200)
+        with self.assertRaises(ValidationError):
+            post_response = c.post(add_url, kwargs, follow=True)
+            pprint(post_response)
+        second_sess = Session.objects.filter(name=name).first()
+        pprint(second_sess)
+        self.assertNone(second_sess)
 
         # end test_validationerror_on_date_conflict
