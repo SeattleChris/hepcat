@@ -100,6 +100,7 @@ class UserManagerHC(UserManager):
         return self.set_user(username, email, password, **extra_fields)
 
     def create_superuser(self, username, email, password, **extra_fields):
+        print('================== UserManagerHC.create_superuser ========================')
         if not extra_fields.setdefault('is_staff', True):
             raise ValueError(_('Superuser must have is_staff=True.'))
         if not extra_fields.setdefault('is_superuser', True):

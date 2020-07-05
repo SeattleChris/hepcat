@@ -11,6 +11,8 @@ from django.contrib.contenttypes.models import ContentType
 from classwork.admin import AdminSessionForm, SessiontAdmin, admin as main_admin
 from classwork.models import Session  # , Subject, ClassOffer, Location, Profile, Registration, Payment
 from datetime import date, timedelta
+from django.contrib.auth import get_user_model
+User = get_user_model()
 # from django.forms import ValidationError
 
 
@@ -73,6 +75,12 @@ class AdminSessionModelManagement(TestCase):
         """ If we need an admin login, this will be the needed dictionary to pass as kwargs. """
         password = environ.get('SUPERUSER_PASS', '')
         admin_user_email = environ.get('SUPERUSER_EMAIL', settings.ADMINS[0][1])
+        # user = User.objects.create_user(email=admin_user_email, is_admin=True)
+        user = User.objects.create_superuser(admin_user_email, admin_user_email, password)
+        # user.set_password(password)
+        # user.save()
+        print('----------------- Made User ----------------------')
+        print(user.username)
         return {'username': admin_user_email, 'password': password}
 
     def response_after_login(self, url, client):
@@ -80,7 +88,10 @@ class AdminSessionModelManagement(TestCase):
         get_response = client.get(url)
         if 'url' in get_response:
             login_kwargs = self.get_login_kwargs()
-            get_response = client.get(get_response.url, login_kwargs)
+            login_attempt = client.post(get_response.url, login_kwargs)
+            print('===========================================')
+            print(login_attempt)
+            get_response = client.get(url)
         return get_response
 
     def test_admin_can_create_first_session(self):
@@ -88,9 +99,13 @@ class AdminSessionModelManagement(TestCase):
         from pprint import pprint
         c = Client()
         add_url = '/admin/classwork/session/add/'
-        # login_kwargs = self.get_login_kwargs()
-        # add_response = c.get(add_url)
-        get_add_template = self.response_after_login(add_url, c)
+        login_kwargs = self.get_login_kwargs()
+        login_try = c.login(**login_kwargs)
+        print('==================================================================')
+        pprint(login_try)
+        get_add_template = c.get(add_url)
+        # get_add_template = self.response_after_login(add_url, c)
+        print('==================================================================')
         pprint(get_add_template)
         print('==================================================================')
         key_day, name = date.today(), 'test_create'
@@ -101,9 +116,13 @@ class AdminSessionModelManagement(TestCase):
         kwargs['break_weeks'] = 0
         kwargs['publish_date'] = key_day - timedelta(days=7*3+1)
         kwargs['expire_date'] = key_day + timedelta(days=7+1)
-        post_response = c.post(add_url, kwargs)
+        post_response = c.post(add_url, kwargs, follow=True)
         pprint(post_response)
-        sess = Session.objects.get(name=name).first()
+        print('==================================================================')
+        if 'url' in post_response:
+            redirect_response = c.get(post_response.url)
+            pprint(redirect_response)
+        sess = Session.objects.filter(name=name).first()
 
         self.assertEquals(post_response.status_code, 200)
         self.assertIsNotNone(sess)
