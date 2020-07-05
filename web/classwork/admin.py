@@ -116,13 +116,13 @@ class ClassOfferAdmin(admin.ModelAdmin):
 
 class AdminSessionForm(ModelForm):
     def clean(self):
+        # print("=================== Admin Session Form Clean method ======================")
         data = super().clean()
         key_day = data.get('key_day_date')
         prev_sess = Session.last_session(since=key_day)
         day_shift = data.get('max_day_shift')
         early_day = key_day + timedelta(days=day_shift) if day_shift < 0 else key_day
         if prev_sess and prev_sess.end_date >= early_day:
-            # TODO: Check the logic and possible backup solutions
             message = "Overlapping class dates with those settings. "
             if early_day < key_day:
                 message += "You could move the other class days to happen after the main day, "
@@ -131,7 +131,8 @@ class AdminSessionForm(ModelForm):
             message += "add a break week on the previous session, or otherwise change when this session starts. "
             raise ValidationError(_(message))
         if data.get('flip_last_day') and data.get('skip_weeks') == 0:
-            data['flip_last_day'] = False
+            message = "Your selection of flipping the last class does not work with your zero skipped weeks input. "
+            raise ValidationError(_(message))
         return data
 
 
