@@ -72,6 +72,7 @@ class NoSkipToOneSkipSessionDates(TransactionTestCase):
         self.assertEquals(sess.expire_date, expire)
         self.assertEquals(sess.start_date, start)
         self.assertEquals(sess.end_date, end)
+        sess.save(with_clean=True)
         self.assertEquals(sess.prev_session.expire_date, sess.publish_date)
         self.assertLess(sess.prev_session.end_date, sess.start_date)
         self.assertEquals(sess.prev_session.end_date, prev_end)
@@ -98,6 +99,7 @@ class NoSkipToOneSkipSessionDates(TransactionTestCase):
         self.assertEquals(sess.expire_date, expire)
         self.assertEquals(sess.start_date, start)
         self.assertEquals(sess.end_date, end)
+        sess.save(with_clean=True)
         self.assertEquals(sess.prev_session.expire_date, sess.publish_date)
         self.assertLess(sess.prev_session.end_date, sess.start_date)
         self.assertEquals(sess.prev_session.end_date, prev_end)
@@ -119,11 +121,13 @@ class NoSkipToOneSkipSessionDates(TransactionTestCase):
             max_day_shift=day_adjust,
             flip_last_day=True,
             )
+        sess.refresh_from_db()
         self.assertEquals(sess.key_day_date, key_day)
         self.assertEquals(sess.publish_date, publish)
         self.assertEquals(sess.expire_date, expire)
         self.assertEquals(sess.start_date, start)
         self.assertEquals(sess.end_date, end)
+        sess.save(with_clean=True)
         self.assertEquals(sess.prev_session.expire_date, sess.publish_date)
         self.assertLess(sess.prev_session.end_date, sess.start_date)
         self.assertEquals(sess.prev_session.end_date, prev_end)
@@ -145,11 +149,13 @@ class NoSkipToOneSkipSessionDates(TransactionTestCase):
             max_day_shift=day_adjust,
             flip_last_day=False,
             )
+        sess.refresh_from_db()
         self.assertEquals(sess.key_day_date, key_day)
         self.assertEquals(sess.publish_date, publish)
         self.assertEquals(sess.expire_date, expire)
         self.assertEquals(sess.start_date, start)
         self.assertEquals(sess.end_date, end)
+        sess.save(with_clean=True)
         self.assertEquals(sess.prev_session.expire_date, sess.publish_date)
         self.assertLess(sess.prev_session.end_date, sess.start_date)
         self.assertEquals(sess.prev_session.end_date, prev_end)

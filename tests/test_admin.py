@@ -62,7 +62,7 @@ class AdminSessionModelManagement(TestCase):
         if current_admin.fieldsets:
             for ea in current_admin.fieldsets:
                 admin_fields.extend(ea[1].get('fields', []))
-        model_fields = [field.name for field in Session._meta.get_fields(include_parents=False)].copy()
+        model_fields = [field.name for field in Session._meta.get_fields(include_parents=False)]
         model_fields.remove('id')
         model_fields.remove('date_added')
         model_fields.remove('date_modified')
@@ -130,13 +130,16 @@ class AdminSessionModelManagement(TestCase):
         self.assertIsNotNone(sess)
         self.assertIsInstance(sess, Session)
 
-    def test_validationerror_on_date_conflict(self):
+    def test_auto_correct_on_date_conflict(self):
         """ Expect a ValidationError when Sessions have overlapping dates. """
         from pprint import pprint
         key_day, name = date.today(), 'first'
         publish = key_day - timedelta(days=7*3+1)
         first_sess = Session.objects.create(name=name, key_day_date=key_day, num_weeks=5, publish_date=publish)
         sess = Session.objects.filter(name=name).first()
+        self.assertIsNotNone(sess)
+        self.assertIsInstance(sess, Session)
+        self.assertEquals(first_sess, sess)
 
         c = Client()
         add_url = '/admin/classwork/session/add/'
@@ -152,15 +155,12 @@ class AdminSessionModelManagement(TestCase):
         kwargs['expire_date'] = key_day + timedelta(days=7+1)
 
         self.assertTrue(login_try)
-        self.assertIsNotNone(sess)
-        self.assertIsInstance(sess, Session)
-        self.assertEquals(first_sess, sess)
-        # self.assertEquals(post_response.status_code, 200)
-        with self.assertRaises(ValidationError):
-            post_response = c.post(add_url, kwargs, follow=True)
-            pprint(post_response)
+        # with self.assertRaises(ValidationError):
+        post_response = c.post(add_url, kwargs, follow=True)
+        template_target = 'admin/classwork/session/change_form.html'
+        self.assertIn(template_target, post_response.template_name)
+        print(post_response.template_name)
+        self.assertEquals(post_response.status_code, 200)
         second_sess = Session.objects.filter(name=name).first()
         pprint(second_sess)
-        self.assertNone(second_sess)
-
-        # end test_validationerror_on_date_conflict
+        self.assertGreater(first_sess.end_date, second_sess.start_date)
