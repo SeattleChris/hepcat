@@ -1,5 +1,6 @@
 from django import forms
 from .models import Profile, Payment, Registration, Notify  # , Session, ClassOffer
+from django.utils.translation import gettext_lazy as _
 # from django.urls import reverse_lazy
 # from django.shortcuts import render
 # TODO: should we be using datetime.datetime or datetime.today ?
@@ -28,22 +29,23 @@ class ProfileForm(forms.ModelForm):
 
 
 class RegisterForm(forms.ModelForm):
-    """ This is where existing and even new users/students can sign up for
-        a ClassOffer
-    """
+    """ This is where existing and even new users/students can sign up for a ClassOffer """
     # TODO: Create the workflow for when (if) the user wants to fill out the
     # registration form for someone else,
 
-    user_answers = (('', 'Please Select an Answer'), ('T', 'This is my first'), ('F', 'I am a returning student'),)
-    # payment_answers = (('F', 'Paid by the student named above'), ('T', 'Paid by someone other than student listed above'))
-    new_user = forms.ChoiceField(label='Have you had classes with us before?', choices=(user_answers))
-    first_name = forms.CharField(label='First Name', max_length=User._meta.get_field('first_name').max_length)
-    last_name = forms.CharField(label='Last Name', max_length=User._meta.get_field('last_name').max_length)
+    user_answers = (('', _('Please Select an Answer')),
+                    ('T', _('This is my first')),
+                    ('F', _('I am a returning student')),
+                    )
+    # payment_answers = (('F', 'Paid by the above student'), ('T', 'Paid by someone other than student listed above'))
+    new_user = forms.ChoiceField(label=_('Have you had classes with us before?'), choices=(user_answers))
+    first_name = forms.CharField(label=_('First Name'), max_length=User._meta.get_field('first_name').max_length)
+    last_name = forms.CharField(label=_('Last Name'), max_length=User._meta.get_field('last_name').max_length)
     email = forms.CharField(max_length=User._meta.get_field('email').max_length, widget=forms.EmailInput())
     # password = forms.CharField(min_length=6, max_length=16, widget=forms.PasswordInput())
     # TODO: Change to CheckboxSelectMultiple and make sure it works
-    class_selected = forms.ModelMultipleChoiceField(label='Choose your class(es)', queryset=None)
-    paid_by_other = forms.BooleanField(label='paid by a different person', required=False)
+    class_selected = forms.ModelMultipleChoiceField(label=_('Choose your class(es)'), queryset=None)
+    paid_by_other = forms.BooleanField(label=_('paid by a different person'), required=False)
     new_fields = ['new_user', 'first_name', 'last_name', 'email', 'class_selected', 'paid_by_other']
 
     class Meta:
@@ -56,15 +58,15 @@ class RegisterForm(forms.ModelForm):
             'billing_postcode',
         )
         labels = {
-            'billing_address_1': 'Street Address (line 1)',
-            'billing_address_2': 'Street Address (continued)',
-            'billing_city': 'City',
-            'billing_country_area': 'State',
-            'billing_postcode': 'Zip',
+            'billing_address_1': _('Street Address (line 1)'),
+            'billing_address_2': _('Street Address (continued)'),
+            'billing_city': _('City'),
+            'billing_country_area': _('State'),
+            'billing_postcode': _('Zip'),
         }
         help_texts = {
-            'billing_country_area': 'State, Territory, or Province',
-            'billing_postcode': 'Zip or Postal Code',
+            'billing_country_area': _('State, Territory, or Province'),
+            'billing_postcode': _('Zip or Postal Code'),
         }
 
     field_order = [*new_fields, *Meta.fields]
@@ -131,8 +133,10 @@ class RegisterForm(forms.ModelForm):
                     print('That email is already assigned to a user')
                     found = same_email.filter(first_name=first_name, last_name=last_name)
                     if len(found) > 0:
-                        print('We found user account with that name and email')
-                        raise forms.ValidationError('We found a user account with your name and email. Try the login link, or resubmit the form and select you are a returning student')
+                        message = 'We found a user account with your name and email. '
+                        print(message)
+                        message += 'Try the login link, or resubmit the form and select you are a returning student'
+                        raise forms.ValidationError(_(message))
                         # If user was found, then we should have them login
                         # TODO: send user to login credentials, keep track of data they have given
                     # TODO: Create a system to deal with matches
@@ -148,7 +152,7 @@ class RegisterForm(forms.ModelForm):
                     message += "If this is not you, please resubmit with either a variation of your name or include an "
                     # TODO: Create a system to deal with matching names, but are unique people
                     message += "extra symbol (such as '.' or '+') at the end of your name to confirm your input"
-                    raise forms.ValidationError(message)
+                    raise forms.ValidationError(_(message))
                 else:
                     print('No user with that name yet')
                 user = User.objects.create_user(
@@ -169,7 +173,10 @@ class RegisterForm(forms.ModelForm):
                 user = query_user[0] if len(query_user) > 0 else None  # TODO: refactor to use get_one_or_none ?
                 # TODO: Above allows anyone to add the user to the class. Perhaps we should force a login.
                 if not user:
-                    raise forms.ValidationError("We did not find your user account with your name and email address. Try the login link. If that does not work, select that you are a new student and we can fix it later.")
+                    message = "We did not find your user account with your name and email address. "
+                    message += "Try the login link. "
+                    message += "If that does not work, select that you are a new student and we can fix it later. "
+                    raise forms.ValidationError(_(message))
             # user = User.objects.find_or_create_for_anon(email=input_email, first_name=first_name, last_name=last_name)
             # TODO: What if a non-user is paying for a friend (established or new user)
         print(f'user before paid_by_other check {user}')
@@ -262,9 +269,7 @@ class RegisterForm(forms.ModelForm):
 
 
 class PaymentForm(forms.ModelForm):
-    """ This is where a user inputs their payment data
-        and it is processed.
-    """
+    """ This is where a user inputs their payment data and it is processed. """
 
     class Meta:
         model = Payment

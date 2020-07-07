@@ -1,14 +1,15 @@
 from django.db import models
-from django.utils.translation import gettext_lazy as _
-from datetime import date, timedelta, datetime as dt
-from django.core.mail import EmailMessage
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils.translation import gettext_lazy as _
+# from django.core.exceptions import ValidationError
+from django.core.mail import EmailMessage
+from django.conf import settings
+from django.urls import reverse
 from decimal import Decimal  # used for Payments
 from payments import PurchasedItem
 from payments.models import BasePayment
-from django.conf import settings
-from django.urls import reverse
+from datetime import date, timedelta, datetime as dt
 # from pprint import pprint
 # from django.contrib.auth import get_user_model
 # User = get_user_model()
@@ -115,7 +116,7 @@ class Resource(models.Model):
     content_type = models.CharField(max_length=15, choices=CONTENT_CHOICES)
     user_type = models.PositiveSmallIntegerField(choices=USER_CHOICES, help_text=_('Who is this for?'))
     avail = models.PositiveSmallIntegerField(choices=PUBLISH_CHOICES, help_text=_('When is this resource available?'))
-    expire = models.PositiveSmallIntegerField(default=0, help_text=_('Number of weeks it stays published? (0 for always)'))
+    expire = models.PositiveSmallIntegerField(default=0, help_text=_('Number of published weeks? (0 for always)'))
     imagepath = models.ImageField(upload_to='resource/', help_text=_('If an image, upload here'), blank=True)
     filepath = models.FileField(upload_to='resource/', help_text=_('If a file, upload here'), blank=True)
     link = models.CharField(max_length=255, help_text=_('External or Internal links go here'), blank=True)
@@ -132,7 +133,7 @@ class Resource(models.Model):
     #         'url': self.link,
     #         'file': self.filepath,
     #         'text': self.text,
-    #         'video': self.fielpath,
+    #         'video': self.filepath,
     #         'image': self.imagepath,
     #         'link': self.link,
     #         'email': self.text
@@ -286,7 +287,7 @@ class Session(models.Model):
     flip_last_day = models.BooleanField(
         default=False,
         verbose_name=_('due to skipped weeks, does the session ending switch between a non-key vs key day?'),
-        help_text=_('This is probably only true if the skipped class is not on the weekday that normally is the end of the session.'))
+        help_text=_('Possibly true if the skipped class is not on the day that normally is the end of the session.'))
     break_weeks = models.PositiveSmallIntegerField(default=0, verbose_name=_('break weeks after this session'))
     publish_date = models.DateField(blank=True, default=lambda: Session.default_publish)
     expire_date = models.DateField(blank=True, help_text=_('If blank, this will be computed'))
@@ -346,7 +347,8 @@ class Session(models.Model):
         allowed_fields = ('key_day_date', 'publish_date')
         if field not in allowed_fields:
             raise ValueError(f"Not a valid field parameter: {field} ")
-        final_session = cls.last_session()
+        now = date.today()
+        final_session = cls.last_session(since=now)
         if not final_session:
             new_date = None
         elif field == 'key_day_date':
@@ -362,7 +364,7 @@ class Session(models.Model):
                 final_session = final_session.prev_session
             new_date = getattr(final_session, 'expire_date', None)
         # return new_date.isoformat() if isinstance(new_date, (date, dt)) else date.today().isoformat()
-        return new_date
+        return new_date or now
 
     @classmethod
     def default_publish(cls):
@@ -372,28 +374,73 @@ class Session(models.Model):
     def default_key_day(cls):
         return cls._default_date('key_day_date')
 
-    def save(self, *args, **kwargs):
+    def computed_expire_day(self, key_day=None):
+        """ Typically 1 day after week 2, but short Sessions expire 2 days after after week 1. """
+        if not key_day:
+            key_day = self.key_day_date
+        adj = self.max_day_shift + 1 if self.max_day_shift > 0 else 1
+        adj += 7 if self.num_weeks > 3 else 1
+        expire = key_day + timedelta(days=adj)
+        return expire
+
+    def clean(self):
+        print('================================ Session.clean ============================')
+        key_day = self.key_day_date
+        prev_sess = Session.last_session(since=key_day)
+        early_day = key_day + timedelta(days=self.max_day_shift) if self.max_day_shift < 0 else key_day
+        week = timedelta(days=7)
+        while prev_sess and prev_sess.end_date >= early_day:
+            print(key_day)
+            print(prev_sess)
+            # TODO: Check the logic and possible backup solutions
+            if early_day < self.key_day_date and early_day + week > prev_sess.end_date:
+                self.max_day_shift = self.max_day_shift + 7  # Move the extra days come after the key day.
+                early_day = key_day
+                if self.flip_last_day and self.skip_weeks > 0:
+                    self.flip_last_day = False  # Skip day was/is on non-key day, but now it is the natural last_day.
+                elif self.skip_weeks > 0:
+                    pass  # Skip day was on key_day, possibly others also. So uncertain if flip_last_day should change.
+            else:  # Move all current days a week later and record an extra break week for the previous session.
+                early_day += week
+                key_day += week
+                self.key_day_date = key_day
+                temp_sess = Session.last_session(since=key_day)
+                if temp_sess == prev_sess:
+                    prev_sess.break_weeks += 1
+                    prev_sess.save(update_fields=['break_weeks'])
+                else:
+                    prev_sess = temp_sess
+                    self.publish_date = prev_sess.expire_date
+                    self.expire_date = self.computed_expire_day(key_day=key_day)
+        if self.skip_weeks == 0:
+            self.flip_last_day = False
+        return super().clean()
+
+    def clean_fields(self, exclude=None):
+        print("================= Session.clean_fields was called ======================")
+        fix_callables = {'key_day_date', 'publish_date'}
+        fix_callables = fix_callables - set(exclude) if exclude else fix_callables
+        for field_to_clean in fix_callables:
+            field = getattr(self, field_to_clean, None)
+            field = field() if callable(field) else field
+            setattr(self, field_to_clean, field)
+        return super().clean_fields(exclude=exclude)
+
+    def save(self, *args, with_clean=False, **kwargs):
         # print("========================= Session.save ==========================")
         if 'update_fields' in kwargs:
             if not all(['expire_date' in kwargs['update_fields'], self.expire_date is None]):
                 return super().save(*args, **kwargs)
-        key_day = self.key_day_date
-        key_day = key_day() if callable(key_day) else key_day
-        self.key_day_date = key_day
-        publish = self.publish_date
-        publish = publish() if callable(publish) else publish
-        # publish = date.fromisoformat(publish) if isinstance(publish, str) else publish
-        self.publish_date = publish
-        expire = self.expire_date
-        if expire is None:
-            # Typically 1 day after week 2, but short Sessions expire 2 days after after week 1.
-            adj = self.max_day_shift + 1 if self.max_day_shift > 0 else 1
-            adj += 7 if self.num_weeks > 3 else 1
-            expire = key_day + timedelta(days=adj)
-            self.expire_date = expire
+        exclude = kwargs.get('exclude', None)
+        if with_clean:
+            self.full_clean(exclude=exclude)
+        else:
+            self.clean_fields(exclude=exclude)
+        if not self.expire_date:
+            self.expire_date = self.computed_expire_day(key_day=self.key_day_date)
         next_sess = self.next_session
         if next_sess:
-            next_sess.publish_date = expire
+            next_sess.publish_date = self.expire
             next_sess.save(update_fields=['publish_date'])
         # try: self.objects.get_next_by_key_day_date().update(publish_date=self.expire_date)
         # except Session.DoesNotExist as e: print(f"There is no next session: {e} ")
@@ -463,7 +510,6 @@ class ClassOffer(models.Model):
             Returns abbreviated form if short is True.
         """
         lookup_day = [value[:3] if short else value for key, value in ClassOffer.DOW_CHOICES]
-        # lookup_day = ['Mon', 'Tue', 'Wed', 'Thur', 'Fri', 'Sat', 'Sun'] if short else [value for key, value in ClassOffer.DOW_CHOICES]
         day = lookup_day[self.class_day]
         if self.subject.num_weeks > 1:
             day += '(s)' if short else 's'

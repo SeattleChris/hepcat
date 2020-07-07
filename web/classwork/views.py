@@ -1,6 +1,7 @@
 from django.views.generic import ListView, CreateView, DetailView, UpdateView
 # from django.contrib.auth.mixins import LoginRequiredMixin
 # from django.urls import reverse_lazy
+from django.utils.translation import gettext_lazy as _
 from django.shortcuts import get_object_or_404, redirect  # used for Payments
 from django.template.response import TemplateResponse  # used for Payments
 from payments import get_payment_model, RedirectNeeded  # used for Payments
@@ -28,7 +29,7 @@ def decide_session(sess=None, display_date=None):
         target = display_date or datetime.now()
         query = query.filter(publish_date__lte=target, expire_date__gte=target)
     elif display_date:
-        raise SyntaxError("You can't filter by both Session and Display Date")
+        raise SyntaxError(_("You can't filter by both Session and Display Date"))
     elif sess != 'all':
         if not isinstance(sess, list):
             sess = [sess]

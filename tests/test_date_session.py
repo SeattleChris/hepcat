@@ -1,8 +1,8 @@
-from django.test import TransactionTestCase, TestCase
-from django.forms import ValidationError
+from django.test import TransactionTestCase  # , TestCase
+# from django.forms import ValidationError
 from classwork.models import Session  # , Subject, ClassOffer, Location, Profile, Registration, Payment
-from classwork.admin import AdminSessionForm, SessiontAdmin
-from django.contrib import admin as default_admin
+# from classwork.admin import AdminSessionForm, SessiontAdmin
+# from django.contrib import admin as default_admin
 from datetime import date, timedelta
 
 INITIAL = {
@@ -65,8 +65,6 @@ class NoSkipToOneSkipSessionDates(TransactionTestCase):
         sess = self.create_session(
             name='early_key_skip',
             max_day_shift=day_adjust,
-            num_weeks=self.duration,
-            skip_weeks=self.skips,
             flip_last_day=False,
             )
         self.assertEquals(sess.key_day_date, key_day)
@@ -74,6 +72,7 @@ class NoSkipToOneSkipSessionDates(TransactionTestCase):
         self.assertEquals(sess.expire_date, expire)
         self.assertEquals(sess.start_date, start)
         self.assertEquals(sess.end_date, end)
+        sess.save(with_clean=True)
         self.assertEquals(sess.prev_session.expire_date, sess.publish_date)
         self.assertLess(sess.prev_session.end_date, sess.start_date)
         self.assertEquals(sess.prev_session.end_date, prev_end)
@@ -93,8 +92,6 @@ class NoSkipToOneSkipSessionDates(TransactionTestCase):
         sess = self.create_session(
             name='late_key_skip',
             max_day_shift=day_adjust,
-            num_weeks=self.duration,
-            skip_weeks=self.skips,
             flip_last_day=True,
             )
         self.assertEquals(sess.key_day_date, key_day)
@@ -102,6 +99,7 @@ class NoSkipToOneSkipSessionDates(TransactionTestCase):
         self.assertEquals(sess.expire_date, expire)
         self.assertEquals(sess.start_date, start)
         self.assertEquals(sess.end_date, end)
+        sess.save(with_clean=True)
         self.assertEquals(sess.prev_session.expire_date, sess.publish_date)
         self.assertLess(sess.prev_session.end_date, sess.start_date)
         self.assertEquals(sess.prev_session.end_date, prev_end)
@@ -121,15 +119,15 @@ class NoSkipToOneSkipSessionDates(TransactionTestCase):
         sess = self.create_session(
             name='early2_oth_skip',
             max_day_shift=day_adjust,
-            num_weeks=self.duration,
-            skip_weeks=self.skips,
             flip_last_day=True,
             )
+        sess.refresh_from_db()
         self.assertEquals(sess.key_day_date, key_day)
         self.assertEquals(sess.publish_date, publish)
         self.assertEquals(sess.expire_date, expire)
         self.assertEquals(sess.start_date, start)
         self.assertEquals(sess.end_date, end)
+        sess.save(with_clean=True)
         self.assertEquals(sess.prev_session.expire_date, sess.publish_date)
         self.assertLess(sess.prev_session.end_date, sess.start_date)
         self.assertEquals(sess.prev_session.end_date, prev_end)
@@ -149,15 +147,15 @@ class NoSkipToOneSkipSessionDates(TransactionTestCase):
         sess = self.create_session(
             name='late_oth_skip',
             max_day_shift=day_adjust,
-            num_weeks=self.duration,
-            skip_weeks=self.skips,
             flip_last_day=False,
             )
+        sess.refresh_from_db()
         self.assertEquals(sess.key_day_date, key_day)
         self.assertEquals(sess.publish_date, publish)
         self.assertEquals(sess.expire_date, expire)
         self.assertEquals(sess.start_date, start)
         self.assertEquals(sess.end_date, end)
+        sess.save(with_clean=True)
         self.assertEquals(sess.prev_session.expire_date, sess.publish_date)
         self.assertLess(sess.prev_session.end_date, sess.start_date)
         self.assertEquals(sess.prev_session.end_date, prev_end)

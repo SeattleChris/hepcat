@@ -22,7 +22,10 @@ class ResourceInline(admin.StackedInline):
     # exclude = ('classoffer', )
     # get_changeform_initial_data is not for this context.
 
-    # fields = ('CONTENT_RENDER', 'MODEL_CHOICES', 'CONTENT_CHOICES', 'USER_CHOICES', 'PUBLISH_CHOICES', 'id', 'subject', 'classoffer', 'content_type', 'user_type', 'avail', 'expire', 'imagepath', 'filepath', 'link', 'text', 'title', 'description', 'date_added', 'date_modified', 'content_path', 'ct', )
+    # fields = ('CONTENT_RENDER', 'MODEL_CHOICES', 'CONTENT_CHOICES', 'USER_CHOICES',
+    #           'PUBLISH_CHOICES', 'id', 'subject', 'classoffer', 'content_type', 'user_type',
+    #           'avail', 'expire', 'imagepath', 'filepath', 'link', 'text', 'title',
+    #           'description', 'date_added', 'date_modified', 'content_path', 'ct', )
     fieldsets = (
         (None, {
             'fields': (('user_type', 'content_type',), ('avail', 'expire'), ('title', 'description')),
@@ -46,7 +49,7 @@ class ResourceInline(admin.StackedInline):
     #     return initial
 
     def get_formset(self, request, obj=None, **kwargs):
-        initial = []
+        # initial = []
         print('========== ResourceInline.get_formset ================')
         print(self)
         for ea in dir(self):
@@ -113,13 +116,13 @@ class ClassOfferAdmin(admin.ModelAdmin):
 
 class AdminSessionForm(ModelForm):
     def clean(self):
+        # print("=================== Admin Session Form Clean method ======================")
         data = super().clean()
         key_day = data.get('key_day_date')
         prev_sess = Session.last_session(since=key_day)
         day_shift = data.get('max_day_shift')
         early_day = key_day + timedelta(days=day_shift) if day_shift < 0 else key_day
         if prev_sess and prev_sess.end_date >= early_day:
-            # TODO: Check the logic and possible backup solutions
             message = "Overlapping class dates with those settings. "
             if early_day < key_day:
                 message += "You could move the other class days to happen after the main day, "
@@ -128,7 +131,8 @@ class AdminSessionForm(ModelForm):
             message += "add a break week on the previous session, or otherwise change when this session starts. "
             raise ValidationError(_(message))
         if data.get('flip_last_day') and data.get('skip_weeks') == 0:
-            data['flip_last_day'] = False
+            message = "Your selection of flipping the last class does not work with your zero skipped weeks input. "
+            raise ValidationError(_(message))
         return data
 
 
@@ -138,7 +142,8 @@ class SessiontAdmin(admin.ModelAdmin):
     form = AdminSessionForm
     list_display = ('name', 'start_day', 'end_day', 'publish_day', 'expire_day')
     ordering = ('key_day_date',)
-    fields = ('name', ('key_day_date', 'max_day_shift'), 'num_weeks', ('skip_weeks', 'flip_last_day'), 'break_weeks', ('publish_date', 'expire_date'))
+    fields = ('name', ('key_day_date', 'max_day_shift'), 'num_weeks',
+              ('skip_weeks', 'flip_last_day'), 'break_weeks', ('publish_date', 'expire_date'))
 
     def date_with_day(self, obj, field=None):
         """ Will format the obj.field datefield to include the day of the week. """
