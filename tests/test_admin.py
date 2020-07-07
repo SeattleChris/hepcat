@@ -7,7 +7,7 @@ from django.contrib.admin.models import LogEntry
 from django.contrib.auth.models import Permission
 from django.contrib.sessions.models import Session as Session_contrib
 from django.contrib.contenttypes.models import ContentType
-from django.forms import ValidationError
+# from django.forms import ValidationError
 # from django.contrib import admin as default_admin
 from classwork.admin import AdminSessionForm, SessiontAdmin, admin as main_admin
 from classwork.models import Session  # , Subject, ClassOffer, Location, Profile, Registration, Payment

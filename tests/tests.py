@@ -1,4 +1,5 @@
 from django.test import TestCase, TransactionTestCase
+# from .helper import SimpleModelTests
 from classwork.models import Location  # , Resource, SiteContent
 from classwork.models import Session  # , Subject, ClassOffer
 # from classwork.models import Profile, Payment, Registration, Notify
@@ -18,16 +19,29 @@ INITIAL = {
 # Create your tests here.
 
 
-class LocationCoverageTests(TestCase):
-    # fixtures = ['tests/db_basic.json']
+# class LocationModelTests(SimpleModelTests):
+#     Model = Location
 
-    def create_location(self, name="only a test", code="tst", address='123 Some St, #42', zipcode='98112', **kwargs):
-        return Location.objects.create(name=name, code=code, address=address, zipcode=zipcode, **kwargs)
 
-    def test_location_creation(self):
-        w = self.create_location()
-        self.assertTrue(isinstance(w, Location))
-        self.assertEqual(w.__str__(), w.name)
+class LocationModelTests(TestCase):
+    Model = Location
+    defaults = {'name': f"test {(str(Model).lower())}"}
+    defaults['code'] = 'tst'
+    defaults['address'] = '123 Some St, #42'
+    defaults['zipcode'] = '98112'
+    skip_fields = ['date_added', 'date_modified']
+
+    def create_model(self, **kwargs):
+        collected_kwargs = self.defaults.copy()
+        collected_kwargs.update(kwargs)
+        return self.Model.objects.create(**collected_kwargs)
+
+    def test_model_creation(self):
+        model = self.create_model()
+        self.assertIsInstance(model, self.Model)
+        self.assertEqual(model.__str__(), model.name)
+        for key, value in self.defaults.items():
+            self.assertAlmostEquals(value, getattr(model, key, None))
 
 
 class SessionCoverageTests(TransactionTestCase):
