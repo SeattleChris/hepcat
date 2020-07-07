@@ -129,11 +129,20 @@ class AdminSessionForm(ModelForm):
             else:
                 message += "You could "
             message += "add a break week on the previous session, or otherwise change when this session starts. "
-            raise ValidationError(_(message))
+            raise ValidationError(_(message), code='invalid')
         if data.get('flip_last_day') and data.get('skip_weeks') == 0:
             message = "Your selection of flipping the last class does not work with your zero skipped weeks input. "
-            raise ValidationError(_(message))
+            raise ValidationError(_(message), code='invalid')
         return data
+
+    def full_clean(self):
+        full_clean = super().full_clean()
+        if True:  # TODO: Is there a way to only run the following when appropriate?
+            instance_after_model_clean = {name: getattr(self.instance, name, None) for name in self.fields}
+            data = self.data.copy()
+            data.update(instance_after_model_clean)
+            self.data = data
+        return full_clean
 
 
 class SessiontAdmin(admin.ModelAdmin):

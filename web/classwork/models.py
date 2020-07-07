@@ -384,7 +384,7 @@ class Session(models.Model):
         return expire
 
     def clean(self):
-        print('================================ Session.clean ============================')
+        # print('================================ Session.clean ============================')
         key_day = self.key_day_date
         prev_sess = Session.last_session(since=key_day)
         early_day = key_day + timedelta(days=self.max_day_shift) if self.max_day_shift < 0 else key_day
@@ -440,7 +440,7 @@ class Session(models.Model):
             self.expire_date = self.computed_expire_day(key_day=self.key_day_date)
         next_sess = self.next_session
         if next_sess:
-            next_sess.publish_date = self.expire
+            next_sess.publish_date = self.expire_date
             next_sess.save(update_fields=['publish_date'])
         # try: self.objects.get_next_by_key_day_date().update(publish_date=self.expire_date)
         # except Session.DoesNotExist as e: print(f"There is no next session: {e} ")
