@@ -347,7 +347,8 @@ class Session(models.Model):
         allowed_fields = ('key_day_date', 'publish_date')
         if field not in allowed_fields:
             raise ValueError(f"Not a valid field parameter: {field} ")
-        final_session = cls.last_session()
+        now = date.today()
+        final_session = cls.last_session(since=now)
         if not final_session:
             new_date = None
         elif field == 'key_day_date':
@@ -363,7 +364,7 @@ class Session(models.Model):
                 final_session = final_session.prev_session
             new_date = getattr(final_session, 'expire_date', None)
         # return new_date.isoformat() if isinstance(new_date, (date, dt)) else date.today().isoformat()
-        return new_date
+        return new_date or now
 
     @classmethod
     def default_publish(cls):
@@ -373,48 +374,73 @@ class Session(models.Model):
     def default_key_day(cls):
         return cls._default_date('key_day_date')
 
-    # def clean(self):
-    #     data = super().clean()
-    #     data = self.cleaned_data if not data else data
-    #     key_day = data.get('key_day_date')
-    #     prev_sess = Session.last_session(since=key_day)
-    #     day_shift = data.get('max_day_shift')
-    #     early_day = key_day + timedelta(days=day_shift) if day_shift < 0 else key_day
-    #     if prev_sess and prev_sess.end_date >= early_day:
-    #         # TODO: Check the logic and possible backup solutions
-    #         message = "Overlapping class dates with those settings. "
-    #         if early_day < key_day:
-    #             message += "You could move the other class days to happen after the main day, "
-    #         else:
-    #             message += "You could "
-    #         message += "add a break week on the previous session, or otherwise change when this session starts. "
-    #         raise ValidationError(_(message))
-    #     if data.get('flip_last_day') and data.get('skip_weeks') == 0:
-    #         data['flip_last_day'] = False
-    #     return data
+    def computed_expire_day(self, key_day=None):
+        """ Typically 1 day after week 2, but short Sessions expire 2 days after after week 1. """
+        if not key_day:
+            key_day = self.key_day_date
+        adj = self.max_day_shift + 1 if self.max_day_shift > 0 else 1
+        adj += 7 if self.num_weeks > 3 else 1
+        expire = key_day + timedelta(days=adj)
+        return expire
 
-    def save(self, *args, **kwargs):
+    def clean(self):
+        print('================================ Session.clean ============================')
+        key_day = self.key_day_date
+        prev_sess = Session.last_session(since=key_day)
+        early_day = key_day + timedelta(days=self.max_day_shift) if self.max_day_shift < 0 else key_day
+        week = timedelta(days=7)
+        while prev_sess and prev_sess.end_date >= early_day:
+            print(key_day)
+            print(prev_sess)
+            # TODO: Check the logic and possible backup solutions
+            if early_day < self.key_day_date and early_day + week > prev_sess.end_date:
+                self.max_day_shift = self.max_day_shift + 7  # Move the extra days come after the key day.
+                early_day = key_day
+                if self.flip_last_day and self.skip_weeks > 0:
+                    self.flip_last_day = False  # Skip day was/is on non-key day, but now it is the natural last_day.
+                elif self.skip_weeks > 0:
+                    pass  # Skip day was on key_day, possibly others also. So uncertain if flip_last_day should change.
+            else:  # Move all current days a week later and record an extra break week for the previous session.
+                early_day += week
+                key_day += week
+                self.key_day_date = key_day
+                temp_sess = Session.last_session(since=key_day)
+                if temp_sess == prev_sess:
+                    prev_sess.break_weeks += 1
+                    prev_sess.save(update_fields=['break_weeks'])
+                else:
+                    prev_sess = temp_sess
+                    self.publish_date = prev_sess.expire_date
+                    self.expire_date = self.computed_expire_day(key_day=key_day)
+        if self.skip_weeks == 0:
+            self.flip_last_day = False
+        return super().clean()
+
+    def clean_fields(self, exclude=None):
+        print("================= Session.clean_fields was called ======================")
+        fix_callables = {'key_day_date', 'publish_date'}
+        fix_callables = fix_callables - set(exclude) if exclude else fix_callables
+        for field_to_clean in fix_callables:
+            field = getattr(self, field_to_clean, None)
+            field = field() if callable(field) else field
+            setattr(self, field_to_clean, field)
+        return super().clean_fields(exclude=exclude)
+
+    def save(self, *args, with_clean=False, **kwargs):
         # print("========================= Session.save ==========================")
         if 'update_fields' in kwargs:
             if not all(['expire_date' in kwargs['update_fields'], self.expire_date is None]):
                 return super().save(*args, **kwargs)
-        key_day = self.key_day_date
-        key_day = key_day() if callable(key_day) else key_day
-        self.key_day_date = key_day
-        publish = self.publish_date
-        publish = publish() if callable(publish) else publish
-        # publish = date.fromisoformat(publish) if isinstance(publish, str) else publish
-        self.publish_date = publish
-        expire = self.expire_date
-        if expire is None:
-            # Typically 1 day after week 2, but short Sessions expire 2 days after after week 1.
-            adj = self.max_day_shift + 1 if self.max_day_shift > 0 else 1
-            adj += 7 if self.num_weeks > 3 else 1
-            expire = key_day + timedelta(days=adj)
-            self.expire_date = expire
+        exclude = kwargs.get('exclude', None)
+        if with_clean:
+            self.full_clean(exclude=exclude)
+        else:
+            self.clean_fields(exclude=exclude)
+        if not self.expire_date:
+            self.expire_date = self.computed_expire_day(key_day=self.key_day_date)
         next_sess = self.next_session
         if next_sess:
-            next_sess.publish_date = expire
+            next_sess.publish_date = self.expire
             next_sess.save(update_fields=['publish_date'])
         # try: self.objects.get_next_by_key_day_date().update(publish_date=self.expire_date)
         # except Session.DoesNotExist as e: print(f"There is no next session: {e} ")
