@@ -218,6 +218,20 @@ We are keeping a checklist of upcoming tasks and feature development, as well as
 
 [Developer Notes - PayPal integration](./paypal.md)
 
+## Tests
+
+* Run test coverage setup:
+  * If using Pipenv for virtual environment.
+    * `coverage run --omit='*/virtualenvs/*' web/manage.py test -v 2`
+  * Or if your virtual environment setup a `venv` directory:
+    * `coverage run --omit='*/venv/*' web/manage.py test -v 2`
+* View coverage report:
+  * `coverage report`
+  * `coverage html`
+* Then view in browser at 'htmlcov/index.html'.
+  * `browse htmlcov/index.html`
+  * `chrome htmlcov/index.html`
+
 ## API
 
 The following routes have been made or scaffolded (mostly in classwork app):
