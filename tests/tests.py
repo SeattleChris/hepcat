@@ -1,10 +1,13 @@
 from django.test import TestCase, TransactionTestCase
+from django.db.models import CharField, URLField, DateField, PositiveSmallIntegerField, SmallIntegerField
+from django.db.models.fields import NOT_PROVIDED
 # from .helper import SimpleModelTests
-from classwork.models import Location  # , Resource, SiteContent
+from classwork.models import Location, Resource, SiteContent
 from classwork.models import Session  # , Subject, ClassOffer
 # from classwork.models import Profile, Payment, Registration, Notify
 # from users.models import UserHC
 from datetime import date, timedelta
+from pprint import pprint
 # from django.utils import timezone
 # from django.core.urlresolvers import reverse
 # from location.forms import WhateverForm
@@ -25,13 +28,11 @@ INITIAL = {
 
 class LocationModelTests(TestCase):
     Model = Location
-    defaults = {'name': "test"}  # f"test {(str(Model).lower())}"
-    defaults['code'] = 'tst'
-    defaults['address'] = '123 Some St, #42'
-    defaults['zipcode'] = '98112'
+    defaults = {'name': "test model"}  # f"test {(str(Model).lower())}"
     repr_dict = {'Location': 'name', 'Link': 'map_google'}
     str_dict = {'': 'name'}
     skip_fields = ['date_added', 'date_modified']
+    skip_attrs = {'auto_created': True, 'is_relation': True}
 
     def create_model(self, **kwargs):
         collected_kwargs = self.defaults.copy()
@@ -40,28 +41,53 @@ class LocationModelTests(TestCase):
 
     def repr_format(self, obj):
         string_list = [key + ": " + getattr(obj, value, '') for key, value in self.repr_dict.items()]
-        print('---------------------------------------')
-        print(string_list)
-        result = '<' + ' | '.join(string_list) + ' >'
-        # print(result)
-        return result
+        return '<' + ' | '.join(string_list) + ' >'
+
+    def get_needed_fields(self):
+        skip = self.skip_fields
+        attr = [key for key in self.skip_attrs]
+        all_fields = self.Model._meta.fields
+        fields = [f for f in all_fields if not any([f.name in skip, *[getattr(f, ea) for ea in attr]])]
+        return fields
+
+    def get_field_info(self):
+        fields = self.get_needed_fields()
+        print('==================================================================')
+        defaults = {}
+        for field in fields:
+            print(f"------------- {field.name} -----------------")
+            if field.default is not NOT_PROVIDED:
+                pass
+            elif isinstance(field, CharField):
+                if field.name != 'name':
+                    defaults[field.name] = 'test string'
+                if field.name == 'title':
+                    defaults[field.name] = self.defaults.pop('name', defaults[field.name])
+            elif isinstance(field, URLField):
+                defaults[field.name] = 'https://www.somewebsite.com/'
+            elif isinstance(field, DateField):
+                defaults[field.name] = date.today()
+            elif isinstance(field, (PositiveSmallIntegerField, SmallIntegerField)):
+                defaults[field.name] = 2
+            else:
+                print(type(field))
+        print('----------------------------------------')
+        pprint(defaults)
+        return defaults
 
     def str_format(self, obj):
         string_list = [f"{k}: {getattr(obj, v, '')}" if k else getattr(obj, v, '') for k, v in self.str_dict.items()]
-        result = ' - '.join(string_list)
-        print(result)
-        return result
+        return ' - '.join(string_list)
 
     def test_model_creation(self):
-        model = self.create_model()
+        fields = self.get_field_info()
+        model = self.create_model(**fields)
         repr_value = self.repr_format(model)
         str_value = self.str_format(model)
 
         self.assertIsInstance(model, self.Model)
         self.assertEqual(model.__str__(), str_value)
         self.assertEqual(model.__repr__(), repr_value)
-        for key, value in self.defaults.items():
-            self.assertAlmostEquals(value, getattr(model, key, None))
 
 
 class SessionCoverageTests(TransactionTestCase):
