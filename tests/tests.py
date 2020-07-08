@@ -4,7 +4,7 @@ from django.db.models import PositiveSmallIntegerField, SmallIntegerField
 from django.db.models.fields import NOT_PROVIDED
 # from .helper import SimpleModelTests
 from classwork.models import Location, Resource, SiteContent, Subject, ClassOffer, Profile
-from classwork.models import Session  # , Payment, Registration, Notify
+from classwork.models import Session, Payment, Registration, Notify
 from users.models import UserHC
 from datetime import date, time, timedelta
 # from django.utils import timezone
@@ -128,6 +128,26 @@ class ClassOfferModelTests(LocationModelTests):
     repr_dict = {'Class Id': 'id', 'Subject': 'subject', 'Session': 'session'}
     str_list = {'subject', 'session'}
     defaults = {}
+
+
+class PaymentModelTests(LocationModelTests):
+    Model = Payment
+    repr_dict = {'Payment': '_payment_description'}
+    str_list = {'_payment_description'}
+    defaults = {}
+
+
+class RegistrationModelTests(LocationModelTests):
+    Model = Registration
+    repr_dict = {'Registration': 'classoffer', 'User': '_get_full_name', 'Owed': '_pay_report'}
+    str_list = {'_pay_report'}
+    defaults = {}
+
+
+class NotifyModelTests(TestCase):
+    Model = Notify
+    repr_dict = {'Notify': 'name'}
+    str_list = {}
 
 
 class ProfileModelTests(LocationModelTests):

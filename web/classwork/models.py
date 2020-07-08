@@ -454,7 +454,7 @@ class Session(models.Model):
         return f'{self.name}'
 
     def __repr__(self):
-        return f'{self.name}'
+        return f'<Session: {self.name} >'
 
 
 class ClassOffer(models.Model):
@@ -693,12 +693,6 @@ class Profile(models.Model):
     def _get_full_name(self):
         return self.user.get_full_name() or _("Name Not Found")
 
-    def __str__(self):
-        return self._get_full_name
-
-    def __repr__(self):
-        return f"<Profile: {self._get_full_name} | Username: {self.username} >"
-
     # @property
     # def checkin_list(self):
     #     return [
@@ -708,6 +702,12 @@ class Profile(models.Model):
     #         self.l2_finished,
     #         self.credit,
     #     ]
+
+    def __str__(self):
+        return self._get_full_name
+
+    def __repr__(self):
+        return f"<Profile: {self._get_full_name} | Username: {self.username} >"
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
@@ -899,10 +899,19 @@ class Payment(BasePayment):
         yield PurchasedItem(name=self.description, sku='HCRF',
                             quantity=1, price=Decimal(self.total), currency='USD')
 
-    # def __str__(self):
-    #     return 'payment by ' + str(self.paid_by) + 'for ' + str(self.student) + 'attending ' + self.description
+    @property
+    def _payment_description(self):
+        result = 'payment '
+        if self.paid_by != self.student:
+            result += 'by ' + str(self.paid_by)
+        result += 'for ' + str(self.student) + ' attending ' + str(self.description)
+        return result
 
-    # end class Payment
+    def __str__(self):
+        return self._payment_description
+
+    def __repr__(self):
+        return f"<Payment: {self._payment_description} >"
 
 
 class Registration(models.Model):
@@ -918,7 +927,7 @@ class Registration(models.Model):
     def owed(self):
         """ How much is owed by this student currently in this classoffer. """
         if not self.payment:
-            return None
+            return 0
         owed = self.payment.total - self.payment.captured_amount
         if owed > 0:
             owed = self.payment.full_total - self.payment.captured_amount
@@ -931,6 +940,10 @@ class Registration(models.Model):
     @property
     def last_name(self):
         return self.student.user.last_name
+
+    @property
+    def _get_full_name(self):
+        return getattr(self.student, '_get_full_name', None) or _("Name Not Found")
 
     @property
     def credit(self):
@@ -959,7 +972,15 @@ class Registration(models.Model):
     #     order_with_respect_to = 'classoffer'
     #     pass
 
-    # end class Registration
+    @property
+    def _pay_report(self):
+        return 'Paid' if self.paid else str(self.owed)
+
+    def __str__(self):
+        return self._pay_report
+
+    def __repr__(self):
+        return f"<Registration: {str(self.classoffer)} | User: {self._get_full_name} | Owed: {self._pay_report} >"
 
 
 def resource_filepath(instance, filename):
