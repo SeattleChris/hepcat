@@ -38,7 +38,7 @@ class SiteContent(models.Model):
         return f'{self.name}'
 
     def __repr__(self):
-        return f'<SiteContent: {self.name} | Modified: {self.date_modified} >'
+        return f'<SiteContent: {self.name} >'
 
     # end class SiteContent
 
@@ -160,17 +160,17 @@ class Resource(models.Model):
         return self.title
 
     def __repr__(self):
-        relate = ''
-        if self.related_type == 'Subject':
-            relate = f'Subject {self.subject}'
-        elif self.related_type == 'ClassOffer':
-            relate = f'ClassOffer {self.classoffer}'
-        elif self.related_type == 'Other':
-            relate = 'Other'
-        else:
-            relate = 'Unknown'
-        return f'<Resource | {relate} | {self.content_type} | {self.avail}>'
-        #  | {self.expire}>'
+        # relate = ''
+        # if self.related_type == 'Subject':
+        #     relate = f'Subject {self.subject}'
+        # elif self.related_type == 'ClassOffer':
+        #     relate = f'ClassOffer {self.classoffer}'
+        # elif self.related_type == 'Other':
+        #     relate = 'Other'
+        # else:
+        #     relate = 'Unknown'
+        # return f'<Resource: {relate} | {self.content_type} | {self.avail} >'
+        return f'<Resource: {self.content_type} | {self.avail} >'
 
 
 class Subject(models.Model):
@@ -227,21 +227,25 @@ class Subject(models.Model):
     date_added = models.DateField(auto_now_add=True)
     date_modified = models.DateField(auto_now=True)
 
-    def __str__(self):
+    @property
+    def num_level(self):
+        """ When we want a sortable level number. """
+        level_dict = self.LEVEL_ORDER
+        num = level_dict[self.level] if self.level in level_dict else 0
+        return num
+
+    @property
+    def _str_slug(self):
         slug = f'{self.level}{self.version}'
         if self.level not in ['Beg', 'L2']:
             slug += f': {self.title}'
         return slug
 
+    def __str__(self):
+        return self._str_slug
+
     def __repr__(self):
         return f'<Subject: {self.title} | Level: {self.level} | Version: {self.version} >'
-
-    def num_level(self):
-        """ When we want a sortable level number
-        """
-        level_dict = self.LEVEL_ORDER
-        num = level_dict[self.level] if self.level in level_dict else 0
-        return num
 
 
 # class LevelGroup(models.Model):
@@ -589,7 +593,7 @@ class ClassOffer(models.Model):
         higher = 100 + max(level_dict.values())
         num = 0
         try:
-            num = level_dict[self.subject.level]
+            num = level_dict.get(getattr(self.subject, 'level', 'Other'))  # 'Other'
         except KeyError:
             num = higher
         return num
@@ -598,7 +602,7 @@ class ClassOffer(models.Model):
         return f'{self.subject} - {self.session}'
 
     def __repr__(self):
-        return f'<Class Id: {self.id} | Subject: {self.subject} | Session: {self.session}>'
+        return f'<Class Id: {self.id} | Subject: {self.subject} | Session: {self.session} >'
 
     def save(self, *args, **kwargs):
         self.num_level = self.set_num_level()
@@ -682,12 +686,15 @@ class Profile(models.Model):
     def full_name(self):
         return self.user.full_name()
 
+    @property
+    def _get_full_name(self):
+        return self.user.get_full_name() or _("Name Not Found")
+
     def __str__(self):
-        name = self.user.get_full_name() or _("Name Not Found")
-        return name
+        return self._get_full_name
 
     def __repr__(self):
-        return f"Profile id: {self.id} | User id: {self.user.id} | Name: {self.user.get_full_name()}"
+        return f"<Profile id: {self.id} | User id: {self.user.id} | Name: {self._get_full_name} >"
 
     # @property
     # def checkin_list(self):
