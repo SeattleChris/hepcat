@@ -34,16 +34,24 @@
 | :heavy_check_mark: | Admin: Sessions pre-populate and error correct dates of the session                         |
 | :heavy_check_mark: | Tests: Add initial testing including coverage reports                                       |
 | :heavy_check_mark: | Tests: Checking date computations on Session model and Admin form                           |
-|                    | Tests: Coverage for most of the code                                                        |
-|                    | Email Features: send register confirmations, weekly class emails                            |
-|                    | Payment & Student Sign Up: PayPal live working, email confirmations, added to checkin       |
-|                    | User Views: more filled out - student Profile structure, visual & layout of ClassOffers     |
+|                    | Tests: Models for classwork, users, and associated data                                     |
 |                    | User Views: About Us - show profile info for only teachers and staff, plus general business |
 |                    | User Views: Contact Us (including contact form), Info - general site resources, sub-pages   |
 |                    | User Views: General site clean up before first launch                                       |
 |                    | Deploy Version 1.0: List classes, register, payment, manage resources, user onboarding      |
+|                    | **Milestone 4 Completion**                                                                  |
+|                    | Tests: Views for classwork                                                                  |
+|                    | Tests: Admin functionality and views                                                        |
+|                    | Tests: User resources and profile view                                                      |
+|                    | User Views: more filled out - student Profile structure, visual & layout of ClassOffers     |
+|                    | Payment & Student Sign Up: PayPal live working, email confirmations, added to checkin       |
+|                    | Email Features: send register confirmations, weekly class emails                            |
 |                    | **Launch Version 1.0**                                                                      |
 |                    | **Upcoming Features**                                                                       |
+|                    | Tests: Email features                                                                       |
+|                    | Tests: Payment features                                                                     |
+|                    | Tests: Metrics features                                                                     |
+|                    | Tests: Coverage for most of the code                                                        |
 |                    | Interest tracking: update Profile model, forms for students, prompts sent to users.         |
 |                    | Social Media connections on website: FB business page, FB group page, Twitter, etc.         |
 |                    | Payment Processing: Square integration - on-site (in person) payments                       |
@@ -73,16 +81,38 @@
 - [s] Stretch Goal. Not for current feature plan.
 
 Current Status:
-2020-07-07 15:38:28
+2020-07-08 09:29:36
 <!-- Ctrl-Shift-I to generate timestamp -->
 
 ### Tests
 
 - [x] Unit tests setup using django test
 - [x] Coverage tests setup with coverage
-- [ ] Initial tests of models
+- [x] Initial tests of models
+- [ ] Models full or near full coverage
+- [ ] Initial tests for views
+- [ ] Views full or near full coverage
+- [ ] Initial tests for admin
+- [ ] Admin full or near full coverage
 - [x] Session date computation methods
-- [ ] Admin forms for Session: date computations
+- [x] Admin forms for Session: date computations
+- [ ] Initial tests for payment features
+- [ ] Payment features full or near full coverage
+- [ ] Initial tests for email features
+- [ ] Email features full or near full coverage
+- [ ] Initial tests for user profile view and resource features
+- [ ] Resource and user profile view features full or near full coverage
+- [ ] Initial tests for metrics features
+- [ ] Metrics features full or near full coverage
+
+### Metrics
+
+- [ ] Update class progression - include repeated L2, and higher levels
+- [ ] Typical follow-through rates in expected progression (at each step)
+- [ ] Identify groups outside of expected class progression
+- [ ] Identify customers "dropping off" to focus to re-gain them
+- [ ] Identify influencer customers - who improves likelihood of others also joining
+- [ ] Exploration: Are there other statistical groupings?
 
 ### Admin class scheduling
 
