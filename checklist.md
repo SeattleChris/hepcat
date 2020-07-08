@@ -30,6 +30,11 @@
 |                    | **Milestone 3 Completion**                                                                  |
 | :heavy_check_mark: | Payment Processing: PayPal integration (sandbox)                                            |
 | :heavy_check_mark: | Deployment Setup: Get App & DB on AWS (probably using Elastic Beanstalk)                    |
+|                    | Deployment Setup: Get App & DB on PythonAnywhere (using MySQL)                              |
+| :heavy_check_mark: | Admin: Sessions pre-populate and error correct dates of the session                         |
+| :heavy_check_mark: | Tests: Add initial testing including coverage reports                                       |
+| :heavy_check_mark: | Tests: Checking date computations on Session model and Admin form                           |
+|                    | Tests: Coverage for most of the code                                                        |
 |                    | Email Features: send register confirmations, weekly class emails                            |
 |                    | Payment & Student Sign Up: PayPal live working, email confirmations, added to checkin       |
 |                    | User Views: more filled out - student Profile structure, visual & layout of ClassOffers     |
@@ -68,8 +73,34 @@
 - [s] Stretch Goal. Not for current feature plan.
 
 Current Status:
-2020-06-23 23:19:17
+2020-07-07 15:38:28
 <!-- Ctrl-Shift-I to generate timestamp -->
+
+### Tests
+
+- [x] Unit tests setup using django test
+- [x] Coverage tests setup with coverage
+- [ ] Initial tests of models
+- [x] Session date computation methods
+- [ ] Admin forms for Session: date computations
+
+### Admin class scheduling
+
+- [x] Session model has awareness of the next_session and prev_session
+- [x] Session model has callable to compute some default date values
+- [x] Session model has clean methods that can be optionally called to correct dates
+- [x] Session model is aware of its potential start_date and end_date, which is not simply just the key_day_date
+- [x] Session model end_date accounts for skipped weeks that only affect some class days and not others
+- [x] Session save method can call optionally call full_clean, but will auto-correct some date fields
+- [x] Admin form for Session will raise ValidationError if session dates overlap
+- [x] Admin form, after ValidationError, will repopulate the fields with values suggested from Session model clean
+- [ ] ClassOffer will be assigned dates according to their Session
+
+### Deployment on PythonAnywhere
+
+- [ ] Stop the AWS servers.
+- [x] Update code to use MySQL since it is preferred on this platform.
+- [ ] ??
 
 ### Deployment on AWS
 

@@ -1,13 +1,17 @@
 from django.test import TestCase, TransactionTestCase
+from django.db.models import CharField, TextField, URLField, DateField, TimeField
+from django.db.models import PositiveSmallIntegerField, SmallIntegerField
+from django.db.models.fields import NOT_PROVIDED
 # from .helper import SimpleModelTests
-from classwork.models import Location  # , Resource, SiteContent
-from classwork.models import Session  # , Subject, ClassOffer
-# from classwork.models import Profile, Payment, Registration, Notify
-# from users.models import UserHC
-from datetime import date, timedelta
+from classwork.models import Location, Resource, SiteContent, Subject, ClassOffer, Profile
+from classwork.models import Session, Payment, Registration, Notify
+from users.models import UserHC
+from datetime import date, time, timedelta
 # from django.utils import timezone
 # from django.core.urlresolvers import reverse
 # from location.forms import WhateverForm
+# from pprint import pprint
+# from django.contrib.auth import get_user_model
 
 INITIAL = {
     "name": "May_2020",
@@ -25,23 +29,140 @@ INITIAL = {
 
 class LocationModelTests(TestCase):
     Model = Location
-    defaults = {'name': f"test {(str(Model).lower())}"}
-    defaults['code'] = 'tst'
-    defaults['address'] = '123 Some St, #42'
-    defaults['zipcode'] = '98112'
+    repr_dict = {'Location': 'name', 'Link': 'map_google'}
+    str_list = {'name'}
+    defaults = {'name': "test model"}  # f"test {(str(Model).lower())}"
     skip_fields = ['date_added', 'date_modified']
+    skip_attrs = {'auto_created': True, 'is_relation': True}
+    instance = None
 
     def create_model(self, **kwargs):
         collected_kwargs = self.defaults.copy()
         collected_kwargs.update(kwargs)
+        # print(f"=================== {self.Model} create_model ============================")
+        # pprint(collected_kwargs)
+        if self.instance and 'user' in collected_kwargs:
+            del collected_kwargs['user']
+            # pprint(self.instance)
+            for key, value in collected_kwargs.items():
+                setattr(self.instance, key, value)
+            self.instance.save()
+            return self.instance
         return self.Model.objects.create(**collected_kwargs)
 
+    def repr_format(self, o):
+        string_list = [f"{k}: {getattr(o, v, '')}" if k else str(getattr(o, v, '')) for k, v in self.repr_dict.items()]
+        return '<' + ' | '.join(string_list) + ' >'
+
+    def str_format(self, obj):
+        string_list = [str(getattr(obj, field_name, '')) for field_name in self.str_list]
+        return ' - '.join(string_list)
+
+    def get_needed_fields(self):
+        skips = self.skip_fields
+        attrs = [key for key in self.skip_attrs]
+        all_fields = self.Model._meta.fields
+        fields = [f for f in all_fields if not any([f.name in skips, *[getattr(f, ea) for ea in attrs]])]
+        return fields
+
+    def get_field_info(self):
+        fields = self.get_needed_fields()
+        defaults = {}
+        for field in fields:
+            if field.default is not NOT_PROVIDED:
+                pass
+            elif field.choices:
+                defaults[field.name] = field.choices[0][0]
+            elif isinstance(field, (CharField, TextField)):
+                if field.name != 'name':
+                    defaults[field.name] = 'test chars'
+                    if field.max_length and field.max_length < len(defaults[field.name]):
+                        defaults[field.name] = defaults[field.name][:field.max_length]
+                if field.name == 'title':
+                    initial = self.defaults.pop('name', defaults[field.name])
+                    defaults[field.name] = self.defaults['title'] if 'title' in self.defaults else initial
+            elif isinstance(field, URLField):
+                defaults[field.name] = 'https://www.somewebsite.com/'
+            elif isinstance(field, (PositiveSmallIntegerField, SmallIntegerField)):
+                defaults[field.name] = 2
+            elif isinstance(field, DateField):
+                defaults[field.name] = date.today()
+            elif isinstance(field, TimeField):
+                defaults[field.name] = time(19, 0, 0)
+            else:
+                print(type(field))
+        return defaults
+
     def test_model_creation(self):
-        model = self.create_model()
+        fields = self.get_field_info()
+        model = self.create_model(**fields)
+        repr_value = self.repr_format(model)
+        str_value = self.str_format(model)
+
         self.assertIsInstance(model, self.Model)
-        self.assertEqual(model.__str__(), model.name)
-        for key, value in self.defaults.items():
-            self.assertAlmostEquals(value, getattr(model, key, None))
+        self.assertEqual(model.__str__(), str_value)
+        self.assertEqual(model.__repr__(), repr_value)
+
+
+class ResourceModelTests(LocationModelTests):
+    Model = Resource
+    repr_dict = {'Resource': 'content_type', '': 'avail'}
+    str_list = {'title'}
+
+
+class SiteContentModelTests(LocationModelTests):
+    Model = SiteContent
+    repr_dict = {'SiteContent': 'name'}
+    str_list = {'name'}
+
+
+class SubjectModelTests(LocationModelTests):
+    Model = Subject
+    repr_dict = {'Subject': 'title', 'Level': 'level', 'Version': 'version'}
+    str_list = {'_str_slug'}
+    # defaults = {'name': "test model"}
+
+
+class ClassOfferModelTests(LocationModelTests):
+    Model = ClassOffer
+    repr_dict = {'Class Id': 'id', 'Subject': 'subject', 'Session': 'session'}
+    str_list = {'subject', 'session'}
+    defaults = {}
+
+
+class PaymentModelTests(LocationModelTests):
+    Model = Payment
+    repr_dict = {'Payment': '_payment_description'}
+    str_list = {'_payment_description'}
+    defaults = {}
+
+
+class RegistrationModelTests(LocationModelTests):
+    Model = Registration
+    repr_dict = {'Registration': 'classoffer', 'User': '_get_full_name', 'Owed': '_pay_report'}
+    str_list = {'_pay_report'}
+    defaults = {}
+
+
+class NotifyModelTests(TestCase):
+    Model = Notify
+    repr_dict = {'Notify': 'name'}
+    str_list = {}
+
+
+class ProfileModelTests(LocationModelTests):
+    Model = Profile
+    repr_dict = {'Profile': '_get_full_name', 'Username': 'username'}
+    str_list = {'_get_full_name'}
+    defaults = {'user': ''}  # getattr(User.objects.first(), 'id', None)
+
+    def setUp(self):
+        print("======================= Profile tests setUp ===============================")
+        user = UserHC.objects.create_user(email='fake@site.com', password='1234', first_name='fa', last_name='fake')
+        # pprint(user)
+        # print('------------------------------------------------')
+        # pprint(user.profile)
+        self.instance = user.profile
 
 
 class SessionCoverageTests(TransactionTestCase):
