@@ -103,9 +103,9 @@ DATABASES = {
         }
     }
 }
-# if os.environ.get('DB_TYPE') == 'mysql':
-#     DATABASES['default']['OPTIONS'] = {'charset': 'utf8mb4'}
-# MAX_INDEX_CHARACTER_SIZE = 191
+if os.environ.get('DB_TYPE') == 'mysql':
+    DATABASES['default']['OPTIONS'] = {'charset': 'utf8mb4'}
+    MAX_INDEX_CHARACTER_SIZE = 191
 
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators

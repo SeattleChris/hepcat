@@ -352,7 +352,7 @@ class Session(models.Model):
         if field not in allowed_fields:
             raise ValueError(f"Not a valid field parameter: {field} ")
         now = date.today()
-        final_session = cls.last_session(since=now)
+        final_session = cls.last_session()
         if not final_session:
             new_date = None
         elif field == 'key_day_date':
