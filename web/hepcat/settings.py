@@ -22,7 +22,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', None)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = strtobool(os.environ.get('DEBUG', 'False'))
 # Update LIVE_ALLOWED_HOSTS in ENV settings if adding another environment.
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS' if LOCAL else 'LIVE_ALLOWED_HOSTS', '').split()
+ALLOWED_HOSTS = os.environ.get('LOCAL_ALLOWED_HOSTS' if LOCAL else 'LIVE_ALLOWED_HOSTS', '').split()
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -46,7 +46,6 @@ INSTALLED_APPS = [
     'classwork',  # CUSTOM: App name
     'users',  # CUSTOM: App name
 ]
-
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -72,9 +71,8 @@ TEMPLATES = [
         },
     },
 ]
-WSGI_APPLICATION = 'hepcat.wsgi.application'
-
-# Database https://docs.djangoproject.com/en/2.1/ref/settings/#databases
+WSGI_APPLICATION = 'hepcat.wsgi.application' if LOCAL else os.environ.get('LIVE_WSGI_FILE', 'hepcat.wsgi.application')
+# Database https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 # if 'RDS_HOSTNAME' in os.environ:
 #     DATABASES = {
 #         'default': {
@@ -105,9 +103,9 @@ DATABASES = {
         }
     }
 }
-# if os.environ.get('DB_TYPE') == 'mysql':
-#     DATABASES['default']['OPTIONS'] = {'charset': 'utf8mb4'}
-# MAX_INDEX_CHARACTER_SIZE = 191
+if os.environ.get('DB_TYPE') == 'mysql':
+    DATABASES['default']['OPTIONS'] = {'charset': 'utf8mb4'}
+    MAX_INDEX_CHARACTER_SIZE = 191
 
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators

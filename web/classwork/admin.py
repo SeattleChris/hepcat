@@ -149,7 +149,7 @@ class SessiontAdmin(admin.ModelAdmin):
     """ Admin manage of Session models. New Sessions will populate initial values based on last Session. """
     model = Session
     form = AdminSessionForm
-    list_display = ('name', 'start_day', 'end_day', 'publish_day', 'expire_day')
+    list_display = ('name', 'start_day', 'end_day', 'skips', 'breaks', 'publish_day', 'expire_day')
     ordering = ('key_day_date',)
     fields = ('name', ('key_day_date', 'max_day_shift'), 'num_weeks',
               ('skip_weeks', 'flip_last_day'), 'break_weeks', ('publish_date', 'expire_date'))
@@ -163,8 +163,12 @@ class SessiontAdmin(admin.ModelAdmin):
     def end_day(self, obj): return self.date_with_day(obj, field='end_date')
     def publish_day(self, obj): return self.date_with_day(obj, field='publish_date')
     def expire_day(self, obj): return self.date_with_day(obj, field='expire_date')
+    def skips(self, obj): return getattr(obj, 'skip_weeks', None)
+    def breaks(self, obj): return getattr(obj, 'break_weeks', None)
     publish_day.admin_order_field = 'publish_date'
     expire_day.admin_order_field = 'expire_date'
+    skips.short_description = 'skips'
+    breaks.short_description = 'breaks'
 
 
 class StudentClassInline(admin.TabularInline):
