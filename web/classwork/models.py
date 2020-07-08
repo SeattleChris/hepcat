@@ -421,7 +421,7 @@ class Session(models.Model):
         return super().clean()
 
     def clean_fields(self, exclude=None):
-        print("================= Session.clean_fields was called ======================")
+        # print("================= Session.clean_fields was called ======================")
         fix_callables = {'key_day_date', 'publish_date'}
         fix_callables = fix_callables - set(exclude) if exclude else fix_callables
         for field_to_clean in fix_callables:
@@ -592,6 +592,8 @@ class ClassOffer(models.Model):
         print(level_dict.values())
         higher = 100 + max(level_dict.values())
         num = 0
+        if self.subject is None:
+            return higher
         try:
             num = level_dict.get(getattr(self.subject, 'level', 'Other'))  # 'Other'
         except KeyError:
@@ -680,6 +682,7 @@ class Profile(models.Model):
             return True
         return False
 
+    @property
     def username(self):
         return self.user.username
 
@@ -694,7 +697,7 @@ class Profile(models.Model):
         return self._get_full_name
 
     def __repr__(self):
-        return f"<Profile id: {self.id} | User id: {self.user.id} | Name: {self._get_full_name} >"
+        return f"<Profile: {self._get_full_name} | Username: {self.username} >"
 
     # @property
     # def checkin_list(self):

@@ -5,14 +5,13 @@ from django.db.models.fields import NOT_PROVIDED
 # from .helper import SimpleModelTests
 from classwork.models import Location, Resource, SiteContent, Subject, ClassOffer, Profile
 from classwork.models import Session  # , Payment, Registration, Notify
-# from users.models import UserHC
+from users.models import UserHC
 from datetime import date, time, timedelta
 # from django.utils import timezone
 # from django.core.urlresolvers import reverse
 # from location.forms import WhateverForm
-from pprint import pprint
-from django.contrib.auth import get_user_model
-User = get_user_model()
+# from pprint import pprint
+# from django.contrib.auth import get_user_model
 
 INITIAL = {
     "name": "May_2020",
@@ -35,10 +34,20 @@ class LocationModelTests(TestCase):
     defaults = {'name': "test model"}  # f"test {(str(Model).lower())}"
     skip_fields = ['date_added', 'date_modified']
     skip_attrs = {'auto_created': True, 'is_relation': True}
+    instance = None
 
     def create_model(self, **kwargs):
         collected_kwargs = self.defaults.copy()
         collected_kwargs.update(kwargs)
+        # print(f"=================== {self.Model} create_model ============================")
+        # pprint(collected_kwargs)
+        if self.instance and 'user' in collected_kwargs:
+            del collected_kwargs['user']
+            # pprint(self.instance)
+            for key, value in collected_kwargs.items():
+                setattr(self.instance, key, value)
+            self.instance.save()
+            return self.instance
         return self.Model.objects.create(**collected_kwargs)
 
     def repr_format(self, o):
@@ -58,13 +67,8 @@ class LocationModelTests(TestCase):
 
     def get_field_info(self):
         fields = self.get_needed_fields()
-        print(f'================================ {self.Model} get_field_info ============================')
         defaults = {}
         for field in fields:
-            # print(f"------------- {field.name} -----------------")
-            # pprint(dir(field))
-            # pprint(field.choices)
-            # pprint(field.max_length)
             if field.default is not NOT_PROVIDED:
                 pass
             elif field.choices:
@@ -87,8 +91,6 @@ class LocationModelTests(TestCase):
                 defaults[field.name] = time(19, 0, 0)
             else:
                 print(type(field))
-        pprint(defaults)
-        print('----------------------------------------')
         return defaults
 
     def test_model_creation(self):
@@ -119,6 +121,28 @@ class SubjectModelTests(LocationModelTests):
     repr_dict = {'Subject': 'title', 'Level': 'level', 'Version': 'version'}
     str_list = {'_str_slug'}
     # defaults = {'name': "test model"}
+
+
+class ClassOfferModelTests(LocationModelTests):
+    Model = ClassOffer
+    repr_dict = {'Class Id': 'id', 'Subject': 'subject', 'Session': 'session'}
+    str_list = {'subject', 'session'}
+    defaults = {}
+
+
+class ProfileModelTests(LocationModelTests):
+    Model = Profile
+    repr_dict = {'Profile': '_get_full_name', 'Username': 'username'}
+    str_list = {'_get_full_name'}
+    defaults = {'user': ''}  # getattr(User.objects.first(), 'id', None)
+
+    def setUp(self):
+        print("======================= Profile tests setUp ===============================")
+        user = UserHC.objects.create_user(email='fake@site.com', password='1234', first_name='fa', last_name='fake')
+        # pprint(user)
+        # print('------------------------------------------------')
+        # pprint(user.profile)
+        self.instance = user.profile
 
 
 class SessionCoverageTests(TransactionTestCase):
