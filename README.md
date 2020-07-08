@@ -135,19 +135,27 @@ This is a specific subject, offered during a specific session. It includes infor
   * Create other fixtures as needed and add them to the fixtures array in the appropriate tests class
 * Move to top repo directory (if in '/web', then `cd ..`). Confirm tests work:
   * `./web/manage.py test`
-* Run test coverage setup:
-  * If using Pipenv for virtual environment.
-    * `coverage run --omit='*/virtualenvs/*' web/manage.py test -v 2`
-  * Or if your virtual environment setup a `venv` directory:
-    * `coverage run --omit='*/venv/*' web/manage.py test -v 2`
-  * View coverage report:
-    * `coverage report`
-    * `coverage html`
-  * Then view in browser at 'htmlcov/index.html'.
-    * `browse htmlcov/index.html`
-    * `chrome htmlcov/index.html`
+* Deployed on python anywhere:
+  * Commands for git are available, so git clone the repo, then move into the top directory of the repo.
+  * Add dotenv functionality to the wsgi.py file as described below (after bullet list)
+  * Update the same wsgi.py file for settings file: `os.environ['DJANGO_SETTINGS_MODULE'] = 'hepcat.settings'`
+  * Use virtualenv from the root directory of the repo:
+    * create for the first time: `mkvirtualenv myvirtualenv --python=/usr/bin/python3.7`
+    * confirm python is in myvirtualenv: `which python`
+    * stop env: `deactivate`
+    * restart env: `workon myvirtualenv`
+    * install packages: `pip install -r requirements.txt`
+    * use env settings: `echo 'set -a; source /home/SeattleChris/hepcat/.env; set +a' >> /home/SeattleChris/.virtualenvs/myvirtualenv/bin/postactivate`
 * ... More to be added later ...
 
+Add the following to [path-to-file]/[username]_pythonanywhere_com_wsgi.py
+
+```Python
+import os
+from dotenv import load_dotenv
+project_folder = os.path.expanduser('~/hepcat')  # adjust as appropriate
+load_dotenv(os.path.join(project_folder, '.env'))
+```
 <!-- **Alternative Setup Using Docker** -->
 
 Each organization installing this app while have some unique settings. Some of these depend on the deployment and development environments, and some of these depend on the business/organization structure. While some of these organization structure settings are created as an organization admin after the app is installed, some are handled elsewhere, most notably in the `.env` file (which should never be published or shared publicly). The following has some `.env` file settings explained:

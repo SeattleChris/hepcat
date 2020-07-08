@@ -17,6 +17,7 @@ boto3 = "*"
 django-ses = "*"
 mysqlclient = "*"
 coverage = "*"
+python-dotenv = "*"
 
 [dev-packages]
 django-sass-processor = "*"

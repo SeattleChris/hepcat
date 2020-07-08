@@ -34,40 +34,43 @@
 | :heavy_check_mark: | Admin: Sessions pre-populate and error correct dates of the session                         |
 | :heavy_check_mark: | Tests: Add initial testing including coverage reports                                       |
 | :heavy_check_mark: | Tests: Checking date computations on Session model and Admin form                           |
-|                    | Tests: Models for classwork, users, and associated data                                     |
 |                    | User Views: About Us - show profile info for only teachers and staff, plus general business |
 |                    | User Views: Contact Us (including contact form), Info - general site resources, sub-pages   |
 |                    | User Views: General site clean up before first launch                                       |
-|                    | Deploy Version 1.0: List classes, register, payment, manage resources, user onboarding      |
+|                    | User Views: Social Justice Call                                                             |
+|                    | **Soft Launch**                                                                             |
 |                    | **Milestone 4 Completion**                                                                  |
+|                    | Tests: Models for classwork, users, and associated data                                     |
 |                    | Tests: Views for classwork                                                                  |
 |                    | Tests: Admin functionality and views                                                        |
 |                    | Tests: User resources and profile view                                                      |
 |                    | User Views: more filled out - student Profile structure, visual & layout of ClassOffers     |
 |                    | Payment & Student Sign Up: PayPal live working, email confirmations, added to checkin       |
 |                    | Email Features: send register confirmations, weekly class emails                            |
+|                    | Initial Social Media connections on website: FB business page, FB group page                |
+|                    | Deploy Version 1.0: List classes, register, payment, manage resources, user onboarding      |
 |                    | **Launch Version 1.0**                                                                      |
 |                    | **Upcoming Features**                                                                       |
-|                    | Tests: Email features                                                                       |
-|                    | Tests: Payment features                                                                     |
-|                    | Tests: Metrics features                                                                     |
-|                    | Tests: Coverage for most of the code                                                        |
-|                    | Interest tracking: update Profile model, forms for students, prompts sent to users.         |
-|                    | Social Media connections on website: FB business page, FB group page, Twitter, etc.         |
-|                    | Payment Processing: Square integration - on-site (in person) payments                       |
-|                    | Payment Processing: Stripe integration                                                      |
-|                    | User onboarding: integrate user accounts with Facebook/Google/etc login                     |
 |                    | Email Features: Manage general customer emailing list                                       |
+|                    | User onboarding: integrate user accounts with Facebook/Google/etc login                     |
 |                    | Metrics: Update class progression - include repeated L2, and higher levels                  |
 |                    | Metrics: Typical follow-through rates in expected progression (at each step)                |
 |                    | Email Features: Better targeted messaging (depending on student's classoffer history)       |
+|                    | Tests: Email features                                                                       |
+|                    | Tests: Payment features                                                                     |
+|                    | Social Media connections on website: FB business page, FB group page, Twitter, etc.         |
 |                    | Metrics: Identify groups outside of expected class progression                              |
 |                    | Metrics: Identify customers "dropping off" to focus to re-gain them                         |
 |                    | Email Features: Better targeted messaging (depending on other metrics analysis)             |
+|                    | Interest tracking: update Profile model, forms for students, prompts sent to users.         |
+|                    | Payment Processing: Square integration - on-site (in person) payments                       |
+|                    | Payment Processing: Stripe integration                                                      |
 |                    | Email Features: improved weekly class emails, new resources available on profile, etc.      |
 |                    | Email Features: Manage "contact us" messaging history                                       |
 |                    | Metrics: Identify influencer customers - who improves likelihood of others also joining     |
 |                    | Metrics Exploration: Are there other statistical groupings?                                 |
+|                    | Tests: Metrics features                                                                     |
+|                    | Tests: Coverage for most of the code                                                        |
 
 ## Checklist
 
@@ -128,8 +131,9 @@ Current Status:
 
 ### Deployment on PythonAnywhere
 
-- [ ] Stop the AWS servers.
+- [?] Stop the AWS servers.
 - [x] Update code to use MySQL since it is preferred on this platform.
+- [ ] Upload ver 0.4.0
 - [ ] ??
 
 ### Deployment on AWS
