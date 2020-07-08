@@ -25,10 +25,12 @@ INITIAL = {
 
 class LocationModelTests(TestCase):
     Model = Location
-    defaults = {'name': f"test {(str(Model).lower())}"}
+    defaults = {'name': "test"}  # f"test {(str(Model).lower())}"
     defaults['code'] = 'tst'
     defaults['address'] = '123 Some St, #42'
     defaults['zipcode'] = '98112'
+    repr_dict = {'Location': 'name', 'Link': 'map_google'}
+    str_dict = {'': 'name'}
     skip_fields = ['date_added', 'date_modified']
 
     def create_model(self, **kwargs):
@@ -36,10 +38,28 @@ class LocationModelTests(TestCase):
         collected_kwargs.update(kwargs)
         return self.Model.objects.create(**collected_kwargs)
 
+    def repr_format(self, obj):
+        string_list = [key + ": " + getattr(obj, value, '') for key, value in self.repr_dict.items()]
+        print('---------------------------------------')
+        print(string_list)
+        result = '<' + ' | '.join(string_list) + ' >'
+        # print(result)
+        return result
+
+    def str_format(self, obj):
+        string_list = [f"{k}: {getattr(obj, v, '')}" if k else getattr(obj, v, '') for k, v in self.str_dict.items()]
+        result = ' - '.join(string_list)
+        print(result)
+        return result
+
     def test_model_creation(self):
         model = self.create_model()
+        repr_value = self.repr_format(model)
+        str_value = self.str_format(model)
+
         self.assertIsInstance(model, self.Model)
-        self.assertEqual(model.__str__(), model.name)
+        self.assertEqual(model.__str__(), str_value)
+        self.assertEqual(model.__repr__(), repr_value)
         for key, value in self.defaults.items():
             self.assertAlmostEquals(value, getattr(model, key, None))
 
