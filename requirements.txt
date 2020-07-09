@@ -1,34 +1,34 @@
--i https://pypi.org/simple
 asgiref==3.2.10
-boto3==1.14.13
-botocore==1.17.13
-braintree==4.1.0
+boto3==1.14.19
+botocore==1.17.19
+braintree==4.2.0
 certifi==2020.6.20
 cffi==1.14.0
 chardet==3.0.4
 confusable-homoglyphs==3.2.0
-coverage==5.1
+coverage==5.2
 cryptography==2.9.2
+Django==3.0.8
 django-appconf==1.0.4
 django-compressor==2.4
 django-payments==0.13.0
 django-registration==3.1
 django-ses==1.0.1
 django-storages==1.9.1
-django==3.0.7
 docutils==0.15.2
 future==0.18.2
 idna==2.10
 jmespath==0.10.0
-mysqlclient==1.4.6
-pillow==7.1.2
+mysqlclient==2.0.1
+Pillow==7.2.0
 psycopg2-binary==2.8.5
 pycparser==2.20
-pyjwt==1.7.1
+PyJWT==1.7.1
 python-dateutil==2.8.1
+python-dotenv==0.14.0
 pytz==2020.1
 rcssmin==1.0.6
-requests==2.24.0 ; python_version >= '3.0'
+requests==2.24.0
 rjsmin==1.1.0
 s3transfer==0.3.3
 six==1.15.0
@@ -36,5 +36,5 @@ sorl-thumbnail==12.6.3
 sqlparse==0.3.1
 stripe==2.48.0
 suds-jurko==0.6
-urllib3==1.25.9 ; python_version != '3.4'
+urllib3==1.25.9
 xmltodict==0.12.0
