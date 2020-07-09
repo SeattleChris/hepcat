@@ -15,16 +15,6 @@ INITIAL = {
 # Create your tests here.
 
 
-# class SimpleModelTests:
-#     Model = None
-#     repr_dict = {'ModelName': 'name'}
-#     str_list = {'name'}
-#     defaults = {'name': "test model"}  # f"test {(str(Model).lower())}"
-#     skip_fields = ['date_added', 'date_modified']
-#     skip_attrs = {'auto_created': True, 'is_relation': True}
-#     instance = None
-
-
 class LocationModelTests(SimpleModelTests, TestCase):
     Model = Location
     repr_dict = {'Location': 'name', 'Link': 'map_google'}
@@ -77,7 +67,6 @@ class ProfileModelTests(SimpleModelTests, TestCase):
     defaults = {'user': ''}  # triggers finding User model and associated Profile instance
 
     def setUp(self):
-        print("======================= Profile tests setUp ===============================")
         user = UserHC.objects.create_user(email='fake@site.com', password='1234', first_name='fa', last_name='fake')
         self.instance = user.profile
 

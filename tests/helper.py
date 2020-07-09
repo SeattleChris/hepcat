@@ -16,11 +16,8 @@ class SimpleModelTests:
     def create_model(self, **kwargs):
         collected_kwargs = self.defaults.copy()
         collected_kwargs.update(kwargs)
-        # print(f"=================== {self.Model} create_model ============================")
-        # pprint(collected_kwargs)
         if self.instance and 'user' in collected_kwargs:
             del collected_kwargs['user']
-            # pprint(self.instance)
             for key, value in collected_kwargs.items():
                 setattr(self.instance, key, value)
             self.instance.save()

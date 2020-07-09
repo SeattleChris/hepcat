@@ -55,7 +55,7 @@ class UserManagerHC(UserManager):
             Returns a user instance created with the inherited self._create_user method if successful.
         """
         from django.db.utils import IntegrityError
-        print('===== UserManagerHC.set_user was called ========')
+        # print('===== UserManagerHC.set_user was called ========')
         user, message = None, ''
         if not email:
             message += "An email address is preferred to ensure confirmation, "
@@ -89,7 +89,7 @@ class UserManagerHC(UserManager):
         return user
 
     def create_user(self, username=None, email=None, password=None, **extra_fields):
-        print('================== UserManagerHC.create_user ========================')
+        # print('================== UserManagerHC.create_user ========================')
         extra_fields['is_superuser'] = False
         if extra_fields.get('is_teacher') is True or extra_fields.get('is_admin') is True:
             extra_fields['is_staff'] = True
@@ -100,7 +100,7 @@ class UserManagerHC(UserManager):
         return self.set_user(username, email, password, **extra_fields)
 
     def create_superuser(self, username, email, password, **extra_fields):
-        print('================== UserManagerHC.create_superuser ========================')
+        # print('================== UserManagerHC.create_superuser ========================')
         if not extra_fields.setdefault('is_staff', True):
             raise ValueError(_('Superuser must have is_staff=True.'))
         if not extra_fields.setdefault('is_superuser', True):
@@ -140,13 +140,13 @@ class UserManagerHC(UserManager):
         first_name = kwargs.get('first_name')
         last_name = kwargs.get('last_name')
         # is_student = kwargs.get('is_student')
-        print("======== UserHC.objects.find_or_create_by_name =====")
+        # print("======== UserHC.objects.find_or_create_by_name =====")
         if not possible_users:
             # assume we want to query all users
             possible_users = UserHC.objects.all()
         if not isinstance(possible_users, models.QuerySet):
             print('possible_users is not a QuerySet')
-        print(possible_users)
+        # print(possible_users)
         if len(possible_users) == 0:
             possible_users = None
         # TODO: Is this how we want to find matching or near matches?
@@ -193,7 +193,7 @@ class UserHC(AbstractUser):
         swappable = 'AUTH_USER_MODEL'
 
     def __str__(self):
-        name = self.get_full_name() or "Name Not Found"
+        name = self.get_full_name() or _("Name Not Found")
         return name
 
     def make_username(self):
@@ -201,8 +201,8 @@ class UserHC(AbstractUser):
             info. We are using casefold() instead of lower() since it is
             better for some international character sets.
         """
-        print('================================')
-        print('UserHC method make_username was called')
+        # print('================================')
+        # print('UserHC method make_username was called')
         if self.uses_email_username is True:
             # TODO: How to check if their email is already taken as a username?
             return self.email.casefold()
