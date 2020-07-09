@@ -1,0 +1,22 @@
+branch-defaults:
+  aws:
+    environment: update-me
+  email:
+    environment: update-me
+    group_suffix: null
+  rollback-static:
+    environment: update-me
+global:
+  application_name: update-me
+  branch: null
+  default_ec2_keyname: update-me
+  default_platform: Python 3.7
+  default_region: update-aws-region-name
+  include_git_submodules: true
+  instance_profile: null
+  platform_name: null
+  platform_version: null
+  profile: null
+  repository: null
+  sc: git
+  workspace_type: Application

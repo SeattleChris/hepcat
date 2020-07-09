@@ -119,6 +119,6 @@ venv.bak/
 notes.md
 
 # Elastic Beanstalk Files
-.elasticbeanstalk/*
+.elasticbeanstalk/*.yml
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml

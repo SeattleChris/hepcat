@@ -135,27 +135,10 @@ This is a specific subject, offered during a specific session. It includes infor
   * Create other fixtures as needed and add them to the fixtures array in the appropriate tests class
 * Move to top repo directory (if in '/web', then `cd ..`). Confirm tests work:
   * `./web/manage.py test`
-* Deployed on python anywhere:
-  * Commands for git are available, so git clone the repo, then move into the top directory of the repo.
-  * Add dotenv functionality to the wsgi.py file as described below (after bullet list)
-  * Update the same wsgi.py file for settings file: `os.environ['DJANGO_SETTINGS_MODULE'] = 'hepcat.settings'`
-  * Use virtualenv from the root directory of the repo:
-    * create for the first time: `mkvirtualenv myvirtualenv --python=/usr/bin/python3.7`
-    * confirm python is in myvirtualenv: `which python`
-    * stop env: `deactivate`
-    * restart env: `workon myvirtualenv`
-    * install packages: `pip install -r requirements.txt`
-    * use env settings: `echo 'set -a; source /home/SeattleChris/hepcat/.env; set +a' >> /home/SeattleChris/.virtualenvs/myvirtualenv/bin/postactivate`
+* See [Tests] section below for further testing details and development.
+* See [Deployment] section below for deploying on Python Anywhere, AWS, etc.
 * ... More to be added later ...
 
-Add the following to [path-to-file]/[username]_pythonanywhere_com_wsgi.py
-
-```Python
-import os
-from dotenv import load_dotenv
-project_folder = os.path.expanduser('~/hepcat')  # adjust as appropriate
-load_dotenv(os.path.join(project_folder, '.env'))
-```
 <!-- **Alternative Setup Using Docker** -->
 
 Each organization installing this app while have some unique settings. Some of these depend on the deployment and development environments, and some of these depend on the business/organization structure. While some of these organization structure settings are created as an organization admin after the app is installed, some are handled elsewhere, most notably in the `.env` file (which should never be published or shared publicly). The following has some `.env` file settings explained:
@@ -182,6 +165,92 @@ Each organization installing this app while have some unique settings. Some of t
 * DEFAULT_CLASS_MINUTES: The typical length of time of a single class day.
 
 *Note: The last 6 are all optional pre-populated values, overwritable per product. For DEFAULT_CLASS_PRICE, DEFAULT_PRE_DISCOUNT, MULTI_DISCOUNT - whole numbers should have '.0' at the end. The last three are expected to be integers.
+
+## Deployment
+
+It should be possible to install this app on a variety of potential deployment locations, such as Google Cloud Platform, Amazon Web Service (AWS), Python Anywhere, Heroku, Digital Ocean, and others.
+
+### Amazon Web Service - AWS
+
+This app has been successfully installed on [Amazon Web Service (AWS)](https://aws.amazon.com/), using Elastic Beanstalk (EBS). The repo has an appropriate `.ebignore` file. Environment configuration templates can be found in the `.elasticbeanstalk/` to make `config.yml` and `01_env.config` (respectively in each folder) files. These new files should never be added to the repo. The `.ebextensions` directory also has AWS EBS setup and management procedures used on AWS.
+
+While AWS is an industry standard, it may not be the best choice for organizations that expect low or even medium usage.
+
+### Python Anywhere
+
+There are a low-cost and free tier options on [PythonAnywhere](https://www.pythonanywhere.com/). This may be appropriate for low, and possibly medium, volume users and organizations. The following detailed list is probably best if followed in the order listed.
+
+* Create a user account on [PythonAnywhere](https://www.pythonanywhere.com/)
+  * You can start with a free tier account and upgrade later if desired.
+* Open a console from PythonAnywhere Dashboard:
+  * Login to [Python Anywhere](https://www.pythonanywhere.com/)
+  * New: Under Consoles, under 'New console:' click 'More...'. Then click 'Bash'.
+  * Or use existing bash console if you have created one on here before.
+  * You will be able to use the command line interface (CLI) in your browser.
+* In console, git commands are available: clone the repo & move into the top repo directory.
+* Use virtualenv from the root directory of the repo:
+  * Open a console, move to the root directory of the repo (probably 'hepcat')
+  * create for the first time: `mkvirtualenv myvirtualenv --python=/usr/bin/python3.7`
+  * confirm python is in myvirtualenv: `which python`
+  * stop env: `deactivate`
+  * restart env: `workon myvirtualenv`
+  * install packages: `pip install -r requirements.txt`
+* Upload env file (can not be stored in repo):
+  * On your local computer, update the '.env' file with the appropriate settings such as:
+    * LIVE_ALLOWED_HOSTS, LIVE_WSGI_FILE, other LIVE_* variables, DB_* variables, etc.
+  * In the PythonAnywhere Dashboard, under Files, click 'Browse files'
+  * Under Files, click 'Upload a file', then select the '.env' file.
+* Have the virtual environment use the '.env' file settings.
+  * Open a console, and start the virtual env.
+  * The following command should be modified with the appropriate user and virtualenv.
+  * `echo 'set -a; source /home/<user>/hepcat/.env; set +a' >> /home/<user>/.virtualenvs/myvirtualenv/bin/postactivate`
+  * Confirm env settings are used:
+    * stop and restart env.
+    * Type `printenv` and confirm some env values as expected from the file.
+* Setup Web App on Python Anywhere
+  * Login [Python Anywhere](https://www.pythonanywhere.com/) and click 'Web' tab on the Dashboard.
+  * Choose 'Manual Configuration' for the desired python version (eg Python 3.7)
+  * If needed, click 'Reload ...' button, and 'Run until 3 months from today'.
+  * Update settings in 'Code:' Section.
+    * Source code: `/home/<user>/hepcat/web` where 'manage.py' is located.
+    * Working Directory: `/home/<user>`
+  * Click WSGI file to edit: '[path-to-file]/[username]_pythonanywhere_com_wsgi.py'
+    * Use the code below (after the bullet list) to:
+      * Add path to 'manage.py' directory, reference settings file, and add dotenv functionality.
+      * After saving the file, click the 'Reload ...' button at the top.
+  * Update Virtualenv path under 'Virtualenv:' Section (adjust as needed):
+    * `/home/<user>/.virtualenvs/<project_env_name>`
+    * Click the 'Reload ...' button at the top to use this setting.
+  * Optional: Enable 'Force HTTPS', then Reload (if wanted, perhaps change later).
+  * Database Setup
+    * Open a bash console and navigate to the directory with the 'manage.py' file.
+    * Confirm the file has execute privileges (it probably does).
+    * `./manage.py migrate`
+
+Include the following code in [path-to-file]/[username]_pythonanywhere_com_wsgi.py
+
+```Python
+# +++++++++++ DJANGO +++++++++++
+# To use your own Django app use code like this:
+import os
+import sys
+from django.core.wsgi import get_wsgi_application
+from dotenv import load_dotenv
+
+project_folder = os.path.expanduser('~/hepcat')  # adjust as appropriate
+load_dotenv(os.path.join(project_folder, '.env'))
+
+# add your project directory to the sys.path
+project_home = '/home/SeattleChris/hepcat/web'
+if project_home not in sys.path:
+    sys.path.insert(0, project_home)
+
+# set environment variable to tell django where your settings.py is
+os.environ['DJANGO_SETTINGS_MODULE'] = 'hepcat.settings'
+
+# serve django via WSGI
+application = get_wsgi_application()
+```
 
 ## Architecture
 
