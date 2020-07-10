@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Max  # , Min, Avg, Sum
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
@@ -44,17 +45,15 @@ class SiteContent(models.Model):
 
 
 class Location(models.Model):
-    """ ClassOffers may be at various locations.
-        This stores information about each location.
-    """
+    """ This stores information about each location where ClassOffers may be held. """
     # id = auto-created
     name = models.CharField(max_length=120)
     code = models.CharField(max_length=120)
-    address = models.CharField(max_length=255)
-    city = models.CharField(max_length=120, default='Seattle')
-    state = models.CharField(max_length=63, default='WA')
+    address = models.CharField(max_length=191)
+    city = models.CharField(max_length=120, default=settings.DEFAULT_CITY)
+    state = models.CharField(max_length=63, default=settings.DEFAULT_COUNTRY_AREA_STATE)
     zipcode = models.CharField(max_length=15)
-    map_google = models.URLField(verbose_name="Google Maps Link")
+    map_link = models.URLField(verbose_name=_("Maps Link"))
 
     date_added = models.DateField(auto_now_add=True)
     date_modified = models.DateField(auto_now=True)
@@ -67,11 +66,10 @@ class Location(models.Model):
 
 
 class Resource(models.Model):
-    """ Subjects and ClassOffers can have various resources released to the
-        students at different times while attending a ClassOffer or after
-        they have completed the session.
-        Subjects and ClassOffers can have various resources available to the
-        instructors to aid them in class preperation and presentation.
+    """ Subjects and ClassOffers can have various resources released to the students at
+        different times while attending a ClassOffer or after they have completed the session.
+        Subjects and ClassOffers can have various resources available to the instructors
+        to aid them in class preperation and presentation.
     """
     # TODO: Make validation checks on new Resource instances
     # TODO: does it require an admin/teacher response before released?
@@ -119,8 +117,8 @@ class Resource(models.Model):
     expire = models.PositiveSmallIntegerField(default=0, help_text=_('Number of published weeks? (0 for always)'))
     imagepath = models.ImageField(upload_to='resource/', help_text=_('If an image, upload here'), blank=True)
     filepath = models.FileField(upload_to='resource/', help_text=_('If a file, upload here'), blank=True)
-    link = models.CharField(max_length=255, help_text=_('External or Internal links go here'), blank=True)
-    text = models.TextField(blank=True, help_text=_('Text chunk used in page or email publication'))
+    link = models.URLField(max_length=191, help_text=_('External or Internal links go here'), blank=True)
+    text = models.TextField(help_text=_('Text chunk used in page or email publication'), blank=True)
     title = models.CharField(max_length=60)
     description = models.TextField(blank=True)
 
@@ -160,29 +158,17 @@ class Resource(models.Model):
         return self.title
 
     def __repr__(self):
-        # relate = ''
-        # if self.related_type == 'Subject':
-        #     relate = f'Subject {self.subject}'
-        # elif self.related_type == 'ClassOffer':
-        #     relate = f'ClassOffer {self.classoffer}'
-        # elif self.related_type == 'Other':
-        #     relate = 'Other'
-        # else:
-        #     relate = 'Unknown'
-        # return f'<Resource: {relate} | {self.content_type} | {self.avail} >'
         return f'<Resource: {self.content_type} | {self.avail} >'
 
 
 class Subject(models.Model):
-    """ We are calling the general information for a potential dance class
-        offering a "Subject". For a give Subject, there may be different
-        instances of when it is offered, which will be in the Classes model.
+    """ A 'Subject' is the general information and teaching content intended to be covered. The details of what was
+        actually covered are part of a 'ClassOffer', which also includes details of when, where, etc it occurs.
     """
     LEVEL_CHOICES = (
         ('Beg', _('Beginning')),
         ('L2', _('Lindy 2')),
-        # Elsewhere our code expects the first 2 elements to be however we
-        # represent our Beginning and Level 2 class series
+        # These first two must represent the Beginning and Level 2 class series.
         ('L3', _('Lindy 3')),
         ('Spec', _('Special Focus')),
         ('WS', _('Workshop')),
@@ -216,7 +202,7 @@ class Subject(models.Model):
     description = models.TextField()
     # TODO: Do we want some ForeignKey references for some common Resources:
     # syllabus, teacher_plan, weekly emails and videos, etc.
-    image = models.URLField(blank=True)
+    image = models.URLField(max_length=191, blank=True)
     # TODO: Update to using ImageField. But what if we want existing image?
     # image = models.ImageField(upload_to=MEDIA_ROOT)
     full_price = models.DecimalField(max_digits=9, decimal_places=2, default=settings.DEFAULT_CLASS_PRICE)
@@ -331,8 +317,6 @@ class Session(models.Model):
         key_day = self.key_day_date
         key_day = key_day() if callable(key_day) else key_day
         key_day = key_day.isoformat() if isinstance(key_day, (date, dt)) else key_day
-        # print(f"self Key Day: {key_day} {type(key_day)} ")
-        # TODO: PROBABLY NOT: later = Session.objects.filter(key_day_date__date__gt=key_day)
         later = Session.objects.filter(key_day_date__gt=key_day)
         next_one_or_none = later.order_by('key_day_date').first()
         return next_one_or_none
@@ -347,7 +331,6 @@ class Session(models.Model):
         # TODO: Look into get_next_by_FOO() and get_previous_by_FOO(), they raise Model.DoesNotExist
         if since:
             # TODO: Check isinstance an appropriate datetime obj
-            # TODO: should following be: query = query.filter(key_day_date__date__lt=since)
             query = query.filter(key_day_date__lt=since)
         return query.order_by('-key_day_date').first()
 
@@ -368,9 +351,8 @@ class Session(models.Model):
                ((final_session.flip_last_day and not later) or (later and not final_session.flip_last_day)):
                 known_weeks -= 1  # One fewer skips since key day class did not have critical skip_weeks
             new_date = final_session.key_day_date + timedelta(days=7*known_weeks)
-            # print(f"Session.key_day_date default computed: {new_date} ")
         elif field == 'publish_date':
-            while final_session is not None and final_session.num_weeks < 4:
+            while final_session is not None and final_session.num_weeks < settings.SESSION_MINIMUM_WEEKS:
                 final_session = final_session.prev_session
             new_date = getattr(final_session, 'expire_date', None)
         # return new_date.isoformat() if isinstance(new_date, (date, dt)) else date.today().isoformat()
@@ -392,8 +374,8 @@ class Session(models.Model):
         early_day = key_day + timedelta(days=self.max_day_shift) if self.max_day_shift < 0 else key_day
         week = timedelta(days=7)
         while prev_sess and prev_sess.end_date >= early_day:
-            print(key_day)
-            print(prev_sess)
+            # print(key_day)
+            # print(prev_sess)
             # TODO: Check the logic and possible backup solutions
             if early_day < self.key_day_date and early_day + week > prev_sess.end_date:
                 self.max_day_shift = self.max_day_shift + 7  # Move the extra days come after the key day.
@@ -456,9 +438,8 @@ class Session(models.Model):
 
 
 class ClassOffer(models.Model):
-    """ Different classes can be offered at different times and scheduled
-        for later publication. Will pull from the following models:
-            Subject, Session, Profile (for teacher association), Location
+    """ Different classes can be offered at different times and scheduled for later publication.
+        Will pull from the following models: Subject, Session, Profile (for teacher association), Location
     """
     DOW_CHOICES = (
         (0, _('Monday')),
@@ -473,12 +454,12 @@ class ClassOffer(models.Model):
     # self.students exists as the students signed up for this ClassOffer
     subject = models.ForeignKey('Subject', on_delete=models.SET_NULL, null=True)
     session = models.ForeignKey('Session', on_delete=models.SET_NULL, null=True)
-    num_level = models.IntegerField(default=0, editable=False)
-    # TODO: Need a flag for Admin to approve for publishing each ClassOffer.
+    _num_level = models.IntegerField(default=0, editable=False)
+    manager_approved = models.BooleanField(default=settings.ASSUME_CLASS_APPROVE)
     location = models.ForeignKey('Location', on_delete=models.SET_NULL, null=True)
     # TODO: later on teachers will selected from users - teachers.
     teachers = models.CharField(max_length=125, default='Chris Chapman')
-    class_day = models.SmallIntegerField(choices=DOW_CHOICES, default=3)
+    class_day = models.SmallIntegerField(choices=DOW_CHOICES, default=settings.DEFAULT_KEY_DAY)
     start_time = models.TimeField()
     date_added = models.DateField(auto_now_add=True)
     date_modified = models.DateField(auto_now=True)
@@ -486,12 +467,12 @@ class ClassOffer(models.Model):
     @property
     def full_price(self):
         """ This is full, at-the-door, price """
-        return Decimal(getattr(self.subject, 'full_price', 65))
+        return Decimal(getattr(self.subject, 'full_price', settings.DEFAULT_CLASS_PRICE))
 
     @property
     def pre_discount(self):
         """ Discount given if they sign up and pay in advanced. """
-        return Decimal(getattr(self.subject, 'pre_pay_discount', 0))
+        return Decimal(getattr(self.subject, 'pre_pay_discount', settings.DEFAULT_PRE_DISCOUNT))
 
     @property
     def multi_discount(self):
@@ -503,9 +484,10 @@ class ClassOffer(models.Model):
 
     @property
     def pre_price(self):
-        """ This is the price if they pay in advance """
+        """ This is the price if they pay in advance. """
         return self.full_price - self.pre_discount if self.pre_discount > 0 else None
 
+    @property
     def day(self, short=False):
         """ Used for displaying the day of week for the class as a word.
             Returns plural form if the class has multiple weeks.
@@ -534,9 +516,7 @@ class ClassOffer(models.Model):
 
     @property
     def end_time(self):
-        """ For a given subject, the time duration is set. So now this
-            ClassOffer instance has set the start time, end time is knowable.
-        """
+        """ Computed based on the Subject.num_minutes and the current class start time. """
         start = dt.combine(self.start_date(), self.start_time)
         end = start + timedelta(minutes=self.subject.num_minutes)
         print(f"End: {end}")
@@ -544,9 +524,7 @@ class ClassOffer(models.Model):
         return end.time()
 
     def start_date(self, short=False):
-        """ Depends on class_day, Session dates, and possibly on
-            Session.max_day_shift being positive or negative.
-        """
+        """ Depends on class_day, Session dates, and possibly on Session.max_day_shift being positive or negative. """
         start = self.session.key_day_date
         dif = self.class_day - start.weekday()
         if dif == 0:
@@ -575,28 +553,36 @@ class ClassOffer(models.Model):
 
     def end_date(self, short=False):
         """ Returns the computed end date for this class offer. """
-        return self.start_date(short=short) + timedelta(days=7*self.subject.num_weeks)
+        return self.start_date(short=short) + timedelta(days=7*(self.subject.num_weeks - 1))
 
     @property
     def end_date_short(self):
         """ Same as end_date, but returns a shorter text in the string. """
         return self.end_date(short=True)
 
-    def set_num_level(self):
+    @property
+    def num_level(self):
         """ When we want a sortable level number. """
-        # TODO: Make this an automatic setter function, remove other code calling it manually.
+        return self._num_level
+
+    @num_level.setter
+    def set_num_level(self):
         level_dict = Subject.LEVEL_ORDER
         print('======= ClassOffer.set_num_level ========')
-        print(level_dict.values())
+        # print(level_dict.values())
         higher = 100 + max(level_dict.values())
         num = 0
         if self.subject is None:
             return higher
         try:
-            num = level_dict.get(getattr(self.subject, 'level', 'Other'))  # 'Other'
+            num = level_dict.get(getattr(self.subject, 'level', higher))  # 'Other'
         except KeyError:
             num = higher
         return num
+
+    def save(self, *args, **kwargs):
+        self.num_level = self.set_num_level()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f'{self.subject} - {self.session}'
@@ -604,16 +590,9 @@ class ClassOffer(models.Model):
     def __repr__(self):
         return f'<Class Id: {self.id} | Subject: {self.subject} | Session: {self.session} >'
 
-    def save(self, *args, **kwargs):
-        self.num_level = self.set_num_level()
-        super().save(*args, **kwargs)
-
 
 class Profile(models.Model):
-    """ Extending user model to have profile fields as appropriate as either a
-        student or a staff member.
-    """
-    # TODO: Do we want different Profile models for staff vs. students?
+    """ Extending user model to have profile fields as appropriate as either a student or a staff member. """
     # TODO: Allow users to modify their profile.
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True)
     bio = models.TextField(max_length=500, blank=True)
@@ -626,37 +605,34 @@ class Profile(models.Model):
     #                           null=True, blank=True, related_names='referred')
     date_added = models.DateField(auto_now_add=True)
     date_modified = models.DateField(auto_now=True)
-
-    # TODO: The following properties could be extracted further to allow the
-    # program admin user to set their own rules for number of versions needed
-    # and other version translation decisions.
+    # TODO: The following properties could be extracted further to allow the program admin user
+    # to set their own rules for number of versions needed and other version translation decisions.
 
     @property
     def highest_subject(self):
-        """ We will want to know what is the student's class level
-            which by default will be the highest class level they
-            have taken. We also want to be able to override this
-            from a teacher or admin input to deal with students
-            who have had instruction or progress elsewhere.
+        """ We will want to know what is the student's class level which by default will be the highest
+            class level they have taken. We also want to be able to override this from a teacher or
+            admin input to deal with students who have had instruction or progress elsewhere.
         """
         # Query all taken ClassOffers for this student
         # ClassOffer.num_level is the level for each of these, find the max.
         # Currently returns max, Do we want LEVEL_CHOICES name of this max?
-        have = [a.num_level for a in self.taken.all()]
-        return max(have) if len(have) > 0 else 0
+        # have = [a.num_level for a in self.taken.all()]
+        # return max(have) if len(have) > 0 else 0
+        return self.taken.all().aggregate(Max('num_level'))
 
     @property
     def taken_subjects(self):
-        """ Since all taken subjects are related through ClassOffer
-            We will query taken classes to report taken subjects
-        """
-        subjs = [c.subject for c in self.taken.all()]
-        # TODO: remove following print line once confirmed.
-        print(subjs)
-        return subjs
+        """ Since all taken subjects are related through ClassOffer, we check taken to see the subject names. """
+        # subjs = [c.subject for c in self.taken.all()]
+        # # TODO: remove following print line once confirmed.
+        # print(subjs)
+        # return subjs
+        return [c.subject for c in self.taken.all()]
 
     @property
     def beg_finished(self):
+        """ Completed the two versions of Beginning. """
         version_translate = {'A': 'A', 'B': 'B', 'C': 'A', 'D': 'B'}
         set_count = {'A': 0, 'B': 0}
         subjs = self.taken_subjects
@@ -670,9 +646,9 @@ class Profile(models.Model):
 
     @property
     def l2_finished(self):
+        """ Completed the four versions of level two. """
         set_count = {'A': 0, 'B': 0, 'C': 0, 'D': 0}
-        subjs = self.taken_subjects
-        for subj in subjs:
+        for subj in self.taken_subjects:
             if subj.level == Subject.LEVEL_CHOICES[1][0]:  # 'L2'
                 ver = subj.version
                 set_count[ver] += 1
@@ -685,7 +661,7 @@ class Profile(models.Model):
         return self.user.username
 
     def full_name(self):
-        return self.user.full_name()
+        return self.user.full_name() or _("Name Not Found")
 
     @property
     def _get_full_name(self):
@@ -718,10 +694,7 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
 class PaymentManager(models.Manager):
 
     def classRegister(self, register=None, student=None, paid_by=None, **extra_fields):
-        """ This is used to set the defaults for when a user
-            is registering for classoffers, which is the most
-            common usage of our payments
-        """
+        """ Used for students registering for classoffers, which is the most common usage of our payments """
         print("===== Payment.objects.classRegister (PaymentManager) ======")
         if not isinstance(student, Profile):
             raise TypeError('We need a user Profile passed here.')
@@ -913,8 +886,8 @@ class Payment(BasePayment):
 
 
 class Registration(models.Model):
-    """ This is an intermediary model referenced by a user profile model
-        so that we can see which students are enrolled in a ClassOffer
+    """ This is an intermediary model between a user Profile and the ClassOffers they are enrolled in.
+        Also used to create the class check-in view for the staff.
     """
     student = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True)
     classoffer = models.ForeignKey(ClassOffer, on_delete=models.SET_NULL, null=True)
