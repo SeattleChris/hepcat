@@ -259,6 +259,12 @@ class Subject(models.Model):
 #     collection = models.ForeignKey('Subject', on_delete=models.CASCADE)
 
 
+def default_publish(): return Session._default_date('publish_date')
+
+
+def default_key_day(): return Session._default_date('key_day_date')
+
+
 class Session(models.Model):
     """ Classes are offered and published according to which session they belong.
         Each session start date is computed based on 'key_day_date' and the earliest class day.
@@ -277,7 +283,7 @@ class Session(models.Model):
     """
     # id = auto-created
     name = models.CharField(max_length=15)
-    key_day_date = models.DateField(verbose_name=_('main class start date'), default=lambda: Session.default_key_day)
+    key_day_date = models.DateField(verbose_name=_('main class start date'), default=default_key_day)
     max_day_shift = models.SmallIntegerField(
         default=settings.DEFAULT_MAX_DAY_SHIFT,
         verbose_name=_('number of days other classes are away from main class'),
@@ -293,7 +299,7 @@ class Session(models.Model):
         verbose_name=_('due to skipped weeks, does the session ending switch between a non-key vs key day?'),
         help_text=_('Possibly true if the skipped class is not on the day that normally is the end of the session.'))
     break_weeks = models.PositiveSmallIntegerField(default=0, verbose_name=_('break weeks after this session'))
-    publish_date = models.DateField(blank=True, default=lambda: Session.default_publish)
+    publish_date = models.DateField(blank=True, default=default_publish)
     expire_date = models.DateField(blank=True, help_text=_('If blank, this will be computed'))
 
     @property
@@ -369,14 +375,6 @@ class Session(models.Model):
             new_date = getattr(final_session, 'expire_date', None)
         # return new_date.isoformat() if isinstance(new_date, (date, dt)) else date.today().isoformat()
         return new_date or now
-
-    @classmethod
-    def default_publish(cls):
-        return cls._default_date('publish_date')
-
-    @classmethod
-    def default_key_day(cls):
-        return cls._default_date('key_day_date')
 
     def computed_expire_day(self, key_day=None):
         """ Typically 1 day after week 2, but short Sessions expire 2 days after after week 1. """

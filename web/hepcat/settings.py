@@ -13,7 +13,10 @@ from distutils.util import strtobool
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LOCAL = True if BASE_DIR == os.environ.get('LOCAL_BASE_DIR') else False
-
+HOSTED_PYTHONANYWHERE = any([strtobool(os.environ.get('HOSTED_PYTHONANYWHERE', 'False')),
+                            os.environ.get('PYTHONANYWHERE_SITE', '') == 'www.pythonanywhere.com',
+                            os.environ.get('PYTHONANYWHERE_DOMAIN', '') == 'pythonanywhere.com']
+                            )
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
@@ -22,7 +25,8 @@ SECRET_KEY = os.environ.get('SECRET_KEY', None)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = strtobool(os.environ.get('DEBUG', 'False'))
 # Update LIVE_ALLOWED_HOSTS in ENV settings if adding another environment.
-ALLOWED_HOSTS = os.environ.get('LOCAL_ALLOWED_HOSTS' if LOCAL else 'LIVE_ALLOWED_HOSTS', '').split()
+ALLOWED_HOSTS = os.environ.get('LOCAL_ALLOWED_HOSTS' if LOCAL else 'LIVE_ALLOWED_HOSTS', '').split(',')
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -94,7 +98,7 @@ DATABASES = {
     'default': {
         'ENGINE': DB_LOOKUP[os.environ.get('DB_TYPE')],
         'HOST': os.environ.get('LOCAL_DB_HOST' if LOCAL else 'LIVE_DB_HOST', os.environ.get('DB_HOST', '')),
-        'PORT': os.environ.get('LOCAL_DB_PORT' if LOCAL else 'LIVE_DB_PORT', os.environ.get('DB_PORT', '5432')),
+        'PORT': os.environ.get('LOCAL_DB_PORT' if LOCAL else 'LIVE_DB_PORT', os.environ.get('DB_PORT', '')),  # 5432
         'NAME': os.environ.get('LOCAL_DB_NAME' if LOCAL else 'LIVE_DB_NAME', os.environ.get('DB_NAME', 'postgres')),
         'USER': os.environ.get('LOCAL_DB_USER' if LOCAL else 'LIVE_DB_USER', os.environ.get('DB_USER', 'postgres')),
         'PASSWORD': os.environ.get('LOCAL_DB_PASS' if LOCAL else 'LIVE_DB_PASS', os.environ.get('DB_PASS', '')),
@@ -106,7 +110,13 @@ DATABASES = {
 if os.environ.get('DB_TYPE') == 'mysql':
     DATABASES['default']['OPTIONS'] = {'charset': 'utf8mb4'}
     MAX_INDEX_CHARACTER_SIZE = 191
-
+if HOSTED_PYTHONANYWHERE and not LOCAL:
+    LOGNAME = os.environ.get('LOGNAME', DATABASES['default']['USER'])
+    DB_NAME = DATABASES['default']['NAME']
+    DATABASES['default']['NAME'] = LOGNAME + '$' + DB_NAME
+    test_db = DATABASES['default'].pop('TEST', None)
+    DATABASES['TEST'] = test_db
+    DATABASES['TEST']['NAME'] = LOGNAME + '$test_' + DB_NAME
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
 AUTH_PASSWORD_VALIDATORS = [
@@ -156,9 +166,9 @@ LOGOUT_REDIRECT_URL = 'home'
 ACCOUNT_ACTIVATION_DAYS = 1
 EMAIL_DOMAIN = os.environ.get('EMAIL_DOMAIN', 'localhost')
 EMAIL_ADMIN_ID = os.environ.get('EMAIL_ADMIN_ID', 'webmaster')
-admin_ids = EMAIL_ADMIN_ID.split((' '))
+admin_ids = EMAIL_ADMIN_ID.split(',')
 ADMINS = [(ea, f"{ea}@{EMAIL_DOMAIN}") for ea in admin_ids]
-manager_ids = os.environ.get('EMAIL_MANAGER_ID', '').split(' ')
+manager_ids = os.environ.get('EMAIL_MANAGER_ID', '').split(',')
 MANAGERS = [(ea, f"{ea}@{EMAIL_DOMAIN}") for ea in manager_ids if ea]
 EMAIL_ADMIN_ARE_MANAGERS = strtobool(os.environ.get('EMAIL_ADMIN_ARE_MANAGERS', 'False'))
 if EMAIL_ADMIN_ARE_MANAGERS:
@@ -213,9 +223,15 @@ PAYMENT_VARIANTS = {
 
 # CUSTOM Global variables
 BUSINESS_NAME = os.environ.get('BUSINESS_NAME', 'School Site')
-DEFAULT_CLASS_PRICE = os.environ.get('DEFAULT_CLASS_PRICE', None)
-DEFAULT_PRE_DISCOUNT = os.environ.get('DEFAULT_PRE_DISCOUNT', None)
-MULTI_DISCOUNT = os.environ.get('MULTI_DISCOUNT', None)
-DEFAULT_MAX_DAY_SHIFT = int(os.environ.get('DEFAULT_MAX_DAY_SHIFT', 0))
-DEFAULT_SESSION_WEEKS = int(os.environ.get('DEFAULT_SESSION_WEEKS', 4))
+DEFAULT_CITY = os.environ.get('DEFAULT_CITY', '')
+DEFAULT_COUNTRY_AREA_STATE = os.environ.get('DEFAULT_COUNTRY_AREA_STATE', 'WA')
+DEFAULT_POSTCODE = os.environ.get('DEFAULT_POSTCODE', '')
+DEFAULT_CLASS_PRICE = float(os.environ.get('DEFAULT_CLASS_PRICE', '0.0'))
+DEFAULT_PRE_DISCOUNT = float(os.environ.get('DEFAULT_PRE_DISCOUNT', '0.0'))
+MULTI_DISCOUNT = float(os.environ.get('MULTI_DISCOUNT', '0.0'))
+DEFAULT_KEY_DAY = int(os.environ.get('DEFAULT_KEY_DAY', 3))  # with Monday as 0, an integer value for week days.
+DEFAULT_MAX_DAY_SHIFT = int(os.environ.get('DEFAULT_MAX_DAY_SHIFT', -2))  # Negative values are days before key_day
+DEFAULT_SESSION_WEEKS = int(os.environ.get('DEFAULT_SESSION_WEEKS', 5))
+SESSION_MINIMUM_WEEKS = int(os.environ.get('SESSION_MINIMUM_WEEKS', DEFAULT_SESSION_WEEKS - 1))
 DEFAULT_CLASS_MINUTES = int(os.environ.get('DEFAULT_CLASS_MINUTES', 60))
+ASSUME_CLASS_APPROVE = strtobool(os.environ.get('ASSUME_CLASS_APPROVE', 'False'))
