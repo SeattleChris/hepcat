@@ -10,7 +10,8 @@ class Command(BaseCommand):
     """ Allows the creation of a superuser with a password set in the environment variables. """
 
     def handle(self, *args, **options):
-        self.stdout.write(f"========== Make SUPERUSER =====================")
+        # TODO: Determine the print command: self.stdout.write worked on AWS, printed but error on PythonAnywhere.
+        self.stdout.write("========== Make SUPERUSER =====================")
         # username = os.environ.get('SUPERUSER_NAME', settings.ADMINS[0][0])
         email = os.environ.get('SUPERUSER_EMAIL', settings.ADMINS[0][1])
         username = email.casefold()

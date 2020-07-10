@@ -31,6 +31,12 @@ class AdminSetupTests(TestCase):
         for model in models:
             self.assertIn(model, registered_models)
 
+    def test_createsu_command(self):
+        """ Our custom command to create a Superuser as an initial admin """
+        # TODO: Write tests for when there is no superuser.
+        # This seemed to not work when using this command on PythonAnywhere the first time
+        pass
+
 
 class AdminSessionModelManagement(TestCase):
     """ Tests for Session model create or modify in the Admin site. """
