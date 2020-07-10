@@ -17,7 +17,7 @@ INITIAL = {
 
 class LocationModelTests(SimpleModelTests, TestCase):
     Model = Location
-    repr_dict = {'Location': 'name', 'Link': 'map_google'}
+    repr_dict = {'Location': 'name', 'Link': 'map_link'}
 
 
 class ResourceModelTests(SimpleModelTests, TestCase):

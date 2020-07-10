@@ -132,7 +132,7 @@ class ClassOfferListView(ListView):
         display_date = self.kwargs.get('display_date', None)
         sessions = decide_session(sess=display_session, display_date=display_date)
         self.kwargs['sessions'] = sessions
-        return ClassOffer.objects.filter(session__in=sessions).order_by('num_level')
+        return ClassOffer.objects.filter(session__in=sessions).order_by('_num_level')
 
     def get_context_data(self, **kwargs):
         """ Get context of class list we are showing, typically currently published or modified by URL parameters """

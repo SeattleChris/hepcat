@@ -567,7 +567,7 @@
         "city": "Seattle",
         "state": "WA",
         "zipcode": "98112",
-        "map_google": "https://goo.gl/maps/y9YgshubfpRg9GPp8",
+        "map_link": "https://goo.gl/maps/y9YgshubfpRg9GPp8",
         "date_added": "2020-06-22",
         "date_modified": "2020-06-22"
     }
@@ -636,7 +636,7 @@
     "fields": {
         "subject": 1,
         "session": 1,
-        "num_level": 1,
+        "_num_level": 1,
         "location": 1,
         "teachers": "Chris Chapman",
         "class_day": 3,

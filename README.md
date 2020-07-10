@@ -168,10 +168,12 @@ Each organization installing this app while have some unique settings. Some of t
 * DEFAULT_MAX_DAY_SHIFT: A positive or negative number of days away from the key_day_date.
 * DEFAULT_SESSION_WEEKS: The typical duration of class weeks for most Sessions.
 * SESSION_MINIMUM_WEEKS: If a Session.num_weeks is less than this, it won't be considered in deciding computed dates.
+* DEFAULT_SESSION_EXPIRE: For a typical session, expire publishing it how many days after the first class?
+* SHORT_SESSION_EXPIRE: For a session under minimum_weeks, expire publishing it how many days after the first class?
 * DEFAULT_CLASS_MINUTES: The typical length of time of a single class day.
 
-*Note: The last 12 are all optional pre-populated values, overwritable per product. For DEFAULT_CLASS_PRICE, DEFAULT_PRE_DISCOUNT, MULTI_DISCOUNT - whole numbers should have '.0' at the end.
-The last five are expected to be integers.
+*Note: The last 15 are all optional pre-populated values, overwritable per product. For DEFAULT_CLASS_PRICE, DEFAULT_PRE_DISCOUNT, MULTI_DISCOUNT - whole numbers should have '.0' at the end.
+The last seven are expected to be integers.
 
 ## Deployment
 
