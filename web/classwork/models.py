@@ -53,7 +53,7 @@ class Location(models.Model):
     city = models.CharField(max_length=120, default=settings.DEFAULT_CITY)
     state = models.CharField(max_length=63, default=settings.DEFAULT_COUNTRY_AREA_STATE)
     zipcode = models.CharField(max_length=15)
-    map_link = models.URLField(verbose_name=_("Maps Link"))
+    map_link = models.URLField(verbose_name=_("Map Link"), blank=True)
 
     date_added = models.DateField(auto_now_add=True)
     date_modified = models.DateField(auto_now=True)
@@ -62,7 +62,7 @@ class Location(models.Model):
         return f'{self.name}'
 
     def __repr__(self):
-        return f'<Location: {self.name} | Link: {self.map_google} >'
+        return f'<Location: {self.name} | Link: {self.map_link} >'
 
 
 class Resource(models.Model):
@@ -90,10 +90,10 @@ class Resource(models.Model):
         ('email', _('Email file'))
     )
     USER_CHOICES = (
+        (0, _('Public')),
         (1, _('Student')),
         (2, _('Teacher')),
-        (4, _('Admin')),
-        (8, _('Public'))
+        (3, _('Admin')),
     )
     PUBLISH_CHOICES = (
         (0, _('On Sign-up, before week 1)')),
@@ -112,8 +112,9 @@ class Resource(models.Model):
     subject = models.ForeignKey('Subject', on_delete=models.SET_NULL, null=True)
     classoffer = models.ForeignKey('ClassOffer', on_delete=models.SET_NULL, null=True, blank=True)
     content_type = models.CharField(max_length=15, choices=CONTENT_CHOICES)
-    user_type = models.PositiveSmallIntegerField(choices=USER_CHOICES, help_text=_('Who is this for?'))
-    avail = models.PositiveSmallIntegerField(choices=PUBLISH_CHOICES, help_text=_('When is this resource available?'))
+    user_type = models.PositiveSmallIntegerField(choices=USER_CHOICES, default=1, help_text=_('Who is this for?'))
+    avail = models.PositiveSmallIntegerField(choices=PUBLISH_CHOICES, default=0,
+                                             help_text=_('When is this resource available?'))
     expire = models.PositiveSmallIntegerField(default=0, help_text=_('Number of published weeks? (0 for always)'))
     imagepath = models.ImageField(upload_to='resource/', help_text=_('If an image, upload here'), blank=True)
     filepath = models.FileField(upload_to='resource/', help_text=_('If a file, upload here'), blank=True)
@@ -124,19 +125,6 @@ class Resource(models.Model):
 
     date_added = models.DateField(auto_now_add=True)
     date_modified = models.DateField(auto_now=True)
-
-    # def respath(self):
-    #     """Returns the data field for the selected content type"""
-    #     content_path = {
-    #         'url': self.link,
-    #         'file': self.filepath,
-    #         'text': self.text,
-    #         'video': self.filepath,
-    #         'image': self.imagepath,
-    #         'link': self.link,
-    #         'email': self.text
-    #     }
-    #     return content_path[self.content_type]
 
     def publish(self, classoffer):
         """ Bool if this resource is available for users who attended a given classoffer. """
@@ -150,6 +138,19 @@ class Resource(models.Model):
         if expire_date and now > expire_date:
             return False
         return now >= avail_date
+
+    # def respath(self):
+    #     """Returns the data field for the selected content type"""
+    #     content_path = {
+    #         'url': self.link,
+    #         'file': self.filepath,
+    #         'text': self.text,
+    #         'video': self.filepath,
+    #         'image': self.imagepath,
+    #         'link': self.link,
+    #         'email': self.text
+    #     }
+    #     return content_path[self.content_type]
 
     def __str__(self):
         ct = self.content_type
@@ -196,7 +197,7 @@ class Subject(models.Model):
     level = models.CharField(max_length=8, choices=LEVEL_CHOICES, default='Spec')
     version = models.CharField(max_length=1, choices=VERSION_CHOICES)
     title = models.CharField(max_length=125, default=_('Untitled'))
-    short_desc = models.CharField(max_length=100)
+    short_desc = models.CharField(max_length=100, blank=True)
     num_weeks = models.PositiveSmallIntegerField(default=settings.DEFAULT_SESSION_WEEKS)
     num_minutes = models.PositiveSmallIntegerField(default=settings.DEFAULT_CLASS_MINUTES)
     description = models.TextField()
