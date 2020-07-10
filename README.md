@@ -157,14 +157,15 @@ Each organization installing this app while have some unique settings. Some of t
   * https://api.sandbox.paypal.com for development or
   * https://api.paypal.com for production
 * BUSINESS_NAME: Optional - Can be used for templates in Admin site as well as main site.
-* DEFAULT_CLASS_PRICE: Can set the common base price for most products (ClassOffer)
-* DEFAULT_PRE_DISCOUNT: Can set the typical discount for paying in advanced (per product)
-* MULTI_DISCOUNT: If offering a discount for multiple classes, this is the default value
-* DEFAULT_MAX_DAY_SHIFT:
+* DEFAULT_CLASS_PRICE: Can set the common base price for most products (ClassOffer).
+* DEFAULT_PRE_DISCOUNT: Can set the typical discount for paying in advanced (per product).
+* MULTI_DISCOUNT: If offering a discount for multiple classes, this is the default value.
+* DEFAULT_MAX_DAY_SHIFT: A positive or negative number of days away from the key_day_date.
 * DEFAULT_SESSION_WEEKS: The typical duration of class weeks for most Sessions.
+* SESSION_MINIMUM_WEEKS: If a Session.num_weeks is less than this, it won't be considered in deciding computed dates.
 * DEFAULT_CLASS_MINUTES: The typical length of time of a single class day.
 
-*Note: The last 6 are all optional pre-populated values, overwritable per product. For DEFAULT_CLASS_PRICE, DEFAULT_PRE_DISCOUNT, MULTI_DISCOUNT - whole numbers should have '.0' at the end. The last three are expected to be integers.
+*Note: The last 7 are all optional pre-populated values, overwritable per product. For DEFAULT_CLASS_PRICE, DEFAULT_PRE_DISCOUNT, MULTI_DISCOUNT - whole numbers should have '.0' at the end. The last three are expected to be integers.
 
 ## Deployment
 
@@ -172,7 +173,7 @@ It should be possible to install this app on a variety of potential deployment l
 
 ### Amazon Web Service - AWS
 
-This app has been successfully installed on [Amazon Web Service (AWS)](https://aws.amazon.com/), using Elastic Beanstalk (EBS). The repo has an appropriate `.ebignore` file. Environment configuration templates can be found in the `.elasticbeanstalk/` to make `config.yml` and `01_env.config` (respectively in each folder) files. These new files should never be added to the repo. The `.ebextensions` directory also has AWS EBS setup and management procedures used on AWS.
+This app has been successfully installed on [Amazon Web Service (AWS)](https://aws.amazon.com/), using Elastic Beanstalk (EBS). The repo has an appropriate `.ebignore` file. Environment configuration templates can be found in the `.elasticbeanstalk/` to make `config.yml` and `01_env.config` files, respectively in each folder. These new files should never be added to the repo. The `.ebextensions` directory also has AWS EBS setup and management procedures used on AWS. In the hepcat app there is a management command added for creating the initial superuser (which is called by procedures in `.ebextensions`). The `.env` file should also be updated with appropriate AWS settings, such as setting `S3=True` to use S3 buckets, as well as various location definitions.
 
 While AWS is an industry standard, it may not be the best choice for organizations that expect low or even medium usage.
 
@@ -198,8 +199,9 @@ There are a low-cost and free tier options on [PythonAnywhere](https://www.pytho
 * Upload env file (can not be stored in repo):
   * On your local computer, update the '.env' file with the appropriate settings such as:
     * LIVE_ALLOWED_HOSTS, LIVE_WSGI_FILE, other LIVE_* variables, DB_* variables, etc.
-  * In the PythonAnywhere Dashboard, under Files, click 'Browse files'
-  * Under Files, click 'Upload a file', then select the '.env' file.
+  * In the PythonAnywhere Dashboard, click the 'Files' tab.
+  * Under 'Directories' go to the repo root directory (probably ~/hepcat).
+  * Under 'Files', click 'Upload a file', then select the '.env' file.
 * Have the virtual environment use the '.env' file settings.
   * Open a console, and start the virtual env.
   * The following command should be modified with the appropriate user and virtualenv.
@@ -221,11 +223,27 @@ There are a low-cost and free tier options on [PythonAnywhere](https://www.pytho
   * Update Virtualenv path under 'Virtualenv:' Section (adjust as needed):
     * `/home/<user>/.virtualenvs/<project_env_name>`
     * Click the 'Reload ...' button at the top to use this setting.
+  * Update Static files section - for `/static/` and `/media/` files:
+    * These should be in the same directory as the 'manage.py' file, eg
+      * `/home/SeattleChris/hepcat/web/static`
+      * `/home/SeattleChris/hepcat/web/media`
   * Optional: Enable 'Force HTTPS', then Reload (if wanted, perhaps change later).
   * Database Setup
+    * on Python Anywhere Dashboard, click the 'Databases' tab
+    * Make or confirm the database for the app, ideally something different than `<user>$default`.
+    * Make sure the Database host, username, and password are set correctly in env and settings.
+    * Start a console on the app database (click on it under 'Your databases)
+      * Confirm the database is present, username is correct, etc. We don't expect tables yet.
     * Open a bash console and navigate to the directory with the 'manage.py' file.
     * Confirm the file has execute privileges (it probably does).
-    * `./manage.py migrate`
+    * Migrate database with: `./manage.py migrate`
+  * View the site!
+    * On Python Anywhere Dashboard, click the 'Web' tag.
+    * Under 'Reload', click the 'Reload ...' button.
+    * Go to the site url:
+      * Link at the top of the Web tab of the Dashboard.
+      * <username>.pythonanywhere.com
+      * or custom domain.
 
 Include the following code in [path-to-file]/[username]_pythonanywhere_com_wsgi.py
 
