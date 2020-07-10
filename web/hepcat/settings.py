@@ -223,10 +223,15 @@ PAYMENT_VARIANTS = {
 
 # CUSTOM Global variables
 BUSINESS_NAME = os.environ.get('BUSINESS_NAME', 'School Site')
-DEFAULT_CLASS_PRICE = os.environ.get('DEFAULT_CLASS_PRICE', None)
-DEFAULT_PRE_DISCOUNT = os.environ.get('DEFAULT_PRE_DISCOUNT', None)
-MULTI_DISCOUNT = os.environ.get('MULTI_DISCOUNT', None)
-DEFAULT_MAX_DAY_SHIFT = int(os.environ.get('DEFAULT_MAX_DAY_SHIFT', 0))
+DEFAULT_CITY = os.environ.get('DEFAULT_CITY', '')
+DEFAULT_COUNTRY_AREA_STATE = os.environ.get('DEFAULT_COUNTRY_AREA_STATE', 'WA')
+DEFAULT_POSTCODE = os.environ.get('DEFAULT_POSTCODE', '')
+DEFAULT_CLASS_PRICE = float(os.environ.get('DEFAULT_CLASS_PRICE', '0.0'))
+DEFAULT_PRE_DISCOUNT = float(os.environ.get('DEFAULT_PRE_DISCOUNT', '0.0'))
+MULTI_DISCOUNT = float(os.environ.get('MULTI_DISCOUNT', '0.0'))
+DEFAULT_KEY_DAY = int(os.environ.get('DEFAULT_KEY_DAY', 3))  # with Monday as 0, an integer value for week days.
+DEFAULT_MAX_DAY_SHIFT = int(os.environ.get('DEFAULT_MAX_DAY_SHIFT', -2))  # Negative values are days before key_day
 DEFAULT_SESSION_WEEKS = int(os.environ.get('DEFAULT_SESSION_WEEKS', 5))
-SESSION_MINIMUM_WEEKS = int(os.environ.get('SESSION_MINIMUM_WEEKS', 3))
+SESSION_MINIMUM_WEEKS = int(os.environ.get('SESSION_MINIMUM_WEEKS', DEFAULT_SESSION_WEEKS - 1))
 DEFAULT_CLASS_MINUTES = int(os.environ.get('DEFAULT_CLASS_MINUTES', 60))
+ASSUME_CLASS_APPROVE = strtobool(os.environ.get('ASSUME_CLASS_APPROVE', 'False'))

@@ -157,15 +157,21 @@ Each organization installing this app while have some unique settings. Some of t
   * https://api.sandbox.paypal.com for development or
   * https://api.paypal.com for production
 * BUSINESS_NAME: Optional - Can be used for templates in Admin site as well as main site.
+* DEFAULT_CITY: City most classes and/or most students are likely in.
+* DEFAULT_COUNTRY_AREA_STATE: In the USA, this is the two-letter abbreviation for the State.
+* DEFAULT_POSTCODE: In the USA, the zip code. Can be the short or long version (15 char max).
+* ASSUME_CLASS_APPROVE: True or False for the default setting for 'manager approved' for ClassOffer and content.
 * DEFAULT_CLASS_PRICE: Can set the common base price for most products (ClassOffer).
 * DEFAULT_PRE_DISCOUNT: Can set the typical discount for paying in advanced (per product).
 * MULTI_DISCOUNT: If offering a discount for multiple classes, this is the default value.
+* DEFAULT_KEY_DAY: Integer for day of the week, counting up with Monday as 0.
 * DEFAULT_MAX_DAY_SHIFT: A positive or negative number of days away from the key_day_date.
 * DEFAULT_SESSION_WEEKS: The typical duration of class weeks for most Sessions.
 * SESSION_MINIMUM_WEEKS: If a Session.num_weeks is less than this, it won't be considered in deciding computed dates.
 * DEFAULT_CLASS_MINUTES: The typical length of time of a single class day.
 
-*Note: The last 7 are all optional pre-populated values, overwritable per product. For DEFAULT_CLASS_PRICE, DEFAULT_PRE_DISCOUNT, MULTI_DISCOUNT - whole numbers should have '.0' at the end. The last three are expected to be integers.
+*Note: The last 12 are all optional pre-populated values, overwritable per product. For DEFAULT_CLASS_PRICE, DEFAULT_PRE_DISCOUNT, MULTI_DISCOUNT - whole numbers should have '.0' at the end.
+The last five are expected to be integers.
 
 ## Deployment
 
