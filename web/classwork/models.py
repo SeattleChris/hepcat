@@ -576,13 +576,13 @@ class ClassOffer(models.Model):
         if self.subject is None:
             return higher
         try:
-            num = level_dict.get(getattr(self.subject, 'level', higher))  # 'Other'
+            num = level_dict.get(getattr(self.subject, 'level', higher))
         except KeyError:
             num = higher
         return num
 
     def save(self, *args, **kwargs):
-        self.num_level = self.set_num_level()
+        # self._num_level = self.set_num_level()
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -620,7 +620,7 @@ class Profile(models.Model):
         # Currently returns max, Do we want LEVEL_CHOICES name of this max?
         # have = [a.num_level for a in self.taken.all()]
         # return max(have) if len(have) > 0 else 0
-        return self.taken.all().aggregate(Max('num_level'))
+        return self.taken.all().aggregate(Max('_num_level'))
 
     @property
     def taken_subjects(self):
