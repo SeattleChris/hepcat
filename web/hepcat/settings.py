@@ -235,3 +235,5 @@ DEFAULT_SESSION_WEEKS = int(os.environ.get('DEFAULT_SESSION_WEEKS', 5))
 SESSION_MINIMUM_WEEKS = int(os.environ.get('SESSION_MINIMUM_WEEKS', DEFAULT_SESSION_WEEKS - 1))
 DEFAULT_CLASS_MINUTES = int(os.environ.get('DEFAULT_CLASS_MINUTES', 60))
 ASSUME_CLASS_APPROVE = strtobool(os.environ.get('ASSUME_CLASS_APPROVE', 'False'))
+DEFAULT_SESSION_EXPIRE = int(os.environ.get('DEFAULT_SESSION_EXPIRE', 8))  # number of days after the first class.
+SHORT_SESSION_EXPIRE = int(os.environ.get('SHORT_SESSION_EXPIRE', 2))  # number of days after the first class.
