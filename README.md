@@ -217,6 +217,10 @@ There are a low-cost and free tier options on [PythonAnywhere](https://www.pytho
   * Confirm env settings are used:
     * stop and restart env.
     * Type `printenv` and confirm some env values as expected from the file.
+* Create Superuser for the app, as the initial admin.
+  * On a console, with the virtual env running, navigate to the directory that has the 'manage.py' file.
+  * Using the values in the '.env', via our custom command file: `./manage.py createsu`
+  * Manually input email and password, using the default command: `./manage.py createsuperuser`
 * Setup Web App on Python Anywhere
   * Login [Python Anywhere](https://www.pythonanywhere.com/) and click 'Web' tab on the Dashboard.
   * Choose 'Manual Configuration' for the desired python version (eg Python 3.7)
