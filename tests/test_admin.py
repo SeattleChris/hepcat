@@ -50,10 +50,8 @@ class AdminSessionModelManagement(TestCase):
     def test_admin_uses_expected_form(self):
         """ The admin SessiontAdmin utilizes the correct AdminSessionForm. """
         current_admin = SessiontAdmin(model=Session, admin_site=AdminSite())
-        # c = Client()
         form = getattr(current_admin, 'form', None)
         form_class = AdminSessionForm
-        # self.assertTrue(isinstance(form, form_class))
         self.assertEquals(form, form_class)
 
     def test_admin_has_all_model_fields(self):
@@ -138,7 +136,6 @@ class AdminSessionModelManagement(TestCase):
 
     def test_auto_correct_on_date_conflict(self):
         """ Expect a ValidationError when Sessions have overlapping dates. """
-        from pprint import pprint
         key_day, name = date.today(), 'first'
         publish = key_day - timedelta(days=7*3+1)
         first_sess = Session.objects.create(name=name, key_day_date=key_day, num_weeks=5, publish_date=publish)
@@ -168,5 +165,9 @@ class AdminSessionModelManagement(TestCase):
         print(post_response.template_name)
         self.assertEquals(post_response.status_code, 200)
         second_sess = Session.objects.filter(name=name).first()
-        pprint(second_sess)
+        # pprint(second_sess)
         self.assertGreater(first_sess.end_date, second_sess.start_date)
+
+    def test_auto_correct_on_flip_but_no_skip(self):
+        # TODO: write test for when flip_last_day is True, but skip_weeks == 0.
+        pass

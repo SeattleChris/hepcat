@@ -15,17 +15,6 @@ class ResourceInline(admin.StackedInline):
     """ Admin can add a Resource while on the Subject or ClassOffer add/change form. """
     model = Resource
     extra = 1
-
-    # prepopulated_fields does not allow me to set defaults or initial
-    # autocomplete does not allow me to set defaults or initial
-    # formfield_overrides ... uh, I think that only changes widgets?
-    # exclude = ('classoffer', )
-    # get_changeform_initial_data is not for this context.
-
-    # fields = ('CONTENT_RENDER', 'MODEL_CHOICES', 'CONTENT_CHOICES', 'USER_CHOICES',
-    #           'PUBLISH_CHOICES', 'id', 'subject', 'classoffer', 'content_type', 'user_type',
-    #           'avail', 'expire', 'imagepath', 'filepath', 'link', 'text', 'title',
-    #           'description', 'date_added', 'date_modified', 'content_path', 'ct', )
     fieldsets = (
         (None, {
             'fields': (('user_type', 'content_type',), ('avail', 'expire'), ('title', 'description')),
@@ -34,58 +23,8 @@ class ResourceInline(admin.StackedInline):
             'classes': ('collapse',),
             'fields': ('imagepath', 'filepath', 'link', 'text',)
         }),
-        # ('To Hide', {
-        #     'fields': ('related_type', 'subject', 'classoffer', ),
-        #     # 'classes': ('hidden', ),
-        # }),
-    )
-    formfield_overrides = {
-        models.TextField: {'widget': Textarea(attrs={'cols': 60, 'rows': 2})},
-    }
-
-    # def get_changeform_initial_data(request):
-    #     initial = {}
-    #     print('====== ResourceInline . get_changeform_initial_data =====')
-    #     return initial
-
-    def get_formset(self, request, obj=None, **kwargs):
-        # from pprint import pprint
-        # initial = []
-        # print('========== ResourceInline.get_formset ================')
-        # pprint(dir(self))
-        # print('-------------------------------------------------------------')
-        # pprint(dir(self.opts))
-        # pprint(self.autocomplete_fields)  # ()
-        # pprint(self.extra)  # 5
-        # pprint(self.fk_name)  # None
-        # pprint(self.parent_model)  # class ClassOffer or class Subject reflecting which Admin ModelForm we are on
-        # pprint(self.to_field_allowed)  # bound method of admin.ResourceInline object
-        # pprint(self.view_on_site)  # True
-        # pprint(self.model)  # Resource
-        # pprint(self.exclude)  # not set, using fieldsets.
-        # pprint(self.prepopulated_fields)  # {}
-        # for ea in dir(self):
-        #     print(ea)
-        # print('----------- Obj -----------')
-        # print(repr(obj))
-        related, subject, classoffer = '', None, None
-        if isinstance(obj, Subject): related, subject, classoffer = 'Subject', obj, None  # noqa e701
-        elif isinstance(obj, ClassOffer): related, subject, classoffer = 'ClassOffer', None, obj  # noqa e701
-        else: related, subject, classoffer = 'Other', None, None  # noqa e701
-        # print(f'{related}, subj: {subject}, co: {classoffer}')
-        # TODO: Set these properties for the resource if one is made:
-        # resource.related_type = related
-        # Currently these are working:
-        # resource.subject, resource.classoffer = subject, classoffer
-        # initial.append({
-        #     'related_type': related,
-        #     'subject': subject,
-        #     'classoffer': classoffer,
-        # })
-        formset = super(ResourceInline, self).get_formset(request, obj, **kwargs)
-        print(formset)
-        # formset.__init__ = curry(formset.__init__, initial=initial)
-        return formset
+        )
+    formfield_overrides = {models.TextField: {'widget': Textarea(attrs={'cols': 60, 'rows': 2})}, }
 
 
 class SubjectAdmin(admin.ModelAdmin):
@@ -95,11 +34,6 @@ class SubjectAdmin(admin.ModelAdmin):
     list_display_links = ('__str__', 'title')
     inlines = (ResourceInline, )
     # TODO: What if we want to attach an already existing Resource?
-
-    # def get_queryset(self, request):
-    #     queryset = super().get_queryset(request)
-
-    #     return queryset
 
 
 class ClassOfferAdmin(admin.ModelAdmin):
@@ -111,14 +45,9 @@ class ClassOfferAdmin(admin.ModelAdmin):
     inlines = (ResourceInline, )
     # TODO: What if we want to attach an already existing Resource?
 
-    # def get_queryset(self, request):
-    #     queryset = super().get_queryset(request)
-    #     return queryset
-
 
 class AdminSessionForm(ModelForm):
     def clean(self):
-        # print("=================== Admin Session Form Clean method ======================")
         data = super().clean()
         key_day = data.get('key_day_date')
         prev_sess = Session.last_session(since=key_day)

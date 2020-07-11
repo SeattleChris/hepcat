@@ -175,23 +175,20 @@ class Subject(models.Model):
         ('WS', _('Workshop')),
         ('Priv', _('Private Lesson')),
         ('PrivSet', _('Private - Multiple Lessons')),
-        ('Other', _('Other'))
-    )
+        ('Other', _('Other')))
     LEVEL_ORDER = {
         'Beg': 1,
         'L2': 2,
         'L3': 3,
         'Spec': 3,
-        'L4': 4,
-    }
+        'L4': 4, }
     # TODO: Update so that site Admin can change class level logic.
     VERSION_CHOICES = (
         ('A', 'A'),
         ('B', 'B'),
         ('C', 'C'),
         ('D', 'D'),
-        ('N', 'NA'),
-    )
+        ('N', 'NA'), )
 
     # id = auto-created
     level = models.CharField(max_length=8, choices=LEVEL_CHOICES, default='Spec')
@@ -684,7 +681,7 @@ class Profile(models.Model):
         return self._get_full_name
 
     def __repr__(self):
-        return f"<Profile: {self._get_full_name} | Username: {self.username} >"
+        return f"<Profile: {self._get_full_name} | User id: {self.user.id} >"
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
@@ -951,7 +948,7 @@ class Registration(models.Model):
         return 'Paid' if self.paid else str(self.owed)
 
     def __str__(self):
-        return self._pay_report
+        return f"{self._get_full_name} - {self.classoffer} - {self._pay_report}"
 
     def __repr__(self):
         return f"<Registration: {str(self.classoffer)} | User: {self._get_full_name} | Owed: {self._pay_report} >"

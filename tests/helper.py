@@ -1,23 +1,36 @@
 from django.db.models.fields import NOT_PROVIDED
 from django.db.models import CharField, TextField, URLField, DateField, TimeField
-from django.db.models import PositiveSmallIntegerField, SmallIntegerField
+from django.db.models import PositiveSmallIntegerField, SmallIntegerField, base as db_models_base
 from datetime import date, time  # , timedelta
 
 
 class SimpleModelTests:
     Model = None
     repr_dict = {'ModelName': 'name'}
-    str_list = {'name'}
-    defaults = {'name': "test model"}  # f"test {(str(Model).lower())}"
+    str_list = ['name']
+    defaults = {'name': "test model"}
     skip_fields = ['date_added', 'date_modified']
     skip_attrs = {'auto_created': True, 'is_relation': True}
-    instance = None
+    instance = None  # If not None, create_model will instead update this instance.
+    related = {}  # If not empty, will be modified to have instance(s) of other related Model(s).
 
     def create_model(self, **kwargs):
         collected_kwargs = self.defaults.copy()
+        for field, target in self.related.items():
+            RelatedModel, related_kwargs = None, None
+            if isinstance(target, dict):
+                RelatedModel = target.pop('RelatedModel', None)
+                related_kwargs = target.copy()
+            elif isinstance(target, db_models_base.ModelBase):
+                RelatedModel = target
+            else:
+                print(type(target))
+            if not RelatedModel:
+                raise ValueError("Expected a Model in cls.related. ")
+            q = RelatedModel.objects
+            kwargs[field] = q.get_or_create(**related_kwargs) if related_kwargs else q.first()
         collected_kwargs.update(kwargs)
-        if self.instance and 'user' in collected_kwargs:
-            del collected_kwargs['user']
+        if self.instance:
             for key, value in collected_kwargs.items():
                 setattr(self.instance, key, value)
             self.instance.save()
