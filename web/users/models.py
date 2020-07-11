@@ -192,9 +192,6 @@ class UserHC(AbstractUser):
         return temp.casefold()
 
     def save(self, *args, **kwargs):
-        """ Take some actions before the actual saving of the instance
-            is called with super().save(*args, **kwargs)
-        """
         if not self.username:
             self.username = self.make_username()
         if self.is_teacher or self.is_admin or self.is_superuser:

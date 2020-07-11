@@ -175,23 +175,20 @@ class Subject(models.Model):
         ('WS', _('Workshop')),
         ('Priv', _('Private Lesson')),
         ('PrivSet', _('Private - Multiple Lessons')),
-        ('Other', _('Other'))
-    )
+        ('Other', _('Other')))
     LEVEL_ORDER = {
         'Beg': 1,
         'L2': 2,
         'L3': 3,
         'Spec': 3,
-        'L4': 4,
-    }
+        'L4': 4, }
     # TODO: Update so that site Admin can change class level logic.
     VERSION_CHOICES = (
         ('A', 'A'),
         ('B', 'B'),
         ('C', 'C'),
         ('D', 'D'),
-        ('N', 'NA'),
-    )
+        ('N', 'NA'), )
 
     # id = auto-created
     level = models.CharField(max_length=8, choices=LEVEL_CHOICES, default='Spec')
