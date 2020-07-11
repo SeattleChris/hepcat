@@ -6,7 +6,6 @@ https://docs.djangoproject.com/en/2.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.1/ref/settings/
 """
-
 import os
 from distutils.util import strtobool
 
@@ -25,8 +24,8 @@ SECRET_KEY = os.environ.get('SECRET_KEY', None)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = strtobool(os.environ.get('DEBUG', 'False'))
 # Update LIVE_ALLOWED_HOSTS in ENV settings if adding another environment.
-ALLOWED_HOSTS = os.environ.get('LOCAL_ALLOWED_HOSTS' if LOCAL else 'LIVE_ALLOWED_HOSTS', '').split(',')
-
+ALLOWED_HOSTS = os.environ.get('LOCAL_ALLOWED_HOSTS' if LOCAL else 'LIVE_ALLOWED_HOSTS',
+                               os.environ.get('ALLOWED_HOSTS', '')).split(',')
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -164,12 +163,12 @@ AUTH_USER_MODEL = 'users.UserHC'
 LOGIN_REDIRECT_URL = '/profile/'
 LOGOUT_REDIRECT_URL = 'home'
 ACCOUNT_ACTIVATION_DAYS = 1
-EMAIL_DOMAIN = os.environ.get('EMAIL_DOMAIN', 'localhost')
+STAFF_EMAIL_DOMAIN = os.environ.get('STAFF_EMAIL_DOMAIN', 'localhost')
 EMAIL_ADMIN_ID = os.environ.get('EMAIL_ADMIN_ID', 'webmaster')
 admin_ids = EMAIL_ADMIN_ID.split(',')
-ADMINS = [(ea, f"{ea}@{EMAIL_DOMAIN}") for ea in admin_ids]
+ADMINS = [(ea, f"{ea}@{STAFF_EMAIL_DOMAIN}") for ea in admin_ids]
 manager_ids = os.environ.get('EMAIL_MANAGER_ID', '').split(',')
-MANAGERS = [(ea, f"{ea}@{EMAIL_DOMAIN}") for ea in manager_ids if ea]
+MANAGERS = [(ea, f"{ea}@{STAFF_EMAIL_DOMAIN}") for ea in manager_ids if ea]
 EMAIL_ADMIN_ARE_MANAGERS = strtobool(os.environ.get('EMAIL_ADMIN_ARE_MANAGERS', 'False'))
 if EMAIL_ADMIN_ARE_MANAGERS:
     MANAGERS.extend(ADMINS)
@@ -201,11 +200,15 @@ NEWSLETTER_BATCH_SIZE = 100
 # CUSTOM Settings for Payment Processing
 STRIPE_KEY = os.environ.get('STRIPE_KEY', None)
 STRIPE_PUBLIC_KEY = os.environ.get('STRIPE_PUBLIC_KEY', None)
+# PAYPAL_BUYER = os.environ.get('PAYPAL_BUYER', None)
 PAYPAL_EMAIL = os.environ.get('PAYPAL_EMAIL', None)
 PAYPAL_CLIENT_ID = os.environ.get('PAYPAL_CLIENT_ID', None)
 PAYPAL_SECRET = os.environ.get('PAYPAL_SECRET', None)
-PAYPAL_URL = os.environ.get('PAYPAL_URL', 'https://api.sandbox.paypal.com')  # https://api.paypal.com for production
 PAYMENT_HOST = os.environ.get('PAYMENT_HOST', ALLOWED_HOSTS[0])
+PAYPAL_LIVE_EMAIL = os.environ.get('PAYPAL_LIVE_EMAIL', PAYPAL_EMAIL)
+PAYPAL_LIVE_CLIENT_ID = os.environ.get('PAYPAL_LIVE_CLIENT_ID', PAYPAL_CLIENT_ID)
+PAYPAL_LIVE_SECRET = os.environ.get('PAYPAL_LIVE_SECRET', PAYPAL_SECRET)
+PAYPAL_URL = os.environ.get('PAYPAL_URL', 'https://api.sandbox.paypal.com')  # https://api.paypal.com for production
 PAYMENT_USES_SSL = False
 PAYMENT_MODEL = 'classwork.Payment'
 PAYMENT_VARIANTS = {
@@ -220,12 +223,12 @@ PAYMENT_VARIANTS = {
         }),
     'default': ('payments.dummy.DummyProvider', {})
     }
-
 # CUSTOM Global variables
 BUSINESS_NAME = os.environ.get('BUSINESS_NAME', 'School Site')
 DEFAULT_CITY = os.environ.get('DEFAULT_CITY', '')
 DEFAULT_COUNTRY_AREA_STATE = os.environ.get('DEFAULT_COUNTRY_AREA_STATE', 'WA')
 DEFAULT_POSTCODE = os.environ.get('DEFAULT_POSTCODE', '')
+ASSUME_CLASS_APPROVE = strtobool(os.environ.get('ASSUME_CLASS_APPROVE', 'False'))
 DEFAULT_CLASS_PRICE = float(os.environ.get('DEFAULT_CLASS_PRICE', '0.0'))
 DEFAULT_PRE_DISCOUNT = float(os.environ.get('DEFAULT_PRE_DISCOUNT', '0.0'))
 MULTI_DISCOUNT = float(os.environ.get('MULTI_DISCOUNT', '0.0'))
@@ -233,7 +236,8 @@ DEFAULT_KEY_DAY = int(os.environ.get('DEFAULT_KEY_DAY', 3))  # with Monday as 0,
 DEFAULT_MAX_DAY_SHIFT = int(os.environ.get('DEFAULT_MAX_DAY_SHIFT', -2))  # Negative values are days before key_day
 DEFAULT_SESSION_WEEKS = int(os.environ.get('DEFAULT_SESSION_WEEKS', 5))
 SESSION_MINIMUM_WEEKS = int(os.environ.get('SESSION_MINIMUM_WEEKS', DEFAULT_SESSION_WEEKS - 1))
+DEFAULT_SESSION_EXPIRE = int(os.environ.get('DEFAULT_SESSION_EXPIRE', 8))  # number of days after the first classes.
+SHORT_SESSION_EXPIRE = int(os.environ.get('SHORT_SESSION_EXPIRE', 2))  # number of days after the first classes.
 DEFAULT_CLASS_MINUTES = int(os.environ.get('DEFAULT_CLASS_MINUTES', 60))
-ASSUME_CLASS_APPROVE = strtobool(os.environ.get('ASSUME_CLASS_APPROVE', 'False'))
-DEFAULT_SESSION_EXPIRE = int(os.environ.get('DEFAULT_SESSION_EXPIRE', 8))  # number of days after the first class.
-SHORT_SESSION_EXPIRE = int(os.environ.get('SHORT_SESSION_EXPIRE', 2))  # number of days after the first class.
+
+# # Global variables: expect decimal values for DEFAULT_CLASS_PRICE, DEFAULT_PRE_DISCOUNT, MULTI_DISCOUNT

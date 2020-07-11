@@ -157,6 +157,8 @@ Each organization installing this app while have some unique settings. Some of t
   * https://api.sandbox.paypal.com for development or
   * https://api.paypal.com for production
 * BUSINESS_NAME: Optional - Can be used for templates in Admin site as well as main site.
+* SUPERUSER_FIRST_NAME: used for creating superuser as first account
+* SUPERUSER_LAST_NAME: used for creating superuser as first account
 * DEFAULT_CITY: City most classes and/or most students are likely in.
 * DEFAULT_COUNTRY_AREA_STATE: In the USA, this is the two-letter abbreviation for the State.
 * DEFAULT_POSTCODE: In the USA, the zip code. Can be the short or long version (15 char max).
