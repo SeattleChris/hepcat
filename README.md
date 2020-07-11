@@ -248,9 +248,13 @@ There are a low-cost and free tier options on [PythonAnywhere](https://www.pytho
     * Make sure the Database host, username, and password are set correctly in env and settings.
     * Start a console on the app database (click on it under 'Your databases)
       * Confirm the database is present, username is correct, etc. We don't expect tables yet.
-    * Open a bash console and navigate to the directory with the 'manage.py' file.
+    * Open a bash console, start virtualenv, and navigate to the directory with the 'manage.py' file.
     * Confirm the file has execute privileges (it probably does).
     * Migrate database with: `./manage.py migrate`
+  * Prepare Static files and Media files:
+    * Open a bash console, start virtualenv, and navigate to the directory with the 'manage.py' file.
+    * Collect static files: `./manage.py collectstatic`
+    * Collect media files: ???
   * View the site!
     * On Python Anywhere Dashboard, click the 'Web' tag.
     * Under 'Reload', click the 'Reload ...' button.
