@@ -13,13 +13,16 @@ class Command(BaseCommand):
         # TODO: Determine the print command: self.stdout.write worked on AWS, printed but error on PythonAnywhere.
         self.stdout.write("========== Make SUPERUSER =====================")
         # username = os.environ.get('SUPERUSER_NAME', settings.ADMINS[0][0])
+        first_name = os.environ.get('SUPERUSER_FIRST_NAME', settings.ADMINS[0][0])
+        last_name = os.environ.get('SUPERUSER_LAST_NAME', '')
+        extra_fields = {'first_name': first_name, 'last_name': last_name}
         email = os.environ.get('SUPERUSER_EMAIL', settings.ADMINS[0][1])
         username = email.casefold()
         password = os.environ.get('SUPERUSER_PASS', None)
         self.stdout.write(f"username: {username}, email: {email}, pw: {password}")
         if not User.objects.filter(username=username).exists():
             try:
-                user = User.objects.create_superuser(username, email, password)
+                user = User.objects.create_superuser(username, email, password, **extra_fields)
                 self.stdout.write(str(user))
             except Exception as e:
                 self.stderr.write(f"Error: {e} ")
