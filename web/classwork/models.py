@@ -10,6 +10,7 @@ from django.urls import reverse
 from decimal import Decimal  # used for Payments
 from payments import PurchasedItem
 from payments.models import BasePayment
+from functools import partial
 from datetime import date, timedelta, datetime as dt
 # from pprint import pprint
 # from django.contrib.auth import get_user_model
@@ -78,8 +79,7 @@ class Resource(models.Model):
     MODEL_CHOICES = (
         ('Subject', _('Subject')),
         ('ClassOffer', _('ClassOffer')),
-        ('Other', _('Other'))
-    )
+        ('Other', _('Other')))
     CONTENT_CHOICES = (
         ('url', _('External Link')),
         ('file', _('Formatted Text File')),
@@ -87,14 +87,12 @@ class Resource(models.Model):
         ('video', _('Video file on our site')),
         ('image', _('Image file on our site')),
         ('link', _('Webpage on our site')),
-        ('email', _('Email file'))
-    )
+        ('email', _('Email file')))
     USER_CHOICES = (
         (0, _('Public')),
         (1, _('Student')),
         (2, _('Teacher')),
-        (3, _('Admin')),
-    )
+        (3, _('Admin')),)
     PUBLISH_CHOICES = (
         (0, _('On Sign-up, before week 1)')),
         (1, _('After week 1')),
@@ -104,12 +102,11 @@ class Resource(models.Model):
         (5, _('After week 5')),
         # TODO: Make this adaptable to any class duration.
         # TODO: Make options for weekly vs. daily classes?
-        (200, _('After completion'))
-    )
+        (200, _('After completion')))
 
     # id = auto-created
-    related_type = models.CharField(max_length=15, choices=MODEL_CHOICES, default='Subject')
-    subject = models.ForeignKey('Subject', on_delete=models.SET_NULL, null=True)
+    related_type = models.CharField(max_length=15, choices=MODEL_CHOICES, default='Subject', editable=False)
+    subject = models.ForeignKey('Subject', on_delete=models.SET_NULL, null=True, blank=True)
     classoffer = models.ForeignKey('ClassOffer', on_delete=models.SET_NULL, null=True, blank=True)
     content_type = models.CharField(max_length=15, choices=CONTENT_CHOICES)
     user_type = models.PositiveSmallIntegerField(choices=USER_CHOICES, default=1, help_text=_('Who is this for?'))
@@ -152,14 +149,17 @@ class Resource(models.Model):
     #     }
     #     return content_path[self.content_type]
 
+    def save(self, *args, **kwargs):
+        if self.subject: self.related_type = 'Subject'  # noqa e701
+        elif self.classoffer: self.related_type = 'ClassOffer'  # noqa e701
+        else: self.related_type = 'Other'  # noqa e701
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        ct = self.content_type
-        if ct == 'email' or ct == 'text':
-            return self.text
-        return self.title
+        return f"{self.title} - {self.related_type} - {self.content_type}"
 
     def __repr__(self):
-        return f'<Resource: {self.content_type} | {self.avail} >'
+        return f'<Resource: {self.related_type} | Type: {self.content_type} >'
 
 
 class Subject(models.Model):
@@ -489,23 +489,6 @@ class ClassOffer(models.Model):
         return self.full_price - self.pre_discount if self.pre_discount > 0 else None
 
     @property
-    def day(self, short=False):
-        """ Used for displaying the day of week for the class as a word.
-            Returns plural form if the class has multiple weeks.
-            Returns abbreviated form if short is True.
-        """
-        lookup_day = [value[:3] if short else value for key, value in ClassOffer.DOW_CHOICES]
-        day = lookup_day[self.class_day]
-        if self.subject.num_weeks > 1:
-            day += '(s)' if short else 's'
-        return day
-
-    @property
-    def day_short(self):
-        """ Same as day, but returns a shorter text in the string. """
-        return self.day(short=True)
-
-    @property
     def skip_week(self):
         """ Most of the time there is not a missing week in the middle of session.
             However, sometimes there are holidays that we can not otherwise schedule around.
@@ -523,6 +506,17 @@ class ClassOffer(models.Model):
         print(f"End: {end}")
         print(f"End time: {end.time()}")
         return end.time()
+
+    def day(self, short=False):
+        """ Used for displaying the day of week for the class as a word.
+            Returns plural form if the class has multiple weeks.
+            Returns abbreviated form if short is True.
+        """
+        lookup_day = [value[:3] if short else value for key, value in ClassOffer.DOW_CHOICES]
+        day = lookup_day[self.class_day]
+        if self.subject.num_weeks > 1:
+            day += '(s)' if short else 's'
+        return day
 
     def start_date(self, short=False):
         """ Depends on class_day, Session dates, and possibly on Session.max_day_shift being positive or negative. """
@@ -547,19 +541,26 @@ class ClassOffer(models.Model):
             return start  # Update if we create a short version.
         return start
 
-    @property
-    def start_date_short(self):
-        """ Same as start_date, but returns shorter text in the string. """
-        return self.start_date(short=True)
-
     def end_date(self, short=False):
         """ Returns the computed end date for this class offer. """
         return self.start_date(short=short) + timedelta(days=7*(self.subject.num_weeks - 1))
 
-    @property
-    def end_date_short(self):
-        """ Same as end_date, but returns a shorter text in the string. """
-        return self.end_date(short=True)
+    # @property
+    # def start_date_short(self):
+    #     """ Same as start_date, but returns shorter text in the string. """
+    #     return self.start_date(short=True)
+
+    # @property
+    # def end_date_short(self):
+    #     """ Same as end_date, but returns a shorter text in the string. """
+    #     return self.end_date(short=True)
+
+    day_short = property(partial(day, short=True))
+    day_long = property(partial(day, short=False))
+    start_date_short = property(partial(start_date, short=True))
+    start_date_long = property(partial(start_date, short=False))
+    end_date_short = property(partial(end_date, short=True))
+    end_date_long = property(partial(end_date, short=False))
 
     @property
     def num_level(self):
@@ -569,7 +570,7 @@ class ClassOffer(models.Model):
     @num_level.setter
     def set_num_level(self):
         level_dict = Subject.LEVEL_ORDER
-        print('======= ClassOffer.set_num_level ========')
+        print('======================================= ClassOffer.set_num_level ======================================')
         # print(level_dict.values())
         higher = 100 + max(level_dict.values())
         num = 0
@@ -579,10 +580,11 @@ class ClassOffer(models.Model):
             num = level_dict.get(getattr(self.subject, 'level', higher))
         except KeyError:
             num = higher
+        self._num_level = num
         return num
 
     def save(self, *args, **kwargs):
-        # self._num_level = self.set_num_level()
+        self.set_num_level
         super().save(*args, **kwargs)
 
     def __str__(self):
