@@ -15,6 +15,11 @@ INITIAL = {
 # Create your tests here.
 
 
+class SiteContentModelTests(SimpleModelTests, TestCase):
+    Model = SiteContent
+    repr_dict = {'SiteContent': 'name'}
+
+
 class LocationModelTests(SimpleModelTests, TestCase):
     Model = Location
     repr_dict = {'Location': 'name', 'Link': 'map_link'}
@@ -22,59 +27,57 @@ class LocationModelTests(SimpleModelTests, TestCase):
 
 class ResourceModelTests(SimpleModelTests, TestCase):
     Model = Resource
-    repr_dict = {'Resource': 'content_type', '': 'avail'}
-    str_list = {'title'}
-
-
-class SiteContentModelTests(SimpleModelTests, TestCase):
-    Model = SiteContent
-    repr_dict = {'SiteContent': 'name'}
-    str_list = {'name'}
+    repr_dict = {'Resource': 'related_type', 'Type': 'content_type'}
+    str_list = ['title', 'related_type', 'content_type']
 
 
 class SubjectModelTests(SimpleModelTests, TestCase):
     Model = Subject
     repr_dict = {'Subject': 'title', 'Level': 'level', 'Version': 'version'}
-    str_list = {'_str_slug'}
-    # defaults = {'name': "test model"}
+    str_list = ['_str_slug']
 
 
 class ClassOfferModelTests(SimpleModelTests, TestCase):
     Model = ClassOffer
     repr_dict = {'Class Id': 'id', 'Subject': 'subject', 'Session': 'session'}
-    str_list = {'subject', 'session'}
+    str_list = ['subject', 'session']
     defaults = {}
+
+
+class ProfileModelTests(SimpleModelTests, TestCase):
+    Model = Profile
+    repr_dict = {'Profile': '_get_full_name', 'User id': 'user_id'}
+    str_list = ['_get_full_name']
+    defaults = {'email': 'fake@site.com', 'password': '1234', 'first_name': 'fa', 'last_name': 'fake'}
+
+    def setUp(self):
+        kwargs = self.defaults.copy()
+        # kwargs = {'email': 'fake@site.com', 'password': '1234', 'first_name': 'fa', 'last_name': 'fake'}
+        user = UserHC.objects.create_user(**kwargs)
+        self.defaults = {}
+        self.instance = user.profile  # triggers self.create_model to update this model instead of creating one.
 
 
 class PaymentModelTests(SimpleModelTests, TestCase):
     Model = Payment
     repr_dict = {'Payment': '_payment_description'}
-    str_list = {'_payment_description'}
+    str_list = ['_payment_description']
     defaults = {}
 
 
 class RegistrationModelTests(SimpleModelTests, TestCase):
     Model = Registration
     repr_dict = {'Registration': 'classoffer', 'User': '_get_full_name', 'Owed': '_pay_report'}
-    str_list = {'_pay_report'}
+    str_list = ['_get_full_name', 'classoffer', '_pay_report']
     defaults = {}
-
-
-class ProfileModelTests(SimpleModelTests, TestCase):
-    Model = Profile
-    repr_dict = {'Profile': '_get_full_name', 'Username': 'username'}
-    str_list = {'_get_full_name'}
-    defaults = {'user': ''}  # triggers finding User model and associated Profile instance
-
-    def setUp(self):
-        user = UserHC.objects.create_user(email='fake@site.com', password='1234', first_name='fa', last_name='fake')
-        self.instance = user.profile
+    related = {'student': Profile, 'classoffer': ClassOffer}
 
 
 class NotifyModelTests(TestCase):
     Model = Notify
     repr_dict = {'Notify': 'name'}
     str_list = {}
+    # TODO: Figure out values for SimpleModelTests and/or write other tests.
 
 
 class SessionCoverageTests(TransactionTestCase):

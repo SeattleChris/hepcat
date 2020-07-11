@@ -684,7 +684,7 @@ class Profile(models.Model):
         return self._get_full_name
 
     def __repr__(self):
-        return f"<Profile: {self._get_full_name} | Username: {self.username} >"
+        return f"<Profile: {self._get_full_name} | User id: {self.user.id} >"
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
@@ -951,7 +951,7 @@ class Registration(models.Model):
         return 'Paid' if self.paid else str(self.owed)
 
     def __str__(self):
-        return self._pay_report
+        return f"{self._get_full_name} - {self.classoffer} - {self._pay_report}"
 
     def __repr__(self):
         return f"<Registration: {str(self.classoffer)} | User: {self._get_full_name} | Owed: {self._pay_report} >"
