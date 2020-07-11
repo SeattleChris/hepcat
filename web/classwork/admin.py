@@ -14,7 +14,7 @@ from datetime import timedelta
 class ResourceInline(admin.StackedInline):
     """ Admin can add a Resource while on the Subject or ClassOffer add/change form. """
     model = Resource
-    extra = 5
+    extra = 1
 
     # prepopulated_fields does not allow me to set defaults or initial
     # autocomplete does not allow me to set defaults or initial
@@ -30,7 +30,7 @@ class ResourceInline(admin.StackedInline):
         (None, {
             'fields': (('user_type', 'content_type',), ('avail', 'expire'), ('title', 'description')),
         }),
-        ('Data Fields', {
+        ('Data: Files, Links, & Text', {
             'classes': ('collapse',),
             'fields': ('imagepath', 'filepath', 'link', 'text',)
         }),
@@ -49,39 +49,41 @@ class ResourceInline(admin.StackedInline):
     #     return initial
 
     def get_formset(self, request, obj=None, **kwargs):
+        # from pprint import pprint
         # initial = []
-        print('========== ResourceInline.get_formset ================')
-        print(self)
-        for ea in dir(self):
-            print(ea)
-        # print(self.parent_model)
-        print('----------- Obj -----------')
-        print(obj)
-        # for ea in dir(obj):
+        # print('========== ResourceInline.get_formset ================')
+        # pprint(dir(self))
+        # print('-------------------------------------------------------------')
+        # pprint(dir(self.opts))
+        # pprint(self.autocomplete_fields)  # ()
+        # pprint(self.extra)  # 5
+        # pprint(self.fk_name)  # None
+        # pprint(self.parent_model)  # class ClassOffer or class Subject reflecting which Admin ModelForm we are on
+        # pprint(self.to_field_allowed)  # bound method of admin.ResourceInline object
+        # pprint(self.view_on_site)  # True
+        # pprint(self.model)  # Resource
+        # pprint(self.exclude)  # not set, using fieldsets.
+        # pprint(self.prepopulated_fields)  # {}
+        # for ea in dir(self):
         #     print(ea)
+        # print('----------- Obj -----------')
+        # print(repr(obj))
         related, subject, classoffer = '', None, None
-        if isinstance(obj, Subject):
-            related = 'Subject'
-            subject = obj
-            classoffer = None
-            self.exclude = ('related_type', 'classoffer',)
-        elif isinstance(obj, ClassOffer):
-            related = 'ClassOffer'
-            subject = None
-            classoffer = obj
-            self.exclude = ('subject',)
-        else:
-            related = 'Other'
-            subject = None
-            classoffer = None
-            self.exclude = ('subject', 'classoffer', )
-        print(f'{related}, subj: {subject}, co: {classoffer}')
+        if isinstance(obj, Subject): related, subject, classoffer = 'Subject', obj, None  # noqa e701
+        elif isinstance(obj, ClassOffer): related, subject, classoffer = 'ClassOffer', None, obj  # noqa e701
+        else: related, subject, classoffer = 'Other', None, None  # noqa e701
+        # print(f'{related}, subj: {subject}, co: {classoffer}')
+        # TODO: Set these properties for the resource if one is made:
+        # resource.related_type = related
+        # Currently these are working:
+        # resource.subject, resource.classoffer = subject, classoffer
         # initial.append({
         #     'related_type': related,
         #     'subject': subject,
         #     'classoffer': classoffer,
         # })
         formset = super(ResourceInline, self).get_formset(request, obj, **kwargs)
+        print(formset)
         # formset.__init__ = curry(formset.__init__, initial=initial)
         return formset
 

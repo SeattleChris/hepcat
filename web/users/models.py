@@ -11,14 +11,15 @@ def get_if_only_one(q, **kwargs):
     elif isinstance(q, models.Model):
         search = q.objects.filter(**kwargs)
     obj = search[0] if search and len(search) == 1 else None
+    # TODO: Refactor to using better Django Query techniques.
     return obj
 
-# Create your models here.
 # TODO: Move some of the student vs staff logic to Group
+# Create your models here.
 
 
 class UserManagerHC(UserManager):
-    """ Adding & Modifying some features to the default UserManager
+    """ Adding & Modifying some features to the default UserManager.
         Inherits from: UserManager, BaseUserManager, models.Manager, ...
     """
     # from Django's UserManager
@@ -66,7 +67,7 @@ class UserManagerHC(UserManager):
         else:
             email = self.normalize_email(email)
 
-        if extra_fields.get('uses_email_username', True):
+        if extra_fields.setdefault('uses_email_username', True):
             attempt_username = email
             try:
                 user = self._create_user(attempt_username, email, password, **extra_fields)
@@ -90,13 +91,13 @@ class UserManagerHC(UserManager):
 
     def create_user(self, username=None, email=None, password=None, **extra_fields):
         # print('================== UserManagerHC.create_user ========================')
-        extra_fields['is_superuser'] = False
+        extra_fields['is_superuser'] = False  # This method will never allow creating a superuser.
         if extra_fields.get('is_teacher') is True or extra_fields.get('is_admin') is True:
-            extra_fields['is_staff'] = True
-            extra_fields['is_student'] = False
+            extra_fields.setdefault('is_staff', True)
+            extra_fields.setdefault('is_student', False)
         else:
-            extra_fields['is_staff'] = False
-            extra_fields['is_student'] = True
+            extra_fields.setdefault('is_staff', False)
+            extra_fields.setdefault('is_student', True)
         return self.set_user(username, email, password, **extra_fields)
 
     def create_superuser(self, username, email, password, **extra_fields):
@@ -108,61 +109,41 @@ class UserManagerHC(UserManager):
         return self.set_user(username, email, password, **extra_fields)
 
     def find_or_create_for_anon(self, email=None, possible_users=None, **kwargs):
-        """ This is called when someone registers when they are not logged in.
-            If they are a new customer, we want no friction, just create a
-            user account. If they might be an existing user, we need to get
-            them logged in.
+        """ This is called when someone registers when they are not logged in. If they are a new customer, we want
+            no friction, just create a user account. If they might be an existing user, we need to get them logged in.
         """
-        first_name = kwargs.get('first_name')
-        last_name = kwargs.get('last_name')
+        first_name, last_name = kwargs.get('first_name'), kwargs.get('last_name')
         if not kwargs.get('is_student') and not kwargs.get('is_teacher') and not kwargs.get('is_admin'):
             kwargs['is_student'] = True
-        # if not possible_users:
-        #     # assume we want to query all users
-        #     possible_users = UserHC.objects.all()
-        # if not isinstance(possible_users, models.QuerySet):
-        #     print('possible_users is not a QuerySet')
         found = UserHC.objects.filter(email=email).count()
         found += UserHC.objects.filter(first_name=first_name, last_name=last_name).count()
         if found > 0:
-            # redirect to login, auto-filling the appropriate fields
-            # this login should also allow them to so say they don't have a user account.
+            # TODO: redirect to login, auto-filling appropriate fields. This should also work if they have no account.
             print('---- Maybe they have had classes before? -----')
-            # TODO: redirect to the appropriate login
         else:
-            # create a new user with this data
             print('----- Creating a new user! -----')
-            return self.create_user(self, email=email, **kwargs)
+            return self.create_user(self, email=email, **kwargs)  # create a new user with this data
         # end find_or_create_for_anon
 
     def find_or_create_by_name(self, email=None, possible_users=None, **kwargs):
         """ This is called when a user signs up someone else """
-        first_name = kwargs.get('first_name')
-        last_name = kwargs.get('last_name')
-        # is_student = kwargs.get('is_student')
+        first_name, last_name = kwargs.get('first_name'), kwargs.get('last_name')
         # print("======== UserHC.objects.find_or_create_by_name =====")
-        if not possible_users:
-            # assume we want to query all users
+        if not possible_users:  # assume we want to query all users
             possible_users = UserHC.objects.all()
         if not isinstance(possible_users, models.QuerySet):
-            print('possible_users is not a QuerySet')
-        # print(possible_users)
-        if len(possible_users) == 0:
-            possible_users = None
+            raise TypeError(_('Possible_users is not a QuerySet'))
         # TODO: Is this how we want to find matching or near matches?
-        if possible_users:
-            friend = get_if_only_one(possible_users, first_name=first_name, last_name=last_name) \
-                or get_if_only_one(possible_users, first_name__icontains=first_name, last_name__icontains=last_name) \
-                or get_if_only_one(possible_users, last_name__icontains=last_name) \
-                or get_if_only_one(possible_users, first_name__icontains=first_name) \
-                or get_if_only_one(UserHC, first_name=first_name, last_name=last_name) \
-                or get_if_only_one(UserHC, first_name__icontains=first_name, last_name__icontains=last_name) \
-                or None
-            # TODO: Should there be some kind of confirmation page?
-            if friend:
-                return friend
+        friend = get_if_only_one(possible_users, first_name=first_name, last_name=last_name) \
+            or get_if_only_one(possible_users, first_name__icontains=first_name, last_name__icontains=last_name) \
+            or get_if_only_one(possible_users, last_name__icontains=last_name) \
+            or get_if_only_one(possible_users, first_name__icontains=first_name) \
+            or get_if_only_one(UserHC, first_name=first_name, last_name=last_name) \
+            or get_if_only_one(UserHC, first_name__icontains=first_name, last_name__icontains=last_name) \
+            or None
+        # TODO: Should there be some kind of confirmation page?
         # Otherwise we create a new user and profile
-        return self.create_user(self, email=email, **kwargs)
+        return friend if friend else self.create_user(self, email=email, **kwargs)
 
     # end class UserManagerHC
 
@@ -172,20 +153,21 @@ class UserHC(AbstractUser):
         Inherits from: AbstractUser, AbstractBaseUser, models.Model, ModelBase, ...
     """
 
-    # email, first_name, last_name, and id - all exist from inherited models.
-    # username (often not used directly) exists from inherited models.
+    # first_name, last_name, id, email, and username (often not used directly) - all exist from inherited models.
     is_student = models.BooleanField('student', default=True)
     is_teacher = models.BooleanField('teacher', default=False)
     is_admin = models.BooleanField('admin', default=False)
     # is_superuser exists from inherited models.
     # is_staff exists from inherited models.
     uses_email_username = models.BooleanField('Using Email', default=True)
-    billing_address_1 = models.CharField(verbose_name='Street Address (line 1)', max_length=255, blank=True)
-    billing_address_2 = models.CharField(verbose_name='Street Address (continued)', max_length=255, blank=True)
-    billing_city = models.CharField(verbose_name='City', max_length=255, blank=True)
-    billing_country_area = models.CharField(verbose_name='State', help_text='State, Territory, or Province', max_length=2, default='WA', blank=True)
-    billing_postcode = models.CharField(verbose_name='Zip Code', help_text='Zip or Postal Code', max_length=255, blank=True)
-    billing_country_code = models.CharField(verbose_name='Country', default='USA', max_length=255, blank=True)
+    billing_address_1 = models.CharField(verbose_name='Street Address (line 1)', max_length=191, blank=True)
+    billing_address_2 = models.CharField(verbose_name='Street Address (continued)', max_length=191, blank=True)
+    billing_city = models.CharField(verbose_name='City', max_length=191, blank=True)
+    billing_country_area = models.CharField(verbose_name='State', max_length=2, default='WA', blank=True,
+                                            help_text='State, Territory, or Province')
+    billing_postcode = models.CharField(verbose_name='Zip Code', max_length=191, blank=True,
+                                        help_text='Zip or Postal Code')
+    billing_country_code = models.CharField(verbose_name='Country', default='USA', max_length=191, blank=True)
     # # # user.profile holds the linked profile for this user.
     objects = UserManagerHC()
 
@@ -193,7 +175,7 @@ class UserHC(AbstractUser):
         swappable = 'AUTH_USER_MODEL'
 
     def __str__(self):
-        name = self.get_full_name() or _("Name Not Found")
+        name = self.get_full_name() or self.username  # _("Name Not Found")
         return name
 
     def make_username(self):
