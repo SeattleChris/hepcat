@@ -30,7 +30,7 @@
 |                    | **Milestone 3 Completion**                                                                  |
 | :heavy_check_mark: | Payment Processing: PayPal integration (sandbox)                                            |
 | :heavy_check_mark: | Deployment Setup: Get App & DB on AWS (probably using Elastic Beanstalk)                    |
-|                    | Deployment Setup: Get App & DB on PythonAnywhere (using MySQL)                              |
+| :heavy_check_mark: | Deployment Setup: Get App & DB on PythonAnywhere (using MySQL)                              |
 | :heavy_check_mark: | Admin: Sessions pre-populate and error correct dates of the session                         |
 | :heavy_check_mark: | Tests: Add initial testing including coverage reports                                       |
 | :heavy_check_mark: | Tests: Checking date computations on Session model and Admin form                           |
@@ -84,7 +84,7 @@
 - [s] Stretch Goal. Not for current feature plan.
 
 Current Status:
-2020-07-08 09:29:36
+2020-07-11 21:04:06
 <!-- Ctrl-Shift-I to generate timestamp -->
 
 ### Tests
@@ -127,14 +127,22 @@ Current Status:
 - [x] Session save method can call optionally call full_clean, but will auto-correct some date fields
 - [x] Admin form for Session will raise ValidationError if session dates overlap
 - [x] Admin form, after ValidationError, will repopulate the fields with values suggested from Session model clean
-- [ ] ClassOffer will be assigned dates according to their Session
+- [x] Resources for Subjects, ClassOffers or Other auto-determine Resource.related_type
+- [x] Raise ValidateError if Session classes overlap.
+- [x] Raise ValidateError if other issues with Session.
+- [x] Session.clean modifies values to ensure the new Session does not overlap with existing Sessions.
+- [x] On Admin Session ValidateError, repopoulate the fields with new values from Session.clean method.
+- [ ] ClassOffer will be assigned dates according to their Session.
 
 ### Deployment on PythonAnywhere
 
 - [?] Stop the AWS servers.
 - [x] Update code to use MySQL since it is preferred on this platform.
-- [ ] Upload ver 0.4.0
-- [ ] ??
+- [x] Upload ver 0.4.0
+- [x] Update models and migrations.
+- [x] Get Database and code working.
+- [x] Collect static working.
+- [ ] Upload ver 0.4.1
 
 ### Deployment on AWS
 
@@ -259,6 +267,8 @@ Current Status:
 ## General Site
 
 - [x] 'About Us' page should only show staff members.
+- [x] More consistent Model str and repr methods.
+- [x] Fix max_length to 191 for utf8mb4.
 - [ ] About Us page shows only teacher & staff profile info, plus business info. Links to Contact Us.
 - [ ] Contact Us page w/ contact form (send to email)
 - [x] Deal with when admin has no name (such as a superuser), it may break the 'About Us' page.
