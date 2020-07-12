@@ -5,13 +5,6 @@ from classwork.models import Session, Payment, Registration, Notify
 from users.models import UserHC
 from datetime import date, timedelta
 
-INITIAL = {
-    "name": "May_2020",
-    "key_day_date": "2020-04-30",
-    "max_day_shift": -2,
-    "num_weeks": 5,
-    "expire_date": "2020-05-08",
-}
 # Create your tests here.
 
 
@@ -65,6 +58,38 @@ class PaymentModelTests(SimpleModelTests, TestCase):
     defaults = {}
 
 
+USER_DEFAULTS = {'email': 'user_fake@fakesite.com', 'password': '1234', 'first_name': 'f_user', 'last_name': 'fake_y'}
+
+
+class UserModelTests(SimpleModelTests, TestCase):
+    Model = UserHC
+    repr_dict = {'UserHC': 'full_name'}
+    str_list = ['full_name']
+    create_method_name = 'create_user'
+    defaults = USER_DEFAULTS.copy()
+
+
+class UserModelNoNameTests(UserModelTests):
+    defaults = {k: v for k, v in USER_DEFAULTS.items() if k not in ('first_name', 'last_name')}
+
+
+class UserSuperModelTests(UserModelTests):
+    create_method_name = 'create_superuser'
+
+
+class UserSuperModelNoNameTests(UserSuperModelTests):
+    defaults = {k: v for k, v in USER_DEFAULTS.items() if k not in ('first_name', 'last_name')}
+
+
+INITIAL = {
+    "name": "May_2020",
+    "key_day_date": "2020-04-30",
+    "max_day_shift": -2,
+    "num_weeks": 5,
+    "expire_date": "2020-05-08",
+    }
+
+
 class RegistrationModelTests(SimpleModelTests, TestCase):
     Model = Registration
     repr_dict = {'Registration': 'classoffer', 'User': '_get_full_name', 'Owed': '_pay_report'}
@@ -81,7 +106,7 @@ class NotifyModelTests(TestCase):
 
 
 class SessionCoverageTests(TransactionTestCase):
-    fixtures = ['tests/db_basic.json']
+    fixtures = ['tests/fixtures/db_basic.json']
 
     def create_session(self, **kwargs):
         obj = Session.objects.create(**kwargs)

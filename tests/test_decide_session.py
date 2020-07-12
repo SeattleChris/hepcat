@@ -21,7 +21,7 @@ class NewSiteDecideSession(TestCase):
 
 class CurrentSessionSelection(TransactionTestCase):
     """ Critical views of current classes and content depend on the decide_session function. """
-    fixtures = ['tests/db_basic.json']  # Has a May_2020 session that has expired
+    fixtures = ['tests/fixtures/db_basic.json']  # Has a May_2020 session that has expired
 
     def test_only_current_published_session(self):
         """ Returns only currently published session, and no expired sessions """

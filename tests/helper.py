@@ -13,9 +13,9 @@ class SimpleModelTests:
     skip_attrs = {'auto_created': True, 'is_relation': True}
     instance = None  # If not None, create_model will instead update this instance.
     related = {}  # If not empty, will be modified to have instance(s) of other related Model(s).
+    create_method_name = 'create'
 
-    def create_model(self, **kwargs):
-        collected_kwargs = self.defaults.copy()
+    def create_model(self, create_method_name='create', **kwargs):
         for field, target in self.related.items():
             RelatedModel, related_kwargs = None, None
             if isinstance(target, dict):
@@ -29,13 +29,31 @@ class SimpleModelTests:
                 raise ValueError("Expected a Model in cls.related. ")
             q = RelatedModel.objects
             kwargs[field] = q.get_or_create(**related_kwargs) if related_kwargs else q.first()
-        collected_kwargs.update(kwargs)
+        kwargs.update(self.defaults.copy())
+        # collected_kwargs = self.defaults.copy()
+        # collected_kwargs.update(kwargs)
         if self.instance:
-            for key, value in collected_kwargs.items():
+            for key, value in kwargs.items():
                 setattr(self.instance, key, value)
             self.instance.save()
             return self.instance
-        return self.Model.objects.create(**collected_kwargs)
+        # TODO: Refactor the following to actually retrieve the method on the model
+        create_method = self.Model.objects
+        if create_method_name == 'create':
+            create_method = create_method.create
+        elif create_method_name == 'create_user':
+            create_method = create_method.create_user
+        elif create_method_name == 'create_superuser':
+            create_method = create_method.create_superuser
+            password = kwargs.pop('password', None)
+            email = kwargs.pop('email', None)
+            username = kwargs.pop('username', email)
+            return create_method(username, email, password, **kwargs)
+        elif create_method_name == 'find_or_create_for_anon':
+            create_method = create_method.find_or_create_for_anon
+        elif create_method_name == 'find_or_create_by_name':
+            create_method = create_method.find_or_create_by_name
+        return create_method(**kwargs)
 
     def repr_format(self, o):
         string_list = [f"{k}: {getattr(o, v, '')}" if k else str(getattr(o, v, '')) for k, v in self.repr_dict.items()]
@@ -82,7 +100,7 @@ class SimpleModelTests:
 
     def test_model_creation(self):
         fields = self.get_field_info()
-        model = self.create_model(**fields)
+        model = self.create_model(create_method_name=self.create_method_name, **fields)
         repr_value = self.repr_format(model)
         str_value = self.str_format(model)
 

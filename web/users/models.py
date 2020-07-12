@@ -174,9 +174,9 @@ class UserHC(AbstractUser):
     class Meta(AbstractUser.Meta):
         swappable = 'AUTH_USER_MODEL'
 
-    def __str__(self):
-        name = self.get_full_name() or self.username  # _("Name Not Found")
-        return name
+    @property
+    def full_name(self):
+        return self.get_full_name()
 
     def make_username(self):
         """ Instead of user selecting a username, we will generate it from their
@@ -200,5 +200,11 @@ class UserHC(AbstractUser):
             self.is_staff = False
         # TODO: Deal with username (email) being checked as existing even when we want a new user
         super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.get_full_name()   # or _("Name Not Found")
+
+    def __repr__(self):
+        return '<UserHC: ' + self.get_full_name() + ' >'
 
     # end class UserHC
