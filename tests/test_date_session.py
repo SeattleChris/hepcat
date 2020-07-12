@@ -34,13 +34,13 @@ early1_oth_skip = {
     "publish_date": "2020-05-08",
     "expire_date": "2020-06-12",
     }
-# no_skip = 'tests/db_early_no_skip_session.json'  # max_day_shift=-2, skip_weeks=0, num_weeks=5
-# oth_skip = 'tests/db_early1_oth_skip_session.json'  # max_day_shift=-2, skip_weeks=1, flip_last_day=True, num_weeks=5
+# no_skip = 'tests/fixtures/db_early_no_skip_session.json'  # max_day_shift=-2, skip_weeks=0, num_weeks=5
+# oth_skip = 'tests/fixtures/db_early1_oth_skip_session.json'  # max_day_shift=-2, skip_weeks=1, flip_last_day=True, num_weeks=5
 # Create your tests here.
 
 
 class NoSkipToOneSkipSessionDates(TransactionTestCase):
-    fixtures = ['tests/db_basic.json', 'tests/db_early_no_skip_session.json']
+    fixtures = ['tests/fixtures/db_basic.json', 'tests/fixtures/db_early_no_skip_session.json']
     skips = 1
     duration = 5
 
@@ -162,19 +162,19 @@ class NoSkipToOneSkipSessionDates(TransactionTestCase):
 
 
 class OneOtherSkipEarlyToOneSkip(NoSkipToOneSkipSessionDates):
-    fixtures = ['tests/db_basic.json', 'tests/db_early1_oth_skip_session.json']
+    fixtures = ['tests/fixtures/db_basic.json', 'tests/fixtures/db_early1_oth_skip_session.json']
     skips = 1
     duration = 5
 
 
 class OneOtherSkipEarlyToThreeSkip(NoSkipToOneSkipSessionDates):
-    fixtures = ['tests/db_basic.json', 'tests/db_early1_oth_skip_session.json']
+    fixtures = ['tests/fixtures/db_basic.json', 'tests/fixtures/db_early1_oth_skip_session.json']
     skips = 3
     duration = 5
 
 
 # class SessionDateAfterEarlyOtherSkip(TransactionTestCase):
-#     fixtures = ['tests/db_basic.json', 'tests/db_early1_oth_skip_session.json']
+#     fixtures = ['tests/fixtures/db_basic.json', 'tests/fixtures/db_early1_oth_skip_session.json']
 
 #     def create_session(self, **kwargs):
 #         obj = self.create_session(**kwargs)
