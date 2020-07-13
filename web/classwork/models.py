@@ -177,8 +177,9 @@ class Subject(models.Model):
     LEVEL_ORDER = {
         'Beg': 1,
         'L2': 2,
+        'WS': 2.25,
         'L3': 3,
-        'Spec': 3,
+        'Spec': 2.75,
         'L4': 4, }
     # TODO: Update so that site Admin can change class level logic.
     VERSION_CHOICES = (
@@ -542,14 +543,12 @@ class ClassOffer(models.Model):
         """ When we want a sortable level number. """
         return self._num_level
 
-    @num_level.setter
     def set_num_level(self):
         level_dict = Subject.LEVEL_ORDER
-        print('======================================= ClassOffer.set_num_level ======================================')
-        # print(level_dict.values())
         higher = 100 + max(level_dict.values())
         num = 0
         if self.subject is None:
+            self._num_level = higher
             return higher
         try:
             num = level_dict.get(getattr(self.subject, 'level', higher))
