@@ -106,7 +106,7 @@ class NotifyModelTests(TestCase):
 
 
 class SessionCoverageTests(TransactionTestCase):
-    fixtures = ['tests/fixtures/db_basic.json']
+    fixtures = ['tests/fixtures/db_basic.json', 'tests/fixtures/db_hidden.json']
 
     def create_session(self, **kwargs):
         obj = Session.objects.create(**kwargs)

@@ -103,6 +103,7 @@ ENV/
 env.bak/
 venv.bak/
 .ebextensions/01_env.config
+db_hidden.json
 
 # Spyder project settings
 .spyderproject
