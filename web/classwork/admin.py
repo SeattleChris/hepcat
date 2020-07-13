@@ -5,7 +5,17 @@ from django.db import models
 from django.conf import settings
 from .models import (SiteContent, Resource, Subject, Session, ClassOffer,
                      Profile, Payment, Registration, Location)
+# from .helper import date_with_day
 from datetime import timedelta
+
+
+def date_with_day(obj, field=None, short=False, year=False):
+    """ Will format the obj.field datefield to include the day of the week. """
+    date_day = getattr(obj, field, None)
+    date_format = '%a' if short else '%A'
+    date_format += ' %B %-d'  # django template language for date: 'l N j'
+    date_format += ', %Y' if year else ''  # django template language for date: 'l N j, Y'
+    return date_day.strftime(date_format) if date_day else ''
 
 # Register your models here.
 # TODO: Make a ResourceAdmin? This could modify which are shown
@@ -38,11 +48,15 @@ class SubjectAdmin(admin.ModelAdmin):
 
 class ClassOfferAdmin(admin.ModelAdmin):
     """ Admin change/add for ClassOffers. Has an inline for Resources. """
-    model = Subject
-    list_display = ('__str__', 'subject', 'session',)
-    # ('subject', 'session', 'teachers', 'class_day', 'start_time',)
+    model = ClassOffer
+    list_display = ('__str__', 'subject', 'session', 'start_day', 'start_time' 'end_day')
     list_display_links = ('__str__',)
     inlines = (ResourceInline, )
+
+    def start_day(self, obj): return date_with_day(obj, field='start_date')
+    def end_day(self, obj): return date_with_day(obj, field='end_date', short=True, year=True)
+    start_day.short_description = 'start'
+    end_day.short_description = 'end'
     # TODO: What if we want to attach an already existing Resource?
 
 
@@ -85,15 +99,10 @@ class SessiontAdmin(admin.ModelAdmin):
     fields = ('name', ('key_day_date', 'max_day_shift'), 'num_weeks',
               ('skip_weeks', 'flip_last_day'), 'break_weeks', ('publish_date', 'expire_date'))
 
-    def date_with_day(self, obj, field=None):
-        """ Will format the obj.field datefield to include the day of the week. """
-        date_day = getattr(obj, field, None)
-        return date_day.strftime('%A %B %-d, %Y') if date_day else ''  # django template language for date: 'l N j, Y'
-
-    def start_day(self, obj): return self.date_with_day(obj, field='start_date')
-    def end_day(self, obj): return self.date_with_day(obj, field='end_date')
-    def publish_day(self, obj): return self.date_with_day(obj, field='publish_date')
-    def expire_day(self, obj): return self.date_with_day(obj, field='expire_date')
+    def start_day(self, obj): return date_with_day(obj, field='start_date')
+    def end_day(self, obj): return date_with_day(obj, field='end_date')
+    def publish_day(self, obj): return date_with_day(obj, field='publish_date')
+    def expire_day(self, obj): return date_with_day(obj, field='expire_date')
     def skips(self, obj): return getattr(obj, 'skip_weeks', None)
     def breaks(self, obj): return getattr(obj, 'break_weeks', None)
     publish_day.admin_order_field = 'publish_date'
