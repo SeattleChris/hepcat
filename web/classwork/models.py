@@ -127,7 +127,7 @@ class Resource(models.Model):
         week = self.avail if self.avail != 200 else classoffer.subject.num_weeks
         delay = pub_delay+7*week
         now = date.today()
-        start = classoffer.start_date()
+        start = classoffer.start_date
         avail_date = min(now, start) if week == 0 else start + timedelta(days=delay)
         expire_date = None if self.expire == 0 else avail_date + timedelta(weeks=self.expire)
         if expire_date and now > expire_date:
@@ -192,10 +192,9 @@ class Subject(models.Model):
     level = models.CharField(max_length=8, choices=LEVEL_CHOICES, default='Spec')
     version = models.CharField(max_length=1, choices=VERSION_CHOICES)
     title = models.CharField(max_length=125, default=_('Untitled'))
-    # tagline_1 = models.CharField(max_length=23, blank=True)
-    # tagline_2 = models.CharField(max_length=23, blank=True)
-    # tagline_3 = models.CharField(max_length=23, blank=True)
-    short_desc = models.CharField(max_length=100, blank=True)
+    tagline_1 = models.CharField(max_length=23, blank=True)
+    tagline_2 = models.CharField(max_length=23, blank=True)
+    tagline_3 = models.CharField(max_length=23, blank=True)
     num_weeks = models.PositiveSmallIntegerField(default=settings.DEFAULT_SESSION_WEEKS)
     num_minutes = models.PositiveSmallIntegerField(default=settings.DEFAULT_CLASS_MINUTES)
     description = models.TextField()
@@ -460,8 +459,8 @@ class ClassOffer(models.Model):
     teachers = models.CharField(max_length=125, default='Chris Chapman')
     class_day = models.SmallIntegerField(choices=DOW_CHOICES, default=settings.DEFAULT_KEY_DAY)
     start_time = models.TimeField()
-    # skip_weeks = models.PositiveSmallIntegerField(default=0, verbose_name=_('skipped mid-session class weeks'))
-    # skip_tagline = models.CharField(max_length=100, blank=True)
+    skip_weeks = models.PositiveSmallIntegerField(default=0, verbose_name=_('skipped mid-session class weeks'))
+    skip_tagline = models.CharField(max_length=46, blank=True)
     date_added = models.DateField(auto_now_add=True)
     date_modified = models.DateField(auto_now=True)
 
@@ -530,8 +529,7 @@ class ClassOffer(models.Model):
     @property
     def end_date(self):
         """ Returns the computed end date for this class offer. """
-        # return self.start_date + timedelta(days=7*(self.subject.num_weeks + self.skip_weeks - 1))
-        return self.start_date + timedelta(days=7*(self.subject.num_weeks - 1))
+        return self.start_date + timedelta(days=7*(self.subject.num_weeks + self.skip_weeks - 1))
 
     @property
     def day_short(self):

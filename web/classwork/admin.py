@@ -44,14 +44,37 @@ class SubjectAdmin(admin.ModelAdmin):
     list_display_links = ('__str__', 'title')
     inlines = (ResourceInline, )
     # TODO: What if we want to attach an already existing Resource?
+    fields = (
+        ('level', 'version'),
+        'title', 'tagline_1', 'tagline_2', 'tagline_3',
+        ('num_weeks', 'num_minutes'),
+        'description', 'image',
+        ('full_price', 'pre_pay_discount'),
+        ('qualifies_as_multi_class_discount', 'multiple_purchase_discount')
+    )
 
 
 class ClassOfferAdmin(admin.ModelAdmin):
     """ Admin change/add for ClassOffers. Has an inline for Resources. """
     model = ClassOffer
-    list_display = ('__str__', 'subject', 'session', 'start_day', 'start_time' 'end_day')
+    list_display = ('__str__', 'subject', 'session', 'start_day', 'start_time', 'end_day')
     list_display_links = ('__str__',)
+    ordering = ('session__key_day_date', '_num_level')
+    list_filter = ('session', 'subject', '_num_level', 'class_day')
     inlines = (ResourceInline, )
+    fieldsets = (
+        (None, {
+            'fields': (
+                ('subject', 'session',),
+                ('location', 'teachers', 'manager_approved'),
+                ('class_day', 'start_time')
+            ),
+        }),
+        ('Missed Classes', {
+            'classes': ('collapse', ),
+            "fields": ('skip_weeks', 'skip_tagline'),
+        })
+    )
 
     def start_day(self, obj): return date_with_day(obj, field='start_date')
     def end_day(self, obj): return date_with_day(obj, field='end_date', short=True, year=True)
