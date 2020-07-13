@@ -11,8 +11,9 @@
   <article>
     <h1>{{ classoffer.subject.title }}</h1>
     <ul>
-      <li>{{ classoffer.class_day }} | {{ classoffer.start_time }} - {{ classoffer.end_time }} </li>
-      <li>{{ classoffer.start_date }} - {{ classoffer.end_date }}</li>
+      <li>{{ classoffer.subject.short_desc }}</li>
+      <li>{{ classoffer.day }} | {{ classoffer.start_time|date:"g:i" }} - {{ classoffer.end_time|date:"g:iA"|lower }} </li>
+      <li>{{ classoffer.start_date|date:"F jS" }} - {{ classoffer.end_date|date:"F jS, Y" }}</li>
       <li>Taught by: {{ classoffer.teachers }} </li>
     </ul>
 

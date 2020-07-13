@@ -72,8 +72,8 @@
   <article class="class_history">
     <h4>{{classoffer}}</h4>
     <p>
-      {{classoffer.start_date}} to {{classoffer.end_date}} |
-      {{classoffer.start_time}} - {{classoffer.end_time}}
+      {{classoffer.start_date|date:"M jS"}} to {{classoffer.end_date|date:"M jS"}} |
+      {{classoffer.start_time|date:"g:i"}} - {{classoffer.end_time|date:"g:iA"|lower}}
       <br />
       Taught by: {{classoffer.teachers}}
     </p>
