@@ -34,6 +34,7 @@
 | :heavy_check_mark: | Admin: Sessions pre-populate and error correct dates of the session                         |
 | :heavy_check_mark: | Tests: Add initial testing including coverage reports                                       |
 | :heavy_check_mark: | Tests: Checking date computations on Session model and Admin form                           |
+| :heavy_check_mark: | Tests: UserHC model - create user; Profile create on UserHC; Basics for all models.         |
 |                    | User Views: About Us - show profile info for only teachers and staff, plus general business |
 |                    | User Views: Contact Us (including contact form), Info - general site resources, sub-pages   |
 |                    | User Views: General site clean up before first launch                                       |
@@ -131,8 +132,10 @@ Current Status:
 - [x] Raise ValidateError if Session classes overlap.
 - [x] Raise ValidateError if other issues with Session.
 - [x] Session.clean modifies values to ensure the new Session does not overlap with existing Sessions.
-- [x] On Admin Session ValidateError, repopoulate the fields with new values from Session.clean method.
-- [ ] ClassOffer will be assigned dates according to their Session.
+- [x] On Admin Session ValidateError, repopulate the fields with new values from Session.clean method.
+- [x] ClassOffer will be assigned dates according to their Session.
+- [ ] ClassOffer will handle invalid day of the week inputs.
+- [ ] ClassOffer Admin list: show start and end dates.
 
 ### Deployment on PythonAnywhere
 
