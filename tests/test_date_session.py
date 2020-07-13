@@ -40,7 +40,8 @@ early1_oth_skip = {
 
 
 class NoSkipToOneSkipSessionDates(TransactionTestCase):
-    fixtures = ['tests/fixtures/db_basic.json', 'tests/fixtures/db_early_no_skip_session.json']
+    fixtures = ['tests/fixtures/db_basic.json', 'tests/fixtures/db_hidden.json',
+                'tests/fixtures/db_early_no_skip_session.json']
     skips = 1
     duration = 5
 
@@ -162,19 +163,23 @@ class NoSkipToOneSkipSessionDates(TransactionTestCase):
 
 
 class OneOtherSkipEarlyToOneSkip(NoSkipToOneSkipSessionDates):
-    fixtures = ['tests/fixtures/db_basic.json', 'tests/fixtures/db_early1_oth_skip_session.json']
+    fixtures = ['tests/fixtures/db_basic.json', 'tests/fixtures/db_hidden.json',
+                'tests/fixtures/db_early1_oth_skip_session.json'
+                ]
     skips = 1
     duration = 5
 
 
 class OneOtherSkipEarlyToThreeSkip(NoSkipToOneSkipSessionDates):
-    fixtures = ['tests/fixtures/db_basic.json', 'tests/fixtures/db_early1_oth_skip_session.json']
+    fixtures = ['tests/fixtures/db_basic.json', 'tests/fixtures/db_hidden.json',
+                'tests/fixtures/db_early1_oth_skip_session.json']
     skips = 3
     duration = 5
 
 
 # class SessionDateAfterEarlyOtherSkip(TransactionTestCase):
-#     fixtures = ['tests/fixtures/db_basic.json', 'tests/fixtures/db_early1_oth_skip_session.json']
+#     fixtures = ['tests/fixtures/db_basic.json', 'tests/fixtures/db_hidden.json',
+#                 'tests/fixtures/db_early1_oth_skip_session.json']
 
 #     def create_session(self, **kwargs):
 #         obj = self.create_session(**kwargs)
