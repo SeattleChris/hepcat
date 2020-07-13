@@ -20,28 +20,30 @@
   <article class="classoffer">
     <h2>{{ classoffer.subject.title }}</h2>
     <ul>
-      {% if classoffer.short_desc1 %}<li>{{classoffer.shortdesc1}}</li>{% endif %}
-      {% if classoffer.short_desc2 %}<li>{{classoffer.shortdesc2}}</li>{% endif %}
+      {% if classoffer.subject.tagline_1 %}<li>{{classoffer.subject.tagline_1}}</li>{% endif %}
+      {% if classoffer.subject.tagline_2 %}<li>{{classoffer.subject.tagline_2}}</li>{% endif %}
+      {% if classoffer.subject.tagline_3 %}<li>{{classoffer.subject.tagline_3}}</li>{% endif %}
       <li>&nbsp;</li>
       <li>
         <span class="shorten2" data-text="{{classoffer.day_short}}, ">
           {{ classoffer.day }},
         </span>
         <span class="nowrap shorten" data-text="{{classoffer.start_time|date:'g'}} - {{classoffer.end_time|date:'gA'|lower}}">
-          {{ classoffer.start_time|date:"g:i"|lower }} - {{ classoffer.end_time|date:"g:iA"|lower }}
+          {{ classoffer.start_time|date:"g:i" }} - {{ classoffer.end_time|date:"g:iA"|lower }}
         </span>
       </li>
-      {% if classoffer.skip_week %}
+      {% if classoffer.skip_weeks > 0 %}
       <li>
-        <span class="shorten" data-text="{{classoffer.start_date_short|date:'b d'}} - {{classoffer.end_date_short|date:'b dS'}}">
-          {{ classoffer.start_date|date:"M dS" }} - {{ classoffer.end_date|date:"F dS" }}
+        <span class="shorten" data-text="{{classoffer.start_date|date:'M j'}} - {{classoffer.end_date|date:'M j'}}">
+          {{ classoffer.start_date|date:"M jS" }} - {{ classoffer.end_date|date:"F jS" }}
         </span>
       </li>
-      <li>{{ classoffer.skip_week }}</li>
+      <li>{{ classoffer.skip_tagline }}</li>
+      <li>{{ classoffer.skip_week_explain }}</li>
       {% else %}
       <li>
-        <span class="shorten" data-text="Starts {{classoffer.start_date_short|date:'b d'}}">
-          Starts {{ classoffer.start_date|date:"F dS" }}
+        <span class="shorten" data-text="Starts {{classoffer.start_date|date:'M d'}}">
+          Starts {{ classoffer.start_date|date:"F jS" }}
         </span>
       </li>
       <li>&nbsp;</li>

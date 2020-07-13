@@ -10,9 +10,7 @@ from django.urls import reverse
 from decimal import Decimal  # used for Payments
 from payments import PurchasedItem
 from payments.models import BasePayment
-from functools import partial
 from datetime import date, timedelta, datetime as dt
-# from pprint import pprint
 # from django.contrib.auth import get_user_model
 # User = get_user_model()
 # TODO: Should we be using get_user_model() instead of settings.AUTH_USER_MODEL ?
@@ -129,7 +127,7 @@ class Resource(models.Model):
         week = self.avail if self.avail != 200 else classoffer.subject.num_weeks
         delay = pub_delay+7*week
         now = date.today()
-        start = classoffer.start_date()
+        start = classoffer.start_date
         avail_date = min(now, start) if week == 0 else start + timedelta(days=delay)
         expire_date = None if self.expire == 0 else avail_date + timedelta(weeks=self.expire)
         if expire_date and now > expire_date:
@@ -179,8 +177,9 @@ class Subject(models.Model):
     LEVEL_ORDER = {
         'Beg': 1,
         'L2': 2,
+        'WS': 2.25,
         'L3': 3,
-        'Spec': 3,
+        'Spec': 2.75,
         'L4': 4, }
     # TODO: Update so that site Admin can change class level logic.
     VERSION_CHOICES = (
@@ -194,7 +193,9 @@ class Subject(models.Model):
     level = models.CharField(max_length=8, choices=LEVEL_CHOICES, default='Spec')
     version = models.CharField(max_length=1, choices=VERSION_CHOICES)
     title = models.CharField(max_length=125, default=_('Untitled'))
-    short_desc = models.CharField(max_length=100, blank=True)
+    tagline_1 = models.CharField(max_length=23, blank=True)
+    tagline_2 = models.CharField(max_length=23, blank=True)
+    tagline_3 = models.CharField(max_length=23, blank=True)
     num_weeks = models.PositiveSmallIntegerField(default=settings.DEFAULT_SESSION_WEEKS)
     num_minutes = models.PositiveSmallIntegerField(default=settings.DEFAULT_CLASS_MINUTES)
     description = models.TextField()
@@ -459,6 +460,8 @@ class ClassOffer(models.Model):
     teachers = models.CharField(max_length=125, default='Chris Chapman')
     class_day = models.SmallIntegerField(choices=DOW_CHOICES, default=settings.DEFAULT_KEY_DAY)
     start_time = models.TimeField()
+    skip_weeks = models.PositiveSmallIntegerField(default=0, verbose_name=_('skipped mid-session class weeks'))
+    skip_tagline = models.CharField(max_length=46, blank=True)
     date_added = models.DateField(auto_now_add=True)
     date_modified = models.DateField(auto_now=True)
 
@@ -486,92 +489,66 @@ class ClassOffer(models.Model):
         return self.full_price - self.pre_discount if self.pre_discount > 0 else None
 
     @property
-    def skip_week(self):
+    def skip_week_explain(self):
         """ Most of the time there is not a missing week in the middle of session.
             However, sometimes there are holidays that we can not otherwise schedule around.
             This returns some text explaining the skipped week. Generally this is included in class description details.
         """
-        explain = ''
+        explain = "but you still get {} class days".format(self.session.num_weeks)
         # if some skip condition, modify explain with explanation text
-        return explain
+        return _(explain)
 
     @property
     def end_time(self):
         """ Computed based on the Subject.num_minutes and the current class start time. """
-        start = dt.combine(self.start_date(), self.start_time)
+        start = dt.combine(self.start_date, self.start_time)
         end = start + timedelta(minutes=self.subject.num_minutes)
         print(f"End: {end}")
         print(f"End time: {end.time()}")
         return end.time()
 
-    def day(self, short=False):
-        """ Used for displaying the day of week for the class as a word.
-            Returns plural form if the class has multiple weeks.
-            Returns abbreviated form if short is True.
-        """
-        lookup_day = [value[:3] if short else value for key, value in ClassOffer.DOW_CHOICES]
-        day = lookup_day[self.class_day]
-        if self.subject.num_weeks > 1:
-            day += '(s)' if short else 's'
+    @property
+    def day(self):
+        """ Returns the day of the week word, plural if there are multiple weeks, for this ClassOffer. """
+        day = self.DOW_CHOICES[self.class_day][1]
+        day += 's' if self.subject.num_weeks > 1 else ''
         return day
 
-    def start_date(self, short=False):
-        """ Depends on class_day, Session dates, and possibly on Session.max_day_shift being positive or negative. """
+    @property
+    def start_date(self):
+        """ Returns a datetime object for the first day of this ClassOffer. """
         start = self.session.key_day_date
         dif = self.class_day - start.weekday()
         if dif == 0:
             return start
-        shift, complement, move = self.session.max_day_shift, 0, 0
-
-        if dif < 0: complement = dif + 7  # noqa E701
-        if dif > 0: complement = dif - 7  # noqa E701
-        if shift < 0:
-            move = min(dif, complement)
-            if move < shift:
-                move = max(dif, complement)
-        if shift > 0:
-            move = max(dif, complement)
-            if move > shift:
-                move = min(dif, complement)
+        # account for weekday out of range of max_day_shift.
+        complement = dif + 7 if dif < 0 else dif - 7
+        move = min(dif, complement) if self.session.max_day_shift < 0 else max(dif, complement)
         start += timedelta(days=move)
-        if short:
-            return start  # Update if we create a short version.
         return start
 
-    def end_date(self, short=False):
+    @property
+    def end_date(self):
         """ Returns the computed end date for this class offer. """
-        return self.start_date(short=short) + timedelta(days=7*(self.subject.num_weeks - 1))
+        return self.start_date + timedelta(days=7*(self.subject.num_weeks + self.skip_weeks - 1))
 
-    # @property
-    # def start_date_short(self):
-    #     """ Same as start_date, but returns shorter text in the string. """
-    #     return self.start_date(short=True)
-
-    # @property
-    # def end_date_short(self):
-    #     """ Same as end_date, but returns a shorter text in the string. """
-    #     return self.end_date(short=True)
-
-    day_short = property(partial(day, short=True))
-    day_long = property(partial(day, short=False))
-    start_date_short = property(partial(start_date, short=True))
-    start_date_long = property(partial(start_date, short=False))
-    end_date_short = property(partial(end_date, short=True))
-    end_date_long = property(partial(end_date, short=False))
+    @property
+    def day_short(self):
+        day_long = self.day
+        ending = "(s)" if day_long.endswith('s') else ""
+        return day_long[:3] + ending
 
     @property
     def num_level(self):
         """ When we want a sortable level number. """
         return self._num_level
 
-    @num_level.setter
     def set_num_level(self):
         level_dict = Subject.LEVEL_ORDER
-        print('======================================= ClassOffer.set_num_level ======================================')
-        # print(level_dict.values())
         higher = 100 + max(level_dict.values())
         num = 0
         if self.subject is None:
+            self._num_level = higher
             return higher
         try:
             num = level_dict.get(getattr(self.subject, 'level', higher))
@@ -581,7 +558,7 @@ class ClassOffer(models.Model):
         return num
 
     def save(self, *args, **kwargs):
-        self.set_num_level
+        self.set_num_level()
         super().save(*args, **kwargs)
 
     def __str__(self):
