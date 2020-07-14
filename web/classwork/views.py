@@ -150,7 +150,7 @@ class Checkin(ListView):
         """ List all the students from all the classes (grouped in days, then
             in start_time order, and then alphabetical first name)
         """
-        print("============ Checkin.get_queryset ================")
+        # print("============ Checkin.get_queryset ================")
         display_session = self.kwargs.get('display_session', None)
         display_date = self.kwargs.get('display_date', None)
         sessions = decide_session(sess=display_session, display_date=display_date)
@@ -160,7 +160,7 @@ class Checkin(ListView):
 
     def get_context_data(self, **kwargs):
         """ Determine Session filter parameters. Reference to previous and next Session if feasible. """
-        print("============ Checkin.get_context_data ================")
+        # print("============ Checkin.get_context_data ================")
         context = super().get_context_data(**kwargs)
         sessions = self.kwargs.pop('sessions', None)
         context['sessions'] = ', '.join([ea.name for ea in sessions])
@@ -200,17 +200,17 @@ class ProfileView(DetailView):
     # TODO: Filter out the resources that are not meant for ProfileView
 
     def get_object(self):
-        print('=== ProfileView get_object ====')
+        # print('=== ProfileView get_object ====')
         return Profile.objects.get(user=self.request.user)
 
     def get_context_data(self, **kwargs):
         """ Modify the context """
         context = super().get_context_data(**kwargs)
-        print('===== ProfileView get_context_data ======')
+        # print('===== ProfileView get_context_data ======')
         registers = list(Registration.objects.filter(student=self.object).values('classoffer'))
         ids = list(set([list(ea.values())[0] for ea in registers]))
         taken = ClassOffer.objects.filter(id__in=ids)
-        print(ids)
+        # print(ids)
         res = []
         for ea in ids:
             cur = ClassOffer.objects.get(id=ea)
@@ -219,8 +219,8 @@ class ProfileView(DetailView):
                 Q(subject=cur.subject)
                 ) if res.publish(cur)]
             res.extend(cur_res) if len(cur_res) else None
-        print('----- res ------')
-        print(res)
+        # print('----- res ------')
+        # print(res)
         context['had'] = taken
         ct = {ea[0]: [] for ea in Resource.CONTENT_CHOICES}
         [ct[ea.content_type].append(ea) for ea in res]
@@ -228,7 +228,7 @@ class ProfileView(DetailView):
         # of the current user resources that are past their avail date.
         context['resources'] = {key: vals for (key, vals) in ct.items() if len(vals) > 0}
         # context['resources'] only has the ct keys if the values have data.
-        print(context['resources'])
+        # print(context['resources'])
         return context
 
     # end class ProfileView
@@ -256,42 +256,42 @@ class RegisterView(CreateView):
     #     print('================ as_view =================')
     #     return super().as_view(**initkwargs)
 
-    def setup(self, *args, **kwargs):
-        print('================ RegisterView.setup =================')
-        return super(RegisterView, self).setup(*args, **kwargs)
+    # def setup(self, *args, **kwargs):
+    #     print('================ RegisterView.setup =================')
+    #     return super(RegisterView, self).setup(*args, **kwargs)
 
-    def dispatch(self, *args, **kwargs):
-        print('================ RegisterView.dispatch =================')
-        return super(RegisterView, self).dispatch(*args, **kwargs)
+    # def dispatch(self, *args, **kwargs):
+    #     print('================ RegisterView.dispatch =================')
+    #     return super(RegisterView, self).dispatch(*args, **kwargs)
 
-    def get(self, *args, **kwargs):
-        print('================ RegisterView.get =================')
-        return super(RegisterView, self).get(*args, **kwargs)
+    # def get(self, *args, **kwargs):
+    #     print('================ RegisterView.get =================')
+    #     return super(RegisterView, self).get(*args, **kwargs)
 
-    def post(self, *args, **kwargs):
-        print('================ RegisterView.post =================')
-        return super().post(self, *args, **kwargs)
+    # def post(self, *args, **kwargs):
+    #     print('================ RegisterView.post =================')
+    #     return super().post(self, *args, **kwargs)
 
-    def put(self, *args, **kwargs):
-        print('================ RegisterView.put =================')
-        return super().put(*args, **kwargs)
+    # def put(self, *args, **kwargs):
+    #     print('================ RegisterView.put =================')
+    #     return super().put(*args, **kwargs)
 
-    def get_context_data(self, **kwargs):
-        print('========== RegisterView.get_context_data =============')
-        context = super().get_context_data(**kwargs)
-        print(context)
-        return context
+    # def get_context_data(self, **kwargs):
+    #     print('========== RegisterView.get_context_data =============')
+    #     context = super().get_context_data(**kwargs)
+    #     print(context)
+    #     return context
 
-    def get_form(self, form_class=None):
-        print('================ RegisterView.get_form =================')
-        return super().get_form(form_class)
+    # def get_form(self, form_class=None):
+    #     print('================ RegisterView.get_form =================')
+    #     return super().get_form(form_class)
 
-    def get_form_class(self):
-        print('================ RegisterView.get_form_class =================')
-        return super().get_form_class()
+    # def get_form_class(self):
+    #     print('================ RegisterView.get_form_class =================')
+    #     return super().get_form_class()
 
     def get_form_kwargs(self):
-        print('================ RegisterView.get_form_kwargs =================')
+        # print('================ RegisterView.get_form_kwargs =================')
         kwargs = super(RegisterView, self).get_form_kwargs()
         sess = self.kwargs.get('display_session', None)
         date = self.kwargs.get('display_date', None)
@@ -300,13 +300,13 @@ class RegisterView(CreateView):
         return kwargs
 
     def get_initial(self):
-        print('================ RegisterView.get_initial ====================')
+        # print('================ RegisterView.get_initial ====================')
         initial = super().get_initial()
         user = self.request.user
         home_state = User._meta.get_field('billing_country_area').get_default()
         initial['user'] = user
-        print(user)
-        print('------- Update initial Values --------------')
+        # print(user)
+        # print('------- Update initial Values --------------')
         initial['first_name'] = getattr(user, 'first_name', '')
         initial['last_name'] = getattr(user, 'last_name', '')
         initial['email'] = getattr(user, 'email', '')
@@ -314,27 +314,27 @@ class RegisterView(CreateView):
         initial['billing_address_2'] = getattr(user, 'billing_address_2', '')
         initial['billing_country_area'] = getattr(user, 'billing_country_area', home_state)
         initial['billing_postcode'] = getattr(user, 'billing_postcode', '')
-        print(initial)
+        # print(initial)
         return initial
 
-    def get_prefix(self):
-        print('================ RegisterView.get_prefix =================')
-        return super().get_prefix()
+    # def get_prefix(self):
+    #     print('================ RegisterView.get_prefix =================')
+    #     return super().get_prefix()
 
-    def render_to_response(self, context, **response_kwargs):
-        print('================ RegisterView.render_to_response =================')
-        return super(RegisterView, self).render_to_response(context, **response_kwargs)
+    # def render_to_response(self, context, **response_kwargs):
+    #     print('================ RegisterView.render_to_response =================')
+    #     return super(RegisterView, self).render_to_response(context, **response_kwargs)
 
-    def get_template_names(self):
-        print('================ RegisterView.get_template_names =================')
-        return super().get_template_names()
+    # def get_template_names(self):
+    #     print('================ RegisterView.get_template_names =================')
+    #     return super().get_template_names()
 
-    def form_valid(self, form):
-        print('======== RegisterView.form_valid ========')
-        print('---- Docs say handle unauthorized users in this form_valid ----')
-        fv = super(RegisterView, self).form_valid(form)
-        print(fv)
-        return fv
+    # def form_valid(self, form):
+    #     print('======== RegisterView.form_valid ========')
+    #     print('---- Docs say handle unauthorized users in this form_valid ----')
+    #     fv = super(RegisterView, self).form_valid(form)
+    #     print(fv)
+    #     return fv
 
     def get_success_url(self):
         print('================ RegisterView.get_success_url =================')
@@ -346,37 +346,37 @@ class RegisterView(CreateView):
 
     # Unsure after this one.
 
-    def form_invalid(self, form):
-        print('================ RegisterView.form_invalid =================')
-        print(f'Self: {self}')
-        for ea in dir(self):
-            print(ea)
-        print(f'Form: {form}')
-        return super().form_invalid(form)
+    # def form_invalid(self, form):
+    #     print('================ RegisterView.form_invalid =================')
+    #     print(f'Self: {self}')
+    #     for ea in dir(self):
+    #         print(ea)
+    #     print(f'Form: {form}')
+    #     return super().form_invalid(form)
 
-    def get_object(self, queryset=None):
-        print('================ RegisterView.get_object =================')
-        return super().get_object(queryset)
+    # def get_object(self, queryset=None):
+    #     print('================ RegisterView.get_object =================')
+    #     return super().get_object(queryset)
 
-    # def head():
-    #     print('================ head =================')
-    #     return super().head(**initkwargs)
+    # # def head():
+    # #     print('================ head =================')
+    # #     return super().head(**initkwargs)
 
-    def http_method_not_allowed(self, *args, **kwargs):
-        print('================ RegisterView.http_method_not_allowed =================')
-        return super(RegisterView, self).http_method_not_allowed(*args, **kwargs)
+    # def http_method_not_allowed(self, *args, **kwargs):
+    #     print('================ RegisterView.http_method_not_allowed =================')
+    #     return super(RegisterView, self).http_method_not_allowed(*args, **kwargs)
 
-    def get_context_object_name(self, obj):
-        print('================ RegisterView.get_context_object_name =================')
-        return super().get_context_object_name(obj)
+    # def get_context_object_name(self, obj):
+    #     print('================ RegisterView.get_context_object_name =================')
+    #     return super().get_context_object_name(obj)
 
-    def get_queryset(self):
-        print('================ RegisterView.get_queryset =================')
-        return super().get_queryset()
+    # def get_queryset(self):
+    #     print('================ RegisterView.get_queryset =================')
+    #     return super().get_queryset()
 
-    def get_slug_field(self):
-        print('================ RegisterView.get_slug_field =================')
-        return super().get_slug_field()
+    # def get_slug_field(self):
+    #     print('================ RegisterView.get_slug_field =================')
+    #     return super().get_slug_field()
 
     # end class RegisterView
 
@@ -415,10 +415,10 @@ class PaymentProcessView(UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        print('========== PaymentResultView.get_context_data =============')
+        # print('========== PaymentResultView.get_context_data =============')
         payment = context['object']  # context['payment'] would also work
         if payment.status == 'preauth':
-            print('------------ Payment Capture -------------------')
+            # print('------------ Payment Capture -------------------')
             payment.capture()
         # TODO: put in logic for handling refunds, release, etc.
         context['payment_done'] = True if payment.status == 'confirmed' else False
@@ -429,12 +429,12 @@ class PaymentProcessView(UpdateView):
         context['class_selected'] = payment.description
         return context
 
-    def render_to_response(self, context, **response_kwargs):
-        print('========= PaymentResultView.render_to_response ========')
-        print(context)
-        print('------------ Context vs Response kwargs -------------------')
-        print(response_kwargs)
-        return super().render_to_response(context, **response_kwargs)
+    # def render_to_response(self, context, **response_kwargs):
+    #     print('========= PaymentResultView.render_to_response ========')
+    #     print(context)
+    #     print('------------ Context vs Response kwargs -------------------')
+    #     print(response_kwargs)
+    #     return super().render_to_response(context, **response_kwargs)
 
     # end class PaymentProcessView
 

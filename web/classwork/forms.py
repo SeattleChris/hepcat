@@ -72,9 +72,9 @@ class RegisterForm(forms.ModelForm):
     field_order = [*new_fields, *Meta.fields]
 
     def __init__(self, *args, **kwargs):
-        print('========= RegistrationForm.__init__========================')
+        # print('========= RegistrationForm.__init__========================')
         class_choices = kwargs.pop('class_choices', None)
-        print(class_choices)
+        # print(class_choices)
         super(RegisterForm, self).__init__(*args, **kwargs)
         self.fields['class_selected'].queryset = class_choices
 
