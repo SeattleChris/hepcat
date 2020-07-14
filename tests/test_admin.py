@@ -11,9 +11,10 @@ from django.contrib.contenttypes.models import ContentType
 # from django.contrib import admin as default_admin
 from classwork.admin import AdminSessionForm, SessiontAdmin, admin as main_admin
 from classwork.models import Session  # , Subject, ClassOffer, Location, Profile, Registration, Payment
+from users.models import UserHC as User
 from datetime import date, timedelta
-from django.contrib.auth import get_user_model
-User = get_user_model()
+# from django.contrib.auth import get_user_model
+# User = get_user_model()
 
 
 class AdminSetupTests(TestCase):

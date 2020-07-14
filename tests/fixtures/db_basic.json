@@ -655,16 +655,5 @@
         "payment": 1,
         "paid": false
     }
-},
-{
-    "model": "classwork.profile",
-    "pk": 1,
-    "fields": {
-        "bio": "",
-        "level": 0,
-        "credit": 0.0,
-        "date_added": "2020-06-22",
-        "date_modified": "2020-06-22"
-    }
 }
 ]
