@@ -503,8 +503,6 @@ class ClassOffer(models.Model):
         """ Computed based on the Subject.num_minutes and the current class start time. """
         start = dt.combine(self.start_date, self.start_time)
         end = start + timedelta(minutes=self.subject.num_minutes)
-        print(f"End: {end}")
-        print(f"End time: {end.time()}")
         return end.time()
 
     @property
