@@ -34,3 +34,16 @@ class RouteTests(TestCase):
         homepage = self.my_client.get('/')
         self.assertEqual(homepage.status_code, 200)
         # self.assertTrue(False)
+
+
+class SettingsFileTests(TestCase):
+    """ Coverage reports some sections of settings file that need testing. """
+
+    def test_hosted_pythonanywhere_and_not_local(self):
+        pass
+
+    def test_use_s3(self):
+        pass
+
+    def test_email_backend_else_condition(self):
+        pass
