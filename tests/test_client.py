@@ -1,4 +1,4 @@
-from django.test import TestCase, Client, modify_settings, override_settings
+from django.test import TestCase, Client, override_settings  # , modify_settings
 # from django.apps import apps
 # from django.conf import settings
 # from os import environ

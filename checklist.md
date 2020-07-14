@@ -94,6 +94,7 @@ Current Status:
 - [x] Coverage tests setup with coverage
 - [x] Initial tests of models
 - [ ] Models full or near full coverage
+  - [x] Scaffold method names for what coverage report shows is missing
 - [ ] Initial tests for views
 - [ ] Views full or near full coverage
 - [ ] Initial tests for admin
