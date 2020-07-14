@@ -18,11 +18,9 @@ User = get_user_model()
 
 
 def decide_session(sess=None, display_date=None):
-    """ Typically we want to see the current session (returned if no params set)
-        Sometimes we want to see a future session.
-        Used by many views, generally those that need a list of ClassOffers
-        that a user can view, sign up for, get a check-in sheet, pay for, etc.
-        Returns a list always, even if an empty list.
+    """ Typically we want to see the current session (default values), sometimes we want to see different session(s).
+        Used chiefly by ClassOfferListView, CheckIn, and RegisterView, but could be used elsewhere for session context.
+        Returns a iterable of zero or more (typically one) Session instances. The iterable may be a Query.
     """
     query = Session.objects
     if sess is None:
@@ -110,15 +108,9 @@ class ClassOfferDetailView(DetailView):
         # context['added_info'] =
         return context
 
-    # def get_queryset(self):
-    #     """ We can limit the classes list by publish date
-    #     """
-    #     return Classes.objects.filter()
-
 
 class ClassOfferListView(ListView):
-    """ We will want to list the classes that are scheduled to be offered.
-    """
+    """ We will want to list the classes that are scheduled to be offered. """
     template_name = 'classwork/classoffer_list.html'
     model = ClassOffer
     context_object_name = 'classoffers'
@@ -127,7 +119,7 @@ class ClassOfferListView(ListView):
 
     def get_queryset(self):
         """ We can limit the classes list by session, what is published on a given date, or currently published. """
-        print("============ ClassOfferListView.get_queryset ================")
+        # print("============ ClassOfferListView.get_queryset ================")
         display_session = self.kwargs.get('display_session', None)
         display_date = self.kwargs.get('display_date', None)
         sessions = decide_session(sess=display_session, display_date=display_date)
@@ -138,7 +130,7 @@ class ClassOfferListView(ListView):
 
     def get_context_data(self, **kwargs):
         """ Get context of class list we are showing, typically currently published or modified by URL parameters """
-        print("============ ClassOfferListView.get_context_data ================")
+        # print("============ ClassOfferListView.get_context_data ================")
         context = super().get_context_data(**kwargs)
         sessions = self.kwargs.pop('sessions', None)
         context['sessions'] = ', '.join([ea.name for ea in sessions])
@@ -167,7 +159,7 @@ class Checkin(ListView):
         return selected_classes
 
     def get_context_data(self, **kwargs):
-        """ Get the context of the current, or selected, class session student list """
+        """ Determine Session filter parameters. Reference to previous and next Session if feasible. """
         print("============ Checkin.get_context_data ================")
         context = super().get_context_data(**kwargs)
         sessions = self.kwargs.pop('sessions', None)
@@ -199,9 +191,7 @@ class ResourceDetailView(DetailView):
 
 
 class ProfileView(DetailView):
-    """Each user has a page where they can see resources that have been made
-        available to them.
-    """
+    """Each user has a page where they can see resources that have been made available to them. """
     template_name = 'classwork/user.html'
     model = Profile
     context_object_name = 'profile'
