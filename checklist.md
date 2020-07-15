@@ -85,7 +85,7 @@
 - [s] Stretch Goal. Not for current feature plan.
 
 Current Status:
-2020-07-11 21:04:06
+2020-07-15 07:02:14
 <!-- Ctrl-Shift-I to generate timestamp -->
 
 ### Tests
@@ -96,8 +96,9 @@ Current Status:
 - [ ] Models full or near full coverage
   - [x] Scaffold method names for what coverage report shows is missing
 - [ ] Initial tests for views
+  - [x] Scaffold method names for what coverage report shows is missing
 - [ ] Views full or near full coverage
-- [ ] Initial tests for admin
+- [x] Initial tests for admin
 - [ ] Admin full or near full coverage
 - [x] Session date computation methods
 - [x] Admin forms for Session: date computations
@@ -135,7 +136,7 @@ Current Status:
 - [x] Session.clean modifies values to ensure the new Session does not overlap with existing Sessions.
 - [x] On Admin Session ValidateError, repopulate the fields with new values from Session.clean method.
 - [x] ClassOffer will be assigned dates according to their Session.
-- [ ] ClassOffer will handle invalid day of the week inputs.
+- [x] ClassOffer will handle invalid day of the week inputs.
 - [ ] ClassOffer Admin list: show start and end dates.
 
 ### Deployment on PythonAnywhere
