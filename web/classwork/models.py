@@ -35,7 +35,7 @@ class SiteContent(models.Model):
     date_modified = models.DateField(auto_now=True)
 
     def __str__(self):
-        return f'{self.name}'
+        return self.name
 
     def __repr__(self):
         return f'<SiteContent: {self.name} >'

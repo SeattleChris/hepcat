@@ -45,20 +45,18 @@ class AboutUsListView(ListView):
     model = Profile
     context_object_name = 'profiles'
 
+    def get_queryset(self):
+        staff = Profile.objects.filter(user__is_staff=True)  # TODO: sort them in some desired order.
+        return staff
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         try:
-            context['business_about'] = SiteContent.objects.get(name='business_about').text
+            about = SiteContent.objects.get(name='business_about')
         except ObjectDoesNotExist:
-            context['business_about'] = ''
-            print('Object Does Not Exist')
+            about = None
+        context['business_about'] = getattr(about, 'text', None) if about else ''
         return context
-
-    def get_queryset(self):
-        all = super().get_queryset()
-        staff = all.filter(user__is_staff=True)
-        # TODO: sort them in some desired order.
-        return staff
 
     # end AboutUs
 
@@ -93,12 +91,6 @@ class ClassOfferDetailView(DetailView):
     model = ClassOffer
     context_object_name = 'classoffer'
     pk_url_kwarg = 'id'
-
-    # def get_context_data(self, **kwargs):
-    #     """ Modify the context """
-    #     context = super().get_context_data(**kwargs)
-    #     # context['added_info'] =
-    #     return context
 
 
 class ClassOfferListView(ListView):
@@ -192,6 +184,7 @@ class ProfileView(DetailView):
         """ Modify the context """
         context = super().get_context_data(**kwargs)
         # print('===== ProfileView get_context_data ======')
+        # TODO: Revisit the following for better query techniques.
         registers = list(Registration.objects.filter(student=self.object).values('classoffer'))
         ids = list(set([list(ea.values())[0] for ea in registers]))
         taken = ClassOffer.objects.filter(id__in=ids)
