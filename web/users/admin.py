@@ -36,20 +36,20 @@ from django.utils.translation import gettext_lazy as _
 
 class CustomUserAdmin(UserAdmin):
     model = get_user_model()  # UserHC
-    add_form = CustomUserCreationForm
-    form = CustomUserChangeForm
-    list_display = ['first_name', 'last_name', 'uses_email_username', 'username', 'is_student', 'is_teacher', 'is_admin',]
+    # add_form = CustomUserCreationForm
+    # form = CustomUserChangeForm
+    list_display = ('first_name', 'last_name', 'username', 'is_student', 'is_teacher', 'is_admin',)
     list_display_links = ('first_name', 'last_name', 'username')
     ordering = ('first_name',)
     fieldsets = (
-        (None, {'fields': ('email', 'password', ('is_student', 'is_teacher', 'is_admin'), 'uses_email_username')}),
-        (_('Personal info'), {'fields': ('first_name', 'last_name')}),
-        (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
+        (None, {'fields': (('email', 'uses_email_username'), 'password', ('is_student', 'is_teacher', 'is_admin'),), }),
+        (_('Personal info'), {'fields': (('first_name', 'last_name'),), }),
+        (_('Activity Dates'), {'fields': (('last_login', 'date_joined'),), 'classes': ('collapse',), }),
     )
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('first_name', 'last_name', 'email', 'is_student', 'is_teacher', 'is_admin', 'uses_email_username', 'password1', 'password2'),
+            'fields': (('first_name', 'last_name'), ('email', 'uses_email_username'), ('is_student', 'is_teacher', 'is_admin'), ('password1', 'password2'),),
         }),
     )
     # search_fields = ('first_name', 'last_name', 'email')
