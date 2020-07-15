@@ -162,6 +162,7 @@ Each organization installing this app while have some unique settings. Some of t
 * DEFAULT_CITY: City most classes and/or most students are likely in.
 * DEFAULT_COUNTRY_AREA_STATE: In the USA, this is the two-letter abbreviation for the State.
 * DEFAULT_POSTCODE: In the USA, the zip code. Can be the short or long version (15 char max).
+* DEFAULT_COUNTRY: Should be set to where you do the most business. No parameter if you don't want a default.
 * ASSUME_CLASS_APPROVE: True or False for the default setting for 'manager approved' for ClassOffer and content.
 * DEFAULT_CLASS_PRICE: Can set the common base price for most products (ClassOffer).
 * DEFAULT_PRE_DISCOUNT: Can set the typical discount for paying in advanced (per product).
@@ -169,12 +170,12 @@ Each organization installing this app while have some unique settings. Some of t
 * DEFAULT_KEY_DAY: Integer for day of the week, counting up with Monday as 0.
 * DEFAULT_MAX_DAY_SHIFT: A positive or negative number of days away from the key_day_date.
 * DEFAULT_SESSION_WEEKS: The typical duration of class weeks for most Sessions.
-* SESSION_MINIMUM_WEEKS: If a Session.num_weeks is less than this, it won't be considered in deciding computed dates.
+* SESSION_MINIMUM_WEEKS: If a Session.num_weeks is less than this, it won't be considered in computed dates.
 * DEFAULT_SESSION_EXPIRE: For a typical session, expire publishing it how many days after the first class?
 * SHORT_SESSION_EXPIRE: For a session under minimum_weeks, expire publishing it how many days after the first class?
 * DEFAULT_CLASS_MINUTES: The typical length of time of a single class day.
 
-*Note: The last 15 are all optional pre-populated values, overwritable per product. For DEFAULT_CLASS_PRICE, DEFAULT_PRE_DISCOUNT, MULTI_DISCOUNT - whole numbers should have '.0' at the end.
+*Note: The last 18 are all optional pre-populated values, overwritable per product. For DEFAULT_CLASS_PRICE, DEFAULT_PRE_DISCOUNT, MULTI_DISCOUNT - whole numbers should have '.0' at the end.
 The last seven are expected to be integers.
 
 ## Deployment
