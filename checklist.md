@@ -137,7 +137,8 @@ Current Status:
 - [x] On Admin Session ValidateError, repopulate the fields with new values from Session.clean method.
 - [x] ClassOffer will be assigned dates according to their Session.
 - [x] ClassOffer will handle invalid day of the week inputs.
-- [ ] ClassOffer Admin list: show start and end dates.
+- [x] ClassOffer Admin list: show start and end dates.
+- [x] ClassOffer Admin list: show start and end times in nice-display (not military time)
 
 ### Deployment on PythonAnywhere
 
@@ -147,7 +148,8 @@ Current Status:
 - [x] Update models and migrations.
 - [x] Get Database and code working.
 - [x] Collect static working.
-- [ ] Upload ver 0.4.1
+- [x] Upload ver 0.4.1
+- [ ] Upload ver 0.4.2
 
 ### Deployment on AWS
 
@@ -251,7 +253,6 @@ Current Status:
   - [ ] User has a randomly generated password, prompted to change on next login
   - [ ] User confirms with email link. Prompted for password from the link
   - [ ] If user never confirms, it does not stop them from joining future class.
-  - [ ]
 
 ## Style & Layout
 
