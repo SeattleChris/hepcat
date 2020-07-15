@@ -69,14 +69,6 @@ class SubjectProgressView(ListView):
     model = Subject
     context_object_name = 'levels'
 
-    def get_context_data(self, **kwargs):
-        """ Modify the context """
-        context = super().get_context_data(**kwargs)
-        # context['added_info'] =
-        return context
-
-    # end SubjectProgressView
-
 
 class LocationListView(ListView):
     """ Display all the Locations that we have stored """
@@ -102,11 +94,11 @@ class ClassOfferDetailView(DetailView):
     context_object_name = 'classoffer'
     pk_url_kwarg = 'id'
 
-    def get_context_data(self, **kwargs):
-        """ Modify the context """
-        context = super().get_context_data(**kwargs)
-        # context['added_info'] =
-        return context
+    # def get_context_data(self, **kwargs):
+    #     """ Modify the context """
+    #     context = super().get_context_data(**kwargs)
+    #     # context['added_info'] =
+    #     return context
 
 
 class ClassOfferListView(ListView):
@@ -181,13 +173,6 @@ class ResourceDetailView(DetailView):
     context_object_name = 'resource'
     pk_url_kwarg = 'id'
     template_name = 'classwork/resource.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["type"] = self.object.content_type
-        return context
-
-    # end ResourceDetailView
 
 
 class ProfileView(DetailView):

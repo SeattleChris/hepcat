@@ -1,4 +1,5 @@
 from django.test import TestCase, Client
+from unittest import skip
 from django.apps import apps
 from django.conf import settings
 from os import environ
@@ -32,6 +33,7 @@ class AdminSetupTests(TestCase):
         for model in models:
             self.assertIn(model, registered_models)
 
+    @skip("Not Implemented")
     def test_createsu_command(self):
         """ Our custom command to create a Superuser as an initial admin """
         # TODO: Write tests for when there is no superuser.
@@ -169,6 +171,7 @@ class AdminSessionModelManagement(TestCase):
         # pprint(second_sess)
         self.assertGreater(first_sess.end_date, second_sess.start_date)
 
+    @skip("Not Implemented")
     def test_auto_correct_on_flip_but_no_skip(self):
         # TODO: write test for when flip_last_day is True, but skip_weeks == 0.
         pass
