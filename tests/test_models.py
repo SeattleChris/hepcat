@@ -160,14 +160,15 @@ class ClassOfferModelTests(SimpleModelTests, TestCase):
 
 class ProfileModelTests(SimpleModelTests, TestCase):
     Model = Profile
-    repr_dict = {'Profile': '_get_full_name', 'User id': 'user_id'}
-    str_list = ['_get_full_name']
+    repr_dict = {'Profile': 'full_name', 'User id': 'user_id'}
+    str_list = ['full_name']
     defaults = {'email': 'fake@site.com', 'password': '1234', 'first_name': 'fa', 'last_name': 'fake'}
 
     def setUp(self):
         kwargs = self.defaults.copy()
         # kwargs = {'email': 'fake@site.com', 'password': '1234', 'first_name': 'fa', 'last_name': 'fake'}
         user = UserHC.objects.create_user(**kwargs)
+        user.save()
         self.defaults = {}
         self.instance = user.profile  # triggers self.create_model to update this model instead of creating one.
 

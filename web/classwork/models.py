@@ -635,28 +635,18 @@ class Profile(models.Model):
     def username(self):
         return self.user.username
 
-    def full_name(self):
-        return self.user.full_name() or _("Name Not Found")
-
     @property
-    def _get_full_name(self):
-        return self.user.get_full_name() or _("Name Not Found")
+    def full_name(self):
+        return self.user.full_name
 
-    # @property
-    # def checkin_list(self):
-    #     return [
-    #         self.user.first_name,
-    #         self.user.last_name,
-    #         self.beg_finished,
-    #         self.l2_finished,
-    #         self.credit,
-    #     ]
+    def _get_full_name(self):
+        return self.user.get_full_name
 
     def __str__(self):
-        return self._get_full_name
+        return self.full_name
 
     def __repr__(self):
-        return f"<Profile: {self._get_full_name} | User id: {self.user.id} >"
+        return f"<Profile: {self.full_name} | User id: {self.user.id} >"
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)

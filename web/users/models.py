@@ -69,16 +69,14 @@ class UserManagerHC(UserManager):
             email = self.normalize_email(email)
 
         if extra_fields.setdefault('uses_email_username', True):
-            attempt_username = email
+            # attempt_username = email
             try:
-                user = self._create_user(attempt_username, email, password, **extra_fields)
+                user = self._create_user(email, email, password, **extra_fields)
             except IntegrityError:
                 message += "A unique email address is preferred, but a user already exists with that email address. "
                 extra_fields['uses_email_username'] = False
         if extra_fields.get('uses_email_username') is False:
             name_fields = ('first_name', 'last_name')
-            # username = username or extra_fields.get('first_name', '') + '_' + extra_fields.get('last_name', '')
-            # if username == '_':
             username = username or '_'.join([extra_fields[key] for key in name_fields if key in extra_fields] or '')
             if not username:
                 message += "If you are not using your email as your username/login, "
@@ -204,7 +202,8 @@ class UserHC(AbstractUser):
         if self.uses_email_username is True:
             # TODO: How to check if their email is already taken as a username?
             return self.email.casefold()
-        temp = self.first_name + '_' + self.last_name
+        # temp = self.first_name + '_' + self.last_name
+        temp = '_'.join([getattr(self, key) for key in ('first_name', 'last_name') if getattr(self, key, None)] or '')
         return temp.casefold()
 
     def save(self, *args, **kwargs):
