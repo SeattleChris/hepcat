@@ -1,4 +1,5 @@
 from django.test import TestCase, TransactionTestCase
+from unittest import skip
 from .helper import SimpleModelTests
 from classwork.models import Location, Resource, SiteContent, Subject, ClassOffer, Profile
 from classwork.models import Session, Payment, Registration, Notify
@@ -23,18 +24,22 @@ class ResourceModelTests(SimpleModelTests, TestCase):
     repr_dict = {'Resource': 'related_type', 'Type': 'content_type'}
     str_list = ['title', 'related_type', 'content_type']
 
+    @skip("Not Implemented")
     def test_publish_can_view_avail_is_immediate(self):
         """ For a User signed in a ClassOffer, determine they are allowed to see an associated immediate Resource. """
         pass
 
+    @skip("Not Implemented")
     def test_publish_can_view_during_published(self):
         """ For a User signed in a ClassOffer, determine they are allowed to see an associated unexpired Resource. """
         pass
 
+    @skip("Not Implemented")
     def test_publish_not_view_before_publish(self):
         """ For a User signed in a ClassOffer, determine they do NOT see an associated Resource early. """
         pass
 
+    @skip("Not Implemented")
     def test_publish_not_view_after_expired(self):
         """ For a User signed in a ClassOffer, they do NOT see an associated expired Resource. """
         pass
@@ -45,6 +50,7 @@ class SubjectModelTests(SimpleModelTests, TestCase):
     repr_dict = {'Subject': 'title', 'Level': 'level', 'Version': 'version'}
     str_list = ['_str_slug']
 
+    @skip("Not Implemented")
     def test_num_level(self):
         pass
 
@@ -55,125 +61,162 @@ class ClassOfferModelTests(SimpleModelTests, TestCase):
     str_list = ['subject', 'session']
     defaults = {}
 
+    @skip("Not Implemented")
     def test_full_price(self):
         pass
 
+    @skip("Not Implemented")
     def test_pre_discount(self):
         pass
 
+    @skip("Not Implemented")
     def test_multi_discount_not_qualified(self):
         pass
 
+    @skip("Not Implemented")
     def test_multi_discount_zero_discount(self):
         pass
 
+    @skip("Not Implemented")
     def test_multi_discount_reports_discount(self):
         pass
 
+    @skip("Not Implemented")
     def test_pre_price(self):
         pass
 
+    @skip("Not Implemented")
     def test_skip_week_explain(self):
         pass
 
+    @skip("Not Implemented")
     def test_end_time(self):
         pass
 
+    @skip("Not Implemented")
     def test_day_singular(self):
         pass
 
+    @skip("Not Implemented")
     def test_day_plural(self):
         pass
 
+    @skip("Not Implemented")
     def test_day_short_singular(self):
         pass
 
+    @skip("Not Implemented")
     def test_day_short_plural(self):
         pass
 
+    @skip("Not Implemented")
     def test_start_date_is_key_day(self):
         pass
 
+    @skip("Not Implemented")
     def test_start_date_zero_max_shift(self):
         pass
 
+    @skip("Not Implemented")
     def test_start_date_negative_shift(self):
         pass
 
+    @skip("Not Implemented")
     def test_start_date_positive_shift(self):
         pass
 
+    @skip("Not Implemented")
     def test_start_date_out_of_shift_range_weekday_early(self):
         pass
 
+    @skip("Not Implemented")
     def test_start_date_out_of_shit_range_weekday_late(self):
         pass
 
+    @skip("Not Implemented")
     def test_end_date_no_skips(self):
         pass
 
+    @skip("Not Implemented")
     def test_end_date_skips_on_session_not_classoffer(self):
         pass
 
+    @skip("Not Implemented")
     def test_end_date_with_skips(self):
         pass
 
+    @skip("Not Implemented")
     def test_num_level(self):
         pass
 
+    @skip("Not Implemented")
     def test_set_num_level_subject_level_bad_value(self):
         pass
 
+    @skip("Not Implemented")
     def test_set_num_level_correct(self):
         pass
 
 
 class ProfileModelTests(SimpleModelTests, TestCase):
     Model = Profile
-    repr_dict = {'Profile': '_get_full_name', 'User id': 'user_id'}
-    str_list = ['_get_full_name']
+    repr_dict = {'Profile': 'full_name', 'User id': 'user_id'}
+    str_list = ['full_name']
     defaults = {'email': 'fake@site.com', 'password': '1234', 'first_name': 'fa', 'last_name': 'fake'}
 
     def setUp(self):
         kwargs = self.defaults.copy()
         # kwargs = {'email': 'fake@site.com', 'password': '1234', 'first_name': 'fa', 'last_name': 'fake'}
         user = UserHC.objects.create_user(**kwargs)
+        user.save()
         self.defaults = {}
         self.instance = user.profile  # triggers self.create_model to update this model instead of creating one.
 
+    @skip("Not Implemented")
     def test_taken_is_related_classoffers(self):
         pass
 
+    @skip("Not Implemented")
     def test_highest_subject_correct_values(self):
         pass
 
+    @skip("Not Implemented")
     def test_highest_subject_no_values(self):
         pass
 
+    @skip("Not Implemented")
     def test_beg_finshed_is_no_if_no_beg(self):
         pass
 
+    @skip("Not Implemented")
     def test_beg_finished_is_no_if_not_all_beg(self):
         pass
 
+    @skip("Not Implemented")
     def test_beg_finish_true_when_all_beg(self):
         pass
 
+    @skip("Not Implemented")
     def test_l2_finshed_is_no_if_no_l2(self):
         pass
 
+    @skip("Not Implemented")
     def test_l2_finished_is_no_if_not_all_l2(self):
         pass
 
+    @skip("Not Implemented")
     def test_l2_finish_true_when_all_l2(self):
         pass
 
+    @skip("Not Implemented")
     def test_profile_and_user_same_username(self):
         pass
 
+    @skip("Not Implemented")
     def test_profile_and_user_same_full_name(self):
         pass
 
+    @skip("Not Implemented")
     def test__profile_and_user_same_get_full_name(self):
         pass
 
@@ -211,45 +254,59 @@ class UserSuperModelNoNameTests(UserModelTests):
 
 class UserExtendedModelTests(UserModelTests):
 
+    @skip("Not Implemented")
     def test_get_if_only_one_function(self):
         pass
 
+    @skip("Not Implemented")
     def test_value_error_normalize_email(self):
         pass
 
+    @skip("Not Implemented")
     def test_set_user_no_email(self):
         pass
 
+    @skip("Not Implemented")
     def test_set_existing_email_user(self):
         pass
 
+    @skip("Not Implemented")
     def test_set_user_not_email_is_username(self):
         pass
 
+    @skip("Not Implemented")
     def test_create_user_teacher(self):
         pass
 
+    @skip("Not Implemented")
     def test_create_user_admin(self):
         pass
 
+    @skip("Not Implemented")
     def test_create_superuser_not_staff(self):
         pass
 
+    @skip("Not Implemented")
     def test_create_superuser_not_superuser(self):
         pass
 
+    @skip("Not Implemented")
     def test_find_or_create_anon(self):
         pass
 
+    @skip("Not Implemented")
     def test_find_or_create_name(self):
         pass
 
+    @skip("Not Implemented")
     def test_make_username_use_email(self):
         pass
 
+    @skip("Not Implemented")
     def test_make_username_not_use_email(self):
         pass
 
+    @skip("Not Implemented")
     def test_save_with_no_username(self):
         pass
 
@@ -272,45 +329,59 @@ class RegistrationModelTests(SimpleModelTests, TestCase):
     defaults = {}
     related = {'student': Profile, 'classoffer': ClassOffer}
 
+    @skip("Not Implemented")
     def test_owed_full_if_no_payment(self):
         pass
 
+    @skip("Not Implemented")
     def test_owed_zero_if_in_person_payment(self):
         pass
 
+    @skip("Not Implemented")
     def test_owed_zero_if_paid_correctly_in_advance(self):
         pass
 
+    @skip("Not Implemented")
     def test_owed_remainder_on_partial_payment(self):
         pass
 
+    @skip("Not Implemented")
     def test_owed_pre_discount_if_paid_after_deadline(self):
         pass
 
+    @skip("Not Implemented")
     def test_first_name(self):
         pass
 
+    @skip("Not Implemented")
     def test_last_name(self):
         pass
 
+    @skip("Not Implemented")
     def test_get_full_name(self):
         pass
 
+    @skip("Not Implemented")
     def test_credit_if_zero(self):
         pass
 
+    @skip("Not Implemented")
     def test_credit_if_some(self):
         pass
 
+    @skip("Not Implemented")
     def test_reg_class_is_subject(self):
         pass
 
+    @skip("Not Implemented")
     def test_session_is_classoffer_session(self):
         pass
 
+    @skip("Not Implemented")
     def test_class_day(self):
         pass
 
+    @skip("Not Implemented")
     def test_start_time(self):
         pass
 
@@ -330,27 +401,35 @@ class SessionCoverageTests(TransactionTestCase):
         # obj.refresh_from_db()
         return obj
 
+    @skip("Not Implemented")
     def test_default_date_error_on_wrong_fields(self):
         pass
 
+    @skip("Not Implemented")
     def test_default_date_traverse_prev_for_final_session(self):
         pass
 
+    @skip("Not Implemented")
     def test_compute_expire_day_with_key_day_none(self):
         pass
 
+    @skip("Not Implemented")
     def test_clean_determine_date_from_previous(self):
         pass
 
+    @skip("Not Implemented")
     def test_clean_expire_date_set_to_compute(self):
         pass
 
+    @skip("Not Implemented")
     def test_clean_expire_date_set_to_submitted_value(self):
         pass
 
+    @skip("Not Implemented")
     def test_save_modify_next_session_publish_date(self):
         pass
 
+    @skip("Not Implemented")
     def test_repr(self):
         pass
 

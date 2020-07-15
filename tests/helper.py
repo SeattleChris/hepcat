@@ -53,7 +53,9 @@ class SimpleModelTests:
             create_method = create_method.find_or_create_for_anon
         elif create_method_name == 'find_or_create_by_name':
             create_method = create_method.find_or_create_by_name
-        return create_method(**kwargs)
+        model = create_method(**kwargs)
+        model.save()
+        return model
 
     def repr_format(self, o):
         string_list = [f"{k}: {getattr(o, v, '')}" if k else str(getattr(o, v, '')) for k, v in self.repr_dict.items()]
@@ -61,6 +63,7 @@ class SimpleModelTests:
 
     def str_format(self, obj):
         string_list = [str(getattr(obj, field_name, '')) for field_name in self.str_list]
+        # string_list = map(lambda x: str(x()) if callable(x) else str(x), [getattr(obj, e, '') for e in self.str_list])
         return ' - '.join(string_list)
 
     def get_needed_fields(self):
