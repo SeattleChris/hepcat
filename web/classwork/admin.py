@@ -6,7 +6,7 @@ from django.conf import settings
 from .models import (SiteContent, Resource, Subject, Session, ClassOffer,
                      Profile, Payment, Registration, Location)
 # from .helper import date_with_day
-from datetime import timedelta
+from datetime import timedelta, time
 
 
 def date_with_day(obj, field=None, short=False, year=False):
@@ -57,7 +57,7 @@ class SubjectAdmin(admin.ModelAdmin):
 class ClassOfferAdmin(admin.ModelAdmin):
     """ Admin change/add for ClassOffers. Has an inline for Resources. """
     model = ClassOffer
-    list_display = ('__str__', 'subject', 'session', 'start_day', 'start_time', 'end_day')
+    list_display = ('__str__', 'subject', 'session', 'time', 'start_day', 'end_day')
     list_display_links = ('__str__',)
     ordering = ('session__key_day_date', '_num_level')
     list_filter = ('session', 'subject', '_num_level', 'class_day')
@@ -75,6 +75,19 @@ class ClassOfferAdmin(admin.ModelAdmin):
             "fields": ('skip_weeks', 'skip_tagline'),
         })
     )
+
+    def time(self, obj):
+        start = getattr(obj, 'start_time', None)
+        num_minutes = getattr(obj.subject, 'num_minutes', None)
+        if not isinstance(start, time) or not num_minutes:
+            return "Not Set"
+        time_format = '%I%p' if start.minute == 0 and num_minutes % 60 == 0 else '%I:%M%p'
+        # add_hour, end_minute = divmod(num_minutes + start.minute, 60)
+        # add_day, end_hour = divmod(start.hour + add_hour, 24)
+        # return ' - '.join([t.strftime(time_format).strip('0').lower() for t in (start, time(end_hour, end_minute))])
+        add_hour, end_minute = divmod(num_minutes + start.minute, 60)
+        end = time((start.hour + add_hour) % 24, end_minute)
+        return ' - '.join([t.strftime(time_format).strip('0').lower() for t in (start, end)])
 
     def start_day(self, obj): return date_with_day(obj, field='start_date')
     def end_day(self, obj): return date_with_day(obj, field='end_date', short=True, year=True)
