@@ -599,33 +599,13 @@ class Profile(models.Model):
     @property
     def taken_subjects(self):
         """ Since all taken subjects are related through ClassOffer, we check taken to see the subject names. """
-        print("========================================= Profile.taken_subjects ================================")
-        # return [c.subject for c in self.taken.all()]
-        # # TODO: remove comments & print once best/good queryset response is determined.
-        # all_subjs_list = [c.subject for c in self.taken.all()]
-        # subjs = self.taken.only('subject').distinct()
-        # taken_with_subjs = self.taken.select_related('subject')
-        # taken_just_subj_field = self.taken.only('subject')
-        # taken_stuff = self.taken.values('subject')
-        # subjs = Subject.objects.filter()
-        # subjs = [c.subject for c in self.taken.only('subject').all()]
-        # subj_qs = Subject.objects.filter(id__in=subjs)
-        # subj_values = [c for c in self.taken.values_list('subject')]
-        subj_qs = Subject.objects.filter(id__in=self.taken.values_list('subject'))
-        # print(subjs.all())
-        print(subj_qs)
-        return subj_qs
+        return Subject.objects.filter(id__in=self.taken.values_list('subject'))
 
     @property
     def beg_finished(self):
         """ Completed the two versions of Beginning. """
-        goal = {'a': 1, 'b': 1}
-        in_a = Q(version__in=(Subject.VERSION_CHOICES[0][0], Subject.VERSION_CHOICES[2][0]))
-        in_b = Q(version__in=(Subject.VERSION_CHOICES[1][0], Subject.VERSION_CHOICES[3][0]))
-        a_count = Count('id', filter=in_a, distinct=True)
-        b_count = Count('id', filter=in_b, distinct=True)
-        beg_taken = self.taken_subjects.filter(level=Subject.LEVEL_CHOICES[0][0])
-        data = beg_taken.aggregate(a=a_count, b=b_count)
+        ver_map = {'A': ['A', 'C'], 'B': ['B', 'D']}
+        goal, data = self.subject_data(level=0, ver_map=ver_map)
         for key in goal:
             if data.get(key, 0) < goal[key]:
                 return False
@@ -634,15 +614,84 @@ class Profile(models.Model):
     @property
     def l2_finished(self):
         """ Completed the four versions of level two. """
-        goal = {key: 1 for key, string in Subject.VERSION_CHOICES}
-        goal.pop('N', None)
-        agg_kwargs = {key: Count('id', filter=Q(version=key), distinct=True) for key in goal}
-        l2_taken = self.taken_subjects.filter(level=Subject.LEVEL_CHOICES[1][0])
-        data = l2_taken.aggregate(**agg_kwargs)
+        goal, data = self.subject_data(level=1)
         for key in goal:
             if data.get(key, 0) < goal[key]:
                 return False
         return True
+
+    def subject_data(self, level=0, each_ver=1, only=None, exclude=('N',), goal_map=None, ver_map=None):
+        """
+        Used by other properties and methods to determine information on the user's history of subjects.
+        Inputs:
+            level -> integer:  The row in Subject.LEVEL_CHOICES.
+            each_ver -> (integer, None): The default count in the goal. Overwritten by goal_map if present.
+            only -> (str, int, list, tuple, None): What VERSION_CHOICES should be included. If None, include all.
+            exclude -> (str, int, list, tuple, set, None): What VERSION_CHOICES should be excluded from results.
+            The Subject.VERSION_CHOICES may be determined by 'only' and 'exclude':
+                int should be an index in VERSION_CHOICES.
+                str should match one of first element of each tuple in VERSION_CHOICES.
+                for list, tuple, and set: they should be collections of int and/or str that are each valid inputs.
+            ver_map -> (dict, None): If the key is a valid 'only' int, it will be converted in a similar way.
+                each var_map value -> (list, tuple, dict):
+                    As list or tuple, the query will count if VERSION_CHOICES is any of these elements.
+                    As a dict, the query is limited to models where model.key=value for all key, value pairs.
+            goal_map -> (dict, None): The keys represent VERSION_CHOICES, and values are the goal for each key.
+                Each key -> (int, str): Will be handled similarly to 'only' (translating int if possible).
+                Each value -> (int): Will be the value in the goal dict for related (modified) key.
+            Priority for VERSION_CHOICES is determined in the order: 'ver_map', 'exclude', 'only', and 'goal_map'.
+        Outputs:
+            goal -> dict: with key -> str of VERSION_CHOICES or label set by ver_map; value -> int for frequency.
+            data -> dict: with key -> str identical in goal; value -> int for total found matching parameters.
+        Depends on self.taken_subjects (depends on self.taken), ClassOffer.subject, Subject.level, & Subject.version.
+        """
+        lookup = Subject.VERSION_CHOICES
+        goal, agg_kwargs = {}, {}
+        def _clean(key): return lookup[key][0] if isinstance(key, int) and key < len(lookup) else key
+
+        if not isinstance(level, int):
+            raise TypeError(_("Expected an int for level parameter. "))
+        if only and isinstance(only, (str, int)):
+            only = [only]
+        elif only and not isinstance(only, (list, tuple)):
+            raise TypeError(_("For parameter 'only', expected a list, tuple, string, int, or None. "))
+        if not exclude:
+            exclude = set()
+        elif isinstance(exclude, (str, int)):
+            exclude = set((exclude,))
+        elif isinstance(exclude, (list, tuple)):
+            exclude = set(exclude)
+        elif not isinstance(exclude, set):
+            raise TypeError(_("For parameter 'exclude', expected a list, tuple, string, int, set, or None. "))
+
+        if goal_map:
+            if not isinstance(goal_map, dict):
+                raise TypeError(_("Expected a dictionary or None for 'goal_map' parameter. "))
+            goal = {_clean(k): v for k, v in goal_map.items() if k not in exclude and (not only or k in only)}
+        elif only and not ver_map:
+            goal = {_clean(key): each_ver for key in only if key not in exclude}
+        elif not ver_map:
+            goal = {key: each_ver for key, string in lookup if key not in exclude}
+
+        if ver_map:
+            for key, setting in ver_map.items():
+                key = _clean(key)
+                goal[key] = goal.get(key, each_ver)
+                if isinstance(setting, (list, tuple)):
+                    setting = map(_clean, setting)
+                    agg_kwargs[key] = Count('id', filter=Q(version__in=setting), distinct=True)
+                elif isinstance(setting, dict):
+                    # TODO: Check if the Q object is correctly checking for key=value.
+                    setting = [Q(**dict(key, value)) for key, value in setting.items()]
+                    agg_kwargs[key] = Count('id', filter=tuple(setting), distinct=True)
+                elif setting:
+                    raise TypeError(_("Expected each 'ver_map' value to be a list, tuple, or dictionary (or falsy). "))
+        else:  # default data_filters when thee is no ver_map
+            agg_kwargs = {key: Count('id', filter=Q(version=key), distinct=True) for key in goal}
+        # goal is populated. The populated agg_kwargs, level, and self.taken_subjects allow us to make data dictionary
+        target_taken = self.taken_subjects.filter(level=Subject.LEVEL_CHOICES[level][0])
+        data = target_taken.aggregate(**agg_kwargs)
+        return goal, data
 
     @property
     def username(self):
