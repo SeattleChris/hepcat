@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import Max  # , Min, Avg, Sum
+from django.db.models import Q, Count, Max  # , Min, Avg, Sum
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
@@ -178,8 +178,8 @@ class Subject(models.Model):
         'Beg': 1,
         'L2': 2,
         'WS': 2.25,
-        'L3': 3,
-        'Spec': 2.75,
+        'L3': 3.1,
+        'Spec': 3,
         'L4': 4, }
     # TODO: Update so that site Admin can change class level logic.
     VERSION_CHOICES = (
@@ -599,37 +599,50 @@ class Profile(models.Model):
     @property
     def taken_subjects(self):
         """ Since all taken subjects are related through ClassOffer, we check taken to see the subject names. """
-        # subjs = [c.subject for c in self.taken.all()]
-        # # TODO: remove following print line once confirmed.
-        # print(subjs)
-        # return subjs
-        return [c.subject for c in self.taken.all()]
+        print("========================================= Profile.taken_subjects ================================")
+        # return [c.subject for c in self.taken.all()]
+        # # TODO: remove comments & print once best/good queryset response is determined.
+        # all_subjs_list = [c.subject for c in self.taken.all()]
+        # subjs = self.taken.only('subject').distinct()
+        # taken_with_subjs = self.taken.select_related('subject')
+        # taken_just_subj_field = self.taken.only('subject')
+        # taken_stuff = self.taken.values('subject')
+        # subjs = Subject.objects.filter()
+        # subjs = [c.subject for c in self.taken.only('subject').all()]
+        # subj_qs = Subject.objects.filter(id__in=subjs)
+        # subj_values = [c for c in self.taken.values_list('subject')]
+        subj_qs = Subject.objects.filter(id__in=self.taken.values_list('subject'))
+        # print(subjs.all())
+        print(subj_qs)
+        return subj_qs
 
     @property
     def beg_finished(self):
         """ Completed the two versions of Beginning. """
-        version_translate = {'A': 'A', 'B': 'B', 'C': 'A', 'D': 'B'}
-        set_count = {'A': 0, 'B': 0}
-        subjs = self.taken_subjects
-        for subj in subjs:
-            if subj.level == Subject.LEVEL_CHOICES[0][0]:  # 'Beg'
-                ver = version_translate[subj.version]
-                set_count[ver] += 1
-        if set_count['A'] > 0 and set_count['B'] > 0:
-            return True
-        return False
+        goal = {'a': 1, 'b': 1}
+        in_a = Q(version__in=(Subject.VERSION_CHOICES[0][0], Subject.VERSION_CHOICES[2][0]))
+        in_b = Q(version__in=(Subject.VERSION_CHOICES[1][0], Subject.VERSION_CHOICES[3][0]))
+        a_count = Count('id', filter=in_a, distinct=True)
+        b_count = Count('id', filter=in_b, distinct=True)
+        beg_taken = self.taken_subjects.filter(level=Subject.LEVEL_CHOICES[0][0])
+        data = beg_taken.aggregate(a=a_count, b=b_count)
+        for key in goal:
+            if data.get(key, 0) < goal[key]:
+                return False
+        return True
 
     @property
     def l2_finished(self):
         """ Completed the four versions of level two. """
-        set_count = {'A': 0, 'B': 0, 'C': 0, 'D': 0}
-        for subj in self.taken_subjects:
-            if subj.level == Subject.LEVEL_CHOICES[1][0]:  # 'L2'
-                ver = subj.version
-                set_count[ver] += 1
-        if set_count['A'] > 0 and set_count['B'] > 0 and set_count['C'] > 0 and set_count['D'] > 0:
-            return True
-        return False
+        goal = {key: 1 for key, string in Subject.VERSION_CHOICES}
+        goal.pop('N', None)
+        agg_kwargs = {key: Count('id', filter=Q(version=key), distinct=True) for key in goal}
+        l2_taken = self.taken_subjects.filter(level=Subject.LEVEL_CHOICES[1][0])
+        data = l2_taken.aggregate(**agg_kwargs)
+        for key in goal:
+            if data.get(key, 0) < goal[key]:
+                return False
+        return True
 
     @property
     def username(self):

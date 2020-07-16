@@ -85,7 +85,7 @@
 - [s] Stretch Goal. Not for current feature plan.
 
 Current Status:
-2020-07-11 21:04:06
+2020-07-15 07:02:14
 <!-- Ctrl-Shift-I to generate timestamp -->
 
 ### Tests
@@ -96,8 +96,9 @@ Current Status:
 - [ ] Models full or near full coverage
   - [x] Scaffold method names for what coverage report shows is missing
 - [ ] Initial tests for views
+  - [x] Scaffold method names for what coverage report shows is missing
 - [ ] Views full or near full coverage
-- [ ] Initial tests for admin
+- [x] Initial tests for admin
 - [ ] Admin full or near full coverage
 - [x] Session date computation methods
 - [x] Admin forms for Session: date computations
@@ -135,8 +136,9 @@ Current Status:
 - [x] Session.clean modifies values to ensure the new Session does not overlap with existing Sessions.
 - [x] On Admin Session ValidateError, repopulate the fields with new values from Session.clean method.
 - [x] ClassOffer will be assigned dates according to their Session.
-- [ ] ClassOffer will handle invalid day of the week inputs.
-- [ ] ClassOffer Admin list: show start and end dates.
+- [x] ClassOffer will handle invalid day of the week inputs.
+- [x] ClassOffer Admin list: show start and end dates.
+- [x] ClassOffer Admin list: show start and end times in nice-display (not military time)
 
 ### Deployment on PythonAnywhere
 
@@ -146,7 +148,8 @@ Current Status:
 - [x] Update models and migrations.
 - [x] Get Database and code working.
 - [x] Collect static working.
-- [ ] Upload ver 0.4.1
+- [x] Upload ver 0.4.1
+- [ ] Upload ver 0.4.2
 
 ### Deployment on AWS
 
@@ -250,7 +253,6 @@ Current Status:
   - [ ] User has a randomly generated password, prompted to change on next login
   - [ ] User confirms with email link. Prompted for password from the link
   - [ ] If user never confirms, it does not stop them from joining future class.
-  - [ ]
 
 ## Style & Layout
 
