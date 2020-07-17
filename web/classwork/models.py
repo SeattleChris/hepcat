@@ -594,7 +594,15 @@ class Profile(models.Model):
         # Currently returns max, Do we want LEVEL_CHOICES name of this max?
         # have = [a.num_level for a in self.taken.all()]
         # return max(have) if len(have) > 0 else 0
-        return self.taken.all().aggregate(Max('_num_level'))
+        lookup_level = dict(Subject.LEVEL_CHOICES)
+        lookup_order = dict(Subject.LEVEL_ORDER)
+        data = self.taken_subjects.aggregate(field_value=Max('level'))
+        val = data.get('field_value', None)
+        data['display'] = lookup_level[val] if val else "None"
+        data['num'] = lookup_order[val] if val else 0
+        print("========================== Profile.highest_subject ======================================")
+        print(data)
+        return data['display']
 
     @property
     def taken_subjects(self):
@@ -605,7 +613,7 @@ class Profile(models.Model):
     def beg_finished(self):
         """ Completed the two versions of Beginning. """
         ver_map = {'A': ['A', 'C'], 'B': ['B', 'D']}
-        goal, data = self.subject_data(level=0, ver_map=ver_map)
+        goal, data = self.subject_data(level=0, each_ver=1, ver_map=ver_map)
         for key in goal:
             if data.get(key, 0) < goal[key]:
                 return False
@@ -614,7 +622,7 @@ class Profile(models.Model):
     @property
     def l2_finished(self):
         """ Completed the four versions of level two. """
-        goal, data = self.subject_data(level=1)
+        goal, data = self.subject_data(level=1, each_ver=1, exclude='N')
         for key in goal:
             if data.get(key, 0) < goal[key]:
                 return False
@@ -651,9 +659,11 @@ class Profile(models.Model):
 
         if not isinstance(level, int):
             raise TypeError(_("Expected an int for level parameter. "))
-        if only and isinstance(only, (str, int)):
+        if not only:
+            pass
+        elif isinstance(only, (str, int)):
             only = [only]
-        elif only and not isinstance(only, (list, tuple)):
+        elif not isinstance(only, (list, tuple)):
             raise TypeError(_("For parameter 'only', expected a list, tuple, string, int, or None. "))
         if not exclude:
             exclude = set()
