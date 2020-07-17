@@ -177,9 +177,9 @@ class Subject(models.Model):
     LEVEL_ORDER = {
         'Beg': 1,
         'L2': 2,
-        'WS': 2.25,
-        'L3': 3.1,
-        'Spec': 3,
+        'WS': 2.5,
+        'L3': 3,
+        'Spec': 3.5,
         'L4': 4, }
     # TODO: Update so that site Admin can change class level logic.
     VERSION_CHOICES = (
@@ -589,20 +589,14 @@ class Profile(models.Model):
             class level they have taken. We also want to be able to override this from a teacher or
             admin input to deal with students who have had instruction or progress elsewhere.
         """
-        # Query all taken ClassOffers for this student
-        # ClassOffer.num_level is the level for each of these, find the max.
-        # Currently returns max, Do we want LEVEL_CHOICES name of this max?
-        # have = [a.num_level for a in self.taken.all()]
-        # return max(have) if len(have) > 0 else 0
         lookup_level = dict(Subject.LEVEL_CHOICES)
         lookup_order = dict(Subject.LEVEL_ORDER)
         data = self.taken_subjects.aggregate(field_value=Max('level'))
         val = data.get('field_value', None)
         data['display'] = lookup_level[val] if val else "None"
-        data['num'] = lookup_order[val] if val else 0
-        print("========================== Profile.highest_subject ======================================")
-        print(data)
-        return data['display']
+        data['level'] = lookup_order[val] if val else 0
+        # TODO: Determine where else we may use this information and the appropriate data structure to create here.
+        return data
 
     @property
     def taken_subjects(self):
