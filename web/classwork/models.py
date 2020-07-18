@@ -618,7 +618,8 @@ class Profile(models.Model):
         # TODO: Determine if ClassOffer should have this value or if we should get it from Subject.
         lookup_level = dict(Subject.LEVEL_CHOICES)
         lookup_order = dict(Subject.LEVEL_ORDER)
-        data = self.taken_subjects.aggregate(field_value=Max('level'))  # This max is alphabetical
+        # data = self.taken_subjects.aggregate(field_value=Max('level'))  # This is alphabetical max
+        data = self.taken_subjects.aggregate(field_value=Max('level_num'))
         # The computed property/method of num_level on Subject would require loading all the queried subjects.
         # Could also pass the work of num_level as a function to run on the level field.
         # # # #
@@ -630,8 +631,8 @@ class Profile(models.Model):
         data['level'] = lookup_order.get(val) if val else 0
         data.update(from_classoffer)
         # TODO: Determine where else we may use this information and the appropriate data structure to create here.
-        # print("================================ Profile.highest_subject =========================================")
-        # pprint(data)
+        print("================================ Profile.highest_subject =========================================")
+        print(data)
         return data
 
     @property
