@@ -226,6 +226,10 @@ class Subject(models.Model):
             slug += f': {self.title}'
         return slug
 
+    def clean(self, *args, **kwargs):
+        self.compute_level_num()
+        return super().clean()
+
     def save(self, *args, **kwargs):
         if not self.level_num:
             self.compute_level_num()

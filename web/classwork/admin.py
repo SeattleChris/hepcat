@@ -37,15 +37,34 @@ class ResourceInline(admin.StackedInline):
     formfield_overrides = {models.TextField: {'widget': Textarea(attrs={'cols': 60, 'rows': 2})}, }
 
 
+class SubjectAdminForm(ModelForm):
+
+    def full_clean(self, *args, **kwargs):
+        from pprint import pprint
+        print("========== SubjectAdminForm.full_clean ===================")
+        pprint(args)
+        pprint(kwargs)
+        print("----------------------------------------------------")
+        pprint(dir(self))
+        full_clean = super().full_clean(*args, **kwargs)
+        instance_after_model_clean = {name: getattr(self.instance, name, None) for name in self.fields}
+        data = self.data.copy()
+        data.update(instance_after_model_clean)
+        self.data = data
+
+        return full_clean
+
+
 class SubjectAdmin(admin.ModelAdmin):
     """ Admin change/add for Subjects. Has an inline for Resources. """
     model = Subject
-    list_display = ('__str__', 'title', 'level', 'version', )
+    form = SubjectAdminForm
+    list_display = ('__str__', 'title', 'level', 'level_num', 'version', )
     list_display_links = ('__str__', 'title')
     inlines = (ResourceInline, )
     # TODO: What if we want to attach an already existing Resource?
     fields = (
-        ('level', 'version'),
+        ('level', 'version', 'level_num'),
         'title', 'tagline_1', 'tagline_2', 'tagline_3',
         ('num_weeks', 'num_minutes'),
         'description', 'image',
