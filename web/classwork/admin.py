@@ -6,7 +6,7 @@ from django.conf import settings
 from .models import (SiteContent, Resource, Subject, Session, ClassOffer,
                      Profile, Payment, Registration, Location)
 # from .helper import date_with_day
-from datetime import timedelta, time
+from datetime import timedelta, time, datetime as dt
 
 
 def date_with_day(obj, field=None, short=False, year=False):
@@ -37,15 +37,34 @@ class ResourceInline(admin.StackedInline):
     formfield_overrides = {models.TextField: {'widget': Textarea(attrs={'cols': 60, 'rows': 2})}, }
 
 
+class SubjectAdminForm(ModelForm):
+
+    def full_clean(self, *args, **kwargs):
+        from pprint import pprint
+        print("========== SubjectAdminForm.full_clean ===================")
+        pprint(args)
+        pprint(kwargs)
+        print("----------------------------------------------------")
+        pprint(dir(self))
+        full_clean = super().full_clean(*args, **kwargs)
+        instance_after_model_clean = {name: getattr(self.instance, name, None) for name in self.fields}
+        data = self.data.copy()
+        data.update(instance_after_model_clean)
+        self.data = data
+
+        return full_clean
+
+
 class SubjectAdmin(admin.ModelAdmin):
     """ Admin change/add for Subjects. Has an inline for Resources. """
     model = Subject
-    list_display = ('__str__', 'title', 'level', 'version', )
+    form = SubjectAdminForm
+    list_display = ('__str__', 'title', 'level', 'level_num', 'version', )
     list_display_links = ('__str__', 'title')
     inlines = (ResourceInline, )
     # TODO: What if we want to attach an already existing Resource?
     fields = (
-        ('level', 'version'),
+        ('level', 'version', 'level_num'),
         'title', 'tagline_1', 'tagline_2', 'tagline_3',
         ('num_weeks', 'num_minutes'),
         'description', 'image',
@@ -77,17 +96,22 @@ class ClassOfferAdmin(admin.ModelAdmin):
     )
 
     def time(self, obj):
+        """ Returns a string for the duration between the start and end time, or 'Not Set' if missing needed data.
+            Input: 'obj' -> ClassOffer instance.
+            Output -> string:
+                "Not Set" if missing values for obj.start_time or obj.subject.num_minutes.
+                "7pm - 8pm" if start time was 7pm and duration was 60 minutes, and similar if both times on the hour.
+                "10:00am - 11:30am" if start at 10am & duration 90 minutes, and similar if either ends not on the hour.
+        """
         start = getattr(obj, 'start_time', None)
         num_minutes = getattr(obj.subject, 'num_minutes', None)
         if not isinstance(start, time) or not num_minutes:
             return "Not Set"
         time_format = '%I%p' if start.minute == 0 and num_minutes % 60 == 0 else '%I:%M%p'
-        # add_hour, end_minute = divmod(num_minutes + start.minute, 60)
-        # add_day, end_hour = divmod(start.hour + add_hour, 24)
-        # return ' - '.join([t.strftime(time_format).strip('0').lower() for t in (start, time(end_hour, end_minute))])
-        add_hour, end_minute = divmod(num_minutes + start.minute, 60)
-        end = time((start.hour + add_hour) % 24, end_minute)
-        return ' - '.join([t.strftime(time_format).strip('0').lower() for t in (start, end)])
+        temp = dt(1930, 1, 1, start.hour, start.minute) + timedelta(minutes=num_minutes)
+        end = temp.time()
+        formatted_time_list = [t.strftime(time_format).strip('0').lower() for t in (start, end)]
+        return ' - '.join(formatted_time_list)
 
     def start_day(self, obj): return date_with_day(obj, field='start_date')
     def end_day(self, obj): return date_with_day(obj, field='end_date', short=True, year=True)
@@ -156,11 +180,14 @@ class StudentClassInline(admin.TabularInline):
 class ProfileAdmin(admin.ModelAdmin):
     """ Admin can modify and view Profiles of all users. """
     model = Profile
-    list_display = ['__str__', 'username', 'highest_subject', 'level', 'beg_finished', 'l2_finished']
+    list_display = ['__str__', 'username', 'max_subject', 'max_level', 'level', 'beg_finished', 'l2_finished']
     list_display_links = ('__str__', 'username')
     filter_horizontal = ('taken',)
     ordering = ('date_modified', 'date_added',)
     inlines = (StudentClassInline, )
+
+    def max_subject(self, obj): return obj.highest_subject.get('display', 'Unknown')
+    def max_level(self, obj): return obj.highest_subject.get('level', 0)
 
 
 class RegistrationAdmin(admin.ModelAdmin):

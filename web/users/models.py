@@ -171,19 +171,19 @@ class UserHC(AbstractUser):
     """
 
     # first_name, last_name, id, email, and username (often not used directly) - all exist from inherited models.
-    is_student = models.BooleanField(_('student'), default=True)
-    is_teacher = models.BooleanField(_('teacher'), default=False)
-    is_admin = models.BooleanField(_('admin'), default=False)
+    is_student = models.BooleanField(_('student'), default=True, )
+    is_teacher = models.BooleanField(_('teacher'), default=False, )
+    is_admin = models.BooleanField(_('admin'), default=False, )
     # is_superuser, is_staff, is_active exist from inherited models.
-    uses_email_username = models.BooleanField(_('using email as username'), default=True)  # help_text='Typical default',
-    billing_address_1 = models.CharField(_('street address (line 1)'), max_length=191, blank=True)
-    billing_address_2 = models.CharField(_('street address (continued)'), max_length=191, blank=True)
-    billing_city = models.CharField(_('city'), max_length=191, default=settings.DEFAULT_CITY, blank=True)
+    uses_email_username = models.BooleanField(_('using email as username'), default=True, )  # help_text='Typical default'
+    billing_address_1 = models.CharField(_('street address (line 1)'), max_length=191, blank=True, )
+    billing_address_2 = models.CharField(_('street address (continued)'), max_length=191, blank=True, )
+    billing_city = models.CharField(_('city'), max_length=191, default=settings.DEFAULT_CITY, blank=True, )
     billing_country_area = models.CharField(_('state'), max_length=2, default=settings.DEFAULT_COUNTRY_AREA_STATE,
-                                            help_text=_('State, Territory, or Province'), blank=True)
+                                            help_text=_('State, Territory, or Province'), blank=True, )
     billing_postcode = models.CharField(_('zipcode'), max_length=191, blank=True,
-                                        help_text=_('Zip or Postal Code'))
-    billing_country_code = models.CharField(_('country'), default=settings.DEFAULT_COUNTRY, max_length=191, blank=True)
+                                        help_text=_('Zip or Postal Code'), )
+    billing_country_code = models.CharField(_('country'), default=settings.DEFAULT_COUNTRY, max_length=191, blank=True,)
     # # # user.profile holds the linked profile for this user.
     objects = UserManagerHC()
 
@@ -220,6 +220,6 @@ class UserHC(AbstractUser):
         return self.full_name
 
     def __repr__(self):
-        return '<UserHC: ' + self.full_name + ' >'
+        return '<UserHC: {} >'.format(self.full_name)
 
     # end class UserHC
