@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import Q, Count, Max  # , F, Min, Avg, Sum
+from django.db.models import Q, F, Count, Max  # , Min, Avg, Sum
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
@@ -189,6 +189,8 @@ class Subject(models.Model):
 
     # id = auto-created
     level = models.CharField(max_length=8, default='Spec', choices=LEVEL_CHOICES, )
+    level_num = models.DecimalField(max_digits=3, decimal_places=1, default=LEVEL_ORDER.get(level.default, 0),
+                                    help_text=_("Will be computed if left blank. "), )
     version = models.CharField(max_length=1, choices=VERSION_CHOICES, )
     title = models.CharField(max_length=125, default=_('Untitled'), )
     tagline_1 = models.CharField(max_length=23, blank=True, )
@@ -202,20 +204,19 @@ class Subject(models.Model):
     image = models.URLField(max_length=191, blank=True, )
     # TODO: Update to using ImageField. But what if we want existing image?
     # image = models.ImageField(upload_to=MEDIA_ROOT)
-    full_price = models.DecimalField(max_digits=9, decimal_places=2, default=settings.DEFAULT_CLASS_PRICE, )
-    pre_pay_discount = models.DecimalField(max_digits=9, decimal_places=2, default=settings.DEFAULT_PRE_DISCOUNT, )
-    multiple_purchase_discount = models.DecimalField(max_digits=9, decimal_places=2, default=settings.MULTI_DISCOUNT, )
+    full_price = models.DecimalField(max_digits=6, decimal_places=2, default=settings.DEFAULT_CLASS_PRICE, )
+    pre_pay_discount = models.DecimalField(max_digits=6, decimal_places=2, default=settings.DEFAULT_PRE_DISCOUNT, )
+    multiple_purchase_discount = models.DecimalField(max_digits=6, decimal_places=2, default=settings.MULTI_DISCOUNT, )
     qualifies_as_multi_class_discount = models.BooleanField(default=True, )
 
     date_added = models.DateField(auto_now_add=True, )
     date_modified = models.DateField(auto_now=True, )
 
-    def num_level(self, level_value=None):
-        """ When we want a sortable level number. """
-        level_dict = self.LEVEL_ORDER
-        if not level_value:
-            level_value = self.level
-        num = level_dict[level_value] if level_value in level_dict else 0
+    def compute_level_num(self, level_value=None):
+        """ Translate and assign the number associated to the value in 'level' field, assigning 0 if not determined. """
+        level_value = level_value if level_value is not None else self.level
+        num = self.LEVEL_ORDER.get(level_value, 0)
+        self.level_num = num
         return num
 
     @property
@@ -224,6 +225,11 @@ class Subject(models.Model):
         if self.level not in ['Beg', 'L2']:
             slug += f': {self.title}'
         return slug
+
+    def save(self, *args, **kwargs):
+        if not self.level_num:
+            self.compute_level_num()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self._str_slug
@@ -554,7 +560,7 @@ class ClassOffer(models.Model):
             self._num_level = higher
             return higher
         try:
-            num = level_dict.get(getattr(self.subject, 'level', higher))
+            num = level_dict.get(getattr(self.subject, 'level', ''), 0)
         except KeyError:
             num = higher
         self._num_level = num
@@ -603,24 +609,25 @@ class Profile(models.Model):
             class level they have taken. We also want to be able to override this from a teacher or
             admin input to deal with students who have had instruction or progress elsewhere.
         """
+        # from pprint import pprint
         from_classoffer = self.taken.aggregate(from_classoffer=Max('_num_level'))
         # TODO: Determine if ClassOffer should have this value or if we should get it from Subject.
         lookup_level = dict(Subject.LEVEL_CHOICES)
         lookup_order = dict(Subject.LEVEL_ORDER)
-        data = self.taken_subjects.aggregate(field_value=Max('level'))
+        data = self.taken_subjects.aggregate(field_value=Max('level'))  # This max is alphabetical
         # The computed property/method of num_level on Subject would require loading all the queried subjects.
         # Could also pass the work of num_level as a function to run on the level field.
-        # translate_name_to_num_level
-        # thing = Subject.objects.annotate(num=(Max(lookup_order.get(F('level'), 0))))
         # # # #
         # for each self.taken ClassOffer, look at its parent Subject and make a dict of the Subject.level value
-        # s = self.taken_subject.values('level')
-        # aggregate(lookup_value=lookup_order.get(F('level')))
+        # map_level = models.ExpressionWrapper(lookup_order.get(F('level'), 0), output_field=models.IntegerField)
+        # temp = self.taken_subjects.annotate(num=map_level).annotate(Max(num))
         val = data.get('field_value', None)
-        data['display'] = lookup_level[val] if val else "None"
-        data['level'] = lookup_order[val] if val else 0
+        data['display'] = lookup_level.get(val) if val else "None"
+        data['level'] = lookup_order.get(val) if val else 0
         data.update(from_classoffer)
         # TODO: Determine where else we may use this information and the appropriate data structure to create here.
+        # print("================================ Profile.highest_subject =========================================")
+        # pprint(data)
         return data
 
     @property
@@ -832,10 +839,10 @@ class Payment(BasePayment):
     objects = PaymentManager()
     student = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True, related_name='payment', )
     paid_by = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True, related_name='paid_for', )
-    full_price = models.DecimalField(max_digits=9, decimal_places=2, default='0.0', )
-    pre_pay_discount = models.DecimalField(max_digits=9, decimal_places=2, default='0.0', )
-    multiple_purchase_discount = models.DecimalField(max_digits=9, decimal_places=2, default='0.0', )
-    credit_applied = models.DecimalField(max_digits=9, decimal_places=2, default='0.0', )
+    full_price = models.DecimalField(max_digits=6, decimal_places=2, default='0.0', )
+    pre_pay_discount = models.DecimalField(max_digits=6, decimal_places=2, default='0.0', )
+    multiple_purchase_discount = models.DecimalField(max_digits=6, decimal_places=2, default='0.0', )
+    credit_applied = models.DecimalField(max_digits=6, decimal_places=2, default='0.0', )
     # items = models.ManyToManyField(ClassOffer, related_name='payments', through='Registration', )
 
     @property
