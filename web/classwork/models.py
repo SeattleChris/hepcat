@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import Q, F, Count, Max  # , Min, Avg, Sum
+from django.db.models import Q, Count, Max  # , F, Min, Avg, Sum
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
@@ -190,7 +190,7 @@ class Subject(models.Model):
     # id = auto-created
     level = models.CharField(max_length=8, default='Spec', choices=LEVEL_CHOICES, )
     level_num = models.DecimalField(max_digits=3, decimal_places=1, default=0,  # LEVEL_ORDER.get(level.default, 0)
-                                    help_text=_("Will be computed if left blank. "), )
+                                    help_text=_("Will be computed if left blank. "), blank=True, )
     version = models.CharField(max_length=1, choices=VERSION_CHOICES, )
     title = models.CharField(max_length=125, default=_('Untitled'), )
     tagline_1 = models.CharField(max_length=23, blank=True, )
@@ -212,11 +212,12 @@ class Subject(models.Model):
     date_added = models.DateField(auto_now_add=True, )
     date_modified = models.DateField(auto_now=True, )
 
-    def compute_level_num(self, level_value=None):
+    def compute_level_num(self, level_value=None, set_self=True):
         """ Translate and assign the number associated to the value in 'level' field, assigning 0 if not determined. """
         level_value = level_value if level_value is not None else self.level
         num = self.LEVEL_ORDER.get(level_value, 0)
-        self.level_num = num
+        if set_self:
+            self.level_num = num
         return num
 
     @property
@@ -225,10 +226,6 @@ class Subject(models.Model):
         if self.level not in ['Beg', 'L2']:
             slug += f': {self.title}'
         return slug
-
-    def clean(self, *args, **kwargs):
-        self.compute_level_num()
-        return super().clean()
 
     def save(self, *args, **kwargs):
         if not self.level_num:
@@ -599,14 +596,6 @@ class Profile(models.Model):
     # TODO: The following properties could be extracted further to allow the program admin user
     # to set their own rules for number of versions needed and other version translation decisions.
 
-    # @classmethod
-    # def _helper_num_level(cls, parent=None, level_word=None):
-    #     level_dict = Subject.LEVEL_ORDER.copy()
-    #     if not level_word:
-    #         level_word = getattr(parent, 'level', '')
-    #     num = level_dict[level_word] if level_word in level_dict else 0
-    #     return num
-
     @property
     def highest_subject(self, subjects=True, classoffers=False):
         """ We will want to know what is the student's class level which by default will be the highest
@@ -719,7 +708,7 @@ class Profile(models.Model):
                     agg_kwargs[key] = Count('id', filter=Q(version__in=setting), distinct=True)
                 elif isinstance(setting, dict):
                     # TODO: Check if the Q object is correctly checking for key=value.
-                    setting = [Q(**dict(key, value)) for key, value in setting.items()]
+                    setting = [Q(**{key: value}) for key, value in setting.items()]
                     agg_kwargs[key] = Count('id', filter=tuple(setting), distinct=True)
                 elif setting:
                     raise TypeError(_("Expected each 'ver_map' value to be a list, tuple, or dictionary (or falsy). "))
