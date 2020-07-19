@@ -189,7 +189,7 @@ class Subject(models.Model):
 
     # id = auto-created
     level = models.CharField(max_length=8, default='Spec', choices=LEVEL_CHOICES, )
-    level_num = models.DecimalField(max_digits=3, decimal_places=1, default=LEVEL_ORDER.get(level.default, 0),
+    level_num = models.DecimalField(max_digits=3, decimal_places=1, default=0,  # LEVEL_ORDER.get(level.default, 0)
                                     help_text=_("Will be computed if left blank. "), )
     version = models.CharField(max_length=1, choices=VERSION_CHOICES, )
     title = models.CharField(max_length=125, default=_('Untitled'), )
@@ -608,31 +608,27 @@ class Profile(models.Model):
     #     return num
 
     @property
-    def highest_subject(self):
+    def highest_subject(self, subjects=True, classoffers=False):
         """ We will want to know what is the student's class level which by default will be the highest
             class level they have taken. We also want to be able to override this from a teacher or
             admin input to deal with students who have had instruction or progress elsewhere.
         """
         # from pprint import pprint
-        from_classoffer = self.taken.aggregate(from_classoffer=Max('_num_level'))
-        # TODO: Determine if ClassOffer should have this value or if we should get it from Subject.
-        lookup_level = dict(Subject.LEVEL_CHOICES)
-        lookup_order = dict(Subject.LEVEL_ORDER)
-        # data = self.taken_subjects.aggregate(field_value=Max('level'))  # This is alphabetical max
-        data = self.taken_subjects.aggregate(field_value=Max('level_num'))
-        # The computed property/method of num_level on Subject would require loading all the queried subjects.
-        # Could also pass the work of num_level as a function to run on the level field.
-        # # # #
-        # for each self.taken ClassOffer, look at its parent Subject and make a dict of the Subject.level value
-        # map_level = models.ExpressionWrapper(lookup_order.get(F('level'), 0), output_field=models.IntegerField)
-        # temp = self.taken_subjects.annotate(num=map_level).annotate(Max(num))
-        val = data.get('field_value', None)
-        data['display'] = lookup_level.get(val) if val else "None"
-        data['level'] = lookup_order.get(val) if val else 0
-        data.update(from_classoffer)
+        data = self.taken_subjects.aggregate(Max('level_num'))
+        max_level = data['level_num__max']
+        if subjects:
+            data['subjects'] = self.taken_subjects.filter(level_num=max_level)
+        if classoffers:
+            data['classoffers'] = self.taken.filter(subject__level_num=max_level).order_by('-session_id__key_day_date')
+            # TODO: Determine if ClassOffer should have this value or if we should get it from Subject.
+            by_classoffer = self.taken.aggregate(max_classoffer=Max('_num_level'))
+            c_max = by_classoffer['max_classoffer']
+            by_classoffer['collect_classoffer'] = self.taken.filter(_num_level=c_max).order_by('-session__key_day_date')
+            data.update(by_classoffer)
         # TODO: Determine where else we may use this information and the appropriate data structure to create here.
-        print("================================ Profile.highest_subject =========================================")
-        print(data)
+        # print("================================ Profile.highest_subject =========================================")
+        # same_as_max = Q(level_num=data['level_num__max'])
+        # pprint(data)
         return data
 
     @property

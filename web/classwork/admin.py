@@ -186,8 +186,8 @@ class ProfileAdmin(admin.ModelAdmin):
     ordering = ('date_modified', 'date_added',)
     inlines = (StudentClassInline, )
 
-    def max_subject(self, obj): return obj.highest_subject.get('display', 'Unknown')
-    def max_level(self, obj): return obj.highest_subject.get('level', 0)
+    def max_subject(self, obj): return list(obj.highest_subject.get('subjects', ['Unknown']))
+    def max_level(self, obj): return obj.highest_subject.get('level_num__max', 0)
 
 
 class RegistrationAdmin(admin.ModelAdmin):
