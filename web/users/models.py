@@ -116,8 +116,8 @@ class UserManagerHC(UserManager):
             raise ValueError(_('Superuser must have is_staff=True.'))
         if not extra_fields.setdefault('is_superuser', True):
             raise ValueError(_('Superuser must have is_superuser=True.'))
-        # if not extra_fields.setdefault('is_admin', True):
-        #     raise ValueError(_('Superuser must have is_admin=True.'))
+        if not extra_fields.setdefault('is_admin', True):
+            raise ValueError(_('Superuser must have is_admin=True.'))
         if not any([username, 'first_name' in extra_fields, 'last_name' in extra_fields]):
             username = email
         return self.set_user(username, email, password, **extra_fields)
@@ -181,7 +181,7 @@ class UserHC(AbstractUser):
     billing_city = models.CharField(_('city'), max_length=191, default=settings.DEFAULT_CITY, blank=True, )
     billing_country_area = models.CharField(_('state'), max_length=2, default=settings.DEFAULT_COUNTRY_AREA_STATE,
                                             help_text=_('State, Territory, or Province'), blank=True, )
-    billing_postcode = models.CharField(_('zipcode'), max_length=191, blank=True,
+    billing_postcode = models.CharField(_('zipcode'), max_length=10, blank=True,
                                         help_text=_('Zip or Postal Code'), )
     billing_country_code = models.CharField(_('country'), default=settings.DEFAULT_COUNTRY, max_length=191, blank=True,)
     # # # user.profile holds the linked profile for this user.

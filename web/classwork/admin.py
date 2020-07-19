@@ -169,11 +169,14 @@ class StudentClassInline(admin.TabularInline):
 class ProfileAdmin(admin.ModelAdmin):
     """ Admin can modify and view Profiles of all users. """
     model = Profile
-    list_display = ['__str__', 'username', 'max_subject', 'max_level', 'level', 'beg_done', 'l2_done', 'l3_done']
-    list_display_links = ('__str__', 'username')
-    filter_horizontal = ('taken',)
-    ordering = ('date_modified', 'date_added',)
+    list_display = ['__str__', 'username', 'max_subject', 'max_level', 'level', 'beg_done', 'l2_done', 'l3_done', ]
+    list_display_links = ('__str__', 'username', )
+    list_filter = ('user__is_staff', 'taken__session', 'taken__subject__level', 'level', )  # , 'taken__subject',
+    list_select_related = True
+    # filter_horizontal = ('taken',)
+    ordering = ('date_modified', 'date_added', )
     inlines = (StudentClassInline, )
+    fields = (('user', 'level', 'credit'), 'bio', )
 
     def max_subject(self, obj): return list(obj.highest_subject.get('subjects', ['Unknown']))
     def max_level(self, obj): return obj.highest_subject.get('level_num__max', 0)

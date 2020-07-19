@@ -965,7 +965,7 @@ class Registration(models.Model):
     """
     student = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True, )
     classoffer = models.ForeignKey(ClassOffer, on_delete=models.SET_NULL, null=True, )
-    payment = models.ForeignKey(Payment, on_delete=models.SET_NULL, null=True, )
+    payment = models.ForeignKey(Payment, on_delete=models.SET_NULL, null=True, blank=True, )
     paid = models.BooleanField(default=False, )
 
     @property

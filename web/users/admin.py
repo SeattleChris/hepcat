@@ -1,67 +1,81 @@
 from django.contrib import admin
-from django.contrib.auth import get_user_model
+from django.db import models
+from django.forms import TextInput  # , Textarea
 from django.contrib.auth.admin import UserAdmin
-from .forms import CustomUserCreationForm, CustomUserChangeForm
-from .models import UserHC  # Staff, Student, Profile
 from django.utils.translation import gettext_lazy as _
+# from django.contrib.auth import get_user_model
+from .models import UserHC  # Staff, Student, Profile
+# from .forms import CustomUserCreationForm, CustomUserChangeForm
 # Register your models here.
 
 
-# class StaffInline(admin.StackedInline):
-#     """ How to add a profile to a user model according to:
-#         https://docs.djangoproject.com/en/2.1/topics/auth/customizing/
-#     """
-#     model = Staff
-#     can_delete = False
-#     verbose_name_plural = 'staff profile'
-
-
-# class StudentInline(admin.StackedInline):
-#     """ How to add a profile to a user model according to:
-#         https://docs.djangoproject.com/en/2.1/topics/auth/customizing/
-#     """
-#     model = Student
-#     can_delete = False
-#     verbose_name_plural = 'student profile'
-
-
-# class ProfileInline(admin.StackedInline):
-#     """ How to add a profile to a user model according to:
-#         https://docs.djangoproject.com/en/2.1/topics/auth/customizing/
-#     """
-#     model = Profile
-#     can_delete = False
-#     verbose_name_plural = 'user profile'
-
-
 class CustomUserAdmin(UserAdmin):
-    model = get_user_model()  # UserHC
+    model = UserHC
     # add_form = CustomUserCreationForm
     # form = CustomUserChangeForm
-    list_display = ('first_name', 'last_name', 'username', 'is_student', 'is_teacher', 'is_admin',)
-    list_display_links = ('first_name', 'last_name', 'username')
-    ordering = ('first_name',)
+    list_display = ('first_name', 'last_name', 'username', 'is_student', 'is_teacher', 'is_admin', )
+    list_display_links = ('first_name', 'last_name', 'username', )
+    list_filter = ('is_student', 'is_teacher', 'is_admin', 'is_staff', 'is_active', )  # , 'is_superuser',
+    ordering = ('first_name', )
     fieldsets = (
         (None, {'fields': (('email', 'uses_email_username'), 'password', ('is_student', 'is_teacher', 'is_admin'),), }),
-        (_('Personal info'), {'fields': (('first_name', 'last_name'),), }),
-        (_('Activity Dates'), {'fields': (('last_login', 'date_joined'),), 'classes': ('collapse',), }),
+        (_('Name info'), {'fields': (('first_name', 'last_name'), ), }),
+        (_('Address Info'), {
+            'classes': ('collapse', ),
+            'fields': (
+                'billing_address_1', 'billing_address_2',
+                ('billing_city', 'billing_country_area', 'billing_postcode', ),
+                'billing_country_code',
+            ),
+        }),
+        (_('Activity Dates'), {'classes': ('collapse', ), 'fields': (('last_login', 'date_joined'), ), }),
     )
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': (('first_name', 'last_name'), ('email', 'uses_email_username'), ('is_student', 'is_teacher', 'is_admin'), ('password1', 'password2'),),
+            'fields': (
+                ('first_name', 'last_name'),
+                ('email', 'uses_email_username'),
+                ('is_student', 'is_teacher', 'is_admin'),
+                ('password1', 'password2'), ),
+        }),
+        (_('Address Info'), {
+            'classes': ('collapse', ),
+            'fields': (
+                'billing_address_1', 'billing_address_2',
+                ('billing_city', 'billing_country_area', 'billing_postcode', ),
+                'billing_country_code',
+            ),
         }),
     )
-    # search_fields = ('first_name', 'last_name', 'email')
+    search_fields = ('first_name', 'last_name', 'email')
     empty_value_display = '-empty-'
-    # TODO: Can we change to show only 1 and the correct profile inline?
-    # inlines = (StaffInline, StudentInline, ProfileInline,)  # All three are just for testing
-    # inlines = (StaffInline, StudentInline,)
-    # inlines = (ProfileInline,)
+    formfield_overrides = {  # attrs{'size': 'Num'} will actually be ~ 1.1*Num + 2
+        models.CharField: {'widget': TextInput(attrs={'size': '15'})},
+        models.EmailField: {'widget': TextInput(attrs={'size': '25'})},
+    }
+    formfield_attrs_overrides = {
+        'email': {'maxlength': 191, },
+        'billing_address_1': {'size': 20},
+        'billing_address_2': {'size': 20},
+    }
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        for name, field in form.base_fields.items():
+            if name in self.formfield_attrs_overrides:
+                for key, value in self.formfield_attrs_overrides[name].items():
+                    field.widget.attrs[key] = value
+            if not self.formfield_attrs_overrides.get(name, {}).get('no_size_override', False):
+                display_size = int(field.widget.attrs.get('size', 0))
+                input_size = int(field.widget.attrs.get('maxlength', 0))
+                if input_size:
+                    field.widget.attrs['size'] = min(display_size, input_size) if display_size else input_size
+        return form
 
     # def get_formsets_with_inlines(self, request, obj=None):
     #     """ Return no inlines when obj is being created. Using super to use
-    #         the defaul get_inline_instances, then filter so we return desired
+    #         the default get_inline_instances, then filter so we return desired
     #         inline based on user type.
     #     """
     #     if not obj:
@@ -84,5 +98,3 @@ class CustomUserAdmin(UserAdmin):
 
 
 admin.site.register(UserHC, CustomUserAdmin)
-# admin.site.register((Staff, Student, Profile))
-# admin.site.register((Staff, Student))
