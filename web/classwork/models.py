@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import Q, F, Count, Max  # , Min, Avg, Sum
+from django.db.models import Q, Count, Max  # , F, Min, Avg, Sum
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
@@ -189,8 +189,8 @@ class Subject(models.Model):
 
     # id = auto-created
     level = models.CharField(max_length=8, default='Spec', choices=LEVEL_CHOICES, )
-    level_num = models.DecimalField(max_digits=3, decimal_places=1, default=LEVEL_ORDER.get(level.default, 0),
-                                    help_text=_("Will be computed if left blank. "), )
+    level_num = models.DecimalField(max_digits=3, decimal_places=1, default=0,  # LEVEL_ORDER.get(level.default, 0)
+                                    help_text=_("Will be computed if left blank. "), blank=True, )
     version = models.CharField(max_length=1, choices=VERSION_CHOICES, )
     title = models.CharField(max_length=125, default=_('Untitled'), )
     tagline_1 = models.CharField(max_length=23, blank=True, )
@@ -212,11 +212,12 @@ class Subject(models.Model):
     date_added = models.DateField(auto_now_add=True, )
     date_modified = models.DateField(auto_now=True, )
 
-    def compute_level_num(self, level_value=None):
+    def compute_level_num(self, level_value=None, set_self=True):
         """ Translate and assign the number associated to the value in 'level' field, assigning 0 if not determined. """
         level_value = level_value if level_value is not None else self.level
         num = self.LEVEL_ORDER.get(level_value, 0)
-        self.level_num = num
+        if set_self:
+            self.level_num = num
         return num
 
     @property
@@ -225,10 +226,6 @@ class Subject(models.Model):
         if self.level not in ['Beg', 'L2']:
             slug += f': {self.title}'
         return slug
-
-    def clean(self, *args, **kwargs):
-        self.compute_level_num()
-        return super().clean()
 
     def save(self, *args, **kwargs):
         if not self.level_num:
@@ -557,6 +554,7 @@ class ClassOffer(models.Model):
         return self._num_level
 
     def set_num_level(self):
+        # TODO: Do we need 'num_level' field, or just going to use value from parent 'Subject'?
         level_dict = Subject.LEVEL_ORDER
         higher = 100 + max(level_dict.values())
         num = 0
@@ -586,7 +584,7 @@ class Profile(models.Model):
     # TODO: Allow users to modify their profile.
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True, )
     bio = models.TextField(max_length=1530, blank=True, )  # Current for Chris is 1349 characters!
-    level = models.IntegerField(_('skill level'), default=0, )
+    level = models.IntegerField(_('skill level'), default=0, blank=True, )
     taken = models.ManyToManyField(ClassOffer, related_name='students', through='Registration', )
     # interest = models.ManyToManyField(Subject, related_names='interests', through='Requests', )
     credit = models.FloatField(_('class payment credit'), default=0, )
@@ -599,40 +597,23 @@ class Profile(models.Model):
     # TODO: The following properties could be extracted further to allow the program admin user
     # to set their own rules for number of versions needed and other version translation decisions.
 
-    # @classmethod
-    # def _helper_num_level(cls, parent=None, level_word=None):
-    #     level_dict = Subject.LEVEL_ORDER.copy()
-    #     if not level_word:
-    #         level_word = getattr(parent, 'level', '')
-    #     num = level_dict[level_word] if level_word in level_dict else 0
-    #     return num
-
     @property
-    def highest_subject(self):
+    def highest_subject(self, subjects=True, classoffers=False):
         """ We will want to know what is the student's class level which by default will be the highest
             class level they have taken. We also want to be able to override this from a teacher or
             admin input to deal with students who have had instruction or progress elsewhere.
         """
-        # from pprint import pprint
-        from_classoffer = self.taken.aggregate(from_classoffer=Max('_num_level'))
-        # TODO: Determine if ClassOffer should have this value or if we should get it from Subject.
-        lookup_level = dict(Subject.LEVEL_CHOICES)
-        lookup_order = dict(Subject.LEVEL_ORDER)
-        # data = self.taken_subjects.aggregate(field_value=Max('level'))  # This is alphabetical max
-        data = self.taken_subjects.aggregate(field_value=Max('level_num'))
-        # The computed property/method of num_level on Subject would require loading all the queried subjects.
-        # Could also pass the work of num_level as a function to run on the level field.
-        # # # #
-        # for each self.taken ClassOffer, look at its parent Subject and make a dict of the Subject.level value
-        # map_level = models.ExpressionWrapper(lookup_order.get(F('level'), 0), output_field=models.IntegerField)
-        # temp = self.taken_subjects.annotate(num=map_level).annotate(Max(num))
-        val = data.get('field_value', None)
-        data['display'] = lookup_level.get(val) if val else "None"
-        data['level'] = lookup_order.get(val) if val else 0
-        data.update(from_classoffer)
-        # TODO: Determine where else we may use this information and the appropriate data structure to create here.
-        print("================================ Profile.highest_subject =========================================")
-        print(data)
+        data = self.taken_subjects.aggregate(Max('level_num'))
+        max_level = data['level_num__max']
+        if subjects:
+            data['subjects'] = self.taken_subjects.filter(level_num=max_level)
+        if classoffers:
+            data['classoffers'] = self.taken.filter(subject__level_num=max_level).order_by('-session_id__key_day_date')
+            # TODO: Determine if ClassOffer should have this value or if we should get it from Subject.
+            by_classoffer = self.taken.aggregate(max_classoffer=Max('_num_level'))
+            c_max = by_classoffer['max_classoffer']
+            by_classoffer['collect_classoffer'] = self.taken.filter(_num_level=c_max).order_by('-session__key_day_date')
+            data.update(by_classoffer)
         return data
 
     @property
@@ -641,23 +622,23 @@ class Profile(models.Model):
         return Subject.objects.filter(id__in=self.taken.values_list('subject'))
 
     @property
-    def beg_finished(self):
+    def beg(self):
         """ Completed the two versions of Beginning. """
         ver_map = {'A': ['A', 'C'], 'B': ['B', 'D']}
-        goal, data = self.subject_data(level=0, each_ver=1, ver_map=ver_map)
-        for key in goal:
-            if data.get(key, 0) < goal[key]:
-                return False
-        return True
+        goal, data, extra = self.subject_data(level=0, each_ver=1, ver_map=ver_map)
+        return extra
 
     @property
-    def l2_finished(self):
+    def l2(self):
         """ Completed the four versions of level two. """
-        goal, data = self.subject_data(level=1, each_ver=1, exclude='N')
-        for key in goal:
-            if data.get(key, 0) < goal[key]:
-                return False
-        return True
+        goal, data, extra = self.subject_data(level=1, each_ver=1, exclude='N')
+        return extra
+
+    @property
+    def l3(self):
+        """ Completed four versions of level three. """
+        goal, data, extra = self.subject_data(level=2, each_ver=1, exclude='N')
+        return extra
 
     def subject_data(self, level=0, each_ver=1, only=None, exclude=('N',), goal_map=None, ver_map=None):
         """
@@ -723,7 +704,7 @@ class Profile(models.Model):
                     agg_kwargs[key] = Count('id', filter=Q(version__in=setting), distinct=True)
                 elif isinstance(setting, dict):
                     # TODO: Check if the Q object is correctly checking for key=value.
-                    setting = [Q(**dict(key, value)) for key, value in setting.items()]
+                    setting = [Q(**{key: value}) for key, value in setting.items()]
                     agg_kwargs[key] = Count('id', filter=tuple(setting), distinct=True)
                 elif setting:
                     raise TypeError(_("Expected each 'ver_map' value to be a list, tuple, or dictionary (or falsy). "))
@@ -732,7 +713,14 @@ class Profile(models.Model):
         # goal is populated. The populated agg_kwargs, level, and self.taken_subjects allow us to make data dictionary
         target_taken = self.taken_subjects.filter(level=Subject.LEVEL_CHOICES[level][0])
         data = target_taken.aggregate(**agg_kwargs)
-        return goal, data
+        extra = {'done': False}
+        for key in goal:
+            extra_value = data.get(key, 0) - goal[key]
+            extra[key] = extra_value
+            if extra_value < 0:
+                return goal, data, extra
+        extra['done'] = True
+        return goal, data, extra
 
     @property
     def username(self):
@@ -744,6 +732,22 @@ class Profile(models.Model):
 
     def _get_full_name(self):
         return self.user.get_full_name
+
+    def compute_level(self):
+        if self.taken.count() < 1:
+            return 0
+        if self.l3.get('done'):
+            return 4 if min(self.l3.values(), default=0) >= 1 else 3.5
+        if self.l2.get('done'):
+            return 3 if min(self.l2.values(), default=0) >= 1 else 2.5
+        if self.beg.get('done'):
+            return 2
+        return 1 if max(self.beg.values(), default=0) > 0 else 0
+
+    def save(self, *args, **kwargs):
+        if not self.level:
+            self.level = self.compute_level()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.full_name

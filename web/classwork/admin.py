@@ -37,29 +37,10 @@ class ResourceInline(admin.StackedInline):
     formfield_overrides = {models.TextField: {'widget': Textarea(attrs={'cols': 60, 'rows': 2})}, }
 
 
-class SubjectAdminForm(ModelForm):
-
-    def full_clean(self, *args, **kwargs):
-        from pprint import pprint
-        print("========== SubjectAdminForm.full_clean ===================")
-        pprint(args)
-        pprint(kwargs)
-        print("----------------------------------------------------")
-        pprint(dir(self))
-        full_clean = super().full_clean(*args, **kwargs)
-        instance_after_model_clean = {name: getattr(self.instance, name, None) for name in self.fields}
-        data = self.data.copy()
-        data.update(instance_after_model_clean)
-        self.data = data
-
-        return full_clean
-
-
 class SubjectAdmin(admin.ModelAdmin):
     """ Admin change/add for Subjects. Has an inline for Resources. """
     model = Subject
-    form = SubjectAdminForm
-    list_display = ('__str__', 'title', 'level', 'level_num', 'version', )
+    list_display = ('__str__', 'title', 'level_num', 'level', 'version', )
     list_display_links = ('__str__', 'title')
     inlines = (ResourceInline, )
     # TODO: What if we want to attach an already existing Resource?
@@ -71,6 +52,12 @@ class SubjectAdmin(admin.ModelAdmin):
         ('full_price', 'pre_pay_discount'),
         ('qualifies_as_multi_class_discount', 'multiple_purchase_discount')
     )
+
+    # class Media:
+    #     css = {
+    #         "all": ("my_styles.css",)
+    #     }
+    #     js = ("my_code.js",)
 
 
 class ClassOfferAdmin(admin.ModelAdmin):
@@ -141,11 +128,13 @@ class AdminSessionForm(ModelForm):
         return data
 
     def full_clean(self):
+        """ Extended functionality with repopulating the form with data updated by the model's clean method. """
         full_clean = super().full_clean()
         if True:  # TODO: Is there a way to only run the following when appropriate?
             instance_after_model_clean = {name: getattr(self.instance, name, None) for name in self.fields}
             data = self.data.copy()
             data.update(instance_after_model_clean)
+            # TODO: Should data be cast to a QueryDict to maintain immutable quality?
             self.data = data
         return full_clean
 
@@ -180,14 +169,20 @@ class StudentClassInline(admin.TabularInline):
 class ProfileAdmin(admin.ModelAdmin):
     """ Admin can modify and view Profiles of all users. """
     model = Profile
-    list_display = ['__str__', 'username', 'max_subject', 'max_level', 'level', 'beg_finished', 'l2_finished']
+    list_display = ['__str__', 'username', 'max_subject', 'max_level', 'level', 'beg_done', 'l2_done', 'l3_done']
     list_display_links = ('__str__', 'username')
     filter_horizontal = ('taken',)
     ordering = ('date_modified', 'date_added',)
     inlines = (StudentClassInline, )
 
-    def max_subject(self, obj): return obj.highest_subject.get('display', 'Unknown')
-    def max_level(self, obj): return obj.highest_subject.get('level', 0)
+    def max_subject(self, obj): return list(obj.highest_subject.get('subjects', ['Unknown']))
+    def max_level(self, obj): return obj.highest_subject.get('level_num__max', 0)
+    def beg_done(self, obj): return obj.beg.get('done')
+    def l2_done(self, obj): return obj.l2.get('done')
+    def l3_done(self, obj): return obj.l3.get('done')
+    beg_done.boolean = True
+    l2_done.boolean = True
+    l3_done.boolean = True
 
 
 class RegistrationAdmin(admin.ModelAdmin):
