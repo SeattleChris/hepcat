@@ -554,6 +554,7 @@ class ClassOffer(models.Model):
         return self._num_level
 
     def set_num_level(self):
+        # TODO: Do we need 'num_level' field, or just going to use value from parent 'Subject'?
         level_dict = Subject.LEVEL_ORDER
         higher = 100 + max(level_dict.values())
         num = 0
@@ -583,7 +584,7 @@ class Profile(models.Model):
     # TODO: Allow users to modify their profile.
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True, )
     bio = models.TextField(max_length=1530, blank=True, )  # Current for Chris is 1349 characters!
-    level = models.IntegerField(_('skill level'), default=0, )
+    level = models.IntegerField(_('skill level'), default=0, blank=True, )
     taken = models.ManyToManyField(ClassOffer, related_name='students', through='Registration', )
     # interest = models.ManyToManyField(Subject, related_names='interests', through='Requests', )
     credit = models.FloatField(_('class payment credit'), default=0, )
@@ -602,7 +603,6 @@ class Profile(models.Model):
             class level they have taken. We also want to be able to override this from a teacher or
             admin input to deal with students who have had instruction or progress elsewhere.
         """
-        # from pprint import pprint
         data = self.taken_subjects.aggregate(Max('level_num'))
         max_level = data['level_num__max']
         if subjects:
@@ -614,10 +614,6 @@ class Profile(models.Model):
             c_max = by_classoffer['max_classoffer']
             by_classoffer['collect_classoffer'] = self.taken.filter(_num_level=c_max).order_by('-session__key_day_date')
             data.update(by_classoffer)
-        # TODO: Determine where else we may use this information and the appropriate data structure to create here.
-        # print("================================ Profile.highest_subject =========================================")
-        # same_as_max = Q(level_num=data['level_num__max'])
-        # pprint(data)
         return data
 
     @property
@@ -626,23 +622,23 @@ class Profile(models.Model):
         return Subject.objects.filter(id__in=self.taken.values_list('subject'))
 
     @property
-    def beg_finished(self):
+    def beg(self):
         """ Completed the two versions of Beginning. """
         ver_map = {'A': ['A', 'C'], 'B': ['B', 'D']}
-        goal, data = self.subject_data(level=0, each_ver=1, ver_map=ver_map)
-        for key in goal:
-            if data.get(key, 0) < goal[key]:
-                return False
-        return True
+        goal, data, extra = self.subject_data(level=0, each_ver=1, ver_map=ver_map)
+        return extra
 
     @property
-    def l2_finished(self):
+    def l2(self):
         """ Completed the four versions of level two. """
-        goal, data = self.subject_data(level=1, each_ver=1, exclude='N')
-        for key in goal:
-            if data.get(key, 0) < goal[key]:
-                return False
-        return True
+        goal, data, extra = self.subject_data(level=1, each_ver=1, exclude='N')
+        return extra
+
+    @property
+    def l3(self):
+        """ Completed four versions of level three. """
+        goal, data, extra = self.subject_data(level=2, each_ver=1, exclude='N')
+        return extra
 
     def subject_data(self, level=0, each_ver=1, only=None, exclude=('N',), goal_map=None, ver_map=None):
         """
@@ -717,7 +713,14 @@ class Profile(models.Model):
         # goal is populated. The populated agg_kwargs, level, and self.taken_subjects allow us to make data dictionary
         target_taken = self.taken_subjects.filter(level=Subject.LEVEL_CHOICES[level][0])
         data = target_taken.aggregate(**agg_kwargs)
-        return goal, data
+        extra = {'done': False}
+        for key in goal:
+            extra_value = data.get(key, 0) - goal[key]
+            extra[key] = extra_value
+            if extra_value < 0:
+                return goal, data, extra
+        extra['done'] = True
+        return goal, data, extra
 
     @property
     def username(self):
@@ -729,6 +732,22 @@ class Profile(models.Model):
 
     def _get_full_name(self):
         return self.user.get_full_name
+
+    def compute_level(self):
+        if self.taken.count() < 1:
+            return 0
+        if self.l3.get('done'):
+            return 4 if min(self.l3.values(), default=0) >= 1 else 3.5
+        if self.l2.get('done'):
+            return 3 if min(self.l2.values(), default=0) >= 1 else 2.5
+        if self.beg.get('done'):
+            return 2
+        return 1 if max(self.beg.values(), default=0) > 0 else 0
+
+    def save(self, *args, **kwargs):
+        if not self.level:
+            self.level = self.compute_level()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.full_name
