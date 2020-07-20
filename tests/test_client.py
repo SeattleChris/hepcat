@@ -1,4 +1,5 @@
 from django.test import TestCase, Client, override_settings  # , modify_settings
+from unittest import skip
 # from django.apps import apps
 # from django.conf import settings
 # from os import environ
@@ -39,11 +40,14 @@ class RouteTests(TestCase):
 class SettingsFileTests(TestCase):
     """ Coverage reports some sections of settings file that need testing. """
 
+    @skip("Not Implemented")
     def test_hosted_pythonanywhere_and_not_local(self):
         pass
 
+    @skip("Not Implemented")
     def test_use_s3(self):
         pass
 
+    @skip("Not Implemented")
     def test_email_backend_else_condition(self):
         pass

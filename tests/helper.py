@@ -29,7 +29,7 @@ class SimpleModelTests:
                 raise ValueError("Expected a Model in cls.related. ")
             q = RelatedModel.objects
             kwargs[field] = q.get_or_create(**related_kwargs) if related_kwargs else q.first()
-        kwargs.update(self.defaults.copy())
+        # kwargs.update(self.defaults.copy())
         # collected_kwargs = self.defaults.copy()
         # collected_kwargs.update(kwargs)
         if self.instance:

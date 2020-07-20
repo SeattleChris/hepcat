@@ -17,8 +17,29 @@ def date_with_day(obj, field=None, short=False, year=False):
     date_format += ', %Y' if year else ''  # django template language for date: 'l N j, Y'
     return date_day.strftime(date_format) if date_day else ''
 
-# Register your models here.
-# TODO: Make a ResourceAdmin? This could modify which are shown
+
+class ClassDayListFilter(admin.SimpleListFilter):
+    title = _('class day')   # Human-readable title used in the filter sidebar
+    parameter_name = 'class_day_filter'  # Parameter for the filter that will be used in the URL query.
+
+    def lookups(self, request, model_admin):
+        """ Returns a list of tuples. The first tuple element is the coded value, second element is the label. """
+        qs = model_admin.get_queryset(request)
+        field_key = 'class_day'
+        if isinstance(model_admin, RegistrationAdmin):
+            field_key = 'classoffer__' + field_key
+        print(field_key)
+        for value, label in ClassOffer.DOW_CHOICES:
+            if qs.filter(**{field_key: value}).exists():
+                yield (value, label)
+
+    def queryset(self, request, queryset):
+        """ Returns the filtered queryset based on value provided in the query string, retrievable via self.value(). """
+        # Compare the requested value to decide how to filter the queryset.
+        field_key = 'class_day'
+        if isinstance(queryset.model, RegistrationAdmin.model):
+            field_key = 'classoffer__' + field_key
+        return queryset.filter(**{field_key: self.value()}) if self.value() else queryset
 
 
 class ResourceInline(admin.StackedInline):
@@ -34,14 +55,24 @@ class ResourceInline(admin.StackedInline):
             'fields': ('imagepath', 'filepath', 'link', 'text',)
         }),
         )
+    # TODO: Modify which are shown
     formfield_overrides = {models.TextField: {'widget': Textarea(attrs={'cols': 60, 'rows': 2})}, }
+
+
+class StudentClassInline(admin.TabularInline):
+    """ Admin can attach a class Registration while on the Profile add/change form. """
+    model = Registration
+    extra = 2
+
+# Register your models here.
 
 
 class SubjectAdmin(admin.ModelAdmin):
     """ Admin change/add for Subjects. Has an inline for Resources. """
     model = Subject
     list_display = ('__str__', 'title', 'level_num', 'level', 'version', )
-    list_display_links = ('__str__', 'title')
+    list_display_links = ('__str__', 'title', )
+    list_filter = ('level_num', 'level', )
     inlines = (ResourceInline, )
     # TODO: What if we want to attach an already existing Resource?
     fields = (
@@ -50,9 +81,10 @@ class SubjectAdmin(admin.ModelAdmin):
         ('num_weeks', 'num_minutes'),
         'description', 'image',
         ('full_price', 'pre_pay_discount'),
-        ('qualifies_as_multi_class_discount', 'multiple_purchase_discount')
+        ('qualifies_as_multi_class_discount', 'multiple_purchase_discount'),
     )
 
+    # TODO: Look into ModelAdmin asset definitions
     # class Media:
     #     css = {
     #         "all": ("my_styles.css",)
@@ -63,10 +95,10 @@ class SubjectAdmin(admin.ModelAdmin):
 class ClassOfferAdmin(admin.ModelAdmin):
     """ Admin change/add for ClassOffers. Has an inline for Resources. """
     model = ClassOffer
-    list_display = ('__str__', 'subject', 'session', 'time', 'start_day', 'end_day')
-    list_display_links = ('__str__',)
-    ordering = ('session__key_day_date', '_num_level')
-    list_filter = ('session', 'subject', '_num_level', 'class_day')
+    list_display = ('__str__', 'subject', 'session', 'time', 'start_day', 'end_day', )
+    list_display_links = ('__str__', )
+    list_filter = ('session', 'subject', '_num_level', ClassDayListFilter, )
+    ordering = ('session__key_day_date', '_num_level', )
     inlines = (ResourceInline, )
     fieldsets = (
         (None, {
@@ -79,7 +111,7 @@ class ClassOfferAdmin(admin.ModelAdmin):
         ('Missed Classes', {
             'classes': ('collapse', ),
             "fields": ('skip_weeks', 'skip_tagline'),
-        })
+        }),
     )
 
     def time(self, obj):
@@ -143,10 +175,10 @@ class SessiontAdmin(admin.ModelAdmin):
     """ Admin manage of Session models. New Sessions will populate initial values based on last Session. """
     model = Session
     form = AdminSessionForm
-    list_display = ('name', 'start_day', 'end_day', 'skips', 'breaks', 'publish_day', 'expire_day')
-    ordering = ('key_day_date',)
+    list_display = ('name', 'start_day', 'end_day', 'skips', 'breaks', 'publish_day', 'expire_day', )
+    ordering = ('key_day_date', )
     fields = ('name', ('key_day_date', 'max_day_shift'), 'num_weeks',
-              ('skip_weeks', 'flip_last_day'), 'break_weeks', ('publish_date', 'expire_date'))
+              ('skip_weeks', 'flip_last_day'), 'break_weeks', ('publish_date', 'expire_date'), )
 
     def start_day(self, obj): return date_with_day(obj, field='start_date')
     def end_day(self, obj): return date_with_day(obj, field='end_date')
@@ -160,20 +192,17 @@ class SessiontAdmin(admin.ModelAdmin):
     breaks.short_description = 'breaks'
 
 
-class StudentClassInline(admin.TabularInline):
-    """ Admin can attach a class Registration while on the Profile add/change form. """
-    model = Registration
-    extra = 2
-
-
 class ProfileAdmin(admin.ModelAdmin):
     """ Admin can modify and view Profiles of all users. """
     model = Profile
-    list_display = ['__str__', 'username', 'max_subject', 'max_level', 'level', 'beg_done', 'l2_done', 'l3_done']
-    list_display_links = ('__str__', 'username')
-    filter_horizontal = ('taken',)
-    ordering = ('date_modified', 'date_added',)
+    list_display = ('__str__', 'username', 'max_subject', 'max_level', 'level', 'beg_done', 'l2_done', 'l3_done', )
+    list_display_links = ('__str__', 'username', )
+    list_filter = ('user__is_staff', 'taken__session', 'taken__subject__level', 'level', )  # , 'taken__subject',
+    list_select_related = True
+    # filter_horizontal = ('taken',)
+    ordering = ('date_modified', 'date_added', )
     inlines = (StudentClassInline, )
+    fields = (('user', 'level', 'credit'), 'bio', )
 
     def max_subject(self, obj): return list(obj.highest_subject.get('subjects', ['Unknown']))
     def max_level(self, obj): return obj.highest_subject.get('level_num__max', 0)
@@ -184,19 +213,19 @@ class ProfileAdmin(admin.ModelAdmin):
     l2_done.boolean = True
     l3_done.boolean = True
 
+    # def message_user(self, request, message, level=messages.INFO, extra_tags='', fail_silently=False):
+    #     # TODO: Look into ModelAdmin.message_user
+    #     return super().message_user(request, message, level=level, extra_tags=extra_tags, fail_silently=fail_silently)
+
 
 class RegistrationAdmin(admin.ModelAdmin):
     """ Admin change/add for Registrations, which are records of what students have signed up for. """
     model = Registration
-    list_display = ['first_name', 'last_name', 'credit', 'reg_class', 'paid']
-    list_display_links = ['first_name', 'last_name']
-    list_filter = ('classoffer__session', 'classoffer__class_day')
-    # TODO: add ability to only display the class_day that exist in qs
-    # https://docs.djangoproject.com/en/2.1/ref/contrib/admin/ see list_filter
+    list_display = ('first_name', 'last_name', 'credit', 'reg_class', 'paid', )
+    list_display_links = ('first_name', 'last_name', )
+    list_filter = ('classoffer__session', ClassDayListFilter, )  # 'classoffer__class_day',
+    ordering = ('-classoffer__class_day', 'classoffer__start_time', 'student__user__first_name', )
     # TODO: modify so by default it shows current session filter
-    ordering = ('-classoffer__class_day', 'classoffer__start_time', 'student__user__first_name')
-
-    # ordering = ('reg_class', )
 
 
 admin.site.site_header = settings.BUSINESS_NAME + ' Admin'
