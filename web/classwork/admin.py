@@ -189,14 +189,29 @@ class ProfileAdmin(admin.ModelAdmin):
     l3_done.boolean = True
 
 
+class ClassDayListFilter(admin.SimpleListFilter):
+    title = _('class day')   # Human-readable title used in the filter sidebar
+    parameter_name = 'class_day_filter'  # Parameter for the filter that will be used in the URL query.
+
+    def lookups(self, request, model_admin):
+        """ Returns a list of tuples. The first tuple element is the coded value, second element is the label. """
+        qs = model_admin.get_queryset(request)
+        for value, label in ClassOffer.DOW_CHOICES:
+            if qs.filter(classoffer__class_day=value).exists():
+                yield (value, label)
+
+    def queryset(self, request, queryset):
+        """ Returns the filtered queryset based on value provided in the query string, retrievable via self.value(). """
+        # Compare the requested value to decide how to filter the queryset.
+        return queryset.filter(classoffer__class_day=self.value()) if self.value() else queryset
+
+
 class RegistrationAdmin(admin.ModelAdmin):
     """ Admin change/add for Registrations, which are records of what students have signed up for. """
     model = Registration
     list_display = ('first_name', 'last_name', 'credit', 'reg_class', 'paid', )
     list_display_links = ('first_name', 'last_name', )
-    list_filter = ('classoffer__session', 'classoffer__class_day', )
-    # TODO: add ability to only display the class_day that exist in qs
-    # https://docs.djangoproject.com/en/2.1/ref/contrib/admin/ see list_filter
+    list_filter = ('classoffer__session', ClassDayListFilter, )  # 'classoffer__class_day',
     ordering = ('-classoffer__class_day', 'classoffer__start_time', 'student__user__first_name', )
     # TODO: modify so by default it shows current session filter
 
