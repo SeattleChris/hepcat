@@ -1,4 +1,5 @@
 from django.test import TestCase, TransactionTestCase
+from django.conf import settings
 from unittest import skip
 from .helper import SimpleModelTests
 from classwork.models import Location, Resource, SiteContent, Subject, ClassOffer, Profile
@@ -69,7 +70,7 @@ class ResourceModelTests(SimpleModelTests, TransactionTestCase):
         """ For a User signed in a ClassOffer, determine they are allowed to see a currently published Resource. """
         pass
 
-    # @skip("Not Implemented")
+    @skip("Not Implemented")
     def test_publish_can_view_never_expired(self):
         """ For a User signed in a ClassOffer, determine they can view an associated never expired Resource. """
         print("=========================== ResourceModelTests - Running Here ========================================")
@@ -102,10 +103,6 @@ class SubjectModelTests(SimpleModelTests, TestCase):
     Model = Subject
     repr_dict = {'Subject': 'title', 'Level': 'level', 'Version': 'version'}
     str_list = ['_str_slug']
-
-    @skip("Not Implemented")
-    def test_num_level(self):
-        pass
 
 
 class ClassOfferModelTests(SimpleModelTests, TestCase):
@@ -454,37 +451,54 @@ class SessionCoverageTests(TransactionTestCase):
         # obj.refresh_from_db()
         return obj
 
-    @skip("Not Implemented")
     def test_default_date_error_on_wrong_fields(self):
-        pass
+        session = Session.objects.get(id=1)
+        with self.assertRaises(ValueError):
+            session._default_date('expire_date')
 
-    @skip("Not Implemented")
     def test_default_date_traverse_prev_for_final_session(self):
-        pass
+        first = Session.objects.first()  # key_day_date = "2020-04-30", num_weeks = 5
+        minimum_session_weeks = settings.SESSION_MINIMUM_WEEKS
+        second = self.create_session(name="short_session", num_weeks=(minimum_session_weeks - 1))
+        second.save()
+        expected_key_day = first.key_day_date + timedelta(days=7*(first.num_weeks + first.break_weeks))
+        third = self.create_session(name="third_test")
+        third.save()
+        # final_session_before_adjust = Session.last_session()
+        # final_session = final_session_before_adjust.prev_session
+        # self.assertEquals(final_session, first)  # Our manual computation should have resolved as such.
+        # computed_publish_date = Session._default_date('publish_date')
+        # computed_key_day_date = Session._default_date('key_day_date')
+        # self.assertEqual(computed_key_day_date, expected_key_day)  # Direct method call should skip "short_session"
+        # self.assertEquals(computed_publish_date, first.expire_date)  # Direct method call should skip "short_session"
+        self.assertGreater(minimum_session_weeks, 1)  # Otherwise we probably have error on create of second.
+        self.assertEqual(first.skip_weeks, 0)  # Therefore, expected_key_day should be correct.
+        self.assertGreater(third.start_date, first.end_date)
+        self.assertEquals(third.publish_date, first.expire_date)
+        self.assertEquals(expected_key_day, third.key_day_date)
 
-    @skip("Not Implemented")
     def test_compute_expire_day_with_key_day_none(self):
-        pass
+        session = Session.objects.get(id=1)
+        computed_expire = session.computed_expire_day()
+        self.assertEquals(session.expire_date, computed_expire)
 
-    @skip("Not Implemented")
     def test_clean_determine_date_from_previous(self):
-        pass
+        first = Session.objects.first()  # key_day_date = "2020-04-30", num_weeks = 5
+        second = self.create_session(name="second_test")
+        second.save()
+        first_key_day = first.key_day_date  # 2020-04-30
+        collide_key_day = first_key_day + timedelta(days=7*(first.num_weeks - 1))
+        third = self.create_session(name="third_test", key_day_date=collide_key_day)
+        third.save(with_clean=True)
 
-    @skip("Not Implemented")
-    def test_clean_expire_date_set_to_compute(self):
-        pass
+        self.assertGreater(first.num_weeks, 1)
+        self.assertGreater(third.start_date, second.end_date)
+        self.assertGreater(second.start_date, first.end_date)
 
-    @skip("Not Implemented")
-    def test_clean_expire_date_set_to_submitted_value(self):
-        pass
-
-    @skip("Not Implemented")
-    def test_save_modify_next_session_publish_date(self):
-        pass
-
-    @skip("Not Implemented")
     def test_repr(self):
-        pass
+        session = Session.objects.first()
+        repr_string = f"<Session: {session.name} >"
+        self.assertEquals(repr_string, repr(session))
 
     def test_create_no_default_functions_no_shift(self):
         """ Session.create works with defined 'key_day_date' and 'publish_date'. """
