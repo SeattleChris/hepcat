@@ -1,4 +1,5 @@
 from django.test import TransactionTestCase  # , TestCase
+# from unittest import skip
 # from django.forms import ValidationError
 from classwork.models import Session  # , Subject, ClassOffer, Location, Profile, Registration, Payment
 # from classwork.admin import AdminSessionForm, SessiontAdmin

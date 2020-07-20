@@ -84,6 +84,7 @@ class SubjectAdmin(admin.ModelAdmin):
         ('qualifies_as_multi_class_discount', 'multiple_purchase_discount'),
     )
 
+    # TODO: Look into ModelAdmin asset definitions
     # class Media:
     #     css = {
     #         "all": ("my_styles.css",)
@@ -211,6 +212,10 @@ class ProfileAdmin(admin.ModelAdmin):
     beg_done.boolean = True
     l2_done.boolean = True
     l3_done.boolean = True
+
+    # def message_user(self, request, message, level=messages.INFO, extra_tags='', fail_silently=False):
+    #     # TODO: Look into ModelAdmin.message_user
+    #     return super().message_user(request, message, level=level, extra_tags=extra_tags, fail_silently=fail_silently)
 
 
 class RegistrationAdmin(admin.ModelAdmin):

@@ -19,10 +19,45 @@ class LocationModelTests(SimpleModelTests, TestCase):
     repr_dict = {'Location': 'name', 'Link': 'map_link'}
 
 
-class ResourceModelTests(SimpleModelTests, TestCase):
+class ResourceModelTests(SimpleModelTests, TransactionTestCase):
+    fixtures = ['tests/fixtures/db_basic.json', 'tests/fixtures/db_hidden.json']
     Model = Resource
     repr_dict = {'Resource': 'related_type', 'Type': 'content_type'}
     str_list = ['title', 'related_type', 'content_type']
+
+    # Setup for publish method
+    # Need a student user & profile
+    # ? Need a Location
+    # Need a Session, Subject, and ClassOffer
+    # The student needs to be associated with the ClassOffer
+    # Need Resource(s) attached to a Subject or ClassOffer
+    # - Can't view before joining
+    # - Immediately available once joined
+    # - Not yet published
+    # - Already expired
+    # # # #
+    # Have
+    # resource = Resource.objects.get(id=1) has .title = "Congrats on Finishing class!"
+    # resource is connected to a Subject with id=1 and a ClassOffer with id=1
+    # classoffer = ClassOffer.objects.get(id=1) is connected to resource and a Session, Subject, Location.
+    # there is a student with id=1, and they have a registration for this classoffer.
+
+    @skip("Not Implemented")
+    def test_publish_not_view_if_not_joined(self):
+        """ For a User NOT signed in a ClassOffer, determine they are NOT allowed to see an associated Resource. """
+        student = Profile.objects.get(id=1)
+        classoffer = ClassOffer.objects.get(id=1)
+        # classoffer settings - 'key_day_date': '2020-04-30', 'num_weeks': 5 ==> class ended already.
+        resource = Resource.objects.get(id=1)
+        # resource has fields - user_type: 1 (student), avail: 200 (after finished), expire: 0 (never)
+        available = resource.publish(classoffer)
+
+        self.assertGreater(len(student.taken), 0)
+        self.assertIn(classoffer, student.taken)
+        self.assertIn(student, classoffer.students)
+        self.assertEquals(resource.classoffer, classoffer)
+        self.assertIn(resource, classoffer.resource_set)
+        self.assertFalse(available)
 
     @skip("Not Implemented")
     def test_publish_can_view_avail_is_immediate(self):
@@ -31,8 +66,26 @@ class ResourceModelTests(SimpleModelTests, TestCase):
 
     @skip("Not Implemented")
     def test_publish_can_view_during_published(self):
-        """ For a User signed in a ClassOffer, determine they are allowed to see an associated unexpired Resource. """
+        """ For a User signed in a ClassOffer, determine they are allowed to see a currently published Resource. """
         pass
+
+    # @skip("Not Implemented")
+    def test_publish_can_view_never_expired(self):
+        """ For a User signed in a ClassOffer, determine they can view an associated never expired Resource. """
+        print("=========================== ResourceModelTests - Running Here ========================================")
+        student = Profile.objects.get(user=1)
+        classoffer = ClassOffer.objects.get(id=1)
+        # classoffer settings - 'key_day_date': '2020-04-30', 'num_weeks': 5 ==> class ended already.
+        resource = Resource.objects.get(id=1)
+        # resource has fields - user_type: 1 (student), avail: 200 (after finished), expire: 0 (never)
+        available = resource.publish(classoffer)
+
+        self.assertGreater(len(student.taken), 0)
+        self.assertIn(classoffer, student.taken)
+        self.assertEquals(resource.classoffer, classoffer)
+        self.assertIn(student, classoffer.students)
+        self.assertIn(resource, classoffer.resource_set)
+        self.assertTrue(available)
 
     @skip("Not Implemented")
     def test_publish_not_view_before_publish(self):
