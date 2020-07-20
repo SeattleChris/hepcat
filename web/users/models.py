@@ -197,7 +197,6 @@ class UserHC(AbstractUser):
         """ Instead of user selecting a username, we will generate it from their info, using casefold()
             instead of lower() since it is better for some international character sets.
         """
-        # print('============UserHC.make_username was called ====================')
         if self.uses_email_username is True:
             # TODO: How to check if their email is already taken as a username?
             return self.email.casefold()
