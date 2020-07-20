@@ -17,8 +17,29 @@ def date_with_day(obj, field=None, short=False, year=False):
     date_format += ', %Y' if year else ''  # django template language for date: 'l N j, Y'
     return date_day.strftime(date_format) if date_day else ''
 
-# Register your models here.
-# TODO: Make a ResourceAdmin? This could modify which are shown
+
+class ClassDayListFilter(admin.SimpleListFilter):
+    title = _('class day')   # Human-readable title used in the filter sidebar
+    parameter_name = 'class_day_filter'  # Parameter for the filter that will be used in the URL query.
+
+    def lookups(self, request, model_admin):
+        """ Returns a list of tuples. The first tuple element is the coded value, second element is the label. """
+        qs = model_admin.get_queryset(request)
+        field_key = 'class_day'
+        if isinstance(model_admin, RegistrationAdmin):
+            field_key = 'classoffer__' + field_key
+        print(field_key)
+        for value, label in ClassOffer.DOW_CHOICES:
+            if qs.filter(**{field_key: value}).exists():
+                yield (value, label)
+
+    def queryset(self, request, queryset):
+        """ Returns the filtered queryset based on value provided in the query string, retrievable via self.value(). """
+        # Compare the requested value to decide how to filter the queryset.
+        field_key = 'class_day'
+        if isinstance(queryset.model, RegistrationAdmin.model):
+            field_key = 'classoffer__' + field_key
+        return queryset.filter(**{field_key: self.value()}) if self.value() else queryset
 
 
 class ResourceInline(admin.StackedInline):
@@ -34,7 +55,16 @@ class ResourceInline(admin.StackedInline):
             'fields': ('imagepath', 'filepath', 'link', 'text',)
         }),
         )
+    # TODO: Modify which are shown
     formfield_overrides = {models.TextField: {'widget': Textarea(attrs={'cols': 60, 'rows': 2})}, }
+
+
+class StudentClassInline(admin.TabularInline):
+    """ Admin can attach a class Registration while on the Profile add/change form. """
+    model = Registration
+    extra = 2
+
+# Register your models here.
 
 
 class SubjectAdmin(admin.ModelAdmin):
@@ -66,7 +96,7 @@ class ClassOfferAdmin(admin.ModelAdmin):
     model = ClassOffer
     list_display = ('__str__', 'subject', 'session', 'time', 'start_day', 'end_day', )
     list_display_links = ('__str__', )
-    list_filter = ('session', 'subject', '_num_level', 'class_day', )
+    list_filter = ('session', 'subject', '_num_level', ClassDayListFilter, )
     ordering = ('session__key_day_date', '_num_level', )
     inlines = (ResourceInline, )
     fieldsets = (
@@ -161,12 +191,6 @@ class SessiontAdmin(admin.ModelAdmin):
     breaks.short_description = 'breaks'
 
 
-class StudentClassInline(admin.TabularInline):
-    """ Admin can attach a class Registration while on the Profile add/change form. """
-    model = Registration
-    extra = 2
-
-
 class ProfileAdmin(admin.ModelAdmin):
     """ Admin can modify and view Profiles of all users. """
     model = Profile
@@ -187,23 +211,6 @@ class ProfileAdmin(admin.ModelAdmin):
     beg_done.boolean = True
     l2_done.boolean = True
     l3_done.boolean = True
-
-
-class ClassDayListFilter(admin.SimpleListFilter):
-    title = _('class day')   # Human-readable title used in the filter sidebar
-    parameter_name = 'class_day_filter'  # Parameter for the filter that will be used in the URL query.
-
-    def lookups(self, request, model_admin):
-        """ Returns a list of tuples. The first tuple element is the coded value, second element is the label. """
-        qs = model_admin.get_queryset(request)
-        for value, label in ClassOffer.DOW_CHOICES:
-            if qs.filter(classoffer__class_day=value).exists():
-                yield (value, label)
-
-    def queryset(self, request, queryset):
-        """ Returns the filtered queryset based on value provided in the query string, retrievable via self.value(). """
-        # Compare the requested value to decide how to filter the queryset.
-        return queryset.filter(classoffer__class_day=self.value()) if self.value() else queryset
 
 
 class RegistrationAdmin(admin.ModelAdmin):
