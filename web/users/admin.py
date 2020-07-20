@@ -1,18 +1,14 @@
 from django.contrib import admin
 from django.db import models
-from django.forms import TextInput  # , Textarea
+from django.forms import TextInput
 from django.contrib.auth.admin import UserAdmin
 from django.utils.translation import gettext_lazy as _
-# from django.contrib.auth import get_user_model
-from .models import UserHC  # Staff, Student, Profile
-# from .forms import CustomUserCreationForm, CustomUserChangeForm
+from .models import UserHC
 # Register your models here.
 
 
 class CustomUserAdmin(UserAdmin):
     model = UserHC
-    # add_form = CustomUserCreationForm
-    # form = CustomUserChangeForm
     list_display = ('first_name', 'last_name', 'username', 'is_student', 'is_teacher', 'is_admin', )
     list_display_links = ('first_name', 'last_name', 'username', )
     list_filter = ('is_student', 'is_teacher', 'is_admin', 'is_staff', 'is_active', )  # , 'is_superuser',
