@@ -169,29 +169,58 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         self.assertEqual(classoffer.subject, subject)
         self.assertEqual(subj_computed, classoffer.pre_price)
 
-    @skip("Not Implemented")
     def test_skip_week_explain(self):
-        pass
+        classoffer = ClassOffer.objects.first()
+        expected_string = f"but you still get {classoffer.session.num_weeks} class days"
+        self.assertEqual(expected_string, classoffer.skip_week_explain)
 
-    @skip("Not Implemented")
     def test_end_time(self):
-        pass
+        model = ClassOffer.objects.first()
+        now = dt.now()
+        start = dt(now.year, now.month, now.day, model.start_time.hour, model.start_time.minute)
+        end = start + timedelta(minutes=model.subject.num_minutes)
 
-    @skip("Not Implemented")
+        self.assertEqual(end.time(), model.end_time)
+
     def test_day_singular(self):
-        pass
+        model = ClassOffer.objects.first()
+        subject = Subject.objects.first()
+        subject.num_weeks = 1
+        subject.save()
+        day = ClassOffer.DOW_CHOICES[model.class_day][1]
 
-    @skip("Not Implemented")
+        self.assertEqual(model.subject, subject)
+        self.assertFalse(model.subject.num_weeks > 1)
+        self.assertEquals(model.day, day)
+
     def test_day_plural(self):
-        pass
+        model = ClassOffer.objects.first()
+        day = ClassOffer.DOW_CHOICES[model.class_day][1]
+        day = str(day) + 's'
 
-    @skip("Not Implemented")
+        self.assertTrue(model.subject.num_weeks > 1)
+        self.assertEquals(model.day, day)
+
     def test_day_short_singular(self):
-        pass
+        model = ClassOffer.objects.first()
+        subject = Subject.objects.first()
+        subject.num_weeks = 1
+        subject.save()
+        day = ClassOffer.DOW_CHOICES[model.class_day][1]
+        day = day[:3]
 
-    @skip("Not Implemented")
+        self.assertEqual(model.subject, subject)
+        self.assertFalse(model.subject.num_weeks > 1)
+        self.assertEquals(model.day_short, day)
+
     def test_day_short_plural(self):
-        pass
+        model = ClassOffer.objects.first()
+        day = ClassOffer.DOW_CHOICES[model.class_day][1]
+        day = day[:3]
+        day += '(s)'
+
+        self.assertTrue(model.subject.num_weeks > 1)
+        self.assertEquals(model.day_short, day)
 
     @skip("Not Implemented")
     def test_start_date_is_key_day(self):
@@ -208,27 +237,6 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
     @skip("Not Implemented")
     def test_start_date_positive_shift(self):
         pass
-
-    def test_start_date_positive_shift(self):
-        model = ClassOffer.objects.first()
-        session = Session.objects.first()  # expected to be connected to model
-        if session.max_day_shift <= 0:
-            session.max_day_shift = 2
-            session.save()
-        key_day_of_week = session.key_day_date.weekday()
-        if model.class_day == key_day_of_week:
-            model.class_day += 1 if key_day_of_week < 6 else -6
-            model.save()
-        actual_date_shift = model.class_day - key_day_of_week
-        if actual_date_shift < 0:
-            actual_date_shift += 7
-        result_date = session.key_day_date + timedelta(days=actual_date_shift)
-
-        self.assertEquals(model.session, session)
-        self.assertGreater(session.max_day_shift, 0)
-        self.assertNotEquals(model.class_day, key_day_of_week)
-        self.assertNotEquals(actual_date_shift, 0)
-        self.assertEquals(model.start_date, result_date)
 
     @skip("Not Implemented")
     def test_start_date_out_of_shift_range_weekday_early(self):
