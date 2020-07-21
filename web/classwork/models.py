@@ -336,13 +336,15 @@ class Session(models.Model):
         return query.order_by('-key_day_date').first()
 
     @classmethod
-    def _default_date(cls, field):
+    def _default_date(cls, field, since=None):
         """ Compute a default value for 'key_day_date' or 'publish_date' field. """
         allowed_fields = ('key_day_date', 'publish_date')
         if field not in allowed_fields:
             raise ValueError(_("Not a valid field parameter: {} ".format(field)))
         now = date.today()
-        final_session = cls.last_session()
+        final_session = cls.last_session(since=since)
+        while final_session is not None and final_session.num_weeks < settings.SESSION_MINIMUM_WEEKS:
+            final_session = final_session.prev_session
         if not final_session:
             new_date = None
         elif field == 'key_day_date':
@@ -353,8 +355,6 @@ class Session(models.Model):
                 known_weeks -= 1  # One fewer skips since key day class did not have critical skip_weeks
             new_date = final_session.key_day_date + timedelta(days=7*known_weeks)
         elif field == 'publish_date':
-            while final_session is not None and final_session.num_weeks < settings.SESSION_MINIMUM_WEEKS:
-                final_session = final_session.prev_session
             new_date = getattr(final_session, 'expire_date', None)
         # return new_date.isoformat() if isinstance(new_date, (date, dt)) else date.today().isoformat()
         return new_date or now
@@ -393,13 +393,17 @@ class Session(models.Model):
             else:  # Move all current days a week later and record an extra break week for the previous session.
                 early_day += week
                 key_day += week
-                self.key_day_date = key_day
-                temp_sess = Session.last_session(since=key_day)
+                temp_sess = Session.last_session(since=(key_day + timedelta(days=1)))
                 if temp_sess == prev_sess:
+                    self.key_day_date = key_day
                     prev_sess.break_weeks += 1
                     prev_sess.save(update_fields=['break_weeks'])
                 else:
                     prev_sess = temp_sess
+                    date_check = prev_sess.key_day_date + timedelta(days=1)
+                    key_day = self._default_date('key_day_date', since=date_check)
+                    early_day = key_day + timedelta(days=self.max_day_shift) if self.max_day_shift < 0 else key_day
+                    self.key_day_date = key_day
                     self.publish_date = prev_sess.expire_date
                     self.expire_date = self.computed_expire_day(key_day=key_day)
         if self.skip_weeks == 0:
@@ -498,7 +502,10 @@ class ClassOffer(models.Model):
     @property
     def pre_price(self):
         """ This is the price if they pay in advance. """
-        return self.full_price - self.pre_discount if self.pre_discount > 0 else None
+        price = self.full_price
+        if self.pre_discount > 0:
+            price -= self.pre_discount
+        return price
 
     @property
     def skip_week_explain(self):
