@@ -222,32 +222,113 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         self.assertTrue(model.subject.num_weeks > 1)
         self.assertEquals(model.day_short, day)
 
-    @skip("Not Implemented")
     def test_start_date_is_key_day(self):
-        pass
+        model = ClassOffer.objects.first()
+        key_day = model.session.key_day_date
+        key_day_of_week = key_day.weekday()
+        if model.class_day != key_day_of_week:
+            model.class_day = key_day_of_week
+            model.save()
 
-    @skip("Not Implemented")
+        self.assertEquals(model.class_day, key_day_of_week)
+        self.assertEquals(model.start_date, model.session.key_day_date)
+
     def test_start_date_zero_max_shift(self):
-        pass
+        model = ClassOffer.objects.first()
+        session = Session.objects.first()  # expected to be connected to model
+        session.max_day_shift = 0
+        session.save()
+        key_day_of_week = session.key_day_date.weekday()
+        if model.class_day != key_day_of_week:
+            model.class_day = key_day_of_week
+            model.save()
 
-    @skip("Not Implemented")
+        self.assertEquals(model.session, session)
+        self.assertEquals(session.max_day_shift, 0)
+        self.assertEquals(model.class_day, key_day_of_week)
+        self.assertEquals(model.start_date, session.key_day_date)
+
     def test_start_date_negative_shift(self):
-        pass
+        model = ClassOffer.objects.first()
+        session = Session.objects.first()  # expected to be connected to model
+        if session.max_day_shift >= 0:
+            session.max_day_shift = -2
+            session.save()
+        key_day_of_week = session.key_day_date.weekday()
+        if model.class_day == key_day_of_week:
+            model.class_day += -1 if key_day_of_week > 0 else 6
+            model.save()
+        actual_date_shift = model.class_day - key_day_of_week
+        if actual_date_shift > 0:
+            actual_date_shift -= 7
+        result_date = session.key_day_date + timedelta(days=actual_date_shift)
 
-    @skip("Not Implemented")
+        self.assertEquals(model.session, session)
+        self.assertLess(session.max_day_shift, 0)
+        self.assertNotEquals(model.class_day, key_day_of_week)
+        self.assertNotEquals(actual_date_shift, 0)
+        self.assertEquals(model.start_date, result_date)
+
     def test_start_date_positive_shift(self):
-        pass
+        model = ClassOffer.objects.first()
+        session = Session.objects.first()  # expected to be connected to model
+        if session.max_day_shift <= 0:
+            session.max_day_shift = 2
+            session.save()
+        key_day_of_week = session.key_day_date.weekday()
+        if model.class_day == key_day_of_week:
+            model.class_day += 1 if key_day_of_week < 6 else -6
+            model.save()
+        actual_date_shift = model.class_day - key_day_of_week
+        if actual_date_shift < 0:
+            actual_date_shift += 7
+        result_date = session.key_day_date + timedelta(days=actual_date_shift)
 
-    @skip("Not Implemented")
-    def test_start_date_out_of_shift_range_weekday_early(self):
-        pass
+        self.assertEquals(model.session, session)
+        self.assertGreater(session.max_day_shift, 0)
+        self.assertNotEquals(model.class_day, key_day_of_week)
+        self.assertNotEquals(actual_date_shift, 0)
+        self.assertEquals(model.start_date, result_date)
 
-    @skip("Not Implemented")
-    def test_start_date_out_of_shit_range_weekday_late(self):
-        pass
+    # @skip("Not Implemented")
+    def test_start_date_out_of_negative_shift_range(self):
+        model = ClassOffer.objects.first()
+        session = Session.objects.first()  # expected to be connected to model
+        if session.max_day_shift >= 0 or session.max_day_shift == -6:
+            session.max_day_shift = -2
+            session.save()
+        key_day_of_week = session.key_day_date.weekday()
+        result_date = session.key_day_date + timedelta(days=1)
+        model.class_day = key_day_of_week + 1
+        model.save()
+
+        self.assertEquals(model.session, session)
+        self.assertLess(session.max_day_shift, 0)
+        self.assertNotEquals(model.class_day, key_day_of_week)
+        self.assertEquals(model.start_date, result_date)
+
+    # @skip("Not Implemented")
+    def test_start_date_out_of_positive_shift_range(self):
+        model = ClassOffer.objects.first()
+        session = Session.objects.first()  # expected to be connected to model
+        if session.max_day_shift <= 0 or session.max_day_shift == 6:
+            session.max_day_shift = 2
+            session.save()
+        key_day_of_week = session.key_day_date.weekday()
+        result_date = session.key_day_date - timedelta(days=1)
+        model.class_day = key_day_of_week - 1
+        model.save()
+
+        self.assertEquals(model.session, session)
+        self.assertGreater(session.max_day_shift, 0)
+        self.assertNotEquals(model.class_day, key_day_of_week)
+        self.assertEquals(model.start_date, result_date)
 
     @skip("Not Implemented")
     def test_end_date_no_skips(self):
+        # return self.start_date + timedelta(days=7*(self.subject.num_weeks + self.skip_weeks - 1))
+        model = ClassOffer.objects.first()
+        subject = Subject.objects.first()
         pass
 
     @skip("Not Implemented")
