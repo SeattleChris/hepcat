@@ -538,10 +538,32 @@ class ClassOffer(models.Model):
         dif = self.class_day - start.weekday()
         if dif == 0:
             return start
-        # account for weekday out of range of max_day_shift.
-        complement = dif + 7 if dif < 0 else dif - 7
-        move = min(dif, complement) if self.session.max_day_shift < 0 else max(dif, complement)
-        start += timedelta(days=move)
+        if dif - 7 < self.session.max_day_shift < dif:
+            dif -= 7  # 0 if dif - 7 < self.session.max_day_shift else
+        if dif < self.session.max_day_shift < dif + 7:
+            dif += 7
+        start += timedelta(days=dif)
+
+        # # account for weekday out of range of max_day_shift.
+        # if dif < self.session.max_day_shift < 0:
+        #     dif += 7
+        # if 0 < self.session.max_day_shift < dif:
+        #     dif -= 7
+
+        # if self.session.max_day_shift > 0:
+        #     if dif < 0:
+        #         dif += 7
+        #     if dif > self.session.max_day_shift:
+        #         dif -= 7
+        # if self.session.max_day_shift < 0:
+        #     if dif > 0:
+        #         dif -= 7
+        #     if dif < self.session.max_day_shift:
+        #         dif += 7
+        # # old, but wrong I think.
+        # complement = dif + 7 if dif < 0 else dif - 7
+        # move = min(dif, complement) if self.session.max_day_shift < 0 else max(dif, complement)
+        # start += timedelta(days=move)
         return start
 
     @property
