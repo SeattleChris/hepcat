@@ -502,7 +502,10 @@ class ClassOffer(models.Model):
     @property
     def pre_price(self):
         """ This is the price if they pay in advance. """
-        return self.full_price - self.pre_discount if self.pre_discount > 0 else None
+        price = self.full_price
+        if self.pre_discount > 0:
+            price -= self.pre_discount
+        return price
 
     @property
     def skip_week_explain(self):
