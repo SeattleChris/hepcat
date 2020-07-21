@@ -5,7 +5,7 @@ from .helper import SimpleModelTests
 from classwork.models import Location, Resource, SiteContent, Subject, ClassOffer, Profile
 from classwork.models import Session, Payment, Registration, Notify
 from users.models import UserHC
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime as dt
 
 # Create your tests here.
 
@@ -105,35 +105,69 @@ class SubjectModelTests(SimpleModelTests, TestCase):
     str_list = ['_str_slug']
 
 
-class ClassOfferModelTests(SimpleModelTests, TestCase):
+class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
+    fixtures = ['tests/fixtures/db_basic.json', 'tests/fixtures/db_hidden.json']
     Model = ClassOffer
     repr_dict = {'Class Id': 'id', 'Subject': 'subject', 'Session': 'session'}
     str_list = ['subject', 'session']
     defaults = {}
 
-    @skip("Not Implemented")
     def test_full_price(self):
-        pass
+        subject = Subject.objects.first()
+        classoffer = ClassOffer.objects.first()
+        full_price = subject.full_price
 
-    @skip("Not Implemented")
+        self.assertEqual(classoffer.subject_id, subject.id)
+        self.assertEquals(full_price, classoffer.full_price)
+
     def test_pre_discount(self):
-        pass
+        subject = Subject.objects.first()
+        classoffer = ClassOffer.objects.first()
+        pre_discount = subject.pre_pay_discount
 
-    @skip("Not Implemented")
-    def test_multi_discount_not_qualified(self):
-        pass
+        self.assertEqual(classoffer.subject_id, subject.id)
+        self.assertEquals(pre_discount, classoffer.pre_discount)
 
-    @skip("Not Implemented")
-    def test_multi_discount_zero_discount(self):
-        pass
-
-    @skip("Not Implemented")
     def test_multi_discount_reports_discount(self):
-        pass
+        subject = Subject.objects.first()
+        classoffer = ClassOffer.objects.first()
+        multi_discount = subject.multiple_purchase_discount
 
-    @skip("Not Implemented")
+        self.assertEqual(classoffer.subject_id, subject.id)
+        self.assertTrue(subject.qualifies_as_multi_class_discount)
+        self.assertEquals(multi_discount, classoffer.multi_discount)
+
+    def test_multi_discount_not_qualified(self):
+        subject = Subject.objects.first()
+        subject.qualifies_as_multi_class_discount = False
+        subject.save()
+        classoffer = ClassOffer.objects.first()
+
+        self.assertEquals(classoffer.subject_id, subject.id)
+        self.assertFalse(subject.qualifies_as_multi_class_discount)
+        self.assertGreater(subject.multiple_purchase_discount, 0)
+        self.assertEquals(classoffer.multi_discount, 0)
+
+    def test_multi_discount_zero_discount(self):
+        subject = Subject.objects.first()
+        subject.multiple_purchase_discount = 0
+        subject.save()
+        classoffer = ClassOffer.objects.first()
+
+        self.assertEquals(classoffer.subject_id, subject.id)
+        self.assertTrue(subject.qualifies_as_multi_class_discount)
+        self.assertEquals(subject.multiple_purchase_discount, 0)
+        self.assertEquals(classoffer.multi_discount, 0)
+
     def test_pre_price(self):
-        pass
+        classoffer = ClassOffer.objects.first()
+        self_computed = classoffer.full_price - classoffer.pre_discount
+        subject = Subject.objects.first()
+        subj_computed = subject.full_price - subject.pre_pay_discount
+
+        self.assertEqual(self_computed, classoffer.pre_price)
+        self.assertEqual(classoffer.subject, subject)
+        self.assertEqual(subj_computed, classoffer.pre_price)
 
     @skip("Not Implemented")
     def test_skip_week_explain(self):
@@ -174,6 +208,27 @@ class ClassOfferModelTests(SimpleModelTests, TestCase):
     @skip("Not Implemented")
     def test_start_date_positive_shift(self):
         pass
+
+    def test_start_date_positive_shift(self):
+        model = ClassOffer.objects.first()
+        session = Session.objects.first()  # expected to be connected to model
+        if session.max_day_shift <= 0:
+            session.max_day_shift = 2
+            session.save()
+        key_day_of_week = session.key_day_date.weekday()
+        if model.class_day == key_day_of_week:
+            model.class_day += 1 if key_day_of_week < 6 else -6
+            model.save()
+        actual_date_shift = model.class_day - key_day_of_week
+        if actual_date_shift < 0:
+            actual_date_shift += 7
+        result_date = session.key_day_date + timedelta(days=actual_date_shift)
+
+        self.assertEquals(model.session, session)
+        self.assertGreater(session.max_day_shift, 0)
+        self.assertNotEquals(model.class_day, key_day_of_week)
+        self.assertNotEquals(actual_date_shift, 0)
+        self.assertEquals(model.start_date, result_date)
 
     @skip("Not Implemented")
     def test_start_date_out_of_shift_range_weekday_early(self):
@@ -464,13 +519,7 @@ class SessionCoverageTests(TransactionTestCase):
         expected_key_day = first.key_day_date + timedelta(days=7*(first.num_weeks + first.break_weeks))
         third = self.create_session(name="third_test")
         third.save()
-        # final_session_before_adjust = Session.last_session()
-        # final_session = final_session_before_adjust.prev_session
-        # self.assertEquals(final_session, first)  # Our manual computation should have resolved as such.
-        # computed_publish_date = Session._default_date('publish_date')
-        # computed_key_day_date = Session._default_date('key_day_date')
-        # self.assertEqual(computed_key_day_date, expected_key_day)  # Direct method call should skip "short_session"
-        # self.assertEquals(computed_publish_date, first.expire_date)  # Direct method call should skip "short_session"
+
         self.assertGreater(minimum_session_weeks, 1)  # Otherwise we probably have error on create of second.
         self.assertEqual(first.skip_weeks, 0)  # Therefore, expected_key_day should be correct.
         self.assertGreater(third.start_date, first.end_date)
