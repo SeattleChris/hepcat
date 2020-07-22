@@ -1,11 +1,12 @@
 from django.test import TestCase, TransactionTestCase
 from django.conf import settings
+from django.db import transaction
 from unittest import skip
 from .helper import SimpleModelTests
 from classwork.models import Location, Resource, SiteContent, Subject, ClassOffer, Profile
 from classwork.models import Session, Payment, Registration, Notify
 from users.models import UserHC
-from datetime import date, timedelta, datetime as dt
+from datetime import date, time, timedelta, datetime as dt
 
 # Create your tests here.
 
@@ -493,32 +494,156 @@ class ProfileModelTests(SimpleModelTests, TestCase):
     def test_highest_subject_no_values(self):
         pass
 
-    @skip("Not Implemented")
-    def test_beg_finshed_is_no_if_no_beg(self):
-        pass
+    def test_beg_property_when_no_beg_attended(self):
+        model = self.instance
+        self.assertFalse(model.beg.get('done'))
 
-    @skip("Not Implemented")
-    def test_beg_finished_is_no_if_not_all_beg(self):
-        pass
+    def test_beg_property_when_only_some_beg_attended(self):
+        model = self.instance
+        level = Subject.LEVEL_CHOICES[0][0]
+        beg_a_subj = Subject.objects.create(level=level, version='A', title='beg_a_test', )
+        session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
+        location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
+        kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
+        beg_a = ClassOffer.objects.create(subject=beg_a_subj, **kwargs)
+        model.taken.add(beg_a)
 
-    @skip("Not Implemented")
-    def test_beg_finish_true_when_all_beg(self):
-        pass
+        self.assertFalse(model.beg.get('done'))
 
-    @skip("Not Implemented")
-    def test_l2_finshed_is_no_if_no_l2(self):
-        pass
+    def test_beg_property_when_beg_finished(self):
+        model = self.instance
+        level = Subject.LEVEL_CHOICES[0][0]
+        versions = ('A', 'B', )
+        subjs = [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}_test", ) for ver in versions]
+        session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
+        location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
+        kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
+        attended = [ClassOffer.objects.create(subject=subj, **kwargs) for subj in subjs]
+        model.taken.add(*attended)
 
-    @skip("Not Implemented")
-    def test_l2_finished_is_no_if_not_all_l2(self):
-        pass
+        self.assertTrue(model.beg.get('done'))
 
-    @skip("Not Implemented")
-    def test_l2_finish_true_when_all_l2(self):
-        pass
+    def test_l2_property_when_no_l2_attended(self):
+        model = self.instance
+        self.assertFalse(model.l2.get('done'))
 
-    @skip("Not Implemented")
+    def test_l2_property_when_some_l2_attended(self):
+        model = self.instance
+        level = Subject.LEVEL_CHOICES[1][0]
+        versions = ('A', 'B', )
+        subjs = [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}_test", ) for ver in versions]
+        session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
+        location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
+        kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
+        attended = [ClassOffer.objects.create(subject=subj, **kwargs) for subj in subjs]
+        model.taken.add(*attended)
+
+        self.assertFalse(model.l2.get('done'))
+
+    def test_l2_property_when_attended_goal(self):
+        model = self.instance
+        level = Subject.LEVEL_CHOICES[1][0]
+        versions = ('A', 'B', 'C', 'D', )
+        subjs = [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}_test", ) for ver in versions]
+        session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
+        location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
+        kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
+        attended = [ClassOffer.objects.create(subject=subj, **kwargs) for subj in subjs]
+        model.taken.add(*attended)
+        expected = {'done': True}
+        expected.update({key: 0 for key, string in Subject.VERSION_CHOICES if key not in ('N', )})
+
+        self.assertTrue(model.l2.get('done'))
+        for key in expected:
+            self.assertEquals(model.l2.get(key, None), expected[key])
+        self.assertEquals(len(model.l2), len(expected))
+        self.assertEquals(model.l2, expected)
+
+    def test_l2_property_when_attended_double_goal(self):
+        model = self.instance
+        level = Subject.LEVEL_CHOICES[1][0]
+        versions = ('A', 'B', 'C', 'D', )
+        subjs = [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}_test", ) for ver in versions]
+        session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
+        location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
+        kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
+        attended = [ClassOffer.objects.create(subject=subj, **kwargs) for subj in subjs]
+        session2 = Session.objects.create(name='test_sess2')
+        kwargs['session'] = session2
+        attended += [ClassOffer.objects.create(subject=subj, **kwargs) for subj in subjs]
+        model.taken.add(*attended)
+        expected = {'done': True}
+        expected.update({key: 1 for key, string in Subject.VERSION_CHOICES if key not in ('N', )})
+
+        self.assertTrue(model.l2.get('done'))
+        # self.assertEquals(len(attended), 8)
+        # self.assertEquals(ClassOffer.objects.filter(subject__level=level).count(), 8)
+        # for key in expected:
+        #     self.assertEquals(model.l2.get(key, None), expected[key])
+        # self.assertEquals(len(model.l2), len(expected))
+        self.assertEquals(model.l2, expected)
+
+    def test_l3_property_when_no_l3_attended(self):
+        model = self.instance
+        self.assertFalse(model.l3.get('done'))
+
+    def test_l3_property_when_some_l3_attended(self):
+        model = self.instance
+        level = Subject.LEVEL_CHOICES[2][0]
+        versions = ('C', 'D', )
+        subjs = [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}_test", ) for ver in versions]
+        session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
+        location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
+        kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
+        attended = [ClassOffer.objects.create(subject=subj, **kwargs) for subj in subjs]
+        model.taken.add(*attended)
+
+        self.assertFalse(model.l3.get('done'))
+
+    def test_l3_property_when_attended_goal(self):
+        model = self.instance
+        level = Subject.LEVEL_CHOICES[2][0]
+        versions = ('A', 'B', 'C', 'D', )
+        subjs = [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}_test", ) for ver in versions]
+        session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
+        location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
+        kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
+        attended = [ClassOffer.objects.create(subject=subj, **kwargs) for subj in subjs]
+        model.taken.add(*attended)
+        expected = {'done': True}
+        expected.update({key: 0 for key, string in Subject.VERSION_CHOICES if key not in ('N', )})
+
+        self.assertTrue(model.l3.get('done'))
+        self.assertEquals(len(model.l3), len(expected))
+        self.assertEquals(model.l3, expected)
+
+    def test_l3_property_when_attended_double_goal(self):
+        model = self.instance
+        level = Subject.LEVEL_CHOICES[2][0]
+        versions = ('A', 'B', 'C', 'D', )
+        subjs = [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}_test", ) for ver in versions]
+        session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
+        location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
+        kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
+        attended = [ClassOffer.objects.create(subject=subj, **kwargs) for subj in subjs]
+        session2 = Session.objects.create(name='test_sess2')
+        kwargs['session'] = session2
+        attended += [ClassOffer.objects.create(subject=subj, **kwargs) for subj in subjs]
+        model.taken.add(*attended)
+        expected = {'done': True}
+        expected.update({key: 1 for key, string in Subject.VERSION_CHOICES if key not in ('N', )})
+
+        self.assertTrue(model.l3.get('done'))
+        self.assertEquals(model.l3, expected)
+
     def test_profile_and_user_same_username(self):
+        model = Profile.objects.first()
+        user = UserHC.objects.first()
+        expected = user.username
+
+        self.assertEqual(model.user, user)
+        self.assertEqual(model.username, expected)
+
         pass
 
     @skip("Not Implemented")

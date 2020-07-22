@@ -702,7 +702,7 @@ class Profile(models.Model):
                 goal[key] = goal.get(key, each_ver)
                 if isinstance(setting, (list, tuple)):
                     setting = map(_clean, setting)
-                    agg_kwargs[key] = Count('id', filter=Q(version__in=setting), distinct=True)
+                    agg_kwargs[key] = Count('id', filter=Q(subject__version__in=setting), distinct=True)
                 elif isinstance(setting, dict):
                     # TODO: Check if the Q object is correctly checking for key=value.
                     setting = [Q(**{key: value}) for key, value in setting.items()]
@@ -710,9 +710,11 @@ class Profile(models.Model):
                 elif setting:
                     raise TypeError(_("Expected each 'ver_map' value to be a list, tuple, or dictionary (or falsy). "))
         else:  # default data_filters when thee is no ver_map
-            agg_kwargs = {key: Count('id', filter=Q(version=key), distinct=True) for key in goal}
+            agg_kwargs = {key: Count('id', filter=Q(subject__version=key), distinct=True) for key in goal}
         # goal is populated. The populated agg_kwargs, level, and self.taken_subjects allow us to make data dictionary
-        target_taken = self.taken_subjects.filter(level=Subject.LEVEL_CHOICES[level][0])
+        # target_taken = self.taken_subjects.filter(level=Subject.LEVEL_CHOICES[level][0])
+        # data = target_taken.aggregate(**agg_kwargs)
+        target_taken = self.taken.filter(subject__level=Subject.LEVEL_CHOICES[level][0])
         data = target_taken.aggregate(**agg_kwargs)
         extra = {'done': False}
         for key in goal:
