@@ -290,16 +290,19 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         self.assertNotEquals(actual_date_shift, 0)
         self.assertEquals(model.start_date, result_date)
 
-    # @skip("Not Implemented")
-    def test_start_date_out_of_negative_shift_range(self):
+    def test_start_date_out_of_negative_shift_range_opposite_direction(self):
         model = ClassOffer.objects.first()
         session = Session.objects.first()  # expected to be connected to model
         if session.max_day_shift >= 0 or session.max_day_shift == -6:
             session.max_day_shift = -2
             session.save()
         key_day_of_week = session.key_day_date.weekday()
-        result_date = session.key_day_date + timedelta(days=1)
-        model.class_day = key_day_of_week + 1
+        shift = 1
+        result_date = session.key_day_date + timedelta(days=shift)
+        target = key_day_of_week + shift
+        if target > 6:
+            target -= 7
+        model.class_day = target
         model.save()
 
         self.assertEquals(model.session, session)
@@ -307,16 +310,19 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         self.assertNotEquals(model.class_day, key_day_of_week)
         self.assertEquals(model.start_date, result_date)
 
-    # @skip("Not Implemented")
-    def test_start_date_out_of_positive_shift_range(self):
+    def test_start_date_out_of_positive_shift_range_opposite_direction(self):
         model = ClassOffer.objects.first()
         session = Session.objects.first()  # expected to be connected to model
         if session.max_day_shift <= 0 or session.max_day_shift == 6:
             session.max_day_shift = 2
             session.save()
         key_day_of_week = session.key_day_date.weekday()
-        result_date = session.key_day_date - timedelta(days=1)
-        model.class_day = key_day_of_week - 1
+        shift = -1
+        result_date = session.key_day_date + timedelta(days=shift)
+        target_day = key_day_of_week + shift
+        if target_day < 0:
+            target_day += 7
+        model.class_day = target_day
         model.save()
 
         self.assertEquals(model.session, session)
@@ -324,32 +330,141 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         self.assertNotEquals(model.class_day, key_day_of_week)
         self.assertEquals(model.start_date, result_date)
 
-    @skip("Not Implemented")
-    def test_end_date_no_skips(self):
-        # return self.start_date + timedelta(days=7*(self.subject.num_weeks + self.skip_weeks - 1))
+    def test_start_date_beyond_negative_shift_range(self):
         model = ClassOffer.objects.first()
+        session = Session.objects.first()  # expected to be connected to model
+        if session.max_day_shift >= 0 or session.max_day_shift == -6:
+            session.max_day_shift = -2
+            session.save()
+        key_day_of_week = session.key_day_date.weekday()
+        shift = session.max_day_shift - 1
+        result_date = session.key_day_date + timedelta(days=(shift + 7))
+        target = key_day_of_week + shift
+        if target < 0:
+            target += 7
+        model.class_day = target
+        model.save()
+
+        self.assertEquals(model.session, session)
+        self.assertLess(session.max_day_shift, 0)
+        self.assertNotEquals(model.class_day, key_day_of_week)
+        self.assertEquals(model.start_date, result_date)
+
+    def test_start_date_beyond_positive_shift_range(self):
+        model = ClassOffer.objects.first()
+        session = Session.objects.first()  # expected to be connected to model
+        if session.max_day_shift <= 0 or session.max_day_shift == 6:
+            session.max_day_shift = 2
+            session.save()
+        key_day_of_week = session.key_day_date.weekday()
+        shift = session.max_day_shift + 1
+        result_date = session.key_day_date + timedelta(days=(shift - 7))
+        target = key_day_of_week + shift
+        if target > 6:
+            target -= 7
+        model.class_day = target
+        model.save()
+
+        self.assertEquals(model.session, session)
+        self.assertGreater(session.max_day_shift, 0)
+        self.assertNotEquals(model.class_day, key_day_of_week)
+        self.assertEquals(model.start_date, result_date)
+
+    def test_end_date_no_skips(self):
         subject = Subject.objects.first()
-        pass
+        session = Session.objects.first()
+        if session.skip_weeks > 0:
+            session.skip_weeks = 0
+            session.save()
+        model = ClassOffer.objects.first()
+        if model.skip_weeks > 0:
+            model.skip_weeks = 0
+            model.save()
+        expected = model.start_date + timedelta(days=7*(subject.num_weeks - 1))
 
-    @skip("Not Implemented")
+        self.assertEquals(model.subject, subject)
+        self.assertEquals(model.session, session)
+        self.assertEquals(session.skip_weeks, 0)
+        self.assertEquals(model.skip_weeks, 0)
+        self.assertEquals(model.end_date, expected)
+
     def test_end_date_skips_on_session_not_classoffer(self):
-        pass
+        subject = Subject.objects.first()
+        session = Session.objects.first()
+        if session.skip_weeks == 0:
+            session.skip_weeks = 1
+            session.save()
+        model = ClassOffer.objects.first()
+        if model.skip_weeks > 0:
+            model.skip_weeks = 0
+            model.save()
+        expected = model.start_date + timedelta(days=7*(subject.num_weeks - 1))
 
-    @skip("Not Implemented")
+        self.assertEquals(model.subject, subject)
+        self.assertEquals(model.session, session)
+        self.assertGreater(session.skip_weeks, 0)
+        self.assertEquals(model.skip_weeks, 0)
+        self.assertEquals(model.end_date, expected)
+
     def test_end_date_with_skips(self):
-        pass
+        subject = Subject.objects.first()
+        session = Session.objects.first()
+        if session.skip_weeks == 0:
+            session.skip_weeks = 1
+            session.save()
+        model = ClassOffer.objects.first()
+        if model.skip_weeks == 0:
+            model.skip_weeks = 1
+            model.save()
+        expected = model.start_date + timedelta(days=7*(subject.num_weeks + model.skip_weeks - 1))
 
-    @skip("Not Implemented")
+        self.assertEquals(model.subject, subject)
+        self.assertEquals(model.session, session)
+        self.assertGreater(session.skip_weeks, 0)
+        self.assertGreater(model.skip_weeks, 0)
+        self.assertEquals(model.end_date, expected)
+
     def test_num_level(self):
-        pass
+        model = ClassOffer.objects.first()
+        expected = model._num_level
+        self.assertEqual(expected, model.num_level)
 
-    @skip("Not Implemented")
     def test_set_num_level_subject_level_bad_value(self):
-        pass
+        level_dict = Subject.LEVEL_ORDER
+        higher = 100 + max(level_dict.values())
+        model = ClassOffer.objects.first()
+        subject = Subject.objects.first()  # expected to be connected to model
+        original = model.num_level
+        subj_level, i = '', 0
+        while subj_level in level_dict or subj_level == subject.level or level_dict.get(subj_level, '') == original:
+            subj_level = Subject.LEVEL_CHOICES[i][0]
+            i += 1
+        subject.level = subj_level
+        subject.save()
+        expected = higher
+        model.set_num_level()
 
-    @skip("Not Implemented")
+        self.assertEquals(model.subject, subject)
+        self.assertNotEqual(model.num_level, original)
+        self.assertEquals(model.num_level, expected)
+
     def test_set_num_level_correct(self):
-        pass
+        level_dict = Subject.LEVEL_ORDER
+        model = ClassOffer.objects.first()
+        subject = Subject.objects.first()  # expected to be connected to model
+        original = model.num_level
+        subj_level, i = '', 0
+        while subj_level not in level_dict or subj_level == subject.level or level_dict[subj_level] == original:
+            subj_level = Subject.LEVEL_CHOICES[i][0]
+            i += 1
+        subject.level = subj_level
+        subject.save()
+        expected = level_dict.get(subj_level, None)
+        model.set_num_level()
+
+        self.assertEquals(model.subject, subject)
+        self.assertNotEqual(model.num_level, original)
+        self.assertEquals(model.num_level, expected)
 
 
 class ProfileModelTests(SimpleModelTests, TestCase):

@@ -565,14 +565,7 @@ class ClassOffer(models.Model):
         # TODO: Do we need 'num_level' field, or just going to use value from parent 'Subject'?
         level_dict = Subject.LEVEL_ORDER
         higher = 100 + max(level_dict.values())
-        num = 0
-        if self.subject is None:
-            self._num_level = higher
-            return higher
-        try:
-            num = level_dict.get(getattr(self.subject, 'level', ''), 0)
-        except KeyError:
-            num = higher
+        num = level_dict.get(getattr(self.subject, 'level', ''), higher)
         self._num_level = num
         return num
 
