@@ -503,9 +503,13 @@ class ProfileModelTests(SimpleModelTests, TestCase):
     def test_highest_subject_correct_values(self):
         pass
 
-    @skip("Not Implemented")
     def test_highest_subject_no_values(self):
-        pass
+        model = self.instance
+        expected = {'level_num__max': None, 'subjects': Subject.objects.none()}
+        # Bug: Error in that the querysets will not evaluate as equal.
+        for key, value in model.highest_subject.items():
+            self.assertEquals(expected.get(key, ''), value)
+        self.assertDictEqual(expected, model.highest_subject)
 
     def test_level_methods_when_no_beg_attended(self):
         model = self.instance
