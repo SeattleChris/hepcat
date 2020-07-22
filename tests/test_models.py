@@ -5,7 +5,7 @@ from .helper import SimpleModelTests
 from classwork.models import Location, Resource, SiteContent, Subject, ClassOffer, Profile
 from classwork.models import Session, Payment, Registration, Notify
 from users.models import UserHC
-from datetime import date, timedelta, datetime as dt
+from datetime import date, time, timedelta, datetime as dt
 
 # Create your tests here.
 
@@ -290,16 +290,19 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         self.assertNotEquals(actual_date_shift, 0)
         self.assertEquals(model.start_date, result_date)
 
-    # @skip("Not Implemented")
-    def test_start_date_out_of_negative_shift_range(self):
+    def test_start_date_out_of_negative_shift_range_opposite_direction(self):
         model = ClassOffer.objects.first()
         session = Session.objects.first()  # expected to be connected to model
         if session.max_day_shift >= 0 or session.max_day_shift == -6:
             session.max_day_shift = -2
             session.save()
         key_day_of_week = session.key_day_date.weekday()
-        result_date = session.key_day_date + timedelta(days=1)
-        model.class_day = key_day_of_week + 1
+        shift = 1
+        result_date = session.key_day_date + timedelta(days=shift)
+        target = key_day_of_week + shift
+        if target > 6:
+            target -= 7
+        model.class_day = target
         model.save()
 
         self.assertEquals(model.session, session)
@@ -307,16 +310,19 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         self.assertNotEquals(model.class_day, key_day_of_week)
         self.assertEquals(model.start_date, result_date)
 
-    # @skip("Not Implemented")
-    def test_start_date_out_of_positive_shift_range(self):
+    def test_start_date_out_of_positive_shift_range_opposite_direction(self):
         model = ClassOffer.objects.first()
         session = Session.objects.first()  # expected to be connected to model
         if session.max_day_shift <= 0 or session.max_day_shift == 6:
             session.max_day_shift = 2
             session.save()
         key_day_of_week = session.key_day_date.weekday()
-        result_date = session.key_day_date - timedelta(days=1)
-        model.class_day = key_day_of_week - 1
+        shift = -1
+        result_date = session.key_day_date + timedelta(days=shift)
+        target_day = key_day_of_week + shift
+        if target_day < 0:
+            target_day += 7
+        model.class_day = target_day
         model.save()
 
         self.assertEquals(model.session, session)
@@ -324,32 +330,141 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         self.assertNotEquals(model.class_day, key_day_of_week)
         self.assertEquals(model.start_date, result_date)
 
-    @skip("Not Implemented")
-    def test_end_date_no_skips(self):
-        # return self.start_date + timedelta(days=7*(self.subject.num_weeks + self.skip_weeks - 1))
+    def test_start_date_beyond_negative_shift_range(self):
         model = ClassOffer.objects.first()
+        session = Session.objects.first()  # expected to be connected to model
+        if session.max_day_shift >= 0 or session.max_day_shift == -6:
+            session.max_day_shift = -2
+            session.save()
+        key_day_of_week = session.key_day_date.weekday()
+        shift = session.max_day_shift - 1
+        result_date = session.key_day_date + timedelta(days=(shift + 7))
+        target = key_day_of_week + shift
+        if target < 0:
+            target += 7
+        model.class_day = target
+        model.save()
+
+        self.assertEquals(model.session, session)
+        self.assertLess(session.max_day_shift, 0)
+        self.assertNotEquals(model.class_day, key_day_of_week)
+        self.assertEquals(model.start_date, result_date)
+
+    def test_start_date_beyond_positive_shift_range(self):
+        model = ClassOffer.objects.first()
+        session = Session.objects.first()  # expected to be connected to model
+        if session.max_day_shift <= 0 or session.max_day_shift == 6:
+            session.max_day_shift = 2
+            session.save()
+        key_day_of_week = session.key_day_date.weekday()
+        shift = session.max_day_shift + 1
+        result_date = session.key_day_date + timedelta(days=(shift - 7))
+        target = key_day_of_week + shift
+        if target > 6:
+            target -= 7
+        model.class_day = target
+        model.save()
+
+        self.assertEquals(model.session, session)
+        self.assertGreater(session.max_day_shift, 0)
+        self.assertNotEquals(model.class_day, key_day_of_week)
+        self.assertEquals(model.start_date, result_date)
+
+    def test_end_date_no_skips(self):
         subject = Subject.objects.first()
-        pass
+        session = Session.objects.first()
+        if session.skip_weeks > 0:
+            session.skip_weeks = 0
+            session.save()
+        model = ClassOffer.objects.first()
+        if model.skip_weeks > 0:
+            model.skip_weeks = 0
+            model.save()
+        expected = model.start_date + timedelta(days=7*(subject.num_weeks - 1))
 
-    @skip("Not Implemented")
+        self.assertEquals(model.subject, subject)
+        self.assertEquals(model.session, session)
+        self.assertEquals(session.skip_weeks, 0)
+        self.assertEquals(model.skip_weeks, 0)
+        self.assertEquals(model.end_date, expected)
+
     def test_end_date_skips_on_session_not_classoffer(self):
-        pass
+        subject = Subject.objects.first()
+        session = Session.objects.first()
+        if session.skip_weeks == 0:
+            session.skip_weeks = 1
+            session.save()
+        model = ClassOffer.objects.first()
+        if model.skip_weeks > 0:
+            model.skip_weeks = 0
+            model.save()
+        expected = model.start_date + timedelta(days=7*(subject.num_weeks - 1))
 
-    @skip("Not Implemented")
+        self.assertEquals(model.subject, subject)
+        self.assertEquals(model.session, session)
+        self.assertGreater(session.skip_weeks, 0)
+        self.assertEquals(model.skip_weeks, 0)
+        self.assertEquals(model.end_date, expected)
+
     def test_end_date_with_skips(self):
-        pass
+        subject = Subject.objects.first()
+        session = Session.objects.first()
+        if session.skip_weeks == 0:
+            session.skip_weeks = 1
+            session.save()
+        model = ClassOffer.objects.first()
+        if model.skip_weeks == 0:
+            model.skip_weeks = 1
+            model.save()
+        expected = model.start_date + timedelta(days=7*(subject.num_weeks + model.skip_weeks - 1))
 
-    @skip("Not Implemented")
+        self.assertEquals(model.subject, subject)
+        self.assertEquals(model.session, session)
+        self.assertGreater(session.skip_weeks, 0)
+        self.assertGreater(model.skip_weeks, 0)
+        self.assertEquals(model.end_date, expected)
+
     def test_num_level(self):
-        pass
+        model = ClassOffer.objects.first()
+        expected = model._num_level
+        self.assertEqual(expected, model.num_level)
 
-    @skip("Not Implemented")
     def test_set_num_level_subject_level_bad_value(self):
-        pass
+        level_dict = Subject.LEVEL_ORDER
+        higher = 100 + max(level_dict.values())
+        model = ClassOffer.objects.first()
+        subject = Subject.objects.first()  # expected to be connected to model
+        original = model.num_level
+        subj_level, i = '', 0
+        while subj_level in level_dict or subj_level == subject.level or level_dict.get(subj_level, '') == original:
+            subj_level = Subject.LEVEL_CHOICES[i][0]
+            i += 1
+        subject.level = subj_level
+        subject.save()
+        expected = higher
+        model.set_num_level()
 
-    @skip("Not Implemented")
+        self.assertEquals(model.subject, subject)
+        self.assertNotEqual(model.num_level, original)
+        self.assertEquals(model.num_level, expected)
+
     def test_set_num_level_correct(self):
-        pass
+        level_dict = Subject.LEVEL_ORDER
+        model = ClassOffer.objects.first()
+        subject = Subject.objects.first()  # expected to be connected to model
+        original = model.num_level
+        subj_level, i = '', 0
+        while subj_level not in level_dict or subj_level == subject.level or level_dict[subj_level] == original:
+            subj_level = Subject.LEVEL_CHOICES[i][0]
+            i += 1
+        subject.level = subj_level
+        subject.save()
+        expected = level_dict.get(subj_level, None)
+        model.set_num_level()
+
+        self.assertEquals(model.subject, subject)
+        self.assertNotEqual(model.num_level, original)
+        self.assertEquals(model.num_level, expected)
 
 
 class ProfileModelTests(SimpleModelTests, TestCase):
@@ -360,15 +475,29 @@ class ProfileModelTests(SimpleModelTests, TestCase):
 
     def setUp(self):
         kwargs = self.defaults.copy()
-        # kwargs = {'email': 'fake@site.com', 'password': '1234', 'first_name': 'fa', 'last_name': 'fake'}
         user = UserHC.objects.create_user(**kwargs)
         user.save()
         self.defaults = {}
         self.instance = user.profile  # triggers self.create_model to update this model instead of creating one.
 
-    @skip("Not Implemented")
-    def test_taken_is_related_classoffers(self):
-        pass
+    def test_taken_subject_is_related_subjects(self):
+        model = self.instance
+        versions = ('A', 'B', 'C', 'D', )
+        subjs = []
+        for level, string in Subject.LEVEL_CHOICES:
+            subjs += [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}", ) for ver in versions]
+        session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
+        location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
+        kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
+        attended = [ClassOffer.objects.create(subject=subj, **kwargs) for subj in subjs]
+        kwargs['session'] = Session.objects.create(name='test_sess2')  # Determines key_day_date based on previous
+        attended += [ClassOffer.objects.create(subject=subj, **kwargs) for subj in subjs]
+        model.taken.add(*attended)
+        expected_subj_count = len(versions) * len(Subject.LEVEL_CHOICES)
+        expected_classoffer_count = 2 * len(versions) * len(Subject.LEVEL_CHOICES)
+
+        self.assertEqual(expected_classoffer_count, model.taken.count())
+        self.assertEqual(expected_subj_count, len(model.taken_subjects))
 
     @skip("Not Implemented")
     def test_highest_subject_correct_values(self):
@@ -378,41 +507,169 @@ class ProfileModelTests(SimpleModelTests, TestCase):
     def test_highest_subject_no_values(self):
         pass
 
-    @skip("Not Implemented")
-    def test_beg_finshed_is_no_if_no_beg(self):
-        pass
+    def test_level_methods_when_no_beg_attended(self):
+        model = self.instance
+        self.assertFalse(model.beg.get('done'))
+        self.assertEqual(model.compute_level(), 0)
 
-    @skip("Not Implemented")
-    def test_beg_finished_is_no_if_not_all_beg(self):
-        pass
+    def test_level_methods_when_only_some_beg_attended(self):
+        model = self.instance
+        level = Subject.LEVEL_CHOICES[0][0]
+        beg_a_subj = Subject.objects.create(level=level, version='A', title='beg_a_test', )
+        session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
+        location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
+        kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
+        beg_a = ClassOffer.objects.create(subject=beg_a_subj, **kwargs)
+        model.taken.add(beg_a)
 
-    @skip("Not Implemented")
-    def test_beg_finish_true_when_all_beg(self):
-        pass
+        self.assertFalse(model.beg.get('done'))
+        self.assertEqual(model.compute_level(), 1)
 
-    @skip("Not Implemented")
-    def test_l2_finshed_is_no_if_no_l2(self):
-        pass
+    def test_level_methods_when_beg_finished(self):
+        model = self.instance
+        level = Subject.LEVEL_CHOICES[0][0]
+        versions = ('A', 'B', )
+        subjs = [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}_test", ) for ver in versions]
+        session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
+        location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
+        kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
+        attended = [ClassOffer.objects.create(subject=subj, **kwargs) for subj in subjs]
+        model.taken.add(*attended)
 
-    @skip("Not Implemented")
-    def test_l2_finished_is_no_if_not_all_l2(self):
-        pass
+        self.assertTrue(model.beg.get('done'))
+        self.assertEqual(model.compute_level(), 2)
 
-    @skip("Not Implemented")
-    def test_l2_finish_true_when_all_l2(self):
-        pass
+    def test_level_methods_when_no_l2_attended(self):
+        model = self.instance
+        self.assertFalse(model.l2.get('done'))
 
-    @skip("Not Implemented")
+    def test_level_methods_when_some_l2_attended(self):
+        model = self.instance
+        level = Subject.LEVEL_CHOICES[1][0]
+        versions = ('A', 'B', )
+        subjs = [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}_test", ) for ver in versions]
+        level = Subject.LEVEL_CHOICES[0][0]
+        subjs += [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}_test", ) for ver in versions]
+        session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
+        location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
+        kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
+        attended = [ClassOffer.objects.create(subject=subj, **kwargs) for subj in subjs]
+        model.taken.add(*attended)
+
+        self.assertFalse(model.l2.get('done'))
+        self.assertTrue(model.beg.get('done'))
+        self.assertEqual(model.compute_level(), 2)
+
+    def test_level_methods_when_attended_l2_goal(self):
+        model = self.instance
+        level = Subject.LEVEL_CHOICES[1][0]
+        versions = ('A', 'B', 'C', 'D', )
+        subjs = [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}_test", ) for ver in versions]
+        session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
+        location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
+        kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
+        attended = [ClassOffer.objects.create(subject=subj, **kwargs) for subj in subjs]
+        model.taken.add(*attended)
+        expected = {'done': True}
+        expected.update({key: 0 for key, string in Subject.VERSION_CHOICES if key not in ('N', )})
+
+        self.assertTrue(model.l2.get('done'))
+        self.assertEquals(model.l2, expected)
+        self.assertEqual(model.compute_level(), 2.5)
+
+    def test_level_methods_when_attended_double_l2_goal(self):
+        model = self.instance
+        level = Subject.LEVEL_CHOICES[1][0]
+        versions = ('A', 'B', 'C', 'D', )
+        subjs = [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}_test", ) for ver in versions]
+        session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
+        location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
+        kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
+        attended = [ClassOffer.objects.create(subject=subj, **kwargs) for subj in subjs]
+        kwargs['session'] = Session.objects.create(name='test_sess2')  # Determines key_day_date based on previous
+        attended += [ClassOffer.objects.create(subject=subj, **kwargs) for subj in subjs]
+        model.taken.add(*attended)
+        expected = {'done': True}
+        expected.update({key: 1 for key, string in Subject.VERSION_CHOICES if key not in ('N', )})
+
+        self.assertTrue(model.l2.get('done'))
+        self.assertEquals(model.l2, expected)
+        self.assertEqual(model.compute_level(), 3)
+
+    def test_level_methods_when_no_l3_attended(self):
+        model = self.instance
+        self.assertFalse(model.l3.get('done'))
+
+    def test_level_methods_when_some_l3_attended(self):
+        model = self.instance
+        level = Subject.LEVEL_CHOICES[2][0]
+        versions = ('C', 'D', )
+        subjs = [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}_test", ) for ver in versions]
+        session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
+        location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
+        kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
+        attended = [ClassOffer.objects.create(subject=subj, **kwargs) for subj in subjs]
+        model.taken.add(*attended)
+
+        self.assertFalse(model.l3.get('done'))
+
+    def test_level_methods_when_attended_l3_goal(self):
+        model = self.instance
+        level = Subject.LEVEL_CHOICES[2][0]
+        versions = ('A', 'B', 'C', 'D', )
+        subjs = [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}_test", ) for ver in versions]
+        session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
+        location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
+        kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
+        attended = [ClassOffer.objects.create(subject=subj, **kwargs) for subj in subjs]
+        model.taken.add(*attended)
+        expected = {'done': True}
+        expected.update({key: 0 for key, string in Subject.VERSION_CHOICES if key not in ('N', )})
+
+        self.assertTrue(model.l3.get('done'))
+        self.assertEquals(model.l3, expected)
+        self.assertEqual(model.compute_level(), 3.5)
+
+    def test_level_methods_when_attended_double_l3_goal(self):
+        model = self.instance
+        level = Subject.LEVEL_CHOICES[2][0]
+        versions = ('A', 'B', 'C', 'D', )
+        subjs = [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}_test", ) for ver in versions]
+        session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
+        location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
+        kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
+        attended = [ClassOffer.objects.create(subject=subj, **kwargs) for subj in subjs]
+        session2 = Session.objects.create(name='test_sess2')
+        kwargs['session'] = session2
+        attended += [ClassOffer.objects.create(subject=subj, **kwargs) for subj in subjs]
+        model.taken.add(*attended)
+        expected = {'done': True}
+        expected.update({key: 1 for key, string in Subject.VERSION_CHOICES if key not in ('N', )})
+
+        self.assertTrue(model.l3.get('done'))
+        self.assertEquals(model.l3, expected)
+        self.assertEqual(model.compute_level(), 4)
+
     def test_profile_and_user_same_username(self):
-        pass
+        model = Profile.objects.first()
+        user = UserHC.objects.first()
+        expected = user.username
+        self.assertEqual(model.user, user)
+        self.assertEqual(model.username, expected)
 
-    @skip("Not Implemented")
     def test_profile_and_user_same_full_name(self):
-        pass
+        model = self.instance
+        user = UserHC.objects.first()
+        expected = user.full_name
+        self.assertEqual(model.user, user)
+        self.assertEqual(model.full_name, expected)
 
-    @skip("Not Implemented")
     def test__profile_and_user_same_get_full_name(self):
-        pass
+        model = self.instance
+        user = UserHC.objects.first()
+        expected = user.get_full_name()
+        self.assertEqual(model.user, user)
+        self.assertEqual(model.get_full_name(), expected)
 
 
 class PaymentModelTests(SimpleModelTests, TestCase):

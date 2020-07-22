@@ -538,33 +538,12 @@ class ClassOffer(models.Model):
         dif = self.class_day - start.weekday()
         if dif == 0:
             return start
-        if dif - 7 < self.session.max_day_shift < dif:
-            dif -= 7  # 0 if dif - 7 < self.session.max_day_shift else
-        if dif < self.session.max_day_shift < dif + 7:
+        shift = self.session.max_day_shift
+        if dif < shift < 0 or 0 < dif + 7 < shift:
             dif += 7
-        start += timedelta(days=dif)
-
-        # # account for weekday out of range of max_day_shift.
-        # if dif < self.session.max_day_shift < 0:
-        #     dif += 7
-        # if 0 < self.session.max_day_shift < dif:
-        #     dif -= 7
-
-        # if self.session.max_day_shift > 0:
-        #     if dif < 0:
-        #         dif += 7
-        #     if dif > self.session.max_day_shift:
-        #         dif -= 7
-        # if self.session.max_day_shift < 0:
-        #     if dif > 0:
-        #         dif -= 7
-        #     if dif < self.session.max_day_shift:
-        #         dif += 7
-        # # old, but wrong I think.
-        # complement = dif + 7 if dif < 0 else dif - 7
-        # move = min(dif, complement) if self.session.max_day_shift < 0 else max(dif, complement)
-        # start += timedelta(days=move)
-        return start
+        elif shift < dif - 7 < 0 or 0 < shift < dif:
+            dif -= 7
+        return start + timedelta(days=dif)
 
     @property
     def end_date(self):
@@ -586,14 +565,7 @@ class ClassOffer(models.Model):
         # TODO: Do we need 'num_level' field, or just going to use value from parent 'Subject'?
         level_dict = Subject.LEVEL_ORDER
         higher = 100 + max(level_dict.values())
-        num = 0
-        if self.subject is None:
-            self._num_level = higher
-            return higher
-        try:
-            num = level_dict.get(getattr(self.subject, 'level', ''), 0)
-        except KeyError:
-            num = higher
+        num = level_dict.get(getattr(self.subject, 'level', ''), higher)
         self._num_level = num
         return num
 
@@ -648,7 +620,7 @@ class Profile(models.Model):
     @property
     def taken_subjects(self):
         """ Since all taken subjects are related through ClassOffer, we check taken to see the subject names. """
-        return Subject.objects.filter(id__in=self.taken.values_list('subject'))
+        return Subject.objects.filter(id__in=self.taken.values_list('subject')).distinct()
 
     @property
     def beg(self):
@@ -730,7 +702,7 @@ class Profile(models.Model):
                 goal[key] = goal.get(key, each_ver)
                 if isinstance(setting, (list, tuple)):
                     setting = map(_clean, setting)
-                    agg_kwargs[key] = Count('id', filter=Q(version__in=setting), distinct=True)
+                    agg_kwargs[key] = Count('id', filter=Q(subject__version__in=setting), distinct=True)
                 elif isinstance(setting, dict):
                     # TODO: Check if the Q object is correctly checking for key=value.
                     setting = [Q(**{key: value}) for key, value in setting.items()]
@@ -738,9 +710,11 @@ class Profile(models.Model):
                 elif setting:
                     raise TypeError(_("Expected each 'ver_map' value to be a list, tuple, or dictionary (or falsy). "))
         else:  # default data_filters when thee is no ver_map
-            agg_kwargs = {key: Count('id', filter=Q(version=key), distinct=True) for key in goal}
+            agg_kwargs = {key: Count('id', filter=Q(subject__version=key), distinct=True) for key in goal}
         # goal is populated. The populated agg_kwargs, level, and self.taken_subjects allow us to make data dictionary
-        target_taken = self.taken_subjects.filter(level=Subject.LEVEL_CHOICES[level][0])
+        # target_taken = self.taken_subjects.filter(level=Subject.LEVEL_CHOICES[level][0])
+        # data = target_taken.aggregate(**agg_kwargs)
+        target_taken = self.taken.filter(subject__level=Subject.LEVEL_CHOICES[level][0])
         data = target_taken.aggregate(**agg_kwargs)
         extra = {'done': False}
         for key in goal:
@@ -759,19 +733,20 @@ class Profile(models.Model):
     def full_name(self):
         return self.user.full_name
 
-    def _get_full_name(self):
-        return self.user.get_full_name
+    def get_full_name(self):
+        return self.user.get_full_name()
 
     def compute_level(self):
         if self.taken.count() < 1:
             return 0
         if self.l3.get('done'):
-            return 4 if min(self.l3.values(), default=0) >= 1 else 3.5
+            return 4 if min(self.l3.values(), default=0) > 0 else 3.5
         if self.l2.get('done'):
-            return 3 if min(self.l2.values(), default=0) >= 1 else 2.5
+            return 3 if min(self.l2.values(), default=0) > 0 else 2.5
         if self.beg.get('done'):
             return 2
-        return 1 if max(self.beg.values(), default=0) > 0 else 0
+        beg_count = self.taken.filter(subject__level=Subject.LEVEL_CHOICES[0][0]).count()
+        return 1 if beg_count > 0 else 0
 
     def save(self, *args, **kwargs):
         if not self.level:
