@@ -475,15 +475,29 @@ class ProfileModelTests(SimpleModelTests, TestCase):
 
     def setUp(self):
         kwargs = self.defaults.copy()
-        # kwargs = {'email': 'fake@site.com', 'password': '1234', 'first_name': 'fa', 'last_name': 'fake'}
         user = UserHC.objects.create_user(**kwargs)
         user.save()
         self.defaults = {}
         self.instance = user.profile  # triggers self.create_model to update this model instead of creating one.
 
-    @skip("Not Implemented")
-    def test_taken_is_related_classoffers(self):
-        pass
+    def test_taken_subject_is_related_subjects(self):
+        model = self.instance
+        versions = ('A', 'B', 'C', 'D', )
+        subjs = []
+        for level, string in Subject.LEVEL_CHOICES:
+            subjs += [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}", ) for ver in versions]
+        session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
+        location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
+        kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
+        attended = [ClassOffer.objects.create(subject=subj, **kwargs) for subj in subjs]
+        kwargs['session'] = Session.objects.create(name='test_sess2')  # Determines key_day_date based on previous
+        attended += [ClassOffer.objects.create(subject=subj, **kwargs) for subj in subjs]
+        model.taken.add(*attended)
+        expected_subj_count = len(versions) * len(Subject.LEVEL_CHOICES)
+        expected_classoffer_count = 2 * len(versions) * len(Subject.LEVEL_CHOICES)
+
+        self.assertEqual(expected_classoffer_count, model.taken.count())
+        self.assertEqual(expected_subj_count, len(model.taken_subjects))
 
     @skip("Not Implemented")
     def test_highest_subject_correct_values(self):
@@ -534,6 +548,8 @@ class ProfileModelTests(SimpleModelTests, TestCase):
         level = Subject.LEVEL_CHOICES[1][0]
         versions = ('A', 'B', )
         subjs = [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}_test", ) for ver in versions]
+        level = Subject.LEVEL_CHOICES[0][0]
+        subjs += [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}_test", ) for ver in versions]
         session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
         location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
         kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
@@ -541,6 +557,8 @@ class ProfileModelTests(SimpleModelTests, TestCase):
         model.taken.add(*attended)
 
         self.assertFalse(model.l2.get('done'))
+        self.assertTrue(model.beg.get('done'))
+        self.assertEqual(model.compute_level(), 2)
 
     def test_level_methods_when_attended_l2_goal(self):
         model = self.instance
@@ -556,9 +574,6 @@ class ProfileModelTests(SimpleModelTests, TestCase):
         expected.update({key: 0 for key, string in Subject.VERSION_CHOICES if key not in ('N', )})
 
         self.assertTrue(model.l2.get('done'))
-        for key in expected:
-            self.assertEquals(model.l2.get(key, None), expected[key])
-        self.assertEquals(len(model.l2), len(expected))
         self.assertEquals(model.l2, expected)
         self.assertEqual(model.compute_level(), 2.5)
 
@@ -571,19 +586,13 @@ class ProfileModelTests(SimpleModelTests, TestCase):
         location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
         kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
         attended = [ClassOffer.objects.create(subject=subj, **kwargs) for subj in subjs]
-        session2 = Session.objects.create(name='test_sess2')
-        kwargs['session'] = session2
+        kwargs['session'] = Session.objects.create(name='test_sess2')  # Determines key_day_date based on previous
         attended += [ClassOffer.objects.create(subject=subj, **kwargs) for subj in subjs]
         model.taken.add(*attended)
         expected = {'done': True}
         expected.update({key: 1 for key, string in Subject.VERSION_CHOICES if key not in ('N', )})
 
         self.assertTrue(model.l2.get('done'))
-        # self.assertEquals(len(attended), 8)
-        # self.assertEquals(ClassOffer.objects.filter(subject__level=level).count(), 8)
-        # for key in expected:
-        #     self.assertEquals(model.l2.get(key, None), expected[key])
-        # self.assertEquals(len(model.l2), len(expected))
         self.assertEquals(model.l2, expected)
         self.assertEqual(model.compute_level(), 3)
 
@@ -618,7 +627,6 @@ class ProfileModelTests(SimpleModelTests, TestCase):
         expected.update({key: 0 for key, string in Subject.VERSION_CHOICES if key not in ('N', )})
 
         self.assertTrue(model.l3.get('done'))
-        self.assertEquals(len(model.l3), len(expected))
         self.assertEquals(model.l3, expected)
         self.assertEqual(model.compute_level(), 3.5)
 
@@ -646,19 +654,22 @@ class ProfileModelTests(SimpleModelTests, TestCase):
         model = Profile.objects.first()
         user = UserHC.objects.first()
         expected = user.username
-
         self.assertEqual(model.user, user)
         self.assertEqual(model.username, expected)
 
-        pass
-
-    @skip("Not Implemented")
     def test_profile_and_user_same_full_name(self):
-        pass
+        model = self.instance
+        user = UserHC.objects.first()
+        expected = user.full_name
+        self.assertEqual(model.user, user)
+        self.assertEqual(model.full_name, expected)
 
-    @skip("Not Implemented")
     def test__profile_and_user_same_get_full_name(self):
-        pass
+        model = self.instance
+        user = UserHC.objects.first()
+        expected = user.get_full_name()
+        self.assertEqual(model.user, user)
+        self.assertEqual(model.get_full_name(), expected)
 
 
 class PaymentModelTests(SimpleModelTests, TestCase):

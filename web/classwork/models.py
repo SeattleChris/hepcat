@@ -620,7 +620,7 @@ class Profile(models.Model):
     @property
     def taken_subjects(self):
         """ Since all taken subjects are related through ClassOffer, we check taken to see the subject names. """
-        return Subject.objects.filter(id__in=self.taken.values_list('subject'))
+        return Subject.objects.filter(id__in=self.taken.values_list('subject')).distinct()
 
     @property
     def beg(self):
@@ -733,8 +733,8 @@ class Profile(models.Model):
     def full_name(self):
         return self.user.full_name
 
-    def _get_full_name(self):
-        return self.user.get_full_name
+    def get_full_name(self):
+        return self.user.get_full_name()
 
     def compute_level(self):
         if self.taken.count() < 1:
