@@ -740,12 +740,13 @@ class Profile(models.Model):
         if self.taken.count() < 1:
             return 0
         if self.l3.get('done'):
-            return 4 if min(self.l3.values(), default=0) >= 1 else 3.5
+            return 4 if min(self.l3.values(), default=0) > 0 else 3.5
         if self.l2.get('done'):
-            return 3 if min(self.l2.values(), default=0) >= 1 else 2.5
+            return 3 if min(self.l2.values(), default=0) > 0 else 2.5
         if self.beg.get('done'):
             return 2
-        return 1 if max(self.beg.values(), default=0) > 0 else 0
+        beg_count = self.taken.filter(subject__level=Subject.LEVEL_CHOICES[0][0]).count()
+        return 1 if beg_count > 0 else 0
 
     def save(self, *args, **kwargs):
         if not self.level:

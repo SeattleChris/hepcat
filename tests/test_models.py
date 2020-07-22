@@ -1,6 +1,5 @@
 from django.test import TestCase, TransactionTestCase
 from django.conf import settings
-from django.db import transaction
 from unittest import skip
 from .helper import SimpleModelTests
 from classwork.models import Location, Resource, SiteContent, Subject, ClassOffer, Profile
@@ -494,11 +493,12 @@ class ProfileModelTests(SimpleModelTests, TestCase):
     def test_highest_subject_no_values(self):
         pass
 
-    def test_beg_property_when_no_beg_attended(self):
+    def test_level_methods_when_no_beg_attended(self):
         model = self.instance
         self.assertFalse(model.beg.get('done'))
+        self.assertEqual(model.compute_level(), 0)
 
-    def test_beg_property_when_only_some_beg_attended(self):
+    def test_level_methods_when_only_some_beg_attended(self):
         model = self.instance
         level = Subject.LEVEL_CHOICES[0][0]
         beg_a_subj = Subject.objects.create(level=level, version='A', title='beg_a_test', )
@@ -509,8 +509,9 @@ class ProfileModelTests(SimpleModelTests, TestCase):
         model.taken.add(beg_a)
 
         self.assertFalse(model.beg.get('done'))
+        self.assertEqual(model.compute_level(), 1)
 
-    def test_beg_property_when_beg_finished(self):
+    def test_level_methods_when_beg_finished(self):
         model = self.instance
         level = Subject.LEVEL_CHOICES[0][0]
         versions = ('A', 'B', )
@@ -522,12 +523,13 @@ class ProfileModelTests(SimpleModelTests, TestCase):
         model.taken.add(*attended)
 
         self.assertTrue(model.beg.get('done'))
+        self.assertEqual(model.compute_level(), 2)
 
-    def test_l2_property_when_no_l2_attended(self):
+    def test_level_methods_when_no_l2_attended(self):
         model = self.instance
         self.assertFalse(model.l2.get('done'))
 
-    def test_l2_property_when_some_l2_attended(self):
+    def test_level_methods_when_some_l2_attended(self):
         model = self.instance
         level = Subject.LEVEL_CHOICES[1][0]
         versions = ('A', 'B', )
@@ -540,7 +542,7 @@ class ProfileModelTests(SimpleModelTests, TestCase):
 
         self.assertFalse(model.l2.get('done'))
 
-    def test_l2_property_when_attended_goal(self):
+    def test_level_methods_when_attended_l2_goal(self):
         model = self.instance
         level = Subject.LEVEL_CHOICES[1][0]
         versions = ('A', 'B', 'C', 'D', )
@@ -558,8 +560,9 @@ class ProfileModelTests(SimpleModelTests, TestCase):
             self.assertEquals(model.l2.get(key, None), expected[key])
         self.assertEquals(len(model.l2), len(expected))
         self.assertEquals(model.l2, expected)
+        self.assertEqual(model.compute_level(), 2.5)
 
-    def test_l2_property_when_attended_double_goal(self):
+    def test_level_methods_when_attended_double_l2_goal(self):
         model = self.instance
         level = Subject.LEVEL_CHOICES[1][0]
         versions = ('A', 'B', 'C', 'D', )
@@ -582,12 +585,13 @@ class ProfileModelTests(SimpleModelTests, TestCase):
         #     self.assertEquals(model.l2.get(key, None), expected[key])
         # self.assertEquals(len(model.l2), len(expected))
         self.assertEquals(model.l2, expected)
+        self.assertEqual(model.compute_level(), 3)
 
-    def test_l3_property_when_no_l3_attended(self):
+    def test_level_methods_when_no_l3_attended(self):
         model = self.instance
         self.assertFalse(model.l3.get('done'))
 
-    def test_l3_property_when_some_l3_attended(self):
+    def test_level_methods_when_some_l3_attended(self):
         model = self.instance
         level = Subject.LEVEL_CHOICES[2][0]
         versions = ('C', 'D', )
@@ -600,7 +604,7 @@ class ProfileModelTests(SimpleModelTests, TestCase):
 
         self.assertFalse(model.l3.get('done'))
 
-    def test_l3_property_when_attended_goal(self):
+    def test_level_methods_when_attended_l3_goal(self):
         model = self.instance
         level = Subject.LEVEL_CHOICES[2][0]
         versions = ('A', 'B', 'C', 'D', )
@@ -616,8 +620,9 @@ class ProfileModelTests(SimpleModelTests, TestCase):
         self.assertTrue(model.l3.get('done'))
         self.assertEquals(len(model.l3), len(expected))
         self.assertEquals(model.l3, expected)
+        self.assertEqual(model.compute_level(), 3.5)
 
-    def test_l3_property_when_attended_double_goal(self):
+    def test_level_methods_when_attended_double_l3_goal(self):
         model = self.instance
         level = Subject.LEVEL_CHOICES[2][0]
         versions = ('A', 'B', 'C', 'D', )
@@ -635,6 +640,7 @@ class ProfileModelTests(SimpleModelTests, TestCase):
 
         self.assertTrue(model.l3.get('done'))
         self.assertEquals(model.l3, expected)
+        self.assertEqual(model.compute_level(), 4)
 
     def test_profile_and_user_same_username(self):
         model = Profile.objects.first()
