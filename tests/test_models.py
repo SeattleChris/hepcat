@@ -499,17 +499,36 @@ class ProfileModelTests(SimpleModelTests, TestCase):
         self.assertEqual(expected_classoffer_count, model.taken.count())
         self.assertEqual(expected_subj_count, len(model.taken_subjects))
 
-    @skip("Not Implemented")
     def test_highest_subject_correct_values(self):
-        pass
+        model = self.instance
+        subj_has_level, i = '', -1
+        while subj_has_level not in Subject.LEVEL_ORDER and subj_has_level is not None:
+            i += 1
+            subj_has_level = Subject.LEVEL_CHOICES[i][0] if i < len(Subject.LEVEL_CHOICES) else None
+        if not subj_has_level:
+            raise NotImplementedError("There must be at least one Subject.LEVEL_CHOICES in Subject.LEVEL_ORDER. ")
+        expected_level_num = Subject.LEVEL_ORDER[subj_has_level]
+        subj_no_level, i = '', -1
+        while subj_no_level in Subject.LEVEL_ORDER or subj_no_level == '':
+            i += 1
+            subj_no_level = Subject.LEVEL_CHOICES[i][0] if i < len(Subject.LEVEL_CHOICES) else None
+        levels = (subj_has_level, subj_no_level) if subj_no_level else (subj_has_level, )
+        ver = Subject.VERSION_CHOICES[0][0]
+        subjs = [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}", ) for level in levels]
+        session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
+        location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
+        kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
+        attended = [ClassOffer.objects.create(subject=subj, **kwargs) for subj in subjs]
+        model.taken.add(*attended)
+        result = model.highest_subject
+        self.assertEqual(result['level_num__max'], expected_level_num)
+        self.assertIn(subjs[0], result['subjects'])
 
     def test_highest_subject_no_values(self):
         model = self.instance
-        expected = {'level_num__max': None, 'subjects': Subject.objects.none()}
-        # Bug: Error in that the querysets will not evaluate as equal.
-        for key, value in model.highest_subject.items():
-            self.assertEquals(expected.get(key, ''), value)
-        self.assertDictEqual(expected, model.highest_subject)
+        result = model.highest_subject
+        self.assertEqual(result['level_num__max'], None)
+        self.assertEqual(result['subjects'].count(), 0)
 
     def test_level_methods_when_no_beg_attended(self):
         model = self.instance
