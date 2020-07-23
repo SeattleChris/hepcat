@@ -36,7 +36,7 @@ urlpatterns = [
     # path('newsletter/', include('newsletter.urls')),  # subscribe, unsubscribe, archive features
 ]
 
-if settings.DEBUG is True:
+if settings.DEBUG is True:  # pragma: no cover
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # Thanks to django-newsletter, the following paths are set:
