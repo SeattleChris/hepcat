@@ -707,8 +707,12 @@ class Profile(models.Model):
                     agg_kwargs[key] = Count('id', filter=Q(subject__version__in=setting), distinct=True)
                 elif isinstance(setting, dict):
                     # TODO: Check if the Q object is correctly checking for key=value.
-                    setting = [Q(**{key: value}) for key, value in setting.items()]
-                    agg_kwargs[key] = Count('id', filter=tuple(setting), distinct=True)
+                    q_full = Q()
+                    for key, value in setting.items():
+                        q_full.add(Q(**{key: value}), Q.AND)
+                    # setting = [Q(**{key: value}) for key, value in setting.items()]
+                    # TODO: The following filter needs to unpack and turn into a single Q
+                    agg_kwargs[key] = Count('id', filter=q_full, distinct=True)
                 elif setting:
                     raise TypeError(_("Expected each 'ver_map' value to be a list, tuple, or dictionary (or falsy). "))
         else:  # default data_filters when thee is no ver_map
