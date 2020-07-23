@@ -710,10 +710,11 @@ class Profile(models.Model):
                 elif isinstance(params, dict):
                     combine_type = params.pop('combine_type', '')
                     if combine_type.upper() == 'OR':
+                        raise NotImplementedError("This version of the product does not yet have this feature. ")
                         # TODO: Check if the Q object is correctly making OR statements with the key=value pairs.
-                        q_full = Q()
-                        for key, value in params.items():
-                            q_full.add(Q(**{key: value}), Q.OR)
+                        # q_full = Q()
+                        # for key, value in params.items():
+                        #     q_full.add(Q(**{key: value}), Q.OR)
                     else:
                         q_full = Q(**params)
                 elif params:
