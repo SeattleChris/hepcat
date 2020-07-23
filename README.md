@@ -1,8 +1,7 @@
 # hepcat
 
 **Author**: Chris L Chapman
-**Version**: 0.4.3
-
+**Ver
 ## Overview
 
 Primarily this is designed for the needs of HepCat Productions - www.SeattleSwing.com, with the intent it could be useful for other dance schools or educational organizations that offer weekly classes. This website will be used to manage new and existing customers signing up for a variety of classes offered. It will manage the current and upcoming class schedule details, keep a record of previously offered classes, attendance, and related information. It will manage the students as users of the website, and allow the class instructors and site admin to deliver weekly email and content to students in a given class as well as general users (all current and past students).
