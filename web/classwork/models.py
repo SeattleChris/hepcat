@@ -667,10 +667,12 @@ class Profile(models.Model):
         Depends on self.taken_subjects (depends on self.taken), ClassOffer.subject, Subject.level, & Subject.version.
         """
         lookup = Subject.VERSION_CHOICES
-        goal, agg_kwargs = {}, {}
+        goal, agg_dict = {}, {}
         def _clean(key): return lookup[key][0] if isinstance(key, int) and key < len(lookup) else key
 
-        if not isinstance(level, int):
+        if isinstance(level, int):
+            level = Subject.LEVEL_CHOICES[level][0]
+        else:
             raise TypeError(_("Expected an int for level parameter. "))
         if only is None:
             pass
@@ -699,29 +701,28 @@ class Profile(models.Model):
         if ver_map:
             if not isinstance(ver_map, dict):
                 raise TypeError(_("Expected a dictionary or None for 'goal_map' parameter. "))
-            for key, setting in ver_map.items():
+            for key, params in ver_map.items():
                 key = _clean(key)
                 goal[key] = goal.get(key, each_ver)
-                if isinstance(setting, (list, tuple)):
-                    setting = map(_clean, setting)
-                    agg_kwargs[key] = Count('id', filter=Q(subject__version__in=setting), distinct=True)
-                elif isinstance(setting, dict):
-                    # TODO: Check if the Q object is correctly checking for key=value.
-                    q_full = Q()
-                    for key, value in setting.items():
-                        q_full.add(Q(**{key: value}), Q.AND)
-                    # setting = [Q(**{key: value}) for key, value in setting.items()]
-                    # TODO: The following filter needs to unpack and turn into a single Q
-                    agg_kwargs[key] = Count('id', filter=q_full, distinct=True)
-                elif setting:
+                if isinstance(params, (list, tuple)):
+                    params = map(_clean, params)
+                    q_full = Q(subject__version__in=params, subject__level=level)
+                elif isinstance(params, dict):
+                    combine_type = params.pop('combine_type', '')
+                    if combine_type.upper() == 'OR':
+                        # TODO: Check if the Q object is correctly making OR statements with the key=value pairs.
+                        q_full = Q()
+                        for key, value in params.items():
+                            q_full.add(Q(**{key: value}), Q.OR)
+                    else:
+                        q_full = Q(**params)
+                elif params:
                     raise TypeError(_("Expected each 'ver_map' value to be a list, tuple, or dictionary (or falsy). "))
+                agg_dict[key] = Count('id', filter=q_full, distinct=True)
         else:  # default data_filters when thee is no ver_map
-            agg_kwargs = {key: Count('id', filter=Q(subject__version=key), distinct=True) for key in goal}
+            agg_dict = {k: Count('id', filter=Q(subject__version=k, subject__level=level), distinct=True) for k in goal}
         # goal is populated. The populated agg_kwargs, level, and self.taken_subjects allow us to make data dictionary
-        # target_taken = self.taken_subjects.filter(level=Subject.LEVEL_CHOICES[level][0])
-        # data = target_taken.aggregate(**agg_kwargs)
-        target_taken = self.taken.filter(subject__level=Subject.LEVEL_CHOICES[level][0])
-        data = target_taken.aggregate(**agg_kwargs)
+        data = self.taken.aggregate(**agg_dict)
         extra = {'done': False}
         for key in goal:
             extra_value = data.get(key, 0) - goal[key]
