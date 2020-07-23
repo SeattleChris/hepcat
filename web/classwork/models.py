@@ -672,7 +672,7 @@ class Profile(models.Model):
 
         if not isinstance(level, int):
             raise TypeError(_("Expected an int for level parameter. "))
-        if not only:
+        if only is None:
             pass
         elif isinstance(only, (str, int)):
             only = [only]
@@ -691,12 +691,14 @@ class Profile(models.Model):
             if not isinstance(goal_map, dict):
                 raise TypeError(_("Expected a dictionary or None for 'goal_map' parameter. "))
             goal = {_clean(k): v for k, v in goal_map.items() if k not in exclude and (not only or k in only)}
-        elif only and not ver_map:
+        elif only is not None and not ver_map:
             goal = {_clean(key): each_ver for key in only if key not in exclude}
         elif not ver_map:
             goal = {key: each_ver for key, string in lookup if key not in exclude}
 
         if ver_map:
+            if not isinstance(ver_map, dict):
+                raise TypeError(_("Expected a dictionary or None for 'goal_map' parameter. "))
             for key, setting in ver_map.items():
                 key = _clean(key)
                 goal[key] = goal.get(key, each_ver)
