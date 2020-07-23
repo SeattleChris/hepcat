@@ -599,7 +599,7 @@ class Profile(models.Model):
     # to set their own rules for number of versions needed and other version translation decisions.
 
     @property
-    def highest_subject(self, subjects=True, classoffers=False):
+    def highest_subject(self, subjects=True):  # , classoffers=False
         """ We will want to know what is the student's class level which by default will be the highest
             class level they have taken. We also want to be able to override this from a teacher or
             admin input to deal with students who have had instruction or progress elsewhere.
@@ -608,13 +608,13 @@ class Profile(models.Model):
         max_level = data['level_num__max']
         if subjects:
             data['subjects'] = self.taken_subjects.filter(level_num=max_level)
-        if classoffers:
-            data['classoffers'] = self.taken.filter(subject__level_num=max_level).order_by('-session_id__key_day_date')
-            # TODO: Determine if ClassOffer should have this value or if we should get it from Subject.
-            by_classoffer = self.taken.aggregate(max_classoffer=Max('_num_level'))
-            c_max = by_classoffer['max_classoffer']
-            by_classoffer['collect_classoffer'] = self.taken.filter(_num_level=c_max).order_by('-session__key_day_date')
-            data.update(by_classoffer)
+        # if classoffers:
+        #     data['classoffers'] = self.taken.filter(subject__level_num=max_level).order_by('-session_id__key_day_date')
+        #     # TODO: Determine if ClassOffer should have this value or if we should get it from Subject.
+        #     by_classoffer = self.taken.aggregate(max_classoffer=Max('_num_level'))
+        #     c_max = by_classoffer['max_classoffer']
+        #     by_classoffer['collect_classoffer'] = self.taken.filter(_num_level=c_max).order_by('-session__key_day_date')
+        #     data.update(by_classoffer)
         return data
 
     @property
@@ -667,12 +667,14 @@ class Profile(models.Model):
         Depends on self.taken_subjects (depends on self.taken), ClassOffer.subject, Subject.level, & Subject.version.
         """
         lookup = Subject.VERSION_CHOICES
-        goal, agg_kwargs = {}, {}
+        goal, agg_dict = {}, {}
         def _clean(key): return lookup[key][0] if isinstance(key, int) and key < len(lookup) else key
 
-        if not isinstance(level, int):
+        if isinstance(level, int):
+            level = Subject.LEVEL_CHOICES[level][0]
+        else:
             raise TypeError(_("Expected an int for level parameter. "))
-        if not only:
+        if only is None:
             pass
         elif isinstance(only, (str, int)):
             only = [only]
@@ -691,31 +693,37 @@ class Profile(models.Model):
             if not isinstance(goal_map, dict):
                 raise TypeError(_("Expected a dictionary or None for 'goal_map' parameter. "))
             goal = {_clean(k): v for k, v in goal_map.items() if k not in exclude and (not only or k in only)}
-        elif only and not ver_map:
+        elif only is not None and not ver_map:
             goal = {_clean(key): each_ver for key in only if key not in exclude}
         elif not ver_map:
             goal = {key: each_ver for key, string in lookup if key not in exclude}
 
         if ver_map:
-            for key, setting in ver_map.items():
+            if not isinstance(ver_map, dict):
+                raise TypeError(_("Expected a dictionary or None for 'goal_map' parameter. "))
+            for key, params in ver_map.items():
                 key = _clean(key)
                 goal[key] = goal.get(key, each_ver)
-                if isinstance(setting, (list, tuple)):
-                    setting = map(_clean, setting)
-                    agg_kwargs[key] = Count('id', filter=Q(subject__version__in=setting), distinct=True)
-                elif isinstance(setting, dict):
-                    # TODO: Check if the Q object is correctly checking for key=value.
-                    setting = [Q(**{key: value}) for key, value in setting.items()]
-                    agg_kwargs[key] = Count('id', filter=tuple(setting), distinct=True)
-                elif setting:
+                if isinstance(params, (list, tuple)):
+                    params = map(_clean, params)
+                    q_full = Q(subject__version__in=params, subject__level=level)
+                elif isinstance(params, dict):
+                    combine_type = params.pop('combine_type', '')
+                    if combine_type.upper() == 'OR':
+                        raise NotImplementedError("This version of the product does not yet have this feature. ")
+                        # TODO: Check if the Q object is correctly making OR statements with the key=value pairs.
+                        # q_full = Q()
+                        # for key, value in params.items():
+                        #     q_full.add(Q(**{key: value}), Q.OR)
+                    else:
+                        q_full = Q(**params)
+                elif params:
                     raise TypeError(_("Expected each 'ver_map' value to be a list, tuple, or dictionary (or falsy). "))
+                agg_dict[key] = Count('id', filter=q_full, distinct=True)
         else:  # default data_filters when thee is no ver_map
-            agg_kwargs = {key: Count('id', filter=Q(subject__version=key), distinct=True) for key in goal}
+            agg_dict = {k: Count('id', filter=Q(subject__version=k, subject__level=level), distinct=True) for k in goal}
         # goal is populated. The populated agg_kwargs, level, and self.taken_subjects allow us to make data dictionary
-        # target_taken = self.taken_subjects.filter(level=Subject.LEVEL_CHOICES[level][0])
-        # data = target_taken.aggregate(**agg_kwargs)
-        target_taken = self.taken.filter(subject__level=Subject.LEVEL_CHOICES[level][0])
-        data = target_taken.aggregate(**agg_kwargs)
+        data = self.taken.aggregate(**agg_dict)
         extra = {'done': False}
         for key in goal:
             extra_value = data.get(key, 0) - goal[key]
