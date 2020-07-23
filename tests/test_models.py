@@ -694,6 +694,207 @@ class ProfileModelTests(SimpleModelTests, TestCase):
         self.assertEqual(model.user, user)
         self.assertEqual(model.get_full_name(), expected)
 
+    def test_subject_data_invalid_level_parameter(self):
+        model = self.instance
+        level = 'letters'
+        with self.assertRaises(TypeError):
+            model.subject_data(level=level)
+
+    def test_subject_data_invalid_only_parameter(self):
+        model = self.instance
+        only = {'first': 'bad input', 'second': 'should not work'}
+        with self.assertRaises(TypeError):
+            model.subject_data(only=only)
+
+    def test_subject_data_invalid_exclude_parameter(self):
+        model = self.instance
+        exclude = {'first': 'bad input', 'second': 'should not work'}
+        with self.assertRaises(TypeError):
+            model.subject_data(exclude=exclude)
+
+    def test_subject_data_invalid_goal_map_parameter(self):
+        model = self.instance
+        goal_map = 'letters'
+        with self.assertRaises(TypeError):
+            model.subject_data(goal_map=goal_map)
+
+    def test_subject_data_invalid_ver_map_parameter(self):
+        model = self.instance
+        ver_map = 'letters'
+        with self.assertRaises(TypeError):
+            model.subject_data(ver_map=ver_map)
+
+    def test_subject_data_ver_map_with_invalid_type_values(self):
+        model = self.instance
+        ver_map = {0: 'bad input', 1: 'should not work'}
+        with self.assertRaises(TypeError):
+            model.subject_data(ver_map=ver_map)
+
+    def test_subject_data_ver_map_has_list_values(self):
+        model = self.instance
+        level = Subject.LEVEL_CHOICES[0][0]
+        versions = [first for first, second in Subject.VERSION_CHOICES]
+        subjs = [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}_test", ) for ver in versions]
+        session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
+        location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
+        kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
+        attended = [ClassOffer.objects.create(subject=subj, **kwargs) for subj in subjs]
+        model.taken.add(*attended)
+
+        ver_map = {'A': ['A', 'C'], 'B': ['B', 'D']}
+        level, each_ver = 0, 1
+        goal, data, extra = model.subject_data(level=level, each_ver=each_ver, ver_map=ver_map)
+        expected_goal = {key: each_ver for key in ver_map}
+        expected_data = {key: 2 for key in ver_map}
+        expected_extra = {key: 1 for key in ver_map}
+        expected_extra['done'] = True
+
+        self.assertDictEqual(expected_goal, goal)
+        self.assertDictEqual(expected_data, data)
+        self.assertDictEqual(expected_extra, extra)
+
+    def test_subject_data_ver_map_has_dict_values(self):
+        model = self.instance
+        versions = [first for first, second in Subject.VERSION_CHOICES]
+        subjs = []
+        for level, string in Subject.LEVEL_CHOICES:
+            subjs += [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}", ) for ver in versions]
+        session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
+        location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
+        kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
+        attended = [ClassOffer.objects.create(subject=subj, **kwargs) for subj in subjs]
+        kwargs['session'] = Session.objects.create(name='test_sess2')  # Determines key_day_date based on previous
+        attended += [ClassOffer.objects.create(subject=subj, **kwargs) for subj in subjs]
+        model.taken.add(*attended)
+        expected_taken_count = 2 * len(Subject.LEVEL_CHOICES) * len(Subject.VERSION_CHOICES)
+
+        ver_map = {
+            'early_beg': {
+                'session': session,
+                'subject__level': Subject.LEVEL_CHOICES[0][0]
+            },
+            'late_l2': {
+                'session__name': 'test_sess2',
+                'subject__level': Subject.LEVEL_CHOICES[1][0]
+            },
+            'early_l3': {
+                'session': session,
+                'subject__level': Subject.LEVEL_CHOICES[2][0]
+            },
+        }
+        each_ver = 1
+        expected_goal = {key: each_ver for key in ver_map}
+        expected_data = {key: len(Subject.VERSION_CHOICES) for key in ver_map}
+        expected_extra = {key: expected_data[key] - expected_goal[key] for key in ver_map}
+        expected_extra['done'] = True
+        goal, data, extra = model.subject_data(each_ver=each_ver, ver_map=ver_map)
+
+        self.assertEqual(expected_taken_count, len(attended))
+        self.assertEqual(expected_taken_count, model.taken.count())
+        self.assertDictEqual(expected_goal, goal)
+        self.assertDictEqual(expected_extra, extra)
+        self.assertDictEqual(expected_data, data)
+
+    def test_subject_data_ver_map_has_dict_values_with_or_combine_type(self):
+        model = self.instance
+        versions = [first for first, second in Subject.VERSION_CHOICES]
+        subjs = []
+        for level, string in Subject.LEVEL_CHOICES:
+            subjs += [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}", ) for ver in versions]
+        session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
+        location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
+        kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
+        attended = [ClassOffer.objects.create(subject=subj, **kwargs) for subj in subjs]
+        kwargs['session'] = Session.objects.create(name='test_sess2')  # Determines key_day_date based on previous
+        attended += [ClassOffer.objects.create(subject=subj, **kwargs) for subj in subjs]
+        model.taken.add(*attended)
+        expected_taken_count = 2 * len(Subject.LEVEL_CHOICES) * len(Subject.VERSION_CHOICES)
+
+        ver_map = {
+            'previous_or_beg': {
+                'session': session,
+                'subject__level': Subject.LEVEL_CHOICES[0][0],
+                'combine_type': 'OR'
+            },
+            'recent_or_l2': {
+                'session__name': 'test_sess2',
+                'subject__level': Subject.LEVEL_CHOICES[1][0],
+                'combine_type': 'or'
+            },
+            'early_l3': {
+                'session': session,
+                'subject__level': Subject.LEVEL_CHOICES[2][0]
+            },
+        }
+        each_ver = 1
+        expected_goal = {key: each_ver for key in ver_map}
+        expected_data = {key: len(Subject.VERSION_CHOICES) for key in ver_map}
+        expected_extra = {key: expected_data[key] - expected_goal[key] for key in ver_map}
+        expected_extra['done'] = True
+        goal, data, extra = model.subject_data(each_ver=each_ver, ver_map=ver_map)
+
+        self.assertEqual(expected_taken_count, len(attended))
+        self.assertEqual(expected_taken_count, model.taken.count())
+        self.assertDictEqual(expected_goal, goal)
+        self.assertDictEqual(expected_extra, extra)
+        self.assertDictEqual(expected_data, data)
+
+    def test_subject_data_only_as_int_and_optional_parameters_as_none(self):
+        model = self.instance
+        versions = [first for first, second in Subject.VERSION_CHOICES]
+        subjs = []
+        for level, string in Subject.LEVEL_CHOICES:
+            subjs += [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}", ) for ver in versions]
+        session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
+        location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
+        kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
+        attended = [ClassOffer.objects.create(subject=subj, **kwargs) for subj in subjs]
+        kwargs['session'] = Session.objects.create(name='test_sess2')  # Determines key_day_date based on previous
+        attended += [ClassOffer.objects.create(subject=subj, **kwargs) for subj in subjs]
+        model.taken.add(*attended)
+
+        level, each_ver, only, exclude = 0, 1, 0, None
+        goal, data, extra = model.subject_data(level=level, each_ver=each_ver, only=only, exclude=exclude)
+        clean_key = Subject.VERSION_CHOICES[only][0]
+        expected_goal = {clean_key: each_ver}
+        expected_data = {clean_key: 2}
+        expected_extra = {clean_key: 2 - each_ver, 'done': True}
+
+        self.assertDictEqual(expected_goal, goal)
+        self.assertDictEqual(expected_data, data)
+        self.assertDictEqual(expected_extra, extra)
+
+    def test_subject_data_only_is_none_goal_map_given(self):
+        model = self.instance
+        versions = [first for first, second in Subject.VERSION_CHOICES]
+        subjs = []
+        for level, string in Subject.LEVEL_CHOICES:
+            subjs += [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}", ) for ver in versions]
+        session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
+        location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
+        kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
+        attended = [ClassOffer.objects.create(subject=subj, **kwargs) for subj in subjs]
+        kwargs['session'] = Session.objects.create(name='test_sess2')  # Determines key_day_date based on previous
+        attended += [ClassOffer.objects.create(subject=subj, **kwargs) for subj in subjs]
+        model.taken.add(*attended)
+
+        goal_map, expected_goal = {}, {}
+        for num, (ver, _val) in enumerate(Subject.VERSION_CHOICES, start=0):
+            expected_goal[ver] = goal_map[num] = 1 if num % 2 else 2
+        expected_data = {key: 2 for key in expected_goal}
+        expected_extra = {key: 2 - val for key, val in expected_goal.items()}
+        expected_extra['done'] = True
+        level, exclude = 1, None
+        goal, data, extra = model.subject_data(level=level, exclude=exclude, goal_map=goal_map)
+
+        self.assertDictEqual(expected_goal, goal)
+        self.assertDictEqual(expected_data, data)
+        self.assertDictEqual(expected_extra, extra)
+
+    @skip("Not Implemented yet")
+    def test_subject_data_goal_map_as_dict(self):
+        pass
+
 
 class PaymentModelTests(SimpleModelTests, TestCase):
     Model = Payment
