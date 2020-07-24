@@ -2,23 +2,23 @@
 
 ## Milestones
 
-| Complete           | Task                                      |
-| ------------------ |:-----------------------------------------:|
-|                    | **Start of Project**                      |
-| :heavy_check_mark: | Research Django and needed packages. Overview site structure and features             |
-| :heavy_check_mark: | Setup: Docker, postgresql, Django, core packages, DB migrations, proof-of-life site   |
-|                    | **Milestone 1 Completion**                |
-| :heavy_check_mark: | Models: User model module - student, teacher, admin.                                       |
-| :heavy_check_mark: | Models: Subject, ClassOffer, Session - core product structure and inter-connections        |
-| :heavy_check_mark: | Models: Resource - allows both temporary or repeated resources                             |
-| :heavy_check_mark: | Models: Profile & connected Resources - students get resources from their classoffers      |
-| :heavy_check_mark: | Admin Views: interface for Subject structure and planning specific ClassOffers.            |
-| :heavy_check_mark: | Admin Views: interface for Session - planning future products, assigning publish times.    |
-| :heavy_check_mark: | Admin Views: teacher/admin interface assigning resources (populates to students Profile)   |
-| :heavy_check_mark: | User Views: ClassOffer list (only currently open to join are shown), Register (join class) |
-| :heavy_check_mark: | User Views: Profile for user - see resources granted them, and class history.
-|                    | **Milestone 2 Completion**           |
-| :heavy_check_mark: | Models: Location - connect locations to ClassOffer                                         |
+| Complete           | Task                                                                                        |
+| ------------------ |:-------------------------------------------------------------------------------------------:|
+|                    | **Start of Project**                                                                        |
+| :heavy_check_mark: | Research Django and needed packages. Overview site structure and features                   |
+| :heavy_check_mark: | Setup: Docker, postgresql, Django, core packages, DB migrations, proof-of-life site         |
+|                    | **Milestone 1 Completion**                                                                  |
+| :heavy_check_mark: | Models: User model module - student, teacher, admin.                                        |
+| :heavy_check_mark: | Models: Subject, ClassOffer, Session - core product structure and inter-connections         |
+| :heavy_check_mark: | Models: Resource - allows both temporary or repeated resources                              |
+| :heavy_check_mark: | Models: Profile & connected Resources - students get resources from their classoffers       |
+| :heavy_check_mark: | Admin Views: interface for Subject structure and planning specific ClassOffers.             |
+| :heavy_check_mark: | Admin Views: interface for Session - planning future products, assigning publish times.     |
+| :heavy_check_mark: | Admin Views: teacher/admin interface assigning resources (populates to students Profile)    |
+| :heavy_check_mark: | User Views: ClassOffer list (only currently open to join are shown), Register (join class)  |
+| :heavy_check_mark: | User Views: Profile for user - see resources granted them, and class history.               |
+|                    | **Milestone 2 Completion**                                                                  |
+| :heavy_check_mark: | Models: Location - connect locations to ClassOffer                                          |
 | :heavy_check_mark: | User Views: AboutUs, ClassOffer details, Locations (directions) - core structure stubbed out|
 | :heavy_check_mark: | Admin Views: Admin can assign class credit to any student (tracked in student Profile)      |
 | :heavy_check_mark: | Existing user joining a ClassOffer: Prompted to login. Catches if they already have account |
@@ -43,7 +43,7 @@
 |                    | **Milestone 4 Completion**                                                                  |
 |                    | Tests: Models for classwork, users, and associated data                                     |
 |                    | Tests: Views for classwork                                                                  |
-|                    | Tests: Admin functionality and views                                                        |
+| :heavy_check_mark: | Tests: Admin functionality and views                                                        |
 |                    | Tests: User resources and profile view                                                      |
 |                    | User Views: more filled out - student Profile structure, visual & layout of ClassOffers     |
 |                    | Payment & Student Sign Up: PayPal live working, email confirmations, added to checkin       |
@@ -85,31 +85,31 @@
 - [s] Stretch Goal. Not for current feature plan.
 
 Current Status:
-2020-07-15 07:02:14
+2020-07-24 02:56:03
 <!-- Ctrl-Shift-I to generate timestamp -->
 
 ### Tests
 
 - [x] Unit tests setup using django test
 - [x] Coverage tests setup with coverage
-- [x] Initial tests of models
 - [ ] Models full or near full coverage
-  - [x] Scaffold method names for what coverage report shows is missing
-- [ ] Initial tests for views
+  - [x] Initial tests of models
   - [x] Scaffold method names for what coverage report shows is missing
 - [ ] Views full or near full coverage
-- [x] Initial tests for admin
-- [ ] Admin full or near full coverage
+  - [x] Scaffold method names for what coverage report shows is missing
+  - [ ] Initial tests for views
+- [x] Admin full or near full coverage
+  - [x] Initial tests for admin
 - [x] Session date computation methods
 - [x] Admin forms for Session: date computations
-- [ ] Initial tests for payment features
 - [ ] Payment features full or near full coverage
-- [ ] Initial tests for email features
+  - [ ] Initial tests for payment features
 - [ ] Email features full or near full coverage
-- [ ] Initial tests for user profile view and resource features
+  - [ ] Initial tests for email features
 - [ ] Resource and user profile view features full or near full coverage
-- [ ] Initial tests for metrics features
+  - [ ] Initial tests for user profile view and resource features
 - [ ] Metrics features full or near full coverage
+  - [ ] Initial tests for metrics features
 
 ### Metrics
 
@@ -149,7 +149,7 @@ Current Status:
 - [x] Get Database and code working.
 - [x] Collect static working.
 - [x] Upload ver 0.4.1
-- [ ] Upload ver 0.4.2
+- [ ] Upload ver 0.4.4
 
 ### Deployment on AWS
 
