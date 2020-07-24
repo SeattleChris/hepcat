@@ -6,16 +6,33 @@ from os import environ
 from django.contrib.admin.sites import AdminSite
 from django.contrib.admin.models import LogEntry
 from django.contrib.auth.models import Permission
+from django.contrib.auth.forms import UserChangeForm  # , UserCreationForm
 from django.contrib.sessions.models import Session as Session_contrib
 from django.contrib.contenttypes.models import ContentType
 # from django.forms import ValidationError
 # from django.contrib import admin as default_admin
 from classwork.admin import AdminSessionForm, SessiontAdmin, admin as main_admin
 from classwork.models import Session  # , Subject, ClassOffer, Location, Profile, Registration, Payment
+from users.admin import CustomUserAdmin
 from users.models import UserHC as User
 from datetime import date, timedelta
+from copy import deepcopy
+# from pprint import pprint
 # from django.contrib.auth import get_user_model
 # User = get_user_model()
+
+
+class MockRequest:
+    pass
+
+
+class MockSuperUser:
+    def has_perm(self, perm):
+        return True
+
+
+request = MockRequest()
+request.user = MockSuperUser()
 
 
 class AdminSetupTests(TestCase):
@@ -103,7 +120,6 @@ class AdminSessionModelManagement(TestCase):
 
     def test_admin_can_create_first_session(self):
         """ The first Session can be made, even though later Sessions get defaults from existing ones. """
-        # from pprint import pprint
         c = Client()
         add_url = '/admin/classwork/session/add/'
         login_kwargs = self.get_login_kwargs()
@@ -175,3 +191,92 @@ class AdminSessionModelManagement(TestCase):
     def test_auto_correct_on_flip_but_no_skip(self):
         # TODO: write test for when flip_last_day is True, but skip_weeks == 0.
         pass
+
+
+class AdminUserHCTests(TestCase):
+
+    def test_admin_uses_correct_admin(self):
+        """ The admin site should use the CustomUserAdmin for the UserHC model. """
+        registered_admins_dict = main_admin.site._registry
+        user_admin = registered_admins_dict.get(User, None)
+        self.assertIsInstance(user_admin, CustomUserAdmin)
+
+    def test_admin_uses_expected_form(self):
+        """ The admin CustomUserAdmin utilizes the correct form. """
+        current_admin = CustomUserAdmin(model=User, admin_site=AdminSite())
+        form = getattr(current_admin, 'form', None)
+        form_class = UserChangeForm
+        self.assertEquals(form, form_class)
+        # self.assertIsInstance(form, form_class)
+
+    # def test_admin_has_all_model_fields(self):
+    #     """ The admin CustomUserAdmin should use all the fields of the UserHC model. """
+    #     current_admin = CustomUserAdmin(model=User, admin_site=AdminSite())
+    #     admin_add_fields = []
+    #     # if current_admin.fields:
+    #     #     for ea in current_admin.fields:
+    #     #         if not isinstance(ea, (list, tuple)):
+    #     #             ea = [ea]
+    #     #         admin_add_fields.extend(ea)
+    #     if current_admin.add_fieldsets:
+    #         for ea in current_admin.fieldsets:
+    #             field_list = ea[1].get('fields', [])
+    #             temp = []
+    #             for field in field_list:
+    #                 if isinstance(field, (tuple, list)):
+    #                     temp.extend(field)
+    #                 else:
+    #                     temp.append(field)
+    #             admin_add_fields.extend(temp)
+    #     model_fields = [field.name for field in User._meta.get_fields(include_parents=False)]
+    #     model_fields.remove('id')
+    #     model_fields.remove('profile')
+    #     model_fields.remove('logentry')
+    #     model_fields.remove('is_superuser')
+    #     model_fields.remove('is_staff')
+    #     model_fields.remove('is_active')
+    #     model_fields.remove('groups')
+    #     model_fields.remove('user_permissions')
+    #     model_fields.remove('username')
+    #     print("================================= AdminUserHCTests ... admin_fields: =================================")
+    #     pprint(admin_add_fields)
+    #     print("================================= AdminUserHCTests ... model_fields: =================================")
+    #     pprint(model_fields)
+    #     print('------------------------------------------------------------------------------------------------------')
+    #     # expected_fields = ['email', 'uses_email_username', '']
+    #     admin_add_fields = set(admin_add_fields)
+    #     model_fields = set(model_fields)
+    #     # for field in current_admin.get_form(request).base_fields:
+    #     #     self.assertSetEqual
+    #     self.assertSetEqual(set(current_admin.get_form(request).base_fields), admin_add_fields)
+    #     self.assertSetEqual(set(current_admin.get_fields(request)), admin_add_fields)
+    #     self.assertSetEqual(model_fields, admin_add_fields)
+
+    def test_get_form_uses_custom_formfield_attrs_overrides(self):
+        current_admin = CustomUserAdmin(model=User, admin_site=AdminSite())
+        form = current_admin.get_form(request)
+        fields = form.base_fields
+        expected_values = deepcopy(current_admin.formfield_attrs_overrides)
+        expected_values = {key: value for key, value in expected_values.items() if key in fields}
+        actual_values = {}
+        for name, field_attrs in expected_values.items():
+            if 'size' in field_attrs and 'no_size_override' not in field_attrs:
+                input_size = float(fields[name].widget.attrs.get('maxlength', float("inf")))
+                field_attrs['size'] = str(int(min(int(field_attrs['size']), input_size)))  # Modify expected_values
+            actual_values[name] = {key: fields[name].widget.attrs.get(key) for key in field_attrs}
+
+        self.assertDictEqual(expected_values, actual_values)
+
+    def test_get_form_modifies_input_size_for_small_maxlength_fields(self):
+        current_admin = CustomUserAdmin(model=User, admin_site=AdminSite())
+        form = current_admin.get_form(request)
+        expected_values, actual_values = {}, {}
+        for name, field in form.base_fields.items():
+            if not current_admin.formfield_attrs_overrides.get(name, {}).get('no_size_override', False):
+                display_size = float(field.widget.attrs.get('size', float('inf')))
+                input_size = int(field.widget.attrs.get('maxlength', 0))
+                if input_size:
+                    expected_values[name] = str(int(min(display_size, input_size)))
+                    actual_values[name] = field.widget.attrs.get('size', '')
+
+        self.assertDictEqual(expected_values, actual_values)
