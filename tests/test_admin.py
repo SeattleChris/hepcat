@@ -12,13 +12,12 @@ from django.contrib.contenttypes.models import ContentType
 # from django.forms import ValidationError
 from classwork.admin import AdminSessionForm, ClassOfferAdmin, SessiontAdmin, ClassDayListFilter, RegistrationAdmin
 from classwork.admin import admin as main_admin
-from classwork.models import Session, ClassOffer, Subject  # , Location, Profile, Registration, Payment
+from classwork.models import Session, ClassOffer, Subject, Registration  # , Location, Profile, Payment
 from users.admin import CustomUserAdmin
 from users.models import UserHC as User
 from datetime import date, time, timedelta
 from copy import deepcopy
 from types import GeneratorType
-from pprint import pprint
 
 
 class MockRequest:
@@ -250,7 +249,7 @@ class AdminClassDayListFilterTests(TestCase):
         subj = Subject.objects.create(version=Subject.VERSION_CHOICES[0][0], title="test_subj")
         kwargs = {'subject': subj, 'session': sess1, 'start_time': time(19, 0)}
         classoffers = [ClassOffer.objects.create(class_day=k, **kwargs) for k, v in ClassOffer.DOW_CHOICES if k % 2]
-        expected_lookup_list = [(k, v) for k, v in ClassOffer.DOW_CHOICES if k % 2]
+        expected_lookup = ((k, v) for k, v in ClassOffer.DOW_CHOICES if k % 2)
 
         current_admin = ClassOfferAdmin(model=ClassOffer, admin_site=AdminSite())
         day_filter = ClassDayListFilter(request, {}, ClassOffer, current_admin)
@@ -258,11 +257,8 @@ class AdminClassDayListFilterTests(TestCase):
 
         self.assertEqual(len(classoffers), 3)
         self.assertEqual(ClassOffer.objects.count(), 3)
-        self.assertEqual(len(lookup), 3)
         self.assertIsInstance(lookup, GeneratorType)
-        self.assertEquals(expected_lookup_list, list(lookup))
-        # qs = current_admin.get_queryset(request)
-        # query = day_filter.queryset(request, qs)
+        self.assertEquals(list(expected_lookup), list(lookup))
 
     def test_admin_classoffer_queryset(self):
         key_day, name = date.today(), 'sess1'
@@ -271,23 +267,68 @@ class AdminClassDayListFilterTests(TestCase):
         subj = Subject.objects.create(version=Subject.VERSION_CHOICES[0][0], title="test_subj")
         kwargs = {'subject': subj, 'session': sess1, 'start_time': time(19, 0)}
         classoffers = [ClassOffer.objects.create(class_day=k, **kwargs) for k, v in ClassOffer.DOW_CHOICES if k % 2]
-        expected_lookup = ((k, v) for k, v in ClassOffer.DOW_CHOICES if k % 2)
+        expected_lookup_list = [(k, v) for k, v in ClassOffer.DOW_CHOICES if k % 2]
 
         current_admin = ClassOfferAdmin(model=ClassOffer, admin_site=AdminSite())
         day_filter = ClassDayListFilter(request, {}, ClassOffer, current_admin)
-        lookup = day_filter.lookups(request, current_admin)
         model_qs = current_admin.get_queryset(request)
-        expected_qs = (model_qs.filter(class_day=key) for key, value in expected_lookup)
+        expected_qs = model_qs.filter(class_day__in=(k for k, v in expected_lookup_list))
         qs = day_filter.queryset(request, model_qs)
-        # query = day_filter.queryset(request, qs)
 
         self.assertEqual(len(classoffers), 3)
-        self.assertEqual(ClassOffer.objects.count(), 3)
-        self.assertEqual(len(lookup), 3)
+        self.assertSetEqual(set(expected_qs), set(qs))
+
+    def test_admin_registration_lookup(self):
+        key_day, name = date.today(), 'sess1'
+        publish = key_day - timedelta(days=7*3+1)
+        sess1 = Session.objects.create(name=name, key_day_date=key_day, max_day_shift=6, publish_date=publish)
+        subj = Subject.objects.create(version=Subject.VERSION_CHOICES[0][0], title="test_subj")
+        kwargs = {'subject': subj, 'session': sess1, 'start_time': time(19, 0)}
+        classoffers = [ClassOffer.objects.create(class_day=k, **kwargs) for k, v in ClassOffer.DOW_CHOICES if k % 2]
+        expected_lookup = ((k, v) for k, v in ClassOffer.DOW_CHOICES if k % 2)
+
+        password = environ.get('SUPERUSER_PASS', '')
+        admin_user_email = environ.get('SUPERUSER_EMAIL', settings.ADMINS[0][1])
+        user_model = User.objects.create_superuser(admin_user_email, admin_user_email, password)
+        user_model.first_name = "test_super"
+        user_model.last_name = "test_user"
+        user_model.save()
+        user = user_model.profile
+        registrations = [Registration.objects.create(student=user, classoffer=ea) for ea in classoffers]
+
+        current_admin = RegistrationAdmin(model=Registration, admin_site=AdminSite())
+        day_filter = ClassDayListFilter(request, {}, Registration, current_admin)
+        lookup = day_filter.lookups(request, current_admin)
+
+        self.assertEqual(len(registrations), 3)
+        self.assertEqual(Registration.objects.count(), 3)
         self.assertIsInstance(lookup, GeneratorType)
         self.assertEquals(list(expected_lookup), list(lookup))
-        self.assertEquals(expected_qs, qs)
-    # end AdminClassDayListFilterTests
+
+    def test_admin_registration_queryset(self):
+        key_day, name = date.today(), 'sess1'
+        publish = key_day - timedelta(days=7*3+1)
+        sess1 = Session.objects.create(name=name, key_day_date=key_day, max_day_shift=6, publish_date=publish)
+        subj = Subject.objects.create(version=Subject.VERSION_CHOICES[0][0], title="test_subj")
+        kwargs = {'subject': subj, 'session': sess1, 'start_time': time(19, 0)}
+        classoffers = [ClassOffer.objects.create(class_day=k, **kwargs) for k, v in ClassOffer.DOW_CHOICES if k % 2]
+        expected_lookup = ((k, v) for k, v in ClassOffer.DOW_CHOICES if k % 2)
+
+        password = environ.get('SUPERUSER_PASS', '')
+        admin_user_email = environ.get('SUPERUSER_EMAIL', settings.ADMINS[0][1])
+        user_model = User.objects.create_superuser(admin_user_email, admin_user_email, password)
+        user = user_model.profile
+        registrations = [Registration.objects.create(student=user, classoffer=ea) for ea in classoffers]
+
+        current_admin = RegistrationAdmin(model=Registration, admin_site=AdminSite())
+        day_filter = ClassDayListFilter(request, {}, Registration, current_admin)
+        model_qs = current_admin.get_queryset(request)
+        expected_qs = model_qs.filter(classoffer__class_day__in=(k for k, v in expected_lookup))
+        qs = day_filter.queryset(request, model_qs)
+
+        self.assertEqual(len(registrations), 3)
+        self.assertEqual(model_qs.model, Registration)
+        self.assertSetEqual(set(expected_qs), set(qs))
 
 
 class AdminUserHCTests(TestCase):
