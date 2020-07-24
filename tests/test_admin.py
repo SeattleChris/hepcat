@@ -264,6 +264,29 @@ class AdminClassDayListFilterTests(TestCase):
         # qs = current_admin.get_queryset(request)
         # query = day_filter.queryset(request, qs)
 
+    def test_admin_classoffer_queryset(self):
+        key_day, name = date.today(), 'sess1'
+        publish = key_day - timedelta(days=7*3+1)
+        sess1 = Session.objects.create(name=name, key_day_date=key_day, max_day_shift=6, publish_date=publish)
+        subj = Subject.objects.create(version=Subject.VERSION_CHOICES[0][0], title="test_subj")
+        kwargs = {'subject': subj, 'session': sess1, 'start_time': time(19, 0)}
+        classoffers = [ClassOffer.objects.create(class_day=k, **kwargs) for k, v in ClassOffer.DOW_CHOICES if k % 2]
+        expected_lookup = ((k, v) for k, v in ClassOffer.DOW_CHOICES if k % 2)
+
+        current_admin = ClassOfferAdmin(model=ClassOffer, admin_site=AdminSite())
+        day_filter = ClassDayListFilter(request, {}, ClassOffer, current_admin)
+        lookup = day_filter.lookups(request, current_admin)
+        model_qs = current_admin.get_queryset(request)
+        expected_qs = (model_qs.filter(class_day=key) for key, value in expected_lookup)
+        qs = day_filter.queryset(request, model_qs)
+        # query = day_filter.queryset(request, qs)
+
+        self.assertEqual(len(classoffers), 3)
+        self.assertEqual(ClassOffer.objects.count(), 3)
+        self.assertEqual(len(lookup), 3)
+        self.assertIsInstance(lookup, GeneratorType)
+        self.assertEquals(list(expected_lookup), list(lookup))
+        self.assertEquals(expected_qs, qs)
     # end AdminClassDayListFilterTests
 
 
