@@ -6,16 +6,32 @@ from os import environ
 from django.contrib.admin.sites import AdminSite
 from django.contrib.admin.models import LogEntry
 from django.contrib.auth.models import Permission
+from django.contrib.auth.forms import UserChangeForm  # , UserCreationForm
 from django.contrib.sessions.models import Session as Session_contrib
 from django.contrib.contenttypes.models import ContentType
 # from django.forms import ValidationError
-# from django.contrib import admin as default_admin
-from classwork.admin import AdminSessionForm, SessiontAdmin, admin as main_admin
-from classwork.models import Session  # , Subject, ClassOffer, Location, Profile, Registration, Payment
+from classwork.admin import AdminSessionForm, ClassOfferAdmin, SessiontAdmin, ClassDayListFilter, RegistrationAdmin
+from classwork.admin import admin as main_admin
+from classwork.models import Session, ClassOffer, Subject  # , Location, Profile, Registration, Payment
+from users.admin import CustomUserAdmin
 from users.models import UserHC as User
-from datetime import date, timedelta
-# from django.contrib.auth import get_user_model
-# User = get_user_model()
+from datetime import date, time, timedelta
+from copy import deepcopy
+from types import GeneratorType
+from pprint import pprint
+
+
+class MockRequest:
+    pass
+
+
+class MockSuperUser:
+    def has_perm(self, perm):
+        return True
+
+
+request = MockRequest()
+request.user = MockSuperUser()
 
 
 class AdminSetupTests(TestCase):
@@ -82,12 +98,7 @@ class AdminSessionModelManagement(TestCase):
         """ If we need an admin login, this will be the needed dictionary to pass as kwargs. """
         password = environ.get('SUPERUSER_PASS', '')
         admin_user_email = environ.get('SUPERUSER_EMAIL', settings.ADMINS[0][1])
-        # user = User.objects.create_user(email=admin_user_email, is_admin=True)
-        user = User.objects.create_superuser(admin_user_email, admin_user_email, password)
-        # user.set_password(password)
-        # user.save()
-        print('----------------- Made User ----------------------')
-        print(user.username)
+        User.objects.create_superuser(admin_user_email, admin_user_email, password)
         return {'username': admin_user_email, 'password': password}
 
     def response_after_login(self, url, client):
@@ -95,26 +106,16 @@ class AdminSessionModelManagement(TestCase):
         get_response = client.get(url)
         if 'url' in get_response:
             login_kwargs = self.get_login_kwargs()
-            login_attempt = client.post(get_response.url, login_kwargs)
-            print('===========================================')
-            print(login_attempt)
+            client.post(get_response.url, login_kwargs)
             get_response = client.get(url)
         return get_response
 
     def test_admin_can_create_first_session(self):
         """ The first Session can be made, even though later Sessions get defaults from existing ones. """
-        # from pprint import pprint
         c = Client()
         add_url = '/admin/classwork/session/add/'
         login_kwargs = self.get_login_kwargs()
         login_try = c.login(**login_kwargs)
-        # print('==================================================================')
-        # pprint(login_try)
-        # get_add_template = c.get(add_url)
-        # get_add_template = self.response_after_login(add_url, c)
-        # print('==================================================================')
-        # pprint(get_add_template)
-        # print('==================================================================')
         key_day, name = date.today(), 'test_create'
         kwargs = {'key_day_date': key_day, 'name': name}
         kwargs['max_day_shift'] = 2
@@ -124,15 +125,9 @@ class AdminSessionModelManagement(TestCase):
         kwargs['publish_date'] = key_day - timedelta(days=7*3+1)
         kwargs['expire_date'] = key_day + timedelta(days=7+1)
         post_response = c.post(add_url, kwargs, follow=True)
-        # pprint(post_response)
-        # print('==================================================================')
-        # if 'url' in post_response:
-        #     redirect_response = c.get(post_response.url)
-        #     pprint(redirect_response)
         sess = Session.objects.filter(name=name).first()
 
         self.assertTrue(login_try)
-        # self.assertIsInstance(get_add_template, get_add_template)
         self.assertEquals(post_response.status_code, 200)
         self.assertIsNotNone(sess)
         self.assertIsInstance(sess, Session)
@@ -143,9 +138,6 @@ class AdminSessionModelManagement(TestCase):
         publish = key_day - timedelta(days=7*3+1)
         first_sess = Session.objects.create(name=name, key_day_date=key_day, num_weeks=5, publish_date=publish)
         sess = Session.objects.filter(name=name).first()
-        self.assertIsNotNone(sess)
-        self.assertIsInstance(sess, Session)
-        self.assertEquals(first_sess, sess)
 
         c = Client()
         add_url = '/admin/classwork/session/add/'
@@ -159,19 +151,186 @@ class AdminSessionModelManagement(TestCase):
         kwargs['break_weeks'] = 0
         kwargs['publish_date'] = key_day - timedelta(days=7*3+1)
         kwargs['expire_date'] = key_day + timedelta(days=7+1)
-
-        self.assertTrue(login_try)
-        # with self.assertRaises(ValidationError):
         post_response = c.post(add_url, kwargs, follow=True)
         template_target = 'admin/classwork/session/change_form.html'
-        self.assertIn(template_target, post_response.template_name)
-        print(post_response.template_name)
-        self.assertEquals(post_response.status_code, 200)
         second_sess = Session.objects.filter(name=name).first()
-        # pprint(second_sess)
+
+        self.assertIsNotNone(sess)
+        self.assertIsInstance(sess, Session)
+        self.assertEquals(first_sess, sess)
+        self.assertTrue(login_try)
+        self.assertIn(template_target, post_response.template_name)
+        self.assertEquals(post_response.status_code, 200)
         self.assertGreater(first_sess.end_date, second_sess.start_date)
+
+    def test_form_clean_validation_error_message(self):
+        key_day, name = date.today(), 'first'
+        publish = key_day - timedelta(days=7*3+1)
+        sess = Session.objects.create(name=name, key_day_date=key_day, num_weeks=5, publish_date=publish)
+
+        c = Client()
+        add_url = '/admin/classwork/session/add/'
+        login_kwargs = self.get_login_kwargs()
+        login_try = c.login(**login_kwargs)
+        key_day += timedelta(days=7)
+        kwargs = {'key_day_date': key_day, 'name': 'test_create'}
+        kwargs['max_day_shift'] = -2
+        kwargs['skip_weeks'] = 0
+        kwargs['flip_last_day'] = True
+        post_response = c.post(add_url, kwargs)
+        errors = post_response.context_data.get('errors', [[]])
+        string = "Overlapping class dates with those settings. "
+        string += "You could move the other class days to happen after the main day, "
+        # string += "You could "
+        string += "add a break week on the previous session, or otherwise change when this session starts. "
+
+        self.assertTrue(login_try)
+        self.assertIsNotNone(sess)
+        self.assertIsInstance(sess, Session)
+        self.assertEqual(string, errors[-1][0])
+        # with self.assertRaises(ValidationError):
+        #     c.post(add_url, kwargs)
 
     @skip("Not Implemented")
     def test_auto_correct_on_flip_but_no_skip(self):
         # TODO: write test for when flip_last_day is True, but skip_weeks == 0.
         pass
+
+
+class AdminClassOfferTests(TestCase):
+
+    def test_admin_uses_correct_admin(self):
+        registered_admins_dict = main_admin.site._registry
+        sess_admin = registered_admins_dict.get(ClassOffer, None)
+        self.assertIsInstance(sess_admin, ClassOfferAdmin)
+
+    def test_time_column(self):
+        key_day, name = date.today(), 'first'
+        publish = key_day - timedelta(days=7*3+1)
+        sess1 = Session.objects.create(name=name, key_day_date=key_day, num_weeks=5, publish_date=publish)
+        sess2 = Session.objects.create(name='second')
+        subj = Subject.objects.create(version=Subject.VERSION_CHOICES[0][0], num_minutes=60, title="test_subj")
+        subj2 = Subject.objects.create(version=Subject.VERSION_CHOICES[0][0], num_minutes=90, title="subj2")
+        first = ClassOffer.objects.create(subject=subj, session=sess1, start_time=time(19, 0))
+        second = ClassOffer.objects.create(subject=subj, session=sess2, start_time=time(19, 30))
+        third = ClassOffer.objects.create(subject=subj2, session=sess2, start_time=time(19, 0))
+        current_admin = ClassOfferAdmin(model=ClassOffer, admin_site=AdminSite())
+
+        time_1 = current_admin.time(first)
+        time_2 = current_admin.time(second)
+        time_3 = current_admin.time(third)
+        expected_time_1 = '7pm - 8pm'
+        expected_time_2 = '7:30pm - 8:30pm'
+        expected_time_3 = '7:00pm - 8:30pm'
+
+        self.assertEqual(expected_time_1, time_1)
+        self.assertEqual(expected_time_2, time_2)
+        self.assertEqual(expected_time_3, time_3)
+
+    def test_time_not_set(self):
+        key_day, name = date.today(), 'first'
+        publish = key_day - timedelta(days=7*3+1)
+        sess1 = Session.objects.create(name=name, key_day_date=key_day, num_weeks=5, publish_date=publish)
+        subj = Subject.objects.create(version=Subject.VERSION_CHOICES[0][0], num_minutes=0, title="test_subj")
+        first = ClassOffer.objects.create(subject=subj, session=sess1, start_time=time(19, 0))
+        current_admin = ClassOfferAdmin(model=ClassOffer, admin_site=AdminSite())
+
+        time_1 = current_admin.time(first)
+        expected_time = 'Not Set'
+        self.assertEqual(expected_time, time_1)
+
+
+class AdminClassDayListFilterTests(TestCase):
+    # related_models = (ClassOfferAdmin, RegistrationAdmin)
+
+    def test_admin_classoffer_lookup(self):
+        key_day, name = date.today(), 'sess1'
+        publish = key_day - timedelta(days=7*3+1)
+        sess1 = Session.objects.create(name=name, key_day_date=key_day, max_day_shift=6, publish_date=publish)
+        subj = Subject.objects.create(version=Subject.VERSION_CHOICES[0][0], title="test_subj")
+        kwargs = {'subject': subj, 'session': sess1, 'start_time': time(19, 0)}
+        classoffers = [ClassOffer.objects.create(class_day=k, **kwargs) for k, v in ClassOffer.DOW_CHOICES if k % 2]
+        expected_lookup_list = [(k, v) for k, v in ClassOffer.DOW_CHOICES if k % 2]
+
+        current_admin = ClassOfferAdmin(model=ClassOffer, admin_site=AdminSite())
+        day_filter = ClassDayListFilter(request, {}, ClassOffer, current_admin)
+        lookup = day_filter.lookups(request, current_admin)
+
+        self.assertEqual(len(classoffers), 3)
+        self.assertEqual(ClassOffer.objects.count(), 3)
+        self.assertEqual(len(lookup), 3)
+        self.assertIsInstance(lookup, GeneratorType)
+        self.assertEquals(expected_lookup_list, list(lookup))
+        # qs = current_admin.get_queryset(request)
+        # query = day_filter.queryset(request, qs)
+
+    def test_admin_classoffer_queryset(self):
+        key_day, name = date.today(), 'sess1'
+        publish = key_day - timedelta(days=7*3+1)
+        sess1 = Session.objects.create(name=name, key_day_date=key_day, max_day_shift=6, publish_date=publish)
+        subj = Subject.objects.create(version=Subject.VERSION_CHOICES[0][0], title="test_subj")
+        kwargs = {'subject': subj, 'session': sess1, 'start_time': time(19, 0)}
+        classoffers = [ClassOffer.objects.create(class_day=k, **kwargs) for k, v in ClassOffer.DOW_CHOICES if k % 2]
+        expected_lookup = ((k, v) for k, v in ClassOffer.DOW_CHOICES if k % 2)
+
+        current_admin = ClassOfferAdmin(model=ClassOffer, admin_site=AdminSite())
+        day_filter = ClassDayListFilter(request, {}, ClassOffer, current_admin)
+        lookup = day_filter.lookups(request, current_admin)
+        model_qs = current_admin.get_queryset(request)
+        expected_qs = (model_qs.filter(class_day=key) for key, value in expected_lookup)
+        qs = day_filter.queryset(request, model_qs)
+        # query = day_filter.queryset(request, qs)
+
+        self.assertEqual(len(classoffers), 3)
+        self.assertEqual(ClassOffer.objects.count(), 3)
+        self.assertEqual(len(lookup), 3)
+        self.assertIsInstance(lookup, GeneratorType)
+        self.assertEquals(list(expected_lookup), list(lookup))
+        self.assertEquals(expected_qs, qs)
+    # end AdminClassDayListFilterTests
+
+
+class AdminUserHCTests(TestCase):
+
+    def test_admin_uses_correct_admin(self):
+        """ The admin site should use the CustomUserAdmin for the UserHC model. """
+        registered_admins_dict = main_admin.site._registry
+        user_admin = registered_admins_dict.get(User, None)
+        self.assertIsInstance(user_admin, CustomUserAdmin)
+
+    def test_admin_uses_expected_form(self):
+        """ The admin CustomUserAdmin utilizes the correct form. """
+        current_admin = CustomUserAdmin(model=User, admin_site=AdminSite())
+        form = getattr(current_admin, 'form', None)
+        form_class = UserChangeForm
+        self.assertEquals(form, form_class)
+        # self.assertIsInstance(form, form_class)
+
+    def test_get_form_uses_custom_formfield_attrs_overrides(self):
+        current_admin = CustomUserAdmin(model=User, admin_site=AdminSite())
+        form = current_admin.get_form(request)
+        fields = form.base_fields
+        expected_values = deepcopy(current_admin.formfield_attrs_overrides)
+        expected_values = {key: value for key, value in expected_values.items() if key in fields}
+        actual_values = {}
+        for name, field_attrs in expected_values.items():
+            if 'size' in field_attrs and 'no_size_override' not in field_attrs:
+                input_size = float(fields[name].widget.attrs.get('maxlength', float("inf")))
+                field_attrs['size'] = str(int(min(int(field_attrs['size']), input_size)))  # Modify expected_values
+            actual_values[name] = {key: fields[name].widget.attrs.get(key) for key in field_attrs}
+
+        self.assertDictEqual(expected_values, actual_values)
+
+    def test_get_form_modifies_input_size_for_small_maxlength_fields(self):
+        current_admin = CustomUserAdmin(model=User, admin_site=AdminSite())
+        form = current_admin.get_form(request)
+        expected_values, actual_values = {}, {}
+        for name, field in form.base_fields.items():
+            if not current_admin.formfield_attrs_overrides.get(name, {}).get('no_size_override', False):
+                display_size = float(field.widget.attrs.get('size', float('inf')))
+                input_size = int(field.widget.attrs.get('maxlength', 0))
+                if input_size:
+                    expected_values[name] = str(int(min(display_size, input_size)))
+                    actual_values[name] = field.widget.attrs.get('size', '')
+
+        self.assertDictEqual(expected_values, actual_values)

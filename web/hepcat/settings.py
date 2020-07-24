@@ -110,7 +110,7 @@ if os.environ.get('DB_TYPE') == 'mysql':
     DATABASES['default']['OPTIONS'] = {'charset': 'utf8mb4'}
     MAX_INDEX_CHARACTER_SIZE = 191
 FIXTURE_DIRS = ['tests/fixtures']
-if HOSTED_PYTHONANYWHERE and not LOCAL:
+if HOSTED_PYTHONANYWHERE and not LOCAL:  # pragma: no cover
     LOGNAME = os.environ.get('LOGNAME', DATABASES['default']['USER'])
     DB_NAME = DATABASES['default']['NAME']
     DATABASES['default']['NAME'] = LOGNAME + '$' + DB_NAME
@@ -135,7 +135,7 @@ USE_L10N = True
 USE_TZ = True
 # Static files (CSS, JavaScript, Images) https://docs.djangoproject.com/en/3.0/howto/static-files/
 USE_S3 = strtobool(os.environ.get('USE_S3', 'False'))
-if USE_S3:
+if USE_S3:  # pragma: no cover
     AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
     AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
     AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
@@ -183,12 +183,13 @@ EMAIL_USE_SSL = strtobool(os.environ.get('EMAIL_USE_SSL', 'False'))
 EMAIL_SUBJECT_PREFIX = '[' + os.environ.get('EMAIL_ADMIN_PREFIX', 'Django') + '] '
 if DEBUG or HOSTED_PYTHONANYWHERE:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-else:
+elif USE_S3:  # pragma: no cover
     # TODO: Choose appropriate Email backend
     EMAIL_BACKEND = 'django_ses.SESBackend'
-    # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     AWS_SES_REGION_NAME = os.environ.get('AWS_SES_REGION_NAME')
     AWS_SES_REGION_ENDPOINT = os.environ.get('AWS_SES_REGION_ENDPOINT')
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 # Django Newsletter
 # NEWSLETTER_CONFIRM_EMAIL = False
 # Using django-tinymce

@@ -154,9 +154,10 @@ class AdminSessionForm(ModelForm):
                 message += "You could "
             message += "add a break week on the previous session, or otherwise change when this session starts. "
             raise ValidationError(_(message), code='invalid')
-        if data.get('flip_last_day') and data.get('skip_weeks') == 0:
-            message = "Your selection of flipping the last class does not work with your zero skipped weeks input. "
-            raise ValidationError(_(message), code='invalid')
+        # The following condition does not occur because it has already been corrected in Session.clean()
+        # if data.get('flip_last_day') and data.get('skip_weeks') == 0:
+        #     message = "Your selection of flipping the last class does not work with your zero skipped weeks input. "
+        #     raise ValidationError(_(message), code='invalid')
         return data
 
     def full_clean(self):
