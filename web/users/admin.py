@@ -63,10 +63,10 @@ class CustomUserAdmin(UserAdmin):
                 for key, value in self.formfield_attrs_overrides[name].items():
                     field.widget.attrs[key] = value
             if not self.formfield_attrs_overrides.get(name, {}).get('no_size_override', False):
-                display_size = int(field.widget.attrs.get('size', 0))
-                input_size = int(field.widget.attrs.get('maxlength', 0))
+                display_size = field.widget.attrs.get('size', float("inf"))  # Cannot use float("inf") as an int.
+                input_size = field.widget.attrs.get('maxlength', None)
                 if input_size:
-                    field.widget.attrs['size'] = min(display_size, input_size) if display_size else input_size
+                    field.widget.attrs['size'] = str(int(min(float(display_size), float(input_size))))
         return form
 
     # def get_formsets_with_inlines(self, request, obj=None):
