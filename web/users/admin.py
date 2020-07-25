@@ -3,7 +3,7 @@ from django.db import models
 from django.forms import TextInput
 from django.contrib.auth.admin import UserAdmin
 from django.utils.translation import gettext_lazy as _
-from .models import UserHC, Staff, Student
+from .models import UserHC, StaffUser, StudentUser
 # Register your models here.
 
 

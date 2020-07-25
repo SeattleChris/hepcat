@@ -223,14 +223,14 @@ class UserHC(AbstractUser):
     # end class UserHC
 
 
-class Staff(UserHC):
+class StaffUser(UserHC):
 
     class Meta:
         proxy = True
         # verbose_plural_name = 'Staff'
 
 
-class Student(UserHC):
+class StudentUser(UserHC):
 
     class Meta:
         proxy = True

@@ -1,5 +1,5 @@
 from django import forms
-from .models import Profile, Payment, Registration, Notify  # , Session, ClassOffer
+from .models import Staff, Student, Payment, Registration, Notify  # , Session, ClassOffer
 from django.utils.translation import gettext_lazy as _
 # from django.urls import reverse_lazy
 # from django.shortcuts import render
@@ -22,7 +22,7 @@ class UserForm(forms.ModelForm):
 class ProfileForm(forms.ModelForm):
 
     class Meta:
-        model = Profile  # 1-to-1 with users.UserHC, also has .taken for classoffers
+        model = Student  # 1-to-1 with users.UserHC, also has .taken for classoffers
         fields = ['taken', ]
 
     # end class ProfileForm
@@ -183,7 +183,7 @@ class RegisterForm(forms.ModelForm):
         if cleaned_data.get('paid_by_other', False):
             # We need to now get the billing info for user who is paying
             # Assign the logged in user name & email to paid_by
-            paid_by = Profile.objects.get(user=user)
+            paid_by = Student.objects.get(user=user)
             cleaned_data['paid_by'] = paid_by
             # paid_by may have given the same email for friend user:
             #   - maybe friend is an existing user (who has a diff email)
@@ -214,7 +214,7 @@ class RegisterForm(forms.ModelForm):
                 print('friend found without using find_or_create_by_name')
             user = friend
         print(f'user as used for student profile {user}')
-        cleaned_data['student'] = Profile.objects.get(user=user)
+        cleaned_data['student'] = Student.objects.get(user=user)
         print(f"student profile: {cleaned_data['student']}")
         print(f"class selected: {cleaned_data['class_selected']}")
         return cleaned_data
