@@ -10,7 +10,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth import get_user_model
 from .forms import RegisterForm, PaymentForm  # , ProfileForm, UserForm
 from .models import (SiteContent, Resource, Location, ClassOffer, Subject,  # ? Session,
-                     Profile, Payment, Registration, Session)
+                     Staff, Student, Payment, Registration, Session)
 from datetime import datetime
 User = get_user_model()
 
@@ -42,11 +42,13 @@ def decide_session(sess=None, display_date=None):
 class AboutUsListView(ListView):
     """ Display details about Business and Staff """
     template_name = 'classwork/aboutus.html'
-    model = Profile
+    model = Staff
     context_object_name = 'profiles'
 
     def get_queryset(self):
-        staff = Profile.objects.filter(user__is_staff=True)  # TODO: sort them in some desired order.
+        staff = Staff.objects.filter(user__is_staff=True, user__is_active=True)
+        # TODO: sort them in some desired order.
+        staff = staff.order_by('listing', )
         return staff
 
     def get_context_data(self, **kwargs):
@@ -170,7 +172,7 @@ class ResourceDetailView(DetailView):
 class ProfileView(DetailView):
     """Each user has a page where they can see resources that have been made available to them. """
     template_name = 'classwork/user.html'
-    model = Profile
+    model = Student
     context_object_name = 'profile'
     pk_url_kwarg = 'id'
     # TODO: Work on the actual layout and presentation of the avail Resources
@@ -178,7 +180,7 @@ class ProfileView(DetailView):
 
     def get_object(self):
         # print('=== ProfileView get_object ====')
-        return Profile.objects.get(user=self.request.user)
+        return Student.objects.get(user=self.request.user)
 
     def get_context_data(self, **kwargs):
         """ Modify the context """

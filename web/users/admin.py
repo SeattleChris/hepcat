@@ -3,13 +3,13 @@ from django.db import models
 from django.forms import TextInput
 from django.contrib.auth.admin import UserAdmin
 from django.utils.translation import gettext_lazy as _
-from .models import UserHC
+from .models import UserHC, StaffUser, StudentUser
 # Register your models here.
 
 
 class CustomUserAdmin(UserAdmin):
     model = UserHC
-    list_display = ('first_name', 'last_name', 'username', 'is_student', 'is_teacher', 'is_admin', )
+    list_display = ('first_name', 'last_name', 'username', 'is_student', 'is_teacher', 'is_admin', 'is_active', )
     list_display_links = ('first_name', 'last_name', 'username', )
     list_filter = ('is_student', 'is_teacher', 'is_admin', 'is_staff', 'is_active', )  # , 'is_superuser',
     ordering = ('first_name', )
@@ -93,4 +93,22 @@ class CustomUserAdmin(UserAdmin):
     #     return inline_list
 
 
-admin.site.register(UserHC, CustomUserAdmin)
+class StaffUserAdmin(CustomUserAdmin):
+    model = StaffUser
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.filter(is_staff=True)
+
+
+class StudentUserAdmin(CustomUserAdmin):
+    model = StudentUser
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.filter(is_student=True)
+
+
+# admin.site.register(UserHC, CustomUserAdmin)
+admin.site.register(StaffUser, StaffUserAdmin)
+admin.site.register(StudentUser, StudentUserAdmin)

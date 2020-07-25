@@ -221,3 +221,16 @@ class UserHC(AbstractUser):
         return '<UserHC: {} >'.format(self.full_name)
 
     # end class UserHC
+
+
+class StaffUser(UserHC):
+
+    class Meta:
+        proxy = True
+        # verbose_plural_name = 'Staff'
+
+
+class StudentUser(UserHC):
+
+    class Meta:
+        proxy = True

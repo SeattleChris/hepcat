@@ -452,7 +452,7 @@ class Session(models.Model):
 
 class ClassOffer(models.Model):
     """ Different classes can be offered at different times and scheduled for later publication.
-        This model depends on the following models: Subject, Session, Profile (for teacher association), Location
+        This model depends on the following models: Subject, Session, Staff (for teacher association), Location
         Various default values for this model are determined by values in the settings file.
     """
     DOW_CHOICES = (
@@ -472,7 +472,7 @@ class ClassOffer(models.Model):
     manager_approved = models.BooleanField(default=settings.ASSUME_CLASS_APPROVE, )
     location = models.ForeignKey('Location', on_delete=models.SET_NULL, null=True, )
     # TODO: later on teachers will selected from users - teachers.
-    teachers = models.CharField(max_length=125, default='Chris Chapman', )
+    # teachers = models.CharField(max_length=125, default='Chris Chapman', )
     class_day = models.SmallIntegerField(choices=DOW_CHOICES, default=settings.DEFAULT_KEY_DAY, )
     start_time = models.TimeField()
     skip_weeks = models.PositiveSmallIntegerField(_('skipped mid-session class weeks'), default=0, )
@@ -582,19 +582,57 @@ class ClassOffer(models.Model):
 
 class Profile(models.Model):
     """ Extending user model to have profile fields as appropriate as either a student or a staff member. """
+
     # TODO: Allow users to modify their profile.
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True, )
-    bio = models.TextField(max_length=1530, blank=True, )  # Current for Chris is 1349 characters!
+    bio = models.TextField(max_length=760, blank=True, )  # Staff will override max_length to be bigger.
+    date_added = models.DateField(auto_now_add=True, )
+    date_modified = models.DateField(auto_now=True, )
+
+    class Meta:
+        abstract = True
+
+    @property
+    def username(self):
+        return self.user.username
+
+    @property
+    def full_name(self):
+        return self.user.full_name
+
+    def get_full_name(self):
+        return self.user.get_full_name()
+
+    def __str__(self):
+        return self.full_name
+
+    def __repr__(self):
+        return "<Profile: {} | User id: {} >".format(self.full_name, self.user.id)
+
+
+class Staff(Profile):
+    """ A profile model appropriate for Staff users. """
+
+    listing = models.SmallIntegerField(help_text=_("listing order"), default=0, blank=True, )
+    tax_doc = models.CharField(max_length=9, blank=True, )
+    taught = models.ManyToManyField(ClassOffer, related_name='teachers', )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._meta.get_field('bio').max_length = 1530  # Current for Chris is 1349 characters!
+
+
+class Student(Profile):
+    """ A profile model appropriate for Student users. """
+
     level = models.IntegerField(_('skill level'), default=0, blank=True, )
     taken = models.ManyToManyField(ClassOffer, related_name='students', through='Registration', )
     # interest = models.ManyToManyField(Subject, related_names='interests', through='Requests', )
-    credit = models.FloatField(_('class payment credit'), default=0, )
+    # credit = models.FloatField(_('class payment credit'), default=0, )
+    credit = models.DecimalField(max_digits=6, decimal_places=2, default=0.0)
     # TODO: Implement self-referencing key for a 'refer-a-friend' discount.
     # refer = models.ForeignKey(User, symmetrical=False, on_delete=models.SET_NULL,
     #                           null=True, blank=True, related_names='referred', )
-
-    date_added = models.DateField(auto_now_add=True, )
-    date_modified = models.DateField(auto_now=True, )
     # TODO: The following properties could be extracted further to allow the program admin user
     # to set their own rules for number of versions needed and other version translation decisions.
 
@@ -733,17 +771,6 @@ class Profile(models.Model):
         extra['done'] = True
         return goal, data, extra
 
-    @property
-    def username(self):
-        return self.user.username
-
-    @property
-    def full_name(self):
-        return self.user.full_name
-
-    def get_full_name(self):
-        return self.user.get_full_name()
-
     def compute_level(self):
         if self.taken.count() < 1:
             return 0
@@ -761,18 +788,23 @@ class Profile(models.Model):
             self.level = self.compute_level()
         super().save(*args, **kwargs)
 
-    def __str__(self):
-        return self.full_name
-
-    def __repr__(self):
-        return "<Profile: {} | User id: {} >".format(self.full_name, self.user.id)
-
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_or_update_user_profile(sender, instance, created, **kwargs):
-    if created:
-        Profile.objects.create(user=instance)
-    instance.profile.save()
+    profile = None
+    if instance.is_student:
+        if getattr(instance, 'student', None):
+            instance.student.save()
+        else:
+            profile = Student.objects.create(user=instance)
+    if instance.is_staff:
+        if getattr(instance, 'staff', None):
+            instance.staff.save()
+        else:
+            profile = Staff.objects.create(user=instance)
+    if profile:
+        print(f"Made a new Profile! {profile} ")
+        # instance.profile = profile
 
 
 class PaymentManager(models.Manager):
@@ -780,8 +812,8 @@ class PaymentManager(models.Manager):
     def classRegister(self, register=None, student=None, paid_by=None, **extra_fields):
         """ Used for students registering for classoffers, which is the most common usage of our payments """
         print("===== Payment.objects.classRegister (PaymentManager) ======")
-        if not isinstance(student, Profile):
-            raise TypeError('We need a user Profile passed here.')
+        if not isinstance(student, Student):
+            raise TypeError('We need a user Student profile passed here.')
         print(student)
 
         full_price, pre_pay_discount, credit_applied = 0, 0, 0
@@ -812,7 +844,7 @@ class PaymentManager(models.Manager):
         # TODO: Insert logic to determine if they owe full_total or pre_total
         paid_by = paid_by if paid_by else student
         user = paid_by.user
-        # TODO: If billing address info added to user Profile, let
+        # TODO: If billing address info added to user Student profile, let
         # Payment.objects.classRegister get that info from user profile
 
         # print("------ Check some pricing processesing ")
@@ -858,8 +890,8 @@ class PaymentManager(models.Manager):
 class Payment(BasePayment):
     """ Payment Processing """
     objects = PaymentManager()
-    student = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True, related_name='payment', )
-    paid_by = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True, related_name='paid_for', )
+    student = models.ForeignKey(Student, on_delete=models.SET_NULL, null=True, related_name='payment', )
+    paid_by = models.ForeignKey(Student, on_delete=models.SET_NULL, null=True, related_name='paid_for', )
     full_price = models.DecimalField(max_digits=6, decimal_places=2, default='0.0', )
     pre_pay_discount = models.DecimalField(max_digits=6, decimal_places=2, default='0.0', )
     multiple_purchase_discount = models.DecimalField(max_digits=6, decimal_places=2, default='0.0', )
@@ -972,10 +1004,10 @@ class Payment(BasePayment):
 
 
 class Registration(models.Model):
-    """ This is an intermediary model between a user Profile and the ClassOffers they are enrolled in.
+    """ This is an intermediary model between a user Student profile and the ClassOffers they are enrolled in.
         Also used to create the class check-in view for the staff.
     """
-    student = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True, )
+    student = models.ForeignKey(Student, on_delete=models.SET_NULL, null=True, )
     classoffer = models.ForeignKey(ClassOffer, on_delete=models.SET_NULL, null=True, )
     payment = models.ForeignKey(Payment, on_delete=models.SET_NULL, null=True, blank=True, )
     paid = models.BooleanField(default=False, )

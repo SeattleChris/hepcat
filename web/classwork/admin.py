@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from django.db import models
 from django.conf import settings
 from .models import (SiteContent, Resource, Subject, Session, ClassOffer,
-                     Profile, Payment, Registration, Location)
+                     Staff, Student, Payment, Registration, Location)
 # from .helper import date_with_day
 from datetime import timedelta, time, datetime as dt
 
@@ -60,7 +60,7 @@ class ResourceInline(admin.StackedInline):
 
 
 class StudentClassInline(admin.TabularInline):
-    """ Admin can attach a class Registration while on the Profile add/change form. """
+    """ Admin can attach a class Registration while on the Student profile add/change form. """
     model = Registration
     extra = 2
 
@@ -193,15 +193,31 @@ class SessiontAdmin(admin.ModelAdmin):
     breaks.short_description = 'breaks'
 
 
-class ProfileAdmin(admin.ModelAdmin):
-    """ Admin can modify and view Profiles of all users. """
-    model = Profile
+class StaffAdmin(admin.ModelAdmin):
+    """ Admin can modify and view Staff user profiles. """
+    model = Staff
+    list_display = ('__str__', 'username', 'listing', 'bio_done', 'tax', )
+    list_display_links = ('__str__', 'username', )
+    # TODO: Allow listing to be editable on Admin list view.
+    list_filter = ('user__is_staff', 'user__is_active', )
+    ordering = ('date_modified', 'date_added', )
+    fields = (('user', 'listing', 'tax_doc'), 'bio', )
+
+    def bio_done(self, obj): return True if len(obj.bio) > 0 else False
+    def tax(self, obj): return True if len(obj.tax_doc) > 0 else False
+    bio_done.boolean = True
+    tax.boolean = True
+
+
+class StudentAdmin(admin.ModelAdmin):
+    """ Admin can modify and view Student user profiles. """
+    model = Student
     list_display = ('__str__', 'username', 'max_subject', 'max_level', 'level', 'beg_done', 'l2_done', 'l3_done', )
     list_display_links = ('__str__', 'username', )
-    list_filter = ('user__is_staff', 'taken__session', 'taken__subject__level', 'level', )  # , 'taken__subject',
+    list_filter = ('user__is_staff', 'taken__session', 'taken__subject__level', 'level', )    # , 'taken__subject',
     list_select_related = True
-    # filter_horizontal = ('taken',)
     ordering = ('date_modified', 'date_added', )
+    # filter_horizontal = ('taken',)
     inlines = (StudentClassInline, )
     fields = (('user', 'level', 'credit'), 'bio', )
 
@@ -235,7 +251,8 @@ admin.site.index_title = 'Admin Home'
 admin.site.register(Subject, SubjectAdmin)
 admin.site.register(ClassOffer, ClassOfferAdmin)
 admin.site.register(Session, SessiontAdmin)
-admin.site.register(Profile, ProfileAdmin)
+admin.site.register(Staff, StaffAdmin)
+admin.site.register(Student, StudentAdmin)
 admin.site.register(Registration, RegistrationAdmin)
 # For the following: each model in the tuple for the first parameter will use default admin.
 admin.site.register((SiteContent, Payment, Location, Resource))

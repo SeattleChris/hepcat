@@ -248,11 +248,19 @@ Current Status:
 ## Sign Up & User Accounts
 
 - [ ] Class sign up as anonymous process:
-  - [x] Create the account, sign-up for class, allow payment
+  - [x] Create the account, sign-up for class, allow payment.
   - [ ] User is logged in on account creation?
-  - [ ] User has a randomly generated password, prompted to change on next login
-  - [ ] User confirms with email link. Prompted for password from the link
+  - [ ] User has a randomly generated password, prompted to change on next login.
+  - [ ] User confirms with email link. Prompted for password from the link.
   - [ ] If user never confirms, it does not stop them from joining future class.
+- [x] Admin for Users has proxy models to view Staff or Student users. Users can still be both.
+  - [x] These proxy models are not linked to from external apps. They only affect views in Admin.
+- [ ] Separate Profile models for Students and Staff
+  - [ ] Staff have bio, field to assist ordering in "about us" view, and employee/volunteer management data fields.
+  - [ ] Student have fields and methods for connecting to ClassOffers, Resources, and inspecting customer data.
+- [ ] Listener to always create Profile on new User, as well as always update. Connected one-to-one, cascade deletes.
+  - [x] Working when only one Profile model (not both Staff and Student profile models).
+  - [ ] Working with both Staff and Student profile models.
 
 ## Style & Layout
 
