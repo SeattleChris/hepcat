@@ -471,8 +471,7 @@ class ClassOffer(models.Model):
     _num_level = models.IntegerField(default=0, editable=False, )
     manager_approved = models.BooleanField(default=settings.ASSUME_CLASS_APPROVE, )
     location = models.ForeignKey('Location', on_delete=models.SET_NULL, null=True, )
-    # TODO: later on teachers will selected from users - teachers.
-    # teachers = models.CharField(max_length=125, default='Chris Chapman', )
+    teachers = models.ManyToManyField('Staff', related_name='taught', limit_choices_to={'user__is_active': True})
     class_day = models.SmallIntegerField(choices=DOW_CHOICES, default=settings.DEFAULT_KEY_DAY, )
     start_time = models.TimeField()
     skip_weeks = models.PositiveSmallIntegerField(_('skipped mid-session class weeks'), default=0, )
@@ -615,7 +614,7 @@ class Staff(Profile):
 
     listing = models.SmallIntegerField(help_text=_("listing order"), default=0, blank=True, )
     tax_doc = models.CharField(max_length=9, blank=True, )
-    taught = models.ManyToManyField(ClassOffer, related_name='teachers', )
+    # taught = models.ManyToManyField(ClassOffer, related_name='teachers', )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

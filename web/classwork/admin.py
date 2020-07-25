@@ -103,14 +103,14 @@ class ClassOfferAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {
             'fields': (
-                ('subject', 'session',),
-                ('location', 'teachers', 'manager_approved'),
-                ('class_day', 'start_time')
+                ('subject', 'session', ),
+                ('location', 'teachers', 'manager_approved', ),
+                ('class_day', 'start_time', ),
             ),
         }),
         ('Missed Classes', {
             'classes': ('collapse', ),
-            "fields": ('skip_weeks', 'skip_tagline'),
+            "fields": ('skip_weeks', 'skip_tagline', ),
         }),
     )
 
