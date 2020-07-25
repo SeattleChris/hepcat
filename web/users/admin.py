@@ -94,7 +94,7 @@ class CustomUserAdmin(UserAdmin):
 
 
 class StaffUserAdmin(CustomUserAdmin):
-    model = Staff
+    model = StaffUser
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -102,7 +102,7 @@ class StaffUserAdmin(CustomUserAdmin):
 
 
 class StudentUserAdmin(CustomUserAdmin):
-    model = Student
+    model = StudentUser
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -110,5 +110,5 @@ class StudentUserAdmin(CustomUserAdmin):
 
 
 # admin.site.register(UserHC, CustomUserAdmin)
-admin.site.register(Staff, StaffUserAdmin)
-admin.site.register(Student, StudentUserAdmin)
+admin.site.register(StaffUser, StaffUserAdmin)
+admin.site.register(StudentUser, StudentUserAdmin)
