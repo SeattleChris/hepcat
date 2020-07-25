@@ -613,7 +613,7 @@ class Profile(models.Model):
 class Staff(Profile):
     """ A profile model appropriate for Staff users. """
 
-    listing = models.SmallIntegerField(help_text=_("listing order"), blank=True, )
+    listing = models.SmallIntegerField(help_text=_("listing order"), default=0, blank=True, )
     tax_doc = models.CharField(max_length=9, blank=True, )
     taught = models.ManyToManyField(ClassOffer, related_name='teachers', )
 
