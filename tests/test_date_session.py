@@ -1,9 +1,5 @@
 from django.test import TransactionTestCase  # , TestCase
-# from unittest import skip
-# from django.forms import ValidationError
-from classwork.models import Session  # , Subject, ClassOffer, Location, Profile, Registration, Payment
-# from classwork.admin import AdminSessionForm, SessiontAdmin
-# from django.contrib import admin as default_admin
+from classwork.models import Session
 from datetime import date, timedelta
 
 INITIAL = {
@@ -35,8 +31,6 @@ early1_oth_skip = {
     "publish_date": "2020-05-08",
     "expire_date": "2020-06-12",
     }
-# no_skip = 'tests/fixtures/db_early_no_skip_session.json'  # max_day_shift=-2, skip_weeks=0, num_weeks=5
-# oth_skip = 'tests/fixtures/db_early1_oth_skip_session.json'  # max_day_shift=-2, skip_weeks=1, flip_last_day=True, num_weeks=5
 # Create your tests here.
 
 

@@ -37,7 +37,7 @@ class ClassDayListFilter(admin.SimpleListFilter):
         """ Returns the filtered queryset based on value provided in the query string, retrievable via self.value(). """
         # Compare the requested value to decide how to filter the queryset.
         field_key = 'class_day'
-        if isinstance(queryset.model, RegistrationAdmin.model):
+        if queryset.model == Registration:
             field_key = 'classoffer__' + field_key
         return queryset.filter(**{field_key: self.value()}) if self.value() else queryset
 
