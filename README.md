@@ -120,21 +120,34 @@ This is a specific subject, offered during a specific session. It includes infor
 * Move to `/web` directory for any of the following commands or locations for files and directories.
 * Give execute privileges to the manage.py file. Make sure it executes using Python 3.
 * Run `./manage.py migrate`
-* Run `./manage.py createsuperuser`
-  * input an admin username (this is temporary as it will be overwritten).
-  * input an email and password as prompted (the email will be used as the username).
+* Run `./manage.py createsu` which creates a superuser based on '.env' file settings.
+  * Alternative: `./manage.py createsuperuser`
+    * input an admin username (this is temporary as it will be overwritten).
+    * input an email and password as prompted (the email will be used as the username).
+    * This approach may have difficulties with the lack of a name, which may need to be fixed directly in the database.
 * Run `./manage.py runserver`
   * From here you should be able to login, but the username will be the provided admin email.
-  * Go to the admin pages. Update the admin account with a first and last name.
-  * Input the initial class structure content for: Session, Subject, ClassOffer
+  * Go to the admin pages. Confirm the admin account has a first and last name, or update as needed.
+  * Confirm the admin has both a Staff and a Student user profile (in the CLASSWORK section).
+  * Input the initial class structure content in the recommended order: Session, Subject, ClassOffer.
+  * Input initial 'Site Content' with a title of 'business_about' to be included in the about us page.
+  * Create a test or mock Payment and Registration
+    * If payments are on test mode, then use the site's process, paying mind to the PAYPAL_BUYER or other test buyer.
+      * Running locally, you'll get a 'This site can’t be reached' error, but will populate the database as needed.
+    * If payments are live, a mock version should be created for use in a test database for tests later on.
+  * Input other initial content for each model, aka row in the admin section of CLASSWORK.
 * Confirm `tests` directory is in the expected location.
 * Create database test fixture from the basic starter models put into the live database.
-  * `./manage.py dumpdata --indent 4 --exclude admin --exclude contenttypes > tests/db_basic.json`
-  * Confirm the contents, possibly editing as needed, of `tests/db_basic.json`
-  * Confirm all appropriate test classes load fixtures: `fixtures = ['tests/db_basic.json']`
-  * Create other fixtures as needed and add them to the fixtures array in the appropriate tests class
-* Move to top repo directory (if in '/web', then `cd ..`). Confirm tests work:
-  * `./web/manage.py test`
+  * `./manage.py dumpdata --indent 4 --exclude admin --exclude contenttypes > ../tests/fixtures/db_basic.json`
+    * Or modify the end of that line to reflect the desired location for your test data fixtures.
+  * Confirm the contents, possibly editing as needed, of `tests/db_basic.json`.
+    * Move any model data from  'users.userhc' or 'classwork.payment' to a new file named `db_hidden.json` in fixtures.
+    * Move any other model data with sensitive information (should not be public), to the `db_hidden.json` file.
+  * Confirm all appropriate test classes load fixtures: `fixtures = ['tests/db_basic.json', 'db_hidden.json', ]`.
+  * Create other fixtures as needed and add them to the fixtures array in the appropriate tests class.
+* Move to top repo directory (if in '/web', then `cd ..`).
+  * Confirm the `.gitignore` file excludes the `.env` and `*hidden.json` files, and others as needed.
+  * Confirm tests work with the command: `./web/manage.py test`
 * See [Tests] section below for further testing details and development.
 * See [Deployment] section below for deploying on Python Anywhere, AWS, etc.
 * ... More to be added later ...

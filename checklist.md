@@ -247,6 +247,7 @@ Current Status:
 
 ## Sign Up & User Accounts
 
+- [ ] Update login pages to say 'email' where it currently asks for 'username'.
 - [ ] Class sign up as anonymous process:
   - [x] Create the account, sign-up for class, allow payment.
   - [ ] User is logged in on account creation?
