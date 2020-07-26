@@ -291,378 +291,270 @@
     "model": "auth.permission",
     "pk": 33,
     "fields": {
-        "name": "Can add registration",
+        "name": "Can add profile",
         "content_type": 9,
-        "codename": "add_registration"
+        "codename": "add_profile"
     }
 },
 {
     "model": "auth.permission",
     "pk": 34,
     "fields": {
-        "name": "Can change registration",
+        "name": "Can change profile",
         "content_type": 9,
-        "codename": "change_registration"
+        "codename": "change_profile"
     }
 },
 {
     "model": "auth.permission",
     "pk": 35,
     "fields": {
-        "name": "Can delete registration",
+        "name": "Can delete profile",
         "content_type": 9,
-        "codename": "delete_registration"
+        "codename": "delete_profile"
     }
 },
 {
     "model": "auth.permission",
     "pk": 36,
     "fields": {
-        "name": "Can view registration",
+        "name": "Can view profile",
         "content_type": 9,
-        "codename": "view_registration"
+        "codename": "view_profile"
     }
 },
 {
     "model": "auth.permission",
     "pk": 37,
     "fields": {
-        "name": "Can add resource",
+        "name": "Can add session",
         "content_type": 10,
-        "codename": "add_resource"
+        "codename": "add_session"
     }
 },
 {
     "model": "auth.permission",
     "pk": 38,
     "fields": {
-        "name": "Can change resource",
+        "name": "Can change session",
         "content_type": 10,
-        "codename": "change_resource"
+        "codename": "change_session"
     }
 },
 {
     "model": "auth.permission",
     "pk": 39,
     "fields": {
-        "name": "Can delete resource",
+        "name": "Can delete session",
         "content_type": 10,
-        "codename": "delete_resource"
+        "codename": "delete_session"
     }
 },
 {
     "model": "auth.permission",
     "pk": 40,
     "fields": {
-        "name": "Can view resource",
+        "name": "Can view session",
         "content_type": 10,
-        "codename": "view_resource"
+        "codename": "view_session"
     }
 },
 {
     "model": "auth.permission",
     "pk": 41,
     "fields": {
-        "name": "Can add session",
+        "name": "Can add site content",
         "content_type": 11,
-        "codename": "add_session"
+        "codename": "add_sitecontent"
     }
 },
 {
     "model": "auth.permission",
     "pk": 42,
     "fields": {
-        "name": "Can change session",
+        "name": "Can change site content",
         "content_type": 11,
-        "codename": "change_session"
+        "codename": "change_sitecontent"
     }
 },
 {
     "model": "auth.permission",
     "pk": 43,
     "fields": {
-        "name": "Can delete session",
+        "name": "Can delete site content",
         "content_type": 11,
-        "codename": "delete_session"
+        "codename": "delete_sitecontent"
     }
 },
 {
     "model": "auth.permission",
     "pk": 44,
     "fields": {
-        "name": "Can view session",
+        "name": "Can view site content",
         "content_type": 11,
-        "codename": "view_session"
+        "codename": "view_sitecontent"
     }
 },
 {
     "model": "auth.permission",
     "pk": 45,
     "fields": {
-        "name": "Can add site content",
+        "name": "Can add subject",
         "content_type": 12,
-        "codename": "add_sitecontent"
+        "codename": "add_subject"
     }
 },
 {
     "model": "auth.permission",
     "pk": 46,
     "fields": {
-        "name": "Can change site content",
+        "name": "Can change subject",
         "content_type": 12,
-        "codename": "change_sitecontent"
+        "codename": "change_subject"
     }
 },
 {
     "model": "auth.permission",
     "pk": 47,
     "fields": {
-        "name": "Can delete site content",
+        "name": "Can delete subject",
         "content_type": 12,
-        "codename": "delete_sitecontent"
+        "codename": "delete_subject"
     }
 },
 {
     "model": "auth.permission",
     "pk": 48,
     "fields": {
-        "name": "Can view site content",
+        "name": "Can view subject",
         "content_type": 12,
-        "codename": "view_sitecontent"
+        "codename": "view_subject"
     }
 },
 {
     "model": "auth.permission",
     "pk": 49,
     "fields": {
-        "name": "Can add subject",
+        "name": "Can add resource",
         "content_type": 13,
-        "codename": "add_subject"
+        "codename": "add_resource"
     }
 },
 {
     "model": "auth.permission",
     "pk": 50,
     "fields": {
-        "name": "Can change subject",
+        "name": "Can change resource",
         "content_type": 13,
-        "codename": "change_subject"
+        "codename": "change_resource"
     }
 },
 {
     "model": "auth.permission",
     "pk": 51,
     "fields": {
-        "name": "Can delete subject",
+        "name": "Can delete resource",
         "content_type": 13,
-        "codename": "delete_subject"
+        "codename": "delete_resource"
     }
 },
 {
     "model": "auth.permission",
     "pk": 52,
     "fields": {
-        "name": "Can view subject",
+        "name": "Can view resource",
         "content_type": 13,
-        "codename": "view_subject"
+        "codename": "view_resource"
     }
 },
 {
     "model": "auth.permission",
     "pk": 53,
     "fields": {
-        "name": "Can add student",
+        "name": "Can add registration",
         "content_type": 14,
-        "codename": "add_student"
+        "codename": "add_registration"
     }
 },
 {
     "model": "auth.permission",
     "pk": 54,
     "fields": {
-        "name": "Can change student",
+        "name": "Can change registration",
         "content_type": 14,
-        "codename": "change_student"
+        "codename": "change_registration"
     }
 },
 {
     "model": "auth.permission",
     "pk": 55,
     "fields": {
-        "name": "Can delete student",
+        "name": "Can delete registration",
         "content_type": 14,
-        "codename": "delete_student"
+        "codename": "delete_registration"
     }
 },
 {
     "model": "auth.permission",
     "pk": 56,
     "fields": {
-        "name": "Can view student",
+        "name": "Can view registration",
         "content_type": 14,
-        "codename": "view_student"
+        "codename": "view_registration"
     }
 },
 {
     "model": "auth.permission",
     "pk": 57,
     "fields": {
-        "name": "Can add staff",
+        "name": "Can add user",
         "content_type": 15,
-        "codename": "add_staff"
+        "codename": "add_userhc"
     }
 },
 {
     "model": "auth.permission",
     "pk": 58,
     "fields": {
-        "name": "Can change staff",
+        "name": "Can change user",
         "content_type": 15,
-        "codename": "change_staff"
+        "codename": "change_userhc"
     }
 },
 {
     "model": "auth.permission",
     "pk": 59,
     "fields": {
-        "name": "Can delete staff",
+        "name": "Can delete user",
         "content_type": 15,
-        "codename": "delete_staff"
+        "codename": "delete_userhc"
     }
 },
 {
     "model": "auth.permission",
     "pk": 60,
     "fields": {
-        "name": "Can view staff",
-        "content_type": 15,
-        "codename": "view_staff"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 61,
-    "fields": {
-        "name": "Can add user",
-        "content_type": 16,
-        "codename": "add_userhc"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 62,
-    "fields": {
-        "name": "Can change user",
-        "content_type": 16,
-        "codename": "change_userhc"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 63,
-    "fields": {
-        "name": "Can delete user",
-        "content_type": 16,
-        "codename": "delete_userhc"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 64,
-    "fields": {
         "name": "Can view user",
-        "content_type": 16,
+        "content_type": 15,
         "codename": "view_userhc"
     }
 },
 {
-    "model": "auth.permission",
-    "pk": 65,
-    "fields": {
-        "name": "Can add staff user",
-        "content_type": 17,
-        "codename": "add_staffuser"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 66,
-    "fields": {
-        "name": "Can change staff user",
-        "content_type": 17,
-        "codename": "change_staffuser"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 67,
-    "fields": {
-        "name": "Can delete staff user",
-        "content_type": 17,
-        "codename": "delete_staffuser"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 68,
-    "fields": {
-        "name": "Can view staff user",
-        "content_type": 17,
-        "codename": "view_staffuser"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 69,
-    "fields": {
-        "name": "Can add student user",
-        "content_type": 18,
-        "codename": "add_studentuser"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 70,
-    "fields": {
-        "name": "Can change student user",
-        "content_type": 18,
-        "codename": "change_studentuser"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 71,
-    "fields": {
-        "name": "Can delete student user",
-        "content_type": 18,
-        "codename": "delete_studentuser"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 72,
-    "fields": {
-        "name": "Can view student user",
-        "content_type": 18,
-        "codename": "view_studentuser"
-    }
-},
-{
     "model": "sessions.session",
-    "pk": "cjjvzw5yhl3vmyfhk7xkzr0altwnnur8",
+    "pk": "mpgv3d2xw9dkp13uw0pyhqtwbrb50d2q",
     "fields": {
-        "session_data": "Y2RkNTQ3OWE4YWRkM2QzNDYyZWEzZjY2YzhiMWU0NDEzYzQ3M2M4Njp7Il9hdXRoX3VzZXJfaWQiOiIxIiwiX2F1dGhfdXNlcl9iYWNrZW5kIjoiZGphbmdvLmNvbnRyaWIuYXV0aC5iYWNrZW5kcy5Nb2RlbEJhY2tlbmQiLCJfYXV0aF91c2VyX2hhc2giOiI2ODkzZDAwMWY2NmZiMjEzM2Q4NjIyOTA1ZGI3ZTVhY2U1MmY4NDdjIn0=",
-        "expire_date": "2020-08-08T21:56:09.595Z"
+        "session_data": "NjdmZTM2NDliOTJlN2U0MzI3MzVmYjRiNzg2YWZiNTU2Njg0YTBiZDp7Il9hdXRoX3VzZXJfaWQiOiIxIiwiX2F1dGhfdXNlcl9iYWNrZW5kIjoiZGphbmdvLmNvbnRyaWIuYXV0aC5iYWNrZW5kcy5Nb2RlbEJhY2tlbmQiLCJfYXV0aF91c2VyX2hhc2giOiIyZWZjNzIyYWY0ZmM2ZTlhZmU4ZWZjODRjMTNiMmQyZGM1ZjA2NDk5In0=",
+        "expire_date": "2020-07-06T09:07:37.238Z"
     }
 },
 {
     "model": "classwork.sitecontent",
     "pk": 1,
     "fields": {
-        "name": "business_about",
-        "text": "HepCat Productions, founded by Chris Chapman, is Seattle's premier organization for classes in Swing Dancing, Lindy Hop, and Authentic Jazz Dance. It hosts the city's longest-running all-ages Swing Dance, popular classes for all levels, and home to the American Lindy Hop Championship performance team - Zah-Zu-Zay. HepCat Productions has a goal of sharing the incredible joy of Lindy Hop and Swing Dancing while delivering high-quality instruction to its students.",
-        "date_added": "2020-07-25",
-        "date_modified": "2020-07-25"
+        "name": "Stuff",
+        "text": "site content text for the \"Stuff\" site content instance.",
+        "date_added": "2020-06-30",
+        "date_modified": "2020-06-30"
     }
 },
 {
@@ -675,9 +567,9 @@
         "city": "Seattle",
         "state": "WA",
         "zipcode": "98112",
-        "map_link": "https://goo.gl/maps/ik7NSTgFUTei6DYE6",
-        "date_added": "2020-07-25",
-        "date_modified": "2020-07-25"
+        "map_link": "https://goo.gl/maps/y9YgshubfpRg9GPp8",
+        "date_added": "2020-06-22",
+        "date_modified": "2020-06-22"
     }
 },
 {
@@ -686,19 +578,19 @@
     "fields": {
         "related_type": "Subject",
         "subject": 1,
-        "classoffer": null,
+        "classoffer": 1,
         "content_type": "text",
         "user_type": 1,
-        "avail": 0,
-        "expire": 2,
+        "avail": 200,
+        "expire": 0,
         "imagepath": "",
         "filepath": "",
         "link": "",
-        "text": "",
-        "title": "Your Beginning Class!",
-        "description": "You have signed up for the Beginning Swing Dance - Lindy Hop class!",
-        "date_added": "2020-07-25",
-        "date_modified": "2020-07-25"
+        "text": "After class congrats! This is the text content.",
+        "title": "Congrats on Finishing class!",
+        "description": "description of post-class resource.",
+        "date_added": "2020-06-30",
+        "date_modified": "2020-06-30"
     }
 },
 {
@@ -706,39 +598,37 @@
     "pk": 1,
     "fields": {
         "level": "Beg",
-        "level_num": "1.0",
         "version": "A",
         "title": "Beginning Swing Dance - Lindy Hop",
         "tagline_1": "Partner Not Required!",
-        "tagline_2": "No experience needed!",
-        "tagline_3": "",
+        "tagline_2": "No Experience Needed!",
         "num_weeks": 5,
         "num_minutes": 60,
-        "description": "Learn this fun dance and make new friends in this welcoming social activity. A dance partner is not needed as you'll be able to dance with a variety of others in the class. Whether you have two left feet, no dance experience, or if Lindy Hop (swing dancing) is something you'd like to add to your repertoire -- this is the class for you! As the original swing dance, Lindy Hop has it all -- from exciting and flashy to smooth and cool. Come join us in this fun & versatile dance and we'll get you dancing before you know it!",
+        "description": "Beg Class Description",
         "image": "",
         "full_price": "70.00",
         "pre_pay_discount": "5.00",
         "multiple_purchase_discount": "10.00",
         "qualifies_as_multi_class_discount": true,
-        "date_added": "2020-07-25",
-        "date_modified": "2020-07-25"
+        "date_added": "2020-06-22",
+        "date_modified": "2020-06-22"
     }
 },
 {
     "model": "classwork.session",
     "pk": 1,
     "fields": {
-        "name": "January_2020",
-        "key_day_date": "2020-01-09",
+        "name": "May_2020",
+        "key_day_date": "2020-04-30",
         "max_day_shift": -2,
         "num_weeks": 5,
         "skip_weeks": 0,
         "flip_last_day": false,
         "break_weeks": 0,
-        "publish_date": "2020-07-25",
-        "expire_date": "2020-01-17",
-        "date_added": "2020-07-25",
-        "date_modified": "2020-07-25"
+        "publish_date": "2020-04-03",
+        "expire_date": "2020-05-08",
+        "date_added": "2020-06-22",
+        "date_modified": "2020-06-28"
     }
 },
 {
@@ -748,17 +638,12 @@
         "subject": 1,
         "session": 1,
         "_num_level": 1,
-        "manager_approved": true,
         "location": 1,
+        "teachers": "Chris Chapman",
         "class_day": 3,
         "start_time": "19:00:00",
-        "skip_weeks": 0,
-        "skip_tagline": "",
-        "date_added": "2020-07-25",
-        "date_modified": "2020-07-25",
-        "teachers": [
-            1
-        ]
+        "date_added": "2020-06-22",
+        "date_modified": "2020-06-22"
     }
 },
 {
@@ -769,28 +654,6 @@
         "classoffer": 1,
         "payment": 1,
         "paid": false
-    }
-},
-{
-    "model": "classwork.student",
-    "pk": 1,
-    "fields": {
-        "bio": "",
-        "date_added": "2020-07-25",
-        "date_modified": "2020-07-25",
-        "level": 0,
-        "credit": "0.00"
-    }
-},
-{
-    "model": "classwork.staff",
-    "pk": 1,
-    "fields": {
-        "bio": "",
-        "date_added": "2020-07-25",
-        "date_modified": "2020-07-25",
-        "listing": 0,
-        "tax_doc": ""
     }
 }
 ]
