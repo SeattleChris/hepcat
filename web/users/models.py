@@ -24,12 +24,15 @@ class UserManagerHC(UserManager):
             by the UserManager, we are using .casefold(), which is better when
             dealing with some international character sets.
         """
-        email = email or ''
+        if not email:
+            return ''
+        if not isinstance(email, str):
+            raise TypeError(_("The email should be a string. "))
         # email = super().normalize_email(email)
         try:
             email_name, domain_part = email.strip().rsplit('@', 1)
-        except ValueError:
-            pass
+        except ValueError as e:
+            raise e
         else:
             email = email_name.casefold() + '@' + domain_part.casefold()
         return email
