@@ -2,7 +2,7 @@ from django.test import TestCase, TransactionTestCase
 from django.conf import settings
 from unittest import skip
 from .helper import SimpleModelTests
-from classwork.models import Location, Resource, SiteContent, Subject, ClassOffer, Profile
+from classwork.models import Location, Resource, SiteContent, Subject, ClassOffer, Staff, Student
 from classwork.models import Session, Payment, Registration, Notify
 from users.models import UserHC
 from datetime import date, time, timedelta, datetime as dt
@@ -25,6 +25,7 @@ class ResourceModelTests(SimpleModelTests, TransactionTestCase):
     Model = Resource
     repr_dict = {'Resource': 'related_type', 'Type': 'content_type'}
     str_list = ['title', 'related_type', 'content_type']
+    ProfileStudent = Student
 
     # Setup for publish method
     # Need a student user & profile
@@ -46,7 +47,7 @@ class ResourceModelTests(SimpleModelTests, TransactionTestCase):
     @skip("Not Implemented")
     def test_publish_not_view_if_not_joined(self):
         """ For a User NOT signed in a ClassOffer, determine they are NOT allowed to see an associated Resource. """
-        student = Profile.objects.get(id=1)
+        student = self.ProfileStudent.objects.first()
         classoffer = ClassOffer.objects.get(id=1)
         # classoffer settings - 'key_day_date': '2020-04-30', 'num_weeks': 5 ==> class ended already.
         resource = Resource.objects.get(id=1)
@@ -74,7 +75,7 @@ class ResourceModelTests(SimpleModelTests, TransactionTestCase):
     def test_publish_can_view_never_expired(self):
         """ For a User signed in a ClassOffer, determine they can view an associated never expired Resource. """
         print("=========================== ResourceModelTests - Running Here ========================================")
-        student = Profile.objects.get(user=1)
+        student = self.ProfileStudent.objects.first()
         classoffer = ClassOffer.objects.get(id=1)
         # classoffer settings - 'key_day_date': '2020-04-30', 'num_weeks': 5 ==> class ended already.
         resource = Resource.objects.get(id=1)
@@ -467,18 +468,55 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         self.assertEquals(model.num_level, expected)
 
 
-class ProfileModelTests(SimpleModelTests, TestCase):
-    Model = Profile
-    repr_dict = {'Profile': 'full_name', 'User id': 'user_id'}
-    str_list = ['full_name']
-    defaults = {'email': 'fake@site.com', 'password': '1234', 'first_name': 'fa', 'last_name': 'fake'}
+class ProfileModelTests(SimpleModelTests):
+    """ Common tests for models based on the abstract Profile model.  """
+    repr_dict = {'Profile': 'full_name', 'User id': 'user_id', }
+    str_list = ['full_name', ]
+    defaults = {'email': 'fake@site.com', 'password': '1234', 'first_name': 'fa', 'last_name': 'fake', }
+    model_specific_settings = {Staff: {'is_teacher': True, }, Student: {'is_student': True, }, }
+    profile_attribute = None
 
     def setUp(self):
         kwargs = self.defaults.copy()
+        model_settings = self.model_specific_settings[self.Model]
+        kwargs.update(model_settings)
         user = UserHC.objects.create_user(**kwargs)
         user.save()
         self.defaults = {}
-        self.instance = user.profile  # triggers self.create_model to update this model instead of creating one.
+        # profile_attribute = self.Model.__class__.__name__.lower()
+        # trigger self.create_model to update the profile model instead of creating one.
+        self.instance = getattr(user, self.profile_attribute, None)
+
+    def test_profile_and_user_same_username(self):
+        model = self.Model.objects.first()
+        user = UserHC.objects.first()
+        expected = user.username
+        self.assertEqual(model.user, user)
+        self.assertEqual(model.username, expected)
+
+    def test_profile_and_user_same_full_name(self):
+        model = self.instance
+        user = UserHC.objects.first()
+        expected = user.full_name
+        self.assertEqual(model.user, user)
+        self.assertEqual(model.full_name, expected)
+
+    def test__profile_and_user_same_get_full_name(self):
+        model = self.instance
+        user = UserHC.objects.first()
+        expected = user.get_full_name()
+        self.assertEqual(model.user, user)
+        self.assertEqual(model.get_full_name(), expected)
+
+
+class StaffModelTests(ProfileModelTests, TestCase):
+    Model = Staff
+    profile_attribute = 'staff'
+
+
+class StudentModelTests(ProfileModelTests, TestCase):
+    Model = Student
+    profile_attribute = 'student'
 
     def test_taken_subject_is_related_subjects(self):
         model = self.instance
@@ -672,27 +710,6 @@ class ProfileModelTests(SimpleModelTests, TestCase):
         self.assertTrue(model.l3.get('done'))
         self.assertEquals(model.l3, expected)
         self.assertEqual(model.compute_level(), 4)
-
-    def test_profile_and_user_same_username(self):
-        model = Profile.objects.first()
-        user = UserHC.objects.first()
-        expected = user.username
-        self.assertEqual(model.user, user)
-        self.assertEqual(model.username, expected)
-
-    def test_profile_and_user_same_full_name(self):
-        model = self.instance
-        user = UserHC.objects.first()
-        expected = user.full_name
-        self.assertEqual(model.user, user)
-        self.assertEqual(model.full_name, expected)
-
-    def test__profile_and_user_same_get_full_name(self):
-        model = self.instance
-        user = UserHC.objects.first()
-        expected = user.get_full_name()
-        self.assertEqual(model.user, user)
-        self.assertEqual(model.get_full_name(), expected)
 
     def test_subject_data_invalid_level_parameter(self):
         model = self.instance
@@ -1003,7 +1020,7 @@ class RegistrationModelTests(SimpleModelTests, TestCase):
     repr_dict = {'Registration': 'classoffer', 'User': '_get_full_name', 'Owed': '_pay_report'}
     str_list = ['_get_full_name', 'classoffer', '_pay_report']
     defaults = {}
-    related = {'student': Profile, 'classoffer': ClassOffer}
+    related = {'student': Student, 'classoffer': ClassOffer}
 
     @skip("Not Implemented")
     def test_owed_full_if_no_payment(self):

@@ -3,7 +3,7 @@ from django.urls import reverse
 from unittest import skip
 # from .helper import SimpleModelTests
 from classwork.views import AboutUsListView  # , SubjectProgressView, ClassOfferDetailView, ClassOfferListView, Checkin
-from classwork.models import Profile, SiteContent
+from classwork.models import Staff, SiteContent
 from users.models import UserHC
 # from classwork.models import Location, Resource, SiteContent, Subject, ClassOffer, Profile
 # from classwork.models import Session, Payment, Registration, Notify
@@ -13,8 +13,9 @@ USER_DEFAULTS = {'email': 'user_fake@fakesite.com', 'password': '1234', 'first_n
 
 
 class AboutUsListTests(TestCase):
+    ProfileStaff_query = Staff.objects  # Profile.objects.filter(is_staff=True) if single Profile model.
 
-    def test_queryset_is_only_staff(self):
+    def test_queryset_is_only_active_staff(self):
         kwargs = USER_DEFAULTS.copy()
         kwargs['is_admin'] = True
         user = UserHC.objects.create_user(**kwargs)
@@ -22,7 +23,7 @@ class AboutUsListTests(TestCase):
         view = AboutUsListView()
         view_queryset = view.get_queryset()
         is_ordered = getattr(view_queryset, 'ordered', False)
-        staff_query = Profile.objects.filter(user__is_staff=True)
+        staff_query = self.ProfileStaff_query.filter(user__is_active=True)
         if is_ordered:
             order = getattr(self, 'query_order_by', [])
             staff_query = staff_query.order_by(*order) if order else staff_query
@@ -33,6 +34,7 @@ class AboutUsListTests(TestCase):
         self.assertQuerysetEqual(view_queryset, all_staff_list, transform=transform, ordered=is_ordered)
 
     def test_get_context_data(self):
+        """ Testing site before and after having a 'business_about' SiteContent.  """
         target_name = 'business_about'
         test_text = 'This is the about text we added. '
         initial_about = SiteContent.objects.filter(name=target_name).first()
