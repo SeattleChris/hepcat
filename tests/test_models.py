@@ -965,15 +965,6 @@ class UserExtendedModelTests(UserModelTests):
 # end class UserExtendedModelTests
 
 
-INITIAL = {
-    "name": "May_2020",
-    "key_day_date": "2020-04-30",
-    "max_day_shift": -2,
-    "num_weeks": 5,
-    "expire_date": "2020-05-08",
-    }
-
-
 class RegistrationModelTests(SimpleModelTests, TestCase):
     Model = Registration
     repr_dict = {'Registration': 'classoffer', 'User': '_get_full_name', 'Owed': '_pay_report'}
@@ -1119,8 +1110,9 @@ class SessionCoverageTests(TransactionTestCase):
     def test_session_defaults_on_creation(self):
         """ Session.create works with the date default functions in the model. """
         day_adjust, duration = 0, 5
-        key_day = date.fromisoformat(INITIAL['key_day_date']) + timedelta(days=7*INITIAL['num_weeks'])
-        new_publish_date = date.fromisoformat(INITIAL['expire_date'])
+        first = Session.objects.first()
+        key_day = first.key_day_date + timedelta(days=7*(first.num_weeks + first.skip_weeks))
+        new_publish_date = first.expire_date
         expire = key_day + timedelta(days=8)
         end = key_day + timedelta(days=7*(duration - 1))
         sess = self.create_session(
@@ -1133,15 +1125,16 @@ class SessionCoverageTests(TransactionTestCase):
         self.assertEquals(sess.publish_date, new_publish_date)
         self.assertEquals(sess.expire_date, expire)
         self.assertEquals(sess.end_date, end)
-        self.assertEquals(sess.prev_session.name, INITIAL['name'])
+        self.assertEquals(sess.prev_session.name, first.name)
         self.assertEquals(sess.prev_session.expire_date, sess.publish_date)
         self.assertLess(sess.prev_session.end_date, sess.start_date)
 
     def test_create_early_shift_no_skip(self):
         """ Sessions with negative 'max_day_shift' correctly compute their dates. """
-        day_adjust, duration = INITIAL['max_day_shift'], INITIAL['num_weeks']
-        key_day = date.fromisoformat(INITIAL['key_day_date']) + timedelta(days=7*duration)
-        publish = date.fromisoformat(INITIAL['expire_date'])
+        first = Session.objects.first()
+        day_adjust, duration = first.max_day_shift, first.num_weeks
+        key_day = first.key_day_date + timedelta(days=7*duration)
+        publish = first.expire_date
         expire = key_day + timedelta(days=8)
         start = key_day + timedelta(days=day_adjust)
         end = key_day + timedelta(days=7*(duration - 1))
@@ -1161,13 +1154,14 @@ class SessionCoverageTests(TransactionTestCase):
 
     def test_dates_late_shift_no_skip(self):
         """ Sessions with positive 'max_day_shift' correctly compute their dates. """
-        day_adjust, duration = 5, INITIAL['num_weeks']
-        key_day = date.fromisoformat(INITIAL['key_day_date']) + timedelta(days=7*duration)
-        publish = date.fromisoformat(INITIAL['expire_date'])
+        first = Session.objects.first()
+        day_adjust, duration = 5, first.num_weeks
+        key_day = first.key_day_date + timedelta(days=7*duration)
+        publish = first.expire_date
         expire = key_day + timedelta(days=8+day_adjust)
         start = key_day
         end = key_day + timedelta(days=7*(duration - 1)+day_adjust)
-        initial_end = date.fromisoformat(INITIAL['key_day_date']) + timedelta(days=7*(duration - 1))
+        initial_end = first.key_day_date + timedelta(days=7*(duration - 1))
         sess = self.create_session(
             name='t1_late_shift',
             max_day_shift=day_adjust,
