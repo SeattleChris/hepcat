@@ -337,23 +337,24 @@ class AdminClassDayListFilterTests(TestCase):
 
 
 class AdminUserHCTests:
+    """ Testing mix-in for proxy models of UserHC. Expect updates for: Model, ModelAdmin, Model_queryset. """
     Model = None
     ModelAdmin = None
-    Model_queryset = None
-    user_settings = {'email': 'fake@site.com', 'password': '1234', 'first_name': 'fa', 'last_name': 'fake', }
-    model_specific_settings = {StaffUser: {'is_teacher': True, }, StudentUser: {'is_student': True, }, }
+    Model_queryset = None  # If left as None, will use the settings from model_specific_setups for given Model.
+    Model_ChangeForm = None  # If left as None, will use the default Admin UserChangeForm
+    user_setup = {'email': 'fake@site.com', 'password': '1234', 'first_name': 'fa', 'last_name': 'fake', }
+    model_specific_setups = {StaffUser: {'is_teacher': True, }, StudentUser: {'is_student': True, }, }
 
     def make_test_users(self):
-        user_kwargs = self.user_settings.copy()
-        model_settings = self.model_specific_settings.get(self.Model, {})
-        user_kwargs.update(model_settings)
-        kwargs_collection = [{k: new + v for k, v in user_kwargs} for new in 'abcdefg']
-        for model in self.model_specific_settings:
-            if model != self.Model:
-                user_kwargs.update(self.model_specific_settings(model))
-                kwargs_collection += [{k: new + v for k, v in user_kwargs} for new in 'hijklmn']
-        users = [User.objects.create_user(kwargs) for kwargs in kwargs_collection]
-        return users
+        m_setup = self.model_specific_setups
+        users_per_model = min(4, 26 // len(m_setup))
+        alpha = (chr(ord('a') + i) for i in range(0, 26))
+        users = []
+        for model in m_setup:
+            chars = ''.join(next(alpha) for _ in range(users_per_model))
+            kwargs_many = [{k: x + v for k, v in self.user_setup.items()} for x in chars]
+            users += [User.objects.create_user(**kwargs, **m_setup[model]) for kwargs in kwargs_many]
+        return users, users_per_model
 
     def test_admin_uses_correct_admin(self):
         """ The admin site should use what was set for ModelAdmin for the model set in Model. """
@@ -371,10 +372,16 @@ class AdminUserHCTests:
     def test_get_queryset(self):
         """ Proxy models tend to be a subset of all models. This tests the queryset is as expected. """
         current_admin = self.ModelAdmin(model=self.Model, admin_site=AdminSite())
-        users = self.make_test_users()
+        users, users_per_model = self.make_test_users()
+        expected_qs = getattr(self, 'Model_queryset', None)
+        if not expected_qs:
+            expected_qs = self.Model.objects.filter(**self.model_specific_setups[self.Model])
         actual_qs = current_admin.get_queryset(request)
-        expected_qs = self.Model_queryset
-        self.assertEqual(expected_qs, actual_qs)
+
+        self.assertEqual(len(users), users_per_model * len(self.model_specific_setups))
+        self.assertEqual(users_per_model, expected_qs.count())
+        self.assertEqual(users_per_model, actual_qs.count())
+        self.assertSetEqual(set(expected_qs), set(actual_qs))
 
     def test_get_form_uses_custom_formfield_attrs_overrides(self):
         current_admin = self.ModelAdmin(model=self.Model, admin_site=AdminSite())
