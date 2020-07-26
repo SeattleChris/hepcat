@@ -437,19 +437,20 @@ class UserSuperModelNoNameTests(UserModelTests):
     defaults = {k: v for k, v in USER_DEFAULTS.items() if k not in ('first_name', 'last_name')}
 
 
-class UserExtendedModelTests(UserModelTests):
+class UserManagerTests(TestCase):
 
-    @skip("Not Implemented")
-    def test_get_if_only_one_function(self):
-        pass
-
-    @skip("Not Implemented")
     def test_value_error_normalize_email(self):
-        pass
+        bad_input = "ThisIsNotValidEmail"
+        with self.assertRaises(ValueError):
+            UserHC.objects.normalize_email(bad_input)
 
-    @skip("Not Implemented")
     def test_set_user_no_email(self):
-        pass
+        first_name = "emailess"
+        last_name = "troglodyte"
+        kwargs = {'username': None, 'email': None, 'password': '1234', 'first_name': first_name, 'last_name': last_name}
+        user = UserHC.objects.set_user(**kwargs)
+        expected_username = first_name + '_' + last_name
+        self.assertEqual(expected_username, user.username)
 
     @skip("Not Implemented")
     def test_set_existing_email_user(self):
@@ -459,21 +460,42 @@ class UserExtendedModelTests(UserModelTests):
     def test_set_user_not_email_is_username(self):
         pass
 
-    @skip("Not Implemented")
     def test_create_user_teacher(self):
-        pass
+        kwargs = USER_DEFAULTS.copy()
+        kwargs['is_teacher'] = True
+        user = UserHC.objects.create_user(**kwargs)
+        self.assertTrue(user.is_teacher)
+        self.assertTrue(user.is_staff)
+        self.assertFalse(user.is_student)
 
-    @skip("Not Implemented")
     def test_create_user_admin(self):
-        pass
+        kwargs = USER_DEFAULTS.copy()
+        kwargs['is_admin'] = True
+        user = UserHC.objects.create_user(**kwargs)
+        self.assertTrue(user.is_admin)
+        self.assertTrue(user.is_staff)
+        self.assertFalse(user.is_student)
 
-    @skip("Not Implemented")
     def test_create_superuser_not_staff(self):
-        pass
+        kwargs = USER_DEFAULTS.copy()
+        kwargs['is_staff'] = False
+        username = "bad_super"
+        with self.assertRaises(ValueError):
+            UserHC.objects.create_superuser(username, **kwargs)
 
-    @skip("Not Implemented")
     def test_create_superuser_not_superuser(self):
-        pass
+        kwargs = USER_DEFAULTS.copy()
+        kwargs['is_superuser'] = False
+        username = "bad_super"
+        with self.assertRaises(ValueError):
+            UserHC.objects.create_superuser(username, **kwargs)
+
+    def test_create_superuser_not_admin(self):
+        kwargs = USER_DEFAULTS.copy()
+        kwargs['is_admin'] = False
+        username = "bad_super"
+        with self.assertRaises(ValueError):
+            UserHC.objects.create_superuser(username, **kwargs)
 
     @skip("Not Implemented")
     def test_find_or_create_anon(self):
@@ -483,16 +505,67 @@ class UserExtendedModelTests(UserModelTests):
     def test_find_or_create_name(self):
         pass
 
-    @skip("Not Implemented")
     def test_make_username_use_email(self):
-        pass
+        """ Notice that switching to True for 'uses_email_username' is not enough to modify the 'username'. """
+        kwargs = USER_DEFAULTS.copy()
+        kwargs['uses_email_username'] = False
+        username = 'manual_username'
+        kwargs['username'] = username
+        username_from_email = kwargs['email'].casefold()
+        user = UserHC.objects.create_user(**kwargs)
+        user.save()
+        initial_username = user.username
+        user.uses_email_username = True
+        user.save()
+        later_username = user.make_username()
+        final_username = user.username
 
-    @skip("Not Implemented")
+        self.assertEqual(username, initial_username)
+        self.assertNotEqual(initial_username, later_username)
+        self.assertTrue(user.uses_email_username)
+        self.assertEqual(username_from_email, later_username)
+        self.assertNotEqual(later_username, final_username)
+
     def test_make_username_not_use_email(self):
-        pass
+        kwargs = USER_DEFAULTS.copy()
+        kwargs['uses_email_username'] = False
+        username = 'manual_username'
+        kwargs['username'] = username
+        username_from_name = kwargs['first_name'] + '_' + kwargs['last_name']
+        user = UserHC.objects.create_user(**kwargs)
+        user.save()
+        initial_username = user.username
+        later_username = user.make_username()
 
-    @skip("Not Implemented")
+        self.assertEqual(username, initial_username)
+        self.assertNotEqual(initial_username, later_username)
+        self.assertEqual(username_from_name, later_username)
+
     def test_save_with_no_username(self):
-        pass
+        kwargs = USER_DEFAULTS.copy()
+        kwargs['uses_email_username'] = False
+        username = 'manual_username'
+        kwargs['username'] = username
+        username_from_name = kwargs['first_name'] + '_' + kwargs['last_name']
+        username_from_email = kwargs['email'].casefold()
+        user = UserHC.objects.create_user(**kwargs)
+        initial_username = user.username
+        user.username = None
+        user.save()
+        later_username = user.username
+        user.uses_email_username = True
+        user.username = None
+        user.save()
+        final_username = user.username
+
+        self.assertEqual(username, initial_username)
+        self.assertNotEqual(initial_username, later_username)
+        self.assertEqual(username_from_name, later_username)
+        self.assertNotEqual(later_username, final_username)
+        self.assertEqual(username_from_email, final_username)
+
+    # @skip("Not Implemented")
+    # def test_get_if_only_one_function(self):
+    #     pass
 
 # end class UserExtendedModelTests
