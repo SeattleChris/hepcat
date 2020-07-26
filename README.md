@@ -129,7 +129,10 @@ This is a specific subject, offered during a specific session. It includes infor
   * From here you should be able to login, but the username will be the provided admin email.
   * Go to the admin pages. Confirm the admin account has a first and last name, or update as needed.
   * Confirm the admin has both a Staff and a Student user profile (in the CLASSWORK section).
-  * Input the initial class structure content in the recommended order: Session, Subject, ClassOffer.
+  * Create data for testing - Input the initial class structure content in the recommended order:
+    * Session: Give a key_day_date old enough to be expired now. Manually set the publish date in the past.
+    * Subject: Attach a Resource when making this model.
+    * ClassOffer: Should use the Session and Subject just made. You can create a Location here as well.
   * Input initial 'Site Content' with a title of 'business_about' to be included in the about us page.
   * Create a test or mock Payment and Registration
     * If payments are on test mode, then use the site's process, paying mind to the PAYPAL_BUYER or other test buyer.
