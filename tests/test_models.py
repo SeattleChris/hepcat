@@ -103,6 +103,7 @@ class SubjectModelTests(SimpleModelTests, TestCase):
     Model = Subject
     repr_dict = {'Subject': 'title', 'Level': 'level', 'Version': 'version'}
     str_list = ['_str_slug']
+    defaults = {'title': 'test model'}
 
 
 class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
