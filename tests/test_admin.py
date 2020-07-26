@@ -340,6 +340,20 @@ class AdminUserHCTests:
     Model = None
     ModelAdmin = None
     Model_queryset = None
+    user_settings = {'email': 'fake@site.com', 'password': '1234', 'first_name': 'fa', 'last_name': 'fake', }
+    model_specific_settings = {StaffUser: {'is_teacher': True, }, StudentUser: {'is_student': True, }, }
+
+    def make_test_users(self):
+        user_kwargs = self.user_settings.copy()
+        model_settings = self.model_specific_settings.get(self.Model, {})
+        user_kwargs.update(model_settings)
+        kwargs_collection = [{k: new + v for k, v in user_kwargs} for new in 'abcdefg']
+        for model in self.model_specific_settings:
+            if model != self.Model:
+                user_kwargs.update(self.model_specific_settings(model))
+                kwargs_collection += [{k: new + v for k, v in user_kwargs} for new in 'hijklmn']
+        users = [User.objects.create_user(kwargs) for kwargs in kwargs_collection]
+        return users
 
     def test_admin_uses_correct_admin(self):
         """ The admin site should use what was set for ModelAdmin for the model set in Model. """
@@ -357,8 +371,10 @@ class AdminUserHCTests:
     def test_get_queryset(self):
         """ Proxy models tend to be a subset of all models. This tests the queryset is as expected. """
         current_admin = self.ModelAdmin(model=self.Model, admin_site=AdminSite())
+        users = self.make_test_users()
         actual_qs = current_admin.get_queryset(request)
-        self.assertQuerysetEqual(self.Model_queryset, actual_qs)
+        expected_qs = self.Model_queryset
+        self.assertEqual(expected_qs, actual_qs)
 
     def test_get_form_uses_custom_formfield_attrs_overrides(self):
         current_admin = self.ModelAdmin(model=self.Model, admin_site=AdminSite())
@@ -390,7 +406,13 @@ class AdminUserHCTests:
         self.assertDictEqual(expected_values, actual_values)
 
 
-class AdminStaffUserTests(AdminUserHCTests):
+class AdminStaffUserTests(AdminUserHCTests, TestCase):
     Model = StaffUser
     ModelAdmin = StaffUserAdmin
     Model_queryset = User.objects.filter(is_staff=True)
+
+
+class AdminStudentUserTests(AdminUserHCTests, TestCase):
+    Model = StudentUser
+    ModelAdmin = StudentUserAdmin
+    Model_queryset = User.objects.filter(is_student=True)
