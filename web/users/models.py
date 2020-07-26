@@ -4,18 +4,6 @@ from django.db.utils import IntegrityError
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
-
-def get_if_only_one(q, **kwargs):
-    """ If it does not exist, or if there are many that match, return none. """
-    search = None
-    if isinstance(q, models.QuerySet):
-        search = q.filter(**kwargs)
-    elif isinstance(q, models.Model):
-        search = q.objects.filter(**kwargs)
-    obj = search[0] if search and len(search) == 1 else None
-    # TODO: Refactor to using better Django Query techniques.
-    return obj
-
 # TODO: Move some of the student vs staff logic to Group
 # Create your models here.
 
@@ -121,18 +109,18 @@ class UserManagerHC(UserManager):
             username = email
         return self.set_user(username, email, password, **extra_fields)
 
-    def find_or_create_for_anon(self, email=None, possible_users=None, **kwargs):
+    def find_or_create_for_anon(self, email=None, **kwargs):
         """ This is called when someone registers when they are not logged in. If they are a new customer, we want
             no friction, just create a user account. If they might be an existing user, we need to get them logged in.
         """
-        email = self.normalize_email(email)
+        email = self.normalize_email(email) if email else None
         first_name, last_name = kwargs.get('first_name'), kwargs.get('last_name')
-        if not kwargs.get('is_student') and not kwargs.get('is_teacher') and not kwargs.get('is_admin'):
-            kwargs.setdefault('is_student', True)
-        found = UserHC.objects.filter(email=email).count()
-        if first_name or last_name:
-            found += UserHC.objects.filter(first_name__iexact=first_name, last_name__iexact=last_name).count()
-        if found > 0:
+        found, q = 0, UserHC.objects
+        found += q.filter(email=email).count() if email else 0
+        q = q.filter(last_name__iexact=last_name) if last_name else q
+        q = q.filter(first_name__iexact=first_name) if first_name else q
+        found += q.count() if first_name or last_name else 0
+        if found:
             # TODO: redirect to login, auto-filling appropriate fields. This should also work if they have no account.
             print('---- Maybe they have had classes before? -----')
         else:
@@ -140,26 +128,36 @@ class UserManagerHC(UserManager):
             return self.create_user(self, email=email, **kwargs)  # create a new user with this data
         # end find_or_create_for_anon
 
-    def find_or_create_by_name(self, email=None, possible_users=None, **kwargs):
+    def find_or_create_by_name(self, first_name=None, last_name=None, possible_users=None, **kwargs):
         """ This is called when a user signs up someone else """
-        first_name, last_name, friend = kwargs.get('first_name'), kwargs.get('last_name'), None
         # print("======== UserHC.objects.find_or_create_by_name =====")
-        # TODO: Is this how we want to find matching or near matches?
+
+        def _get_single(q, **kwargs):
+            """ Helper to get if there is only one. """
+            try:
+                obj = q.get(**kwargs)
+            except UserHC.MultipleObjectsReturned:
+                obj = None
+            except UserHC.DoesNotExist:
+                obj = None
+            return obj
+
+        friend = None
         if possible_users:
-            if not isinstance(possible_users, (models.QuerySet, models.Model)):
-                raise TypeError(_('Possible_users is not a QuerySet or Model'))
-            friend = get_if_only_one(possible_users, first_name__iexact=first_name, last_name__iexact=last_name) \
-                or get_if_only_one(possible_users, first_name__icontains=first_name, last_name__icontains=last_name) \
-                or get_if_only_one(possible_users, last_name__icontains=last_name) \
-                or get_if_only_one(possible_users, first_name__icontains=first_name) \
+            if not isinstance(possible_users, models.QuerySet):
+                raise TypeError(_('Possible_users must be a QuerySet of Users'))
+
+            friend = _get_single(possible_users, first_name__iexact=first_name, last_name__iexact=last_name) \
+                or _get_single(possible_users, first_name__icontains=first_name, last_name__icontains=last_name) \
+                or _get_single(possible_users, last_name__icontains=last_name) \
+                or _get_single(possible_users, first_name__icontains=first_name) \
                 or None
         if not friend:
-            friend = get_if_only_one(UserHC, first_name__iexact=first_name, last_name__iexact=last_name) \
-                or get_if_only_one(UserHC, first_name__icontains=first_name, last_name__icontains=last_name) \
+            friend = _get_single(UserHC.objects, first_name__iexact=first_name, last_name__iexact=last_name) \
+                or _get_single(UserHC.objects, first_name__icontains=first_name, last_name__icontains=last_name) \
                 or None
-        # TODO: Should there be some kind of confirmation page?
-        # Otherwise we create a new user and profile
-        return friend if friend else self.create_user(self, email=email, **kwargs)
+        # TODO: Should there be some kind of confirmation page if friend found?
+        return friend if friend else self.create_user(self, **kwargs)  # original call should have email in kwargs.
 
     # end class UserManagerHC
 
