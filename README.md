@@ -348,14 +348,18 @@ We are keeping a checklist of upcoming tasks and feature development, as well as
 ## Tests
 
 * Run test coverage setup:
-  * If using Pipenv for virtual environment.
+  * If using Pipenv for virtual environment: either of following, second one omits coverage report of tests themselves.
     * `coverage run --omit='*/virtualenvs/*' web/manage.py test -v 2`
-  * Or if your virtual environment setup a `venv` directory:
+    * `coverage run --omit='*/virtualenvs/*','*/tests/*' web/manage.py test -v 2`
+  * Or if your virtual environment setup a `venv` directory: the following are with or without coverage report of tests.
     * `coverage run --omit='*/venv/*' web/manage.py test -v 2`
+    * `coverage run --omit='*/venv/*','*/tests/*' web/manage.py test -v 2`
+  * Additional files and directories can be ignored as additional comma separated list for omit value
 * View coverage report:
   * `coverage report`
   * `coverage html`
-* Then view in browser at 'htmlcov/index.html'.
+* Then view in browser at 'htmlcov/index.html', depending on your settings:
+  * `browser htmlcov/index.html`
   * `browse htmlcov/index.html`
   * `chrome htmlcov/index.html`
 
