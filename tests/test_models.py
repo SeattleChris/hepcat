@@ -1,8 +1,8 @@
 from django.test import TestCase, TransactionTestCase
 from django.conf import settings
 from unittest import skip
-from .helper import SimpleModelTests
-from classwork.models import Location, Resource, SiteContent, Subject, ClassOffer, Profile
+from .helper import SimpleModelTests, AbstractProfileModelTests
+from classwork.models import Location, Resource, SiteContent, Subject, ClassOffer, Staff, Student
 from classwork.models import Session, Payment, Registration, Notify
 from users.models import UserHC
 from datetime import date, time, timedelta, datetime as dt
@@ -25,6 +25,7 @@ class ResourceModelTests(SimpleModelTests, TransactionTestCase):
     Model = Resource
     repr_dict = {'Resource': 'related_type', 'Type': 'content_type'}
     str_list = ['title', 'related_type', 'content_type']
+    ProfileStudent = Student
 
     # Setup for publish method
     # Need a student user & profile
@@ -46,7 +47,7 @@ class ResourceModelTests(SimpleModelTests, TransactionTestCase):
     @skip("Not Implemented")
     def test_publish_not_view_if_not_joined(self):
         """ For a User NOT signed in a ClassOffer, determine they are NOT allowed to see an associated Resource. """
-        student = Profile.objects.get(id=1)
+        student = self.ProfileStudent.objects.first()
         classoffer = ClassOffer.objects.get(id=1)
         # classoffer settings - 'key_day_date': '2020-04-30', 'num_weeks': 5 ==> class ended already.
         resource = Resource.objects.get(id=1)
@@ -74,7 +75,7 @@ class ResourceModelTests(SimpleModelTests, TransactionTestCase):
     def test_publish_can_view_never_expired(self):
         """ For a User signed in a ClassOffer, determine they can view an associated never expired Resource. """
         print("=========================== ResourceModelTests - Running Here ========================================")
-        student = Profile.objects.get(user=1)
+        student = self.ProfileStudent.objects.first()
         classoffer = ClassOffer.objects.get(id=1)
         # classoffer settings - 'key_day_date': '2020-04-30', 'num_weeks': 5 ==> class ended already.
         resource = Resource.objects.get(id=1)
@@ -467,18 +468,14 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         self.assertEquals(model.num_level, expected)
 
 
-class ProfileModelTests(SimpleModelTests, TestCase):
-    Model = Profile
-    repr_dict = {'Profile': 'full_name', 'User id': 'user_id'}
-    str_list = ['full_name']
-    defaults = {'email': 'fake@site.com', 'password': '1234', 'first_name': 'fa', 'last_name': 'fake'}
+class StaffModelTests(AbstractProfileModelTests, TestCase):
+    Model = Staff
+    profile_attribute = 'staff'
 
-    def setUp(self):
-        kwargs = self.defaults.copy()
-        user = UserHC.objects.create_user(**kwargs)
-        user.save()
-        self.defaults = {}
-        self.instance = user.profile  # triggers self.create_model to update this model instead of creating one.
+
+class StudentModelTests(AbstractProfileModelTests, TestCase):
+    Model = Student
+    profile_attribute = 'student'
 
     def test_taken_subject_is_related_subjects(self):
         model = self.instance
@@ -672,27 +669,6 @@ class ProfileModelTests(SimpleModelTests, TestCase):
         self.assertTrue(model.l3.get('done'))
         self.assertEquals(model.l3, expected)
         self.assertEqual(model.compute_level(), 4)
-
-    def test_profile_and_user_same_username(self):
-        model = Profile.objects.first()
-        user = UserHC.objects.first()
-        expected = user.username
-        self.assertEqual(model.user, user)
-        self.assertEqual(model.username, expected)
-
-    def test_profile_and_user_same_full_name(self):
-        model = self.instance
-        user = UserHC.objects.first()
-        expected = user.full_name
-        self.assertEqual(model.user, user)
-        self.assertEqual(model.full_name, expected)
-
-    def test__profile_and_user_same_get_full_name(self):
-        model = self.instance
-        user = UserHC.objects.first()
-        expected = user.get_full_name()
-        self.assertEqual(model.user, user)
-        self.assertEqual(model.get_full_name(), expected)
 
     def test_subject_data_invalid_level_parameter(self):
         model = self.instance
@@ -989,21 +965,12 @@ class UserExtendedModelTests(UserModelTests):
 # end class UserExtendedModelTests
 
 
-INITIAL = {
-    "name": "May_2020",
-    "key_day_date": "2020-04-30",
-    "max_day_shift": -2,
-    "num_weeks": 5,
-    "expire_date": "2020-05-08",
-    }
-
-
 class RegistrationModelTests(SimpleModelTests, TestCase):
     Model = Registration
     repr_dict = {'Registration': 'classoffer', 'User': '_get_full_name', 'Owed': '_pay_report'}
     str_list = ['_get_full_name', 'classoffer', '_pay_report']
     defaults = {}
-    related = {'student': Profile, 'classoffer': ClassOffer}
+    related = {'student': Student, 'classoffer': ClassOffer}
 
     @skip("Not Implemented")
     def test_owed_full_if_no_payment(self):
@@ -1143,8 +1110,9 @@ class SessionCoverageTests(TransactionTestCase):
     def test_session_defaults_on_creation(self):
         """ Session.create works with the date default functions in the model. """
         day_adjust, duration = 0, 5
-        key_day = date.fromisoformat(INITIAL['key_day_date']) + timedelta(days=7*INITIAL['num_weeks'])
-        new_publish_date = date.fromisoformat(INITIAL['expire_date'])
+        first = Session.objects.first()
+        key_day = first.key_day_date + timedelta(days=7*(first.num_weeks + first.skip_weeks))
+        new_publish_date = first.expire_date
         expire = key_day + timedelta(days=8)
         end = key_day + timedelta(days=7*(duration - 1))
         sess = self.create_session(
@@ -1157,15 +1125,16 @@ class SessionCoverageTests(TransactionTestCase):
         self.assertEquals(sess.publish_date, new_publish_date)
         self.assertEquals(sess.expire_date, expire)
         self.assertEquals(sess.end_date, end)
-        self.assertEquals(sess.prev_session.name, INITIAL['name'])
+        self.assertEquals(sess.prev_session.name, first.name)
         self.assertEquals(sess.prev_session.expire_date, sess.publish_date)
         self.assertLess(sess.prev_session.end_date, sess.start_date)
 
     def test_create_early_shift_no_skip(self):
         """ Sessions with negative 'max_day_shift' correctly compute their dates. """
-        day_adjust, duration = INITIAL['max_day_shift'], INITIAL['num_weeks']
-        key_day = date.fromisoformat(INITIAL['key_day_date']) + timedelta(days=7*duration)
-        publish = date.fromisoformat(INITIAL['expire_date'])
+        first = Session.objects.first()
+        day_adjust, duration = first.max_day_shift, first.num_weeks
+        key_day = first.key_day_date + timedelta(days=7*duration)
+        publish = first.expire_date
         expire = key_day + timedelta(days=8)
         start = key_day + timedelta(days=day_adjust)
         end = key_day + timedelta(days=7*(duration - 1))
@@ -1185,13 +1154,14 @@ class SessionCoverageTests(TransactionTestCase):
 
     def test_dates_late_shift_no_skip(self):
         """ Sessions with positive 'max_day_shift' correctly compute their dates. """
-        day_adjust, duration = 5, INITIAL['num_weeks']
-        key_day = date.fromisoformat(INITIAL['key_day_date']) + timedelta(days=7*duration)
-        publish = date.fromisoformat(INITIAL['expire_date'])
+        first = Session.objects.first()
+        day_adjust, duration = 5, first.num_weeks
+        key_day = first.key_day_date + timedelta(days=7*duration)
+        publish = first.expire_date
         expire = key_day + timedelta(days=8+day_adjust)
         start = key_day
         end = key_day + timedelta(days=7*(duration - 1)+day_adjust)
-        initial_end = date.fromisoformat(INITIAL['key_day_date']) + timedelta(days=7*(duration - 1))
+        initial_end = first.key_day_date + timedelta(days=7*(duration - 1))
         sess = self.create_session(
             name='t1_late_shift',
             max_day_shift=day_adjust,

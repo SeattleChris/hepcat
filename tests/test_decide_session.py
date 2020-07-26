@@ -22,7 +22,7 @@ class NewSiteDecideSession(TestCase):
 class CurrentSessionSelection(TransactionTestCase):
     """ Critical views of current classes and content depend on the decide_session function. """
     fixtures = ['tests/fixtures/db_basic.json', 'tests/fixtures/db_hidden.json']
-    # Has a May_2020 session that has expired
+    # Should have a January_2020 session that has expired
 
     def test_only_current_published_session(self):
         """ Returns only currently published session, and no expired sessions """
@@ -78,7 +78,7 @@ class CurrentSessionSelection(TransactionTestCase):
         expire = initial.expire_date + timedelta(days=1)
         key_day = initial.key_day_date + timedelta(days=1)
         overlap = Session.objects.create(name='overlap', key_day_date=key_day, publish_date=publish, expire_date=expire)
-        test_date = publish + timedelta(days=3)
+        test_date = publish + timedelta(days=1)
         result = decide_session(display_date=test_date)
 
         self.assertGreater(test_date, publish)

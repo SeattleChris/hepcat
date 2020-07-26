@@ -13,8 +13,8 @@ from django.contrib.contenttypes.models import ContentType
 from classwork.admin import AdminSessionForm, ClassOfferAdmin, SessiontAdmin, ClassDayListFilter, RegistrationAdmin
 from classwork.admin import admin as main_admin
 from classwork.models import Session, ClassOffer, Subject, Registration  # , Location, Profile, Payment
-from users.admin import CustomUserAdmin
-from users.models import UserHC as User
+from users.admin import StaffUserAdmin, StudentUserAdmin, CustomUserAdmin
+from users.models import StaffUser, StudentUser, UserHC as User
 from datetime import date, time, timedelta
 from copy import deepcopy
 from types import GeneratorType
@@ -36,11 +36,14 @@ request.user = MockSuperUser()
 class AdminSetupTests(TestCase):
     """ General expectations of the Admin. """
 
-    def test_admin_set_for_all_models(self):
+    def test_admin_set_for_all_expected_models(self):
         """ Make sure all models can be managed in the admin. """
         models = apps.get_models()
         registered_admins_dict = main_admin.site._registry
         registered_models = list(registered_admins_dict.keys())
+        # All UserHC (imported as User here) management done by proxy models: StaffUser and StudentUser
+        models.remove(User)
+        # The following models are from packages we do not need to test.
         models.remove(LogEntry)
         models.remove(Permission)
         models.remove(ContentType)
@@ -241,6 +244,8 @@ class AdminClassOfferTests(TestCase):
 
 class AdminClassDayListFilterTests(TestCase):
     # related_models = (ClassOfferAdmin, RegistrationAdmin)
+    student_profile_attribute = 'student'  # 'profile' if only one profile model.
+    staff_profile_attribute = 'staff'  # 'profile' if only one profile model.
 
     def test_admin_classoffer_lookup(self):
         key_day, name = date.today(), 'sess1'
@@ -289,12 +294,12 @@ class AdminClassDayListFilterTests(TestCase):
 
         password = environ.get('SUPERUSER_PASS', '')
         admin_user_email = environ.get('SUPERUSER_EMAIL', settings.ADMINS[0][1])
-        user_model = User.objects.create_superuser(admin_user_email, admin_user_email, password)
-        user_model.first_name = "test_super"
-        user_model.last_name = "test_user"
-        user_model.save()
-        user = user_model.profile
-        registrations = [Registration.objects.create(student=user, classoffer=ea) for ea in classoffers]
+        user = User.objects.create_superuser(admin_user_email, admin_user_email, password)
+        user.first_name = "test_super"
+        user.last_name = "test_user"
+        user.save()
+        student = getattr(user, self.student_profile_attribute, None)
+        registrations = [Registration.objects.create(student=student, classoffer=ea) for ea in classoffers]
 
         current_admin = RegistrationAdmin(model=Registration, admin_site=AdminSite())
         day_filter = ClassDayListFilter(request, {}, Registration, current_admin)
@@ -316,9 +321,9 @@ class AdminClassDayListFilterTests(TestCase):
 
         password = environ.get('SUPERUSER_PASS', '')
         admin_user_email = environ.get('SUPERUSER_EMAIL', settings.ADMINS[0][1])
-        user_model = User.objects.create_superuser(admin_user_email, admin_user_email, password)
-        user = user_model.profile
-        registrations = [Registration.objects.create(student=user, classoffer=ea) for ea in classoffers]
+        user = User.objects.create_superuser(admin_user_email, admin_user_email, password)
+        student = getattr(user, self.student_profile_attribute, None)
+        registrations = [Registration.objects.create(student=student, classoffer=ea) for ea in classoffers]
 
         current_admin = RegistrationAdmin(model=Registration, admin_site=AdminSite())
         day_filter = ClassDayListFilter(request, {}, Registration, current_admin)
@@ -331,24 +336,48 @@ class AdminClassDayListFilterTests(TestCase):
         self.assertSetEqual(set(expected_qs), set(qs))
 
 
-class AdminUserHCTests(TestCase):
+class AdminUserHCTests:
+    Model = None
+    ModelAdmin = None
+    Model_queryset = None
+    user_settings = {'email': 'fake@site.com', 'password': '1234', 'first_name': 'fa', 'last_name': 'fake', }
+    model_specific_settings = {StaffUser: {'is_teacher': True, }, StudentUser: {'is_student': True, }, }
+
+    def make_test_users(self):
+        user_kwargs = self.user_settings.copy()
+        model_settings = self.model_specific_settings.get(self.Model, {})
+        user_kwargs.update(model_settings)
+        kwargs_collection = [{k: new + v for k, v in user_kwargs} for new in 'abcdefg']
+        for model in self.model_specific_settings:
+            if model != self.Model:
+                user_kwargs.update(self.model_specific_settings(model))
+                kwargs_collection += [{k: new + v for k, v in user_kwargs} for new in 'hijklmn']
+        users = [User.objects.create_user(kwargs) for kwargs in kwargs_collection]
+        return users
 
     def test_admin_uses_correct_admin(self):
-        """ The admin site should use the CustomUserAdmin for the UserHC model. """
+        """ The admin site should use what was set for ModelAdmin for the model set in Model. """
         registered_admins_dict = main_admin.site._registry
-        user_admin = registered_admins_dict.get(User, None)
-        self.assertIsInstance(user_admin, CustomUserAdmin)
+        user_admin = registered_admins_dict.get(self.Model, None)
+        self.assertIsInstance(user_admin, self.ModelAdmin)
 
     def test_admin_uses_expected_form(self):
-        """ The admin CustomUserAdmin utilizes the correct form. """
-        current_admin = CustomUserAdmin(model=User, admin_site=AdminSite())
+        """ The admin set for ModelAdmin utilizes the correct form. """
+        current_admin = self.ModelAdmin(model=self.Model, admin_site=AdminSite())
         form = getattr(current_admin, 'form', None)
         form_class = UserChangeForm
         self.assertEquals(form, form_class)
-        # self.assertIsInstance(form, form_class)
+
+    def test_get_queryset(self):
+        """ Proxy models tend to be a subset of all models. This tests the queryset is as expected. """
+        current_admin = self.ModelAdmin(model=self.Model, admin_site=AdminSite())
+        users = self.make_test_users()
+        actual_qs = current_admin.get_queryset(request)
+        expected_qs = self.Model_queryset
+        self.assertEqual(expected_qs, actual_qs)
 
     def test_get_form_uses_custom_formfield_attrs_overrides(self):
-        current_admin = CustomUserAdmin(model=User, admin_site=AdminSite())
+        current_admin = self.ModelAdmin(model=self.Model, admin_site=AdminSite())
         form = current_admin.get_form(request)
         fields = form.base_fields
         expected_values = deepcopy(current_admin.formfield_attrs_overrides)
@@ -363,7 +392,7 @@ class AdminUserHCTests(TestCase):
         self.assertDictEqual(expected_values, actual_values)
 
     def test_get_form_modifies_input_size_for_small_maxlength_fields(self):
-        current_admin = CustomUserAdmin(model=User, admin_site=AdminSite())
+        current_admin = self.ModelAdmin(model=self.Model, admin_site=AdminSite())
         form = current_admin.get_form(request)
         expected_values, actual_values = {}, {}
         for name, field in form.base_fields.items():
@@ -375,3 +404,15 @@ class AdminUserHCTests(TestCase):
                     actual_values[name] = field.widget.attrs.get('size', '')
 
         self.assertDictEqual(expected_values, actual_values)
+
+
+class AdminStaffUserTests(AdminUserHCTests, TestCase):
+    Model = StaffUser
+    ModelAdmin = StaffUserAdmin
+    Model_queryset = User.objects.filter(is_staff=True)
+
+
+class AdminStudentUserTests(AdminUserHCTests, TestCase):
+    Model = StudentUser
+    ModelAdmin = StudentUserAdmin
+    Model_queryset = User.objects.filter(is_student=True)
