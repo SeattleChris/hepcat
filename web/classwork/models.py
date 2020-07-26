@@ -579,7 +579,7 @@ class ClassOffer(models.Model):
         return '<Class Id: {} | Subject: {} | Session: {} >'.format(self.id, self.subject, self.session)
 
 
-class Profile(models.Model):
+class AbstractProfile(models.Model):
     """ Extending user model to have profile fields as appropriate as either a student or a staff member. """
 
     # TODO: Allow users to modify their profile.
@@ -609,7 +609,7 @@ class Profile(models.Model):
         return "<Profile: {} | User id: {} >".format(self.full_name, self.user.id)
 
 
-class Staff(Profile):
+class Staff(AbstractProfile):
     """ A profile model appropriate for Staff users. """
 
     listing = models.SmallIntegerField(help_text=_("listing order"), default=0, blank=True, )
@@ -621,7 +621,7 @@ class Staff(Profile):
         self._meta.get_field('bio').max_length = 1530  # Current for Chris is 1349 characters!
 
 
-class Student(Profile):
+class Student(AbstractProfile):
     """ A profile model appropriate for Student users. """
 
     level = models.IntegerField(_('skill level'), default=0, blank=True, )
@@ -802,7 +802,8 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
         else:
             profile = Staff.objects.create(user=instance)
     if profile:
-        print(f"Made a new Profile! {profile} ")
+        pass
+        # print(f"Made a new Profile! {profile} ")
         # instance.profile = profile
 
 

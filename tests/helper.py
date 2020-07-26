@@ -1,6 +1,8 @@
 from django.db.models.fields import NOT_PROVIDED
 from django.db.models import CharField, TextField, URLField, DateField, TimeField
 from django.db.models import PositiveSmallIntegerField, SmallIntegerField, base as db_models_base
+from classwork.models import Staff, Student
+from users.models import UserHC
 from datetime import date, time  # , timedelta
 
 
@@ -110,6 +112,46 @@ class SimpleModelTests:
         self.assertIsInstance(model, self.Model)
         self.assertEqual(model.__str__(), str_value)
         self.assertEqual(model.__repr__(), repr_value)
+
+
+class AbstractProfileModelTests(SimpleModelTests):
+    """ Extends SimpleModelTests with common tests for models based on the AbstractProfile model.  """
+    repr_dict = {'Profile': 'full_name', 'User id': 'user_id', }
+    str_list = ['full_name', ]
+    defaults = {'email': 'fake@site.com', 'password': '1234', 'first_name': 'fa', 'last_name': 'fake', }
+    model_specific_settings = {Staff: {'is_teacher': True, }, Student: {'is_student': True, }, }
+    profile_attribute = 'profile'  # Expected to be overwritten by model using this mix-in.
+
+    def setUp(self):
+        """ Create a User, then the create_profile method will modify (not create) the profile stored in instance. """
+        kwargs = self.defaults.copy()
+        model_settings = self.model_specific_settings[self.Model]
+        kwargs.update(model_settings)
+        user = UserHC.objects.create_user(**kwargs)
+        user.save()
+        self.defaults = {}
+        self.instance = getattr(user, self.profile_attribute, None)
+
+    def test_profile_and_user_same_username(self):
+        model = self.Model.objects.first()
+        user = UserHC.objects.first()
+        expected = user.username
+        self.assertEqual(model.user, user)
+        self.assertEqual(model.username, expected)
+
+    def test_profile_and_user_same_full_name(self):
+        model = self.instance
+        user = UserHC.objects.first()
+        expected = user.full_name
+        self.assertEqual(model.user, user)
+        self.assertEqual(model.full_name, expected)
+
+    def test__profile_and_user_same_get_full_name(self):
+        model = self.instance
+        user = UserHC.objects.first()
+        expected = user.get_full_name()
+        self.assertEqual(model.user, user)
+        self.assertEqual(model.get_full_name(), expected)
 
 
 # class ExampleTests(TestCase):
