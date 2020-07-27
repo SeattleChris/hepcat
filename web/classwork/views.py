@@ -5,13 +5,13 @@ from django.utils.translation import gettext_lazy as _
 from django.shortcuts import get_object_or_404, redirect  # used for Payments
 from django.template.response import TemplateResponse  # used for Payments
 from payments import get_payment_model, RedirectNeeded  # used for Payments
-from django.db.models import Q
+from django.db.models import Q, F, Case, When, DateField, BooleanField, functions, ExpressionWrapper as EW  # ,
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth import get_user_model
 from .forms import RegisterForm, PaymentForm  # , ProfileForm, UserForm
 from .models import (SiteContent, Resource, Location, ClassOffer, Subject,  # ? Session,
                      Staff, Student, Payment, Registration, Session)
-from datetime import datetime
+from datetime import timedelta, date, datetime
 User = get_user_model()
 
 # TODO: Clean out excessive print lines telling us where we are.
@@ -172,7 +172,7 @@ class ResourceDetailView(DetailView):
 class ProfileView(DetailView):
     """Each user has a page where they can see resources that have been made available to them. """
     template_name = 'classwork/user.html'
-    model = Student
+    # model = Student
     context_object_name = 'profile'
     pk_url_kwarg = 'id'
     # TODO: Work on the actual layout and presentation of the avail Resources
@@ -180,35 +180,70 @@ class ProfileView(DetailView):
 
     def get_object(self):
         # print('=== ProfileView get_object ====')
-        return Student.objects.get(user=self.request.user)
+        user = self.request.user
+        profile = getattr(user, 'profile', user.staff if user.is_staff else getattr(user, 'student', None))
+        return profile
 
     def get_context_data(self, **kwargs):
         """ Modify the context """
         context = super().get_context_data(**kwargs)
         # print('===== ProfileView get_context_data ======')
         # TODO: Revisit the following for better query techniques.
-        registers = list(Registration.objects.filter(student=self.object).values('classoffer'))
-        ids = list(set([list(ea.values())[0] for ea in registers]))
-        taken = ClassOffer.objects.filter(id__in=ids)
-        # print(ids)
-        res = []
-        for ea in ids:
-            cur = ClassOffer.objects.get(id=ea)
-            cur_res = [res for res in Resource.objects.filter(
-                Q(classoffer=cur) |
-                Q(subject=cur.subject)
-                ) if res.publish(cur)]
-            res.extend(cur_res) if len(cur_res) else None
-        # print('----- res ------')
-        # print(res)
-        context['had'] = taken
-        ct = {ea[0]: [] for ea in Resource.CONTENT_CHOICES}
-        [ct[ea.content_type].append(ea) for ea in res]
-        # ct is now is a dictionary of all possible content types, with values
-        # of the current user resources that are past their avail date.
-        context['resources'] = {key: vals for (key, vals) in ct.items() if len(vals) > 0}
-        # context['resources'] only has the ct keys if the values have data.
-        # print(context['resources'])
+        student = getattr(self.request.user, 'student', None)
+        if student:
+            student.taken
+            # registers = list(Registration.objects.filter(student=self.object).values('classoffer'))
+            # ids = list(set([list(ea.values())[0] for ea in registers]))
+            # taken = ClassOffer.objects.filter(id__in=ids)
+            # print(ids)
+            taken = student.taken.all()
+            res = []
+            now, week, no_time = date.today(), timedelta(days=7), timedelta(days=0)
+            for cur in taken:
+                start_date, end_date, skips = cur.start_date, cur.end_date, cur.skip_weeks
+                early = min((now, start_date))
+                qr = Resource.objects.annotate(
+                        pub=Case(
+                            When(Q(avail=0), then=early),
+                            When(Q(avail=5), then=end_date),
+                            default=(start_date + F('avail')*week),
+                            output_field=DateField
+                        )
+                    # ).annotate(
+                    #     dead=Case(
+                    #         When(Q(expire=0), then=False),
+                    #         default=functions.Cast(
+                    #             start_date + (F('expire') + skips)*week,
+                    #             output_field=DateField) - now > no_time,
+                    #         output_field=BooleanField
+                    #     )
+                    ).filter(
+                        Q(classoffer=cur) | Q(subject=cur.subject),
+                        pub__lte=now,
+                        # dead=False,
+                        user_type__gt=1
+                    )
+                res += qr.all()
+            # for ea in ids:
+            #     cur = ClassOffer.objects.get(id=ea)
+            #     cur_res = [res for res in Resource.objects.filter(
+            #         Q(classoffer=cur) |
+            #         Q(subject=cur.subject)
+            #         ) if res.publish(cur)]
+            #     res.extend(cur_res) if len(cur_res) else None
+            # print('----- res ------')
+            # print(res)
+            context['had'] = taken
+            ct = {ea[0]: [] for ea in Resource.CONTENT_CHOICES}
+            [ct[ea.content_type].append(ea) for ea in res]
+            # ct is now is a dictionary of all possible content types, with values
+            # of the current user resources that are past their avail date.
+            context['resources'] = {key: vals for (key, vals) in ct.items() if len(vals) > 0}
+            # context['resources'] only has the ct keys if the values have data.
+            # print(context['resources'])
+        else:
+            context['had'] = None
+            context['resources'] = {}
         return context
 
     # end class ProfileView
