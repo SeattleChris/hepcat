@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import Q, Count, Max  # , F, Min, Avg, Sum
+from django.db.models import Q, F, Case, When, ExpressionWrapper, OuterRef, Count, Max  # , Min, Avg, Sum
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
@@ -62,6 +62,50 @@ class Location(models.Model):
         return '<Location: {} | Link: {} >'.format(self.name, self.map_link)
 
 
+class ResourceManager(models.Manager):
+
+    def get_queryset(self, *args, **kwargs):
+        return super().get_queryset(*args, **kwargs)
+        # .annotate(
+        #         some_value='Hello'
+        #     )
+
+    def alive(self, start=None, end=None, skips=0, type_user=0, **kwargs):
+        """ Will filter and annotate to return only currently published Resource for the given context. """
+        if not isinstance(start, date) or not isinstance(end, date):
+            raise TypeError(_("Both start and end parameters must be date objects. "))
+        if not isinstance(skips, int):
+            raise TypeError(_("The skips parameter must be an integer. "))
+        user_lookup = {'public': 0, 'student': 1, 'teacher': 2, 'admin': 3, }
+        if isinstance(type_user, str):
+            type_user = user_lookup.get(type_user, 0)
+        if not isinstance(type_user, int) or type_user < 0 or type_user > 3:
+            raise TypeError(_("The type_user parameter must be an appropriate string or integer"))
+        now_date = date.today()
+        early = min(start, now_date)
+        return self.get_queryset().annotate(
+                publish=Case(
+                    When(avail=0, then=early),
+                    When(avail=5, then=end),
+                    default=(start + timedelta(days=7*F('avail'))),
+                    output_field=models.DateField
+                )
+            ).filter(
+                Q(expire=0) | Q(F('publish') + timedelta(days=7*(F('expire') + skips)) <= now_date),
+                publish__lte=now_date,
+                user_type__gt=type_user  # TODO: Refactor to filter out user_type is called before this method.
+            )
+        # ).annotate(
+        #     completed=Case(
+        #         When(expire=0, then=False),
+        #         default=(F('publish') + timedelta(days=7*(F('expire') + skips)) > now_date),
+        #         output_field=models.BooleanField
+        #     )
+        # ).filter(
+        #     completed=False, publish__lte=now_date, user_type__gt=type_user
+        # )
+
+
 class Resource(models.Model):
     """ Subjects and ClassOffers can have various resources released to the students at
         different times while attending a ClassOffer or after they have completed the session.
@@ -115,22 +159,9 @@ class Resource(models.Model):
     text = models.TextField(help_text=_('Text chunk used in page or email publication'), blank=True, )
     title = models.CharField(max_length=60, )
     description = models.TextField(blank=True, )
-
     date_added = models.DateField(auto_now_add=True, )
     date_modified = models.DateField(auto_now=True, )
-
-    def publish(self, classoffer):
-        """ Bool if this resource is available for users who attended a given classoffer. """
-        pub_delay = 3
-        week = self.avail if self.avail != 200 else classoffer.subject.num_weeks
-        delay = pub_delay+7*week
-        now = date.today()
-        start = classoffer.start_date
-        avail_date = min(now, start) if week == 0 else start + timedelta(days=delay)
-        expire_date = None if self.expire == 0 else avail_date + timedelta(weeks=self.expire)
-        if expire_date and now > expire_date:
-            return False
-        return now >= avail_date
+    objects = ResourceManager()
 
     # def respath(self):
     #     """Returns the data field for the selected content type"""
@@ -450,6 +481,39 @@ class Session(models.Model):
         return '<Session: {} >'.format(self.name)
 
 
+class ClassOfferManager(models.Manager):
+
+    def get_queryset(self, *args, **kwargs):
+        return super().get_queryset(*args, **kwargs)
+        # .annotate(
+        #         dif=ExpressionWrapper(
+        #             F('class_day') - F('session__key_day_date').weekday(), output_field=models.SmallIntegerField)
+        #     ).annotate(
+        #         shifted=Case(
+        #             When(dif=0, then=0),
+        #             When(Q(session__max_day_shift__lt=0) & Q(session__max_day_shift__gt=F('dif')), then=F('dif')+7),
+        #             When(Q(session__max_day_shift__gt=F('dif')+7), then=F('dif')+7),
+        #             When(session__max_day_shift__lt=F('dif')-7, then=F('dif')-7),
+        #             When(Q(session__max_day_shift__gt=0) & Q(session__max_day_shift__lt=F('dif')), then=F('dif')-7),
+        #             default=F('dif'), output_field=models.SmallIntegerField)
+        #     ).annotate(
+        #         start=Case(  # TODO: Rename to start_date and replace the @property version.
+        #             When(dif=0, then=F('session__key_day_date')),
+        #             default=(F('session__key_day_date') + timedelta(days=7*F('shifted'))),
+        #             output_field=models.DateField)
+        #     ).annotate(
+        #         end=ExpressionWrapper(  # TODO: Rename to end_date and replace the @property version.
+        #             F('start') + timedelta(days=7*(F('subject__num_weeks') + F('skip_weeks') - 1)),
+        #             output_field=models.DateField)
+        #     )  # TODO: Use other annotations for current @property defined in the model.
+
+    # def resources(self, *args, **kwargs):
+    #     res = Resource.objects.filter(
+    #             Q(classoffer=OuterRef('pk')) | Q(subject=OuterRef('subject'))
+    #         ).distinct(
+    #         )  # TODO: Use the alive qs filter on ResourceManager, passing the start, end, and skips values.
+
+
 class ClassOffer(models.Model):
     """ Different classes can be offered at different times and scheduled for later publication.
         This model depends on the following models: Subject, Session, Staff (for teacher association), Location
@@ -465,7 +529,7 @@ class ClassOffer(models.Model):
         (6, _('Sunday'))
     )
     # id = auto-created
-    # self.students exists as the students signed up for this ClassOffer
+    # students exists as the students signed up for this ClassOffer
     subject = models.ForeignKey('Subject', on_delete=models.SET_NULL, null=True, )
     session = models.ForeignKey('Session', on_delete=models.SET_NULL, null=True, )
     _num_level = models.IntegerField(default=0, editable=False, )
@@ -476,9 +540,10 @@ class ClassOffer(models.Model):
     start_time = models.TimeField()
     skip_weeks = models.PositiveSmallIntegerField(_('skipped mid-session class weeks'), default=0, )
     skip_tagline = models.CharField(max_length=46, blank=True, )
-
     date_added = models.DateField(auto_now_add=True, )
     date_modified = models.DateField(auto_now=True, )
+    # resource_set exists but only includes Resources connected directly to this ClassOffer, not its Subject.
+    objects = ClassOfferManager()
 
     @property
     def full_price(self):
@@ -517,21 +582,21 @@ class ClassOffer(models.Model):
         return _(explain)
 
     @property
-    def end_time(self):
+    def end_time(self):  # TODO: Replace with annotation if possible
         """ A time obj (date and timezone unaware) computed based on the start time and subject.num_minutes. """
         start = dt.combine(date(2009, 2, 13), self.start_time)  # arbitrary date on day of timestamp 1234567890.
         end = start + timedelta(minutes=self.subject.num_minutes)
         return end.time()
 
     @property
-    def day(self):
+    def day(self):  # TODO: Replace with annotation if possible
         """ Returns a string for the day of the week, plural if there are multiple weeks, for this ClassOffer. """
         day = self.DOW_CHOICES[self.class_day][1]
         day += 's' if self.subject.num_weeks > 1 else ''
         return day
 
     @property
-    def start_date(self):
+    def start_date(self):  # TODO: Replace with annotation if possible
         """ Returns a date object (time and timezone unaware) for the first day of this ClassOffer. """
         start = self.session.key_day_date
         dif = self.class_day - start.weekday()
@@ -545,7 +610,7 @@ class ClassOffer(models.Model):
         return start + timedelta(days=dif)
 
     @property
-    def end_date(self):
+    def end_date(self):  # TODO: Replace with annotation if possible
         """ Returns the computed end date (time and timezone unaware) for this class offer. """
         return self.start_date + timedelta(days=7*(self.subject.num_weeks + self.skip_weeks - 1))
 
@@ -609,12 +674,43 @@ class AbstractProfile(models.Model):
         return "<Profile: {} | User id: {} >".format(self.full_name, self.user.id)
 
 
+# class AvailableResourceQuerySet(models.QuerySet):
+#     """ Used by Student profile model as Student.resources """
+
+#     def resources(self, start=None, end=None, skips=None):
+#         if self.model == Student:
+#             pass
+#         if self.model == ClassOffer:
+#             pass
+#         if self.model == Subject:
+#             pass
+#     pass
+
+#     # end AvailableResourceManager
+
+
+# class AvailableResourceManager(models.Manager):
+#     """ Used by Student profile model as Student.resources """
+#     # self.model = Model being used by this Manager.
+
+#     def resources(self):
+#         if self.model == Student:
+#             pass
+#         if self.model == ClassOffer:
+#             pass
+#         if self.model == Subject:
+#             pass
+#     pass
+
+#     # end AvailableResourceManager
+
+
 class Staff(AbstractProfile):
     """ A profile model appropriate for Staff users. """
 
     listing = models.SmallIntegerField(help_text=_("listing order"), default=0, blank=True, )
     tax_doc = models.CharField(max_length=9, blank=True, )
-    # taught = models.ManyToManyField(ClassOffer, related_name='teachers', )
+    # taught exists from ClassOffer.teachers related_name
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -627,7 +723,6 @@ class Student(AbstractProfile):
     level = models.IntegerField(_('skill level'), default=0, blank=True, )
     taken = models.ManyToManyField(ClassOffer, related_name='students', through='Registration', )
     # interest = models.ManyToManyField(Subject, related_names='interests', through='Requests', )
-    # credit = models.FloatField(_('class payment credit'), default=0, )
     credit = models.DecimalField(max_digits=6, decimal_places=2, default=0.0)
     # TODO: Implement self-referencing key for a 'refer-a-friend' discount.
     # refer = models.ForeignKey(User, symmetrical=False, on_delete=models.SET_NULL,
