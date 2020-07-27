@@ -209,18 +209,18 @@ class ProfileView(DetailView):
                             default=(start_date + F('avail')*week),
                             output_field=DateField
                         )
-                    # ).annotate(
-                    #     dead=Case(
-                    #         When(Q(expire=0), then=False),
-                    #         default=functions.Cast(
-                    #             start_date + (F('expire') + skips)*week,
-                    #             output_field=DateField) - now > no_time,
-                    #         output_field=BooleanField
-                    #     )
+                    ).annotate(
+                        dead=Case(
+                            When(Q(expire=0), then=False),
+                            default=functions.Cast(
+                                start_date + (F('expire') + skips)*week,
+                                output_field=DateField) - now > no_time,
+                            output_field=BooleanField
+                        )
                     ).filter(
                         Q(classoffer=cur) | Q(subject=cur.subject),
                         pub__lte=now,
-                        # dead=False,
+                        dead=False,
                         user_type__gt=1
                     )
                 res += qr.all()
