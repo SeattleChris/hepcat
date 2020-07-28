@@ -1,5 +1,6 @@
 from django.db import models
-from django.db.models import Q, F, Case, When, ExpressionWrapper, OuterRef, Count, Max  # , Min, Avg, Sum
+from django.db.models import Q, F, Case, When, OuterRef, Count, Max, ExpressionWrapper as EW  # , Min, Avg, Sum
+from django.db.models.functions import Extract, ExtractYear, ExtractMonth, ExtractDay, Trunc
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
@@ -88,7 +89,7 @@ class ResourceManager(models.Manager):
                     When(avail=0, then=early),
                     When(avail=5, then=end),
                     default=(start + timedelta(days=7*F('avail'))),
-                    output_field=models.DateField
+                    output_field=models.DateField()
                 )
             ).filter(
                 Q(expire=0) | Q(F('publish') + timedelta(days=7*(F('expire') + skips)) <= now_date),
@@ -485,9 +486,18 @@ class ClassOfferManager(models.Manager):
 
     def get_queryset(self, *args, **kwargs):
         return super().get_queryset(*args, **kwargs)
-        # .annotate(
-        #         dif=ExpressionWrapper(
-        #             F('class_day') - F('session__key_day_date').weekday(), output_field=models.SmallIntegerField)
+        # week = timedelta(days=7)
+        # return super().get_queryset(*args, **kwargs).annotate(
+        #         dif=Case(
+        #             When(Q(session__key_day_date__week_day=1),
+        #                  then=EW(
+        #                     F('class_day') + 2 - 7 - Extract('session__key_day_date', 'week_day'),
+        #                     output_field=models.SmallIntegerField())),
+        #             default=EW(
+        #                 F('class_day') + 2 - Extract('session__key_day_date', 'week_day'),
+        #                 output_field=models.SmallIntegerField()),
+        #             output_field=models.SmallIntegerField()
+        #         ),
         #     ).annotate(
         #         shifted=Case(
         #             When(dif=0, then=0),
@@ -495,16 +505,16 @@ class ClassOfferManager(models.Manager):
         #             When(Q(session__max_day_shift__gt=F('dif')+7), then=F('dif')+7),
         #             When(session__max_day_shift__lt=F('dif')-7, then=F('dif')-7),
         #             When(Q(session__max_day_shift__gt=0) & Q(session__max_day_shift__lt=F('dif')), then=F('dif')-7),
-        #             default=F('dif'), output_field=models.SmallIntegerField)
+        #             default=F('dif'), output_field=models.SmallIntegerField())
         #     ).annotate(
         #         start=Case(  # TODO: Rename to start_date and replace the @property version.
         #             When(dif=0, then=F('session__key_day_date')),
-        #             default=(F('session__key_day_date') + timedelta(days=7*F('shifted'))),
-        #             output_field=models.DateField)
+        #             default=(F('session__key_day_date') + week*F('shifted')),
+        #             output_field=models.DateField())
         #     ).annotate(
-        #         end=ExpressionWrapper(  # TODO: Rename to end_date and replace the @property version.
-        #             F('start') + timedelta(days=7*(F('subject__num_weeks') + F('skip_weeks') - 1)),
-        #             output_field=models.DateField)
+        #         end=EW(  # TODO: Rename to end_date and replace the @property version.
+        #             F('start') + week*(F('subject__num_weeks') + F('skip_weeks') - 1),
+        #             output_field=models.DateField())
         #     )  # TODO: Use other annotations for current @property defined in the model.
 
     # def resources(self, *args, **kwargs):
