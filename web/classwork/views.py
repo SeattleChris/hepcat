@@ -192,14 +192,9 @@ class ProfileView(DetailView):
         # TODO: Revisit the following for better query techniques.
         student = getattr(self.request.user, 'student', None)
         if student:
-            student.taken
-            # registers = list(Registration.objects.filter(student=self.object).values('classoffer'))
-            # ids = list(set([list(ea.values())[0] for ea in registers]))
-            # taken = ClassOffer.objects.filter(id__in=ids)
-            # print(ids)
             taken = student.taken.all()
             res = []
-            now, week, no_time = date.today(), timedelta(days=7), timedelta(days=0)
+            now, week, = date.today(), timedelta(days=7)
             for cur in taken:
                 start_date, end_date, skips = cur.start_date, cur.end_date, cur.skip_weeks
                 early = min((now, start_date))
@@ -208,7 +203,6 @@ class ProfileView(DetailView):
                 wk4_date = start_date + week*3
                 weeks_since = (now - start_date) // week
 
-                # dates += [end_date + week * i for i in range(50)]
                 qr = Resource.objects.annotate(
                         publish=Case(
                             When(Q(avail=0), then=early),
@@ -232,7 +226,6 @@ class ProfileView(DetailView):
             # of the current user resources that are past their avail date.
             context['resources'] = {key: vals for (key, vals) in ct.items() if len(vals) > 0}
             # context['resources'] only has the ct keys if the values have data.
-            # print(context['resources'])
         else:
             context['had'] = None
             context['resources'] = {}
