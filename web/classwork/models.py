@@ -82,29 +82,32 @@ class ResourceManager(models.Manager):
             type_user = user_lookup.get(type_user, 0)
         if not isinstance(type_user, int) or type_user < 0 or type_user > 3:
             raise TypeError(_("The type_user parameter must be an appropriate string or integer"))
-        now_date = date.today()
-        early = min(start, now_date)
+        now = date.today()
+        week = timedelta(days=7)
+        weeks_since = (now - start) // week
+        early = min(start, now)
+        wk2_date = start + week
+        wk3_date = start + week*2
+        wk4_date = start + week*3
+        # dates = [early, start]
+        # dates += [start + week * (i - 1) for i in range(2, 6)]
+        # dates[5] = end
+
         return self.get_queryset().annotate(
                 publish=Case(
-                    When(avail=0, then=early),
-                    When(avail=5, then=end),
-                    default=(start + timedelta(days=7*F('avail'))),
-                    output_field=models.DateField()
-                )
+                    When(Q(avail=0), then=early),
+                    When(Q(avail=1), then=start),
+                    When(Q(avail=2), then=wk2_date),
+                    When(Q(avail=3), then=wk3_date),
+                    When(Q(avail=4), then=wk4_date),
+                    When(Q(avail=5), then=end),
+                    default=None,
+                    output_field=models.DateField()),
             ).filter(
-                Q(expire=0) | Q(F('publish') + timedelta(days=7*(F('expire') + skips)) <= now_date),
-                publish__lte=now_date,
-                user_type__gt=type_user  # TODO: Refactor to filter out user_type is called before this method.
+                Q(expire=0) | Q(expire__lt=F('avail') + weeks_since - skips),
+                publish__isnull=False, publish__lte=now,
+                # user_type__lte=type_user  # TODO: Refactor to filter out user_type is called before this method.
             )
-        # ).annotate(
-        #     completed=Case(
-        #         When(expire=0, then=False),
-        #         default=(F('publish') + timedelta(days=7*(F('expire') + skips)) > now_date),
-        #         output_field=models.BooleanField
-        #     )
-        # ).filter(
-        #     completed=False, publish__lte=now_date, user_type__gt=type_user
-        # )
 
 
 class Resource(models.Model):
