@@ -1,6 +1,6 @@
 from django.db import models
-from django.db.models import Q, F, Case, When, Count, Max  # , OuterRef, ExpressionWrapper as EW  # , Min, Avg, Sum
-# from django.db.models.functions import Extract, ExtractYear, ExtractMonth, ExtractDay, Trunc
+from django.db.models import Q, F, Case, When, Count, Max, OuterRef, ExpressionWrapper as EW  # , Min, Avg, Sum
+from django.db.models.functions import Extract  # , ExtractYear, ExtractMonth, ExtractDay, Trunc
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
@@ -485,37 +485,81 @@ class Session(models.Model):
 class ClassOfferManager(models.Manager):
 
     def get_queryset(self, *args, **kwargs):
-        return super().get_queryset(*args, **kwargs)
-        # week = timedelta(days=7)
-        # return super().get_queryset(*args, **kwargs).annotate(
-        #         dif=Case(
-        #             When(Q(session__key_day_date__week_day=1),
-        #                  then=EW(
-        #                     F('class_day') + 2 - 7 - Extract('session__key_day_date', 'week_day'),
-        #                     output_field=models.SmallIntegerField())),
-        #             default=EW(
-        #                 F('class_day') + 2 - Extract('session__key_day_date', 'week_day'),
-        #                 output_field=models.SmallIntegerField()),
-        #             output_field=models.SmallIntegerField()
-        #         ),
-        #     ).annotate(
-        #         shifted=Case(
-        #             When(dif=0, then=0),
-        #             When(Q(session__max_day_shift__lt=0) & Q(session__max_day_shift__gt=F('dif')), then=F('dif')+7),
-        #             When(Q(session__max_day_shift__gt=F('dif')+7), then=F('dif')+7),
-        #             When(session__max_day_shift__lt=F('dif')-7, then=F('dif')-7),
-        #             When(Q(session__max_day_shift__gt=0) & Q(session__max_day_shift__lt=F('dif')), then=F('dif')-7),
-        #             default=F('dif'), output_field=models.SmallIntegerField())
-        #     ).annotate(
-        #         start=Case(  # TODO: Rename to start_date and replace the @property version.
-        #             When(dif=0, then=F('session__key_day_date')),
-        #             default=(F('session__key_day_date') + week*F('shifted')),
-        #             output_field=models.DateField())
-        #     ).annotate(
-        #         end=EW(  # TODO: Rename to end_date and replace the @property version.
-        #             F('start') + week*(F('subject__num_weeks') + F('skip_weeks') - 1),
-        #             output_field=models.DateField())
-        #     )  # TODO: Use other annotations for current @property defined in the model.
+        # return super().get_queryset(*args, **kwargs)
+        week = timedelta(days=7)
+        day = timedelta(days=1)
+        return super().get_queryset(*args, **kwargs).annotate(
+                dif=Case(
+                    When(Q(session__key_day_date__week_day=1),
+                         then=EW(
+                            F('class_day') + 2 - 7 - Extract('session__key_day_date', 'week_day'),
+                            output_field=models.SmallIntegerField())),
+                    default=EW(
+                        F('class_day') + 2 - Extract('session__key_day_date', 'week_day'),
+                        output_field=models.SmallIntegerField()),
+                    output_field=models.SmallIntegerField()
+                ),
+            ).annotate(
+                shifted=Case(
+                    When(dif=0, then=0),
+                    When(Q(session__max_day_shift__lt=0) & Q(session__max_day_shift__gt=F('dif')), then=F('dif')+7),
+                    When(Q(session__max_day_shift__gt=F('dif')+7), then=F('dif')+7),
+                    When(session__max_day_shift__lt=F('dif')-7, then=F('dif')-7),
+                    When(Q(session__max_day_shift__gt=0) & Q(session__max_day_shift__lt=F('dif')), then=F('dif')-7),
+                    default=F('dif'), output_field=models.SmallIntegerField())
+            ).annotate(  # TODO: Rename to start_date and replace the @property version.
+                start=Case(
+                    When(shifted=0,  then=F('session__key_day_date')),
+                    When(shifted=-6, then=F('session__key_day_date') - 6*day),
+                    When(shifted=-5, then=F('session__key_day_date') - 5*day),
+                    When(shifted=-4, then=F('session__key_day_date') - 4*day),
+                    When(shifted=-3, then=F('session__key_day_date') - 3*day),
+                    When(shifted=-2, then=F('session__key_day_date') - 2*day),
+                    When(shifted=-1, then=F('session__key_day_date') - 1*day),
+                    When(shifted=1,  then=F('session__key_day_date') + 1*day),
+                    When(shifted=2,  then=F('session__key_day_date') + 2*day),
+                    When(shifted=3,  then=F('session__key_day_date') + 3*day),
+                    When(shifted=4,  then=F('session__key_day_date') + 4*day),
+                    When(shifted=5,  then=F('session__key_day_date') + 5*day),
+                    When(shifted=6,  then=F('session__key_day_date') + 6*day),
+                    default=F('session__key_day_date'),
+                    output_field=models.DateField()),
+                no_skip_end=Case(
+                    When(subject__num_weeks=settings.DEFAULT_SESSION_WEEKS,
+                         then=F('session__key_day_date') + week * (settings.DEFAULT_SESSION_WEEKS)),
+                    When(subject__num_weeks=1,  then=F('session__key_day_date')),
+                    When(subject__num_weeks=2,  then=F('session__key_day_date') + 1*week),
+                    When(subject__num_weeks=3,  then=F('session__key_day_date') + 2*week),
+                    When(subject__num_weeks=4,  then=F('session__key_day_date') + 3*week),
+                    When(subject__num_weeks=5,  then=F('session__key_day_date') + 4*week),
+                    When(subject__num_weeks=6,  then=F('session__key_day_date') + 5*week),
+                    When(subject__num_weeks=7,  then=F('session__key_day_date') + 6*week),
+                    When(subject__num_weeks=8,  then=F('session__key_day_date') + 7*week),
+                    When(subject__num_weeks=9,  then=F('session__key_day_date') + 8*week),
+                    When(subject__num_weeks=10, then=F('session__key_day_date') + 9*week),
+                    When(subject__num_weeks=11, then=F('session__key_day_date') + 10*week),
+                    When(subject__num_weeks=12, then=F('session__key_day_date') + 11*week),
+                    When(subject__num_weeks=13, then=F('session__key_day_date') + 12*week),
+                    When(subject__num_weeks=14, then=F('session__key_day_date') + 13*week),
+                    When(subject__num_weeks=15, then=F('session__key_day_date') + 14*week),
+                    When(subject__num_weeks=16, then=F('session__key_day_date') + 15*week),
+                    When(subject__num_weeks=17, then=F('session__key_day_date') + 16*week),
+                    When(subject__num_weeks=18, then=F('session__key_day_date') + 17*week),
+                    When(subject__num_weeks=19, then=F('session__key_day_date') + 18*week),
+                    When(subject__num_weeks=20, then=F('session__key_day_date') + 19*week),
+                    default=F('session__key_day_date') + week * settings.DEFAULT_SESSION_WEEKS,
+                    output_field=models.DateField())
+            ).annotate(
+                end=Case(
+                    When(skip_weeks=0, then=F('no_skip_end')),
+                    When(skip_weeks=1, then=F('no_skip_end') + 1*week),
+                    When(skip_weeks=2, then=F('no_skip_end') + 2*week),
+                    When(skip_weeks=3, then=F('no_skip_end') + 3*week),
+                    When(skip_weeks=4, then=F('no_skip_end') + 4*week),
+                    When(skip_weeks=5, then=F('no_skip_end') + 5*week),
+                    default=F('no_skip_end'),
+                    output_field=models.DateField()),
+            )
 
     # def resources(self, *args, **kwargs):
     #     res = Resource.objects.filter(
