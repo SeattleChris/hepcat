@@ -1,6 +1,6 @@
 from django.db import models
-from django.db.models import Q, F, Case, When, OuterRef, Count, Max, ExpressionWrapper as EW  # , Min, Avg, Sum
-from django.db.models.functions import Extract, ExtractYear, ExtractMonth, ExtractDay, Trunc
+from django.db.models import Q, F, Case, When, Count, Max  # , OuterRef, ExpressionWrapper as EW  # , Min, Avg, Sum
+# from django.db.models.functions import Extract, ExtractYear, ExtractMonth, ExtractDay, Trunc
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
@@ -682,37 +682,6 @@ class AbstractProfile(models.Model):
 
     def __repr__(self):
         return "<Profile: {} | User id: {} >".format(self.full_name, self.user.id)
-
-
-# class AvailableResourceQuerySet(models.QuerySet):
-#     """ Used by Student profile model as Student.resources """
-
-#     def resources(self, start=None, end=None, skips=None):
-#         if self.model == Student:
-#             pass
-#         if self.model == ClassOffer:
-#             pass
-#         if self.model == Subject:
-#             pass
-#     pass
-
-#     # end AvailableResourceManager
-
-
-# class AvailableResourceManager(models.Manager):
-#     """ Used by Student profile model as Student.resources """
-#     # self.model = Model being used by this Manager.
-
-#     def resources(self):
-#         if self.model == Student:
-#             pass
-#         if self.model == ClassOffer:
-#             pass
-#         if self.model == Subject:
-#             pass
-#     pass
-
-#     # end AvailableResourceManager
 
 
 class Staff(AbstractProfile):
