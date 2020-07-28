@@ -5,7 +5,8 @@ from django.utils.translation import gettext_lazy as _
 from django.shortcuts import get_object_or_404, redirect  # used for Payments
 from django.template.response import TemplateResponse  # used for Payments
 from payments import get_payment_model, RedirectNeeded  # used for Payments
-from django.db.models import Q, F, Case, When, DateField, BooleanField, functions, ExpressionWrapper as EW  # ,
+from django.db.models import Q, F, Case, When, DateField, BooleanField, SmallIntegerField, DurationField, ExpressionWrapper as EW  # ,
+from django.db.models.functions import Trunc  # , Extract, ExtractYear, ExtractMonth, ExtractDay
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth import get_user_model
 from .forms import RegisterForm, PaymentForm  # , ProfileForm, UserForm
@@ -172,7 +173,7 @@ class ResourceDetailView(DetailView):
 class ProfileView(DetailView):
     """Each user has a page where they can see resources that have been made available to them. """
     template_name = 'classwork/user.html'
-    # model = Student
+    model = Student
     context_object_name = 'profile'
     pk_url_kwarg = 'id'
     # TODO: Work on the actual layout and presentation of the avail Resources
@@ -202,37 +203,28 @@ class ProfileView(DetailView):
             for cur in taken:
                 start_date, end_date, skips = cur.start_date, cur.end_date, cur.skip_weeks
                 early = min((now, start_date))
+                wk2_date = start_date + week
+                wk3_date = start_date + week*2
+                wk4_date = start_date + week*3
+                weeks_since = (now - start_date) // week
+
+                # dates += [end_date + week * i for i in range(50)]
                 qr = Resource.objects.annotate(
-                        pub=Case(
+                        publish=Case(
                             When(Q(avail=0), then=early),
+                            When(Q(avail=1), then=start_date),
+                            When(Q(avail=2), then=wk2_date),
+                            When(Q(avail=3), then=wk3_date),
+                            When(Q(avail=4), then=wk4_date),
                             When(Q(avail=5), then=end_date),
-                            default=(start_date + F('avail')*week),
-                            output_field=DateField
-                        )
-                    ).annotate(
-                        dead=Case(
-                            When(Q(expire=0), then=False),
-                            default=functions.Cast(
-                                start_date + (F('expire') + skips)*week,
-                                output_field=DateField) - now > no_time,
-                            output_field=BooleanField
-                        )
+                            default=None,
+                            output_field=DateField()),
                     ).filter(
-                        Q(classoffer=cur) | Q(subject=cur.subject),
-                        pub__lte=now,
-                        dead=False,
-                        user_type__gt=1
+                        Q(expire=0) | Q(expire__lt=F('avail') + weeks_since - skips),
+                        publish__lte=now,
                     )
-                res += qr.all()
-            # for ea in ids:
-            #     cur = ClassOffer.objects.get(id=ea)
-            #     cur_res = [res for res in Resource.objects.filter(
-            #         Q(classoffer=cur) |
-            #         Q(subject=cur.subject)
-            #         ) if res.publish(cur)]
-            #     res.extend(cur_res) if len(cur_res) else None
-            # print('----- res ------')
-            # print(res)
+                print(qr)
+                res += [ea for ea in qr]
             context['had'] = taken
             ct = {ea[0]: [] for ea in Resource.CONTENT_CHOICES}
             [ct[ea.content_type].append(ea) for ea in res]
