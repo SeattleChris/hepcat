@@ -86,21 +86,13 @@ class ResourceManager(models.Manager):
         week = timedelta(days=7)
         weeks_since = (now - start) // week
         early = min(start, now)
-        wk2_date = start + week
-        wk3_date = start + week*2
-        wk4_date = start + week*3
-        # dates = [early, start]
-        # dates += [start + week * (i - 1) for i in range(2, 6)]
-        # dates[5] = end
+        dates = [early, start]
+        dates += [start + week * i for i in range(1, 5)]
+        dates[5] = end
 
         return self.get_queryset().annotate(
                 publish=Case(
-                    When(Q(avail=0), then=early),
-                    When(Q(avail=1), then=start),
-                    When(Q(avail=2), then=wk2_date),
-                    When(Q(avail=3), then=wk3_date),
-                    When(Q(avail=4), then=wk4_date),
-                    When(Q(avail=5), then=end),
+                    *[When(Q(avail=num), then=date) for num, date in enumerate(dates)],
                     default=None,
                     output_field=models.DateField()),
             ).filter(
@@ -329,7 +321,7 @@ class Session(models.Model):
 
     @property
     def start_date(self):
-        """ Return the date for whichever is the actual first class day. """
+        """ Return the date for the earliest possible first class day, based on Session field values. """
         first_date = self.key_day_date
         if self.max_day_shift < 0:
             first_date += timedelta(days=self.max_day_shift)
@@ -337,7 +329,7 @@ class Session(models.Model):
 
     @property
     def end_date(self):
-        """ Return the date for the last class day. """
+        """ Return the date for the last possible class day, based on Session field values. """
         last_date = self.key_day_date + timedelta(days=7*(self.num_weeks + self.skip_weeks - 1))
         if (self.max_day_shift < 0 and self.flip_last_day) or \
            (self.max_day_shift > 0 and not self.flip_last_day):
@@ -378,7 +370,7 @@ class Session(models.Model):
             raise ValueError(_("Not a valid field parameter: {} ".format(field)))
         now = date.today()
         final_session = cls.last_session(since=since)
-        while final_session is not None and final_session.num_weeks < settings.SESSION_MINIMUM_WEEKS:
+        while final_session is not None and final_session.num_weeks < settings.SESSION_LOW_WEEKS:
             final_session = final_session.prev_session
         if not final_session:
             new_date = None
@@ -396,7 +388,7 @@ class Session(models.Model):
 
     def computed_expire_day(self, key_day=None):
         """ Assumes unaffected by skipped weeks. Based on parameters from settings. """
-        minimum_session_weeks = settings.SESSION_MINIMUM_WEEKS
+        minimum_session_weeks = settings.SESSION_LOW_WEEKS
         default_expire = settings.DEFAULT_SESSION_EXPIRE
         short_expire = settings.SHORT_SESSION_EXPIRE
         if not key_day:
@@ -488,9 +480,7 @@ class Session(models.Model):
 class ClassOfferManager(models.Manager):
 
     def get_queryset(self, *args, **kwargs):
-        # return super().get_queryset(*args, **kwargs)
-        week = timedelta(days=7)
-        day = timedelta(days=1)
+        day, week = timedelta(days=1), timedelta(days=7)
         return super().get_queryset(*args, **kwargs).annotate(
                 dif=Case(
                     When(Q(session__key_day_date__week_day=1),
@@ -564,11 +554,11 @@ class ClassOfferManager(models.Manager):
                     output_field=models.DateField()),
             )
 
-    # def resources(self, *args, **kwargs):
-    #     res = Resource.objects.filter(
-    #             Q(classoffer=OuterRef('pk')) | Q(subject=OuterRef('subject'))
-    #         ).distinct(
-    #         )  # TODO: Use the alive qs filter on ResourceManager, passing the start, end, and skips values.
+    def resources(self, *args, **kwargs):
+        res = Resource.objects.filter(
+                Q(classoffer=OuterRef('pk')) | Q(subject=OuterRef('subject'))
+            ).distinct(
+            )  # TODO: Use the alive qs filter on ResourceManager, passing the start, end, and skips values.
 
 
 class ClassOffer(models.Model):
