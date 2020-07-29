@@ -187,38 +187,24 @@ class ProfileView(DetailView):
 
     def get_context_data(self, **kwargs):
         """ Modify the context """
+        from pprint import pprint
         context = super().get_context_data(**kwargs)
         # print('===== ProfileView get_context_data ======')
         # TODO: Revisit the following for better query techniques.
         student = getattr(self.request.user, 'student', None)
         if student:
             taken = student.taken.all()
+            print("========================= Resources on Student.taken ===================================")
+            res_taken = student.taken.resources
+            pprint(res_taken)
+            pprint(student.taken.dates())
+            temp = ClassOffer.objects.resources()
+            pprint(temp)
             res = []
-            now, week, = date.today(), timedelta(days=7)
+            # res = [Resource.objects.alive(start=cur.start_date, end=cur.end_date, skips=cur.skip_weeks).all() for cur in taken]
             for cur in taken:
-                start_date, end_date, skips = cur.start_date, cur.end_date, cur.skip_weeks
-                early = min((now, start_date))
-                wk2_date = start_date + week
-                wk3_date = start_date + week*2
-                wk4_date = start_date + week*3
-                weeks_since = (now - start_date) // week
-
-                qr = Resource.objects.annotate(
-                        publish=Case(
-                            When(Q(avail=0), then=early),
-                            When(Q(avail=1), then=start_date),
-                            When(Q(avail=2), then=wk2_date),
-                            When(Q(avail=3), then=wk3_date),
-                            When(Q(avail=4), then=wk4_date),
-                            When(Q(avail=5), then=end_date),
-                            default=None,
-                            output_field=DateField()),
-                    ).filter(
-                        Q(expire=0) | Q(expire__lt=F('avail') + weeks_since - skips),
-                        publish__lte=now,
-                    )
-                print(qr)
-                res += [ea for ea in qr]
+                qr = Resource.objects.alive(start=cur.start_date, end=cur.end_date, skips=cur.skip_weeks)
+                res += qr.all()
             context['had'] = taken
             ct = {ea[0]: [] for ea in Resource.CONTENT_CHOICES}
             [ct[ea.content_type].append(ea) for ea in res]

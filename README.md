@@ -186,7 +186,8 @@ Each organization installing this app while have some unique settings. Some of t
 * DEFAULT_KEY_DAY: Integer for day of the week, counting up with Monday as 0.
 * DEFAULT_MAX_DAY_SHIFT: A positive or negative number of days away from the key_day_date.
 * DEFAULT_SESSION_WEEKS: The typical duration of class weeks for most Sessions.
-* SESSION_MINIMUM_WEEKS: If a Session.num_weeks is less than this, it won't be considered in computed dates.
+* SESSION_LOW_WEEKS: If a Session.num_weeks is less than this, it won't be considered in computed dates.
+* SESSION_MAX_WEEKS: The longest any session can last. Used for potential resources before Session.num_weeks is known.
 * DEFAULT_SESSION_EXPIRE: For a typical session, expire publishing it how many days after the first class?
 * SHORT_SESSION_EXPIRE: For a session under minimum_weeks, expire publishing it how many days after the first class?
 * DEFAULT_CLASS_MINUTES: The typical length of time of a single class day.

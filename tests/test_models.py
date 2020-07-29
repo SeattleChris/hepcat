@@ -561,7 +561,7 @@ class SessionCoverageTests(TransactionTestCase):
 
     def test_default_date_traverse_prev_for_final_session(self):
         first = Session.objects.first()  # key_day_date = "2020-04-30", num_weeks = 5
-        minimum_session_weeks = settings.SESSION_MINIMUM_WEEKS
+        minimum_session_weeks = settings.SESSION_LOW_WEEKS
         second = self.create_session(name="short_session", num_weeks=(minimum_session_weeks - 1))
         second.save()
         expected_key_day = first.key_day_date + timedelta(days=7*(first.num_weeks + first.break_weeks))

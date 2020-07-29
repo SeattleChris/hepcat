@@ -19,6 +19,8 @@
   {% for classoffer in classoffers %}
   <article class="classoffer">
     <h2>{{ classoffer.subject.title }}</h2>
+    <p>dif, shifted: {{classoffer.dif}}, {{classoffer.shifted}} | dates: {{classoffer.start}} - {{classoffer.end}}</p>
+    <p>no_skip_end: {{classoffer.no_skip_end}} </p>
     <ul>
       {% if classoffer.subject.tagline_1 %}<li>{{classoffer.subject.tagline_1}}</li>{% endif %}
       {% if classoffer.subject.tagline_2 %}<li>{{classoffer.subject.tagline_2}}</li>{% endif %}
