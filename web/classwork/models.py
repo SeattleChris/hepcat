@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import Q, F, Case, When, Count, Max, OuterRef, ExpressionWrapper as EW  # , Min, Avg, Sum
+from django.db.models import Q, F, Case, When, Count, Max, OuterRef, Subquery, ExpressionWrapper as EW  # Min, Avg, Sum
 from django.db.models.functions import Extract  # , ExtractYear, ExtractMonth, ExtractDay, Trunc
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -65,13 +65,13 @@ class Location(models.Model):
 
 class ResourceManager(models.Manager):
 
-    def get_queryset(self, *args, **kwargs):
-        return super().get_queryset(*args, **kwargs)
+    def get_queryset(self):
+        return super().get_queryset()
         # .annotate(
         #         some_value='Hello'
         #     )
 
-    def alive(self, start=None, end=None, skips=0, type_user=0, **kwargs):
+    def alive(self, start=None, end=None, skips=0, type_user=0):
         """ Will filter and annotate to return only currently published Resource for the given context. """
         if not isinstance(start, date) or not isinstance(end, date):
             raise TypeError(_("Both start and end parameters must be date objects. "))
@@ -85,9 +85,8 @@ class ResourceManager(models.Manager):
         now = date.today()
         week = timedelta(days=7)
         weeks_since = (now - start) // week
-        dates = [start + week * i for i in range(settings.SESSION_MAX_WEEKS - 1)]
         early = min(start, now)
-        dates = [early] + dates + [end]
+        dates = [early] + [start + week * i for i in range(settings.SESSION_MAX_WEEKS - 1)] + [end]
 
         return self.get_queryset().annotate(
                 publish=Case(
@@ -470,13 +469,13 @@ class Session(models.Model):
         return '<Session: {} >'.format(self.name)
 
 
-class ClassOfferManager(models.Manager):
+class CustomQuerySet(models.QuerySet):
 
-    def get_queryset(self, *args, **kwargs):
+    def dates(self):
         day, week = timedelta(days=1), timedelta(days=7)
         sess_max = settings.SESSION_MAX_WEEKS
         skip_max = settings.SESSION_MAX_SKIP
-        return super().get_queryset(*args, **kwargs).annotate(
+        return self.annotate(
                 dif=Case(
                     When(Q(session__key_day_date__week_day=1),
                          then=EW(
@@ -514,11 +513,75 @@ class ClassOfferManager(models.Manager):
                     output_field=models.DateField()),
             )
 
-    def resources(self, *args, **kwargs):
+    def resources(self):
         res = Resource.objects.filter(
                 Q(classoffer=OuterRef('pk')) | Q(subject=OuterRef('subject'))
-            ).distinct(
-            )  # TODO: Use the alive qs filter on ResourceManager, passing the start, end, and skips values.
+            # ).distinct(
+            ).alive(
+                start=OuterRef('start'),
+                end=OuterRef('end'),
+                skips=OuterRef('skip_weeks')
+            )
+        return self.dates().annotate(resources=Subquery(res))
+
+
+class ClassOfferManager(models.Manager):
+
+    def get_queryset(self):
+        return CustomQuerySet(self.model, using=self._db)
+        # day, week = timedelta(days=1), timedelta(days=7)
+        # sess_max = settings.SESSION_MAX_WEEKS
+        # skip_max = settings.SESSION_MAX_SKIP
+        # return super().get_queryset().annotate(
+        #         dif=Case(
+        #             When(Q(session__key_day_date__week_day=1),
+        #                  then=EW(
+        #                     F('class_day') + 2 - 7 - Extract('session__key_day_date', 'week_day'),
+        #                     output_field=models.SmallIntegerField())),
+        #             default=EW(
+        #                 F('class_day') + 2 - Extract('session__key_day_date', 'week_day'),
+        #                 output_field=models.SmallIntegerField()),
+        #             output_field=models.SmallIntegerField()
+        #         ),
+        #     ).annotate(
+        #         shifted=Case(
+        #             When(dif=0, then=0),
+        #             When(Q(session__max_day_shift__lt=0) & Q(session__max_day_shift__gt=F('dif')), then=F('dif')+7),
+        #             When(Q(session__max_day_shift__gt=F('dif')+7), then=F('dif')+7),
+        #             When(session__max_day_shift__lt=F('dif')-7, then=F('dif')-7),
+        #             When(Q(session__max_day_shift__gt=0) & Q(session__max_day_shift__lt=F('dif')), then=F('dif')-7),
+        #             default=F('dif'), output_field=models.SmallIntegerField())
+        #     ).annotate(  # TODO: Rename to start_date and replace the @property version.
+        #         start=Case(
+        #             When(shifted=0,  then=F('session__key_day_date')),
+        #             *[When(shifted=i, then=F('session__key_day_date') + i*day) for i in range(-6, 7)],
+        #             default=F('session__key_day_date'),
+        #             output_field=models.DateField()),
+        #         no_skip_end=Case(
+        #             When(subject__num_weeks=settings.DEFAULT_SESSION_WEEKS,
+        #                  then=F('session__key_day_date') + week * (settings.DEFAULT_SESSION_WEEKS)),
+        #             *[When(subject__num_weeks=i+1,  then=F('session__key_day_date') + i*week) for i in range(sess_max)],
+        #             default=F('session__key_day_date') + week * settings.DEFAULT_SESSION_WEEKS,
+        #             output_field=models.DateField())
+        #     ).annotate(
+        #         end=Case(
+        #             *[When(skip_weeks=i, then=F('no_skip_end') + i*week) for i in range(skip_max + 1)],
+        #             default=F('no_skip_end'),
+        #             output_field=models.DateField()),
+        #     )
+
+    def resources(self, *args, **kwargs):
+        return self.get_queryset().resources()
+        # return CustomQuerySet(self.model, using=self._db).resources()
+        # res = Resource.objects.filter(
+        #         Q(classoffer=OuterRef('pk')) | Q(subject=OuterRef('subject'))
+        #     ).distinct(
+        #     ).alive(
+        #         start=OuterRef('start'),
+        #         end=OuterRef('end'),
+        #         skips=OuterRef('skip_weeks')
+        #     )
+        # return self.get_queryset().annotate(resources=Subquery(res))
 
 
 class ClassOffer(models.Model):

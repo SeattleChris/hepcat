@@ -187,12 +187,19 @@ class ProfileView(DetailView):
 
     def get_context_data(self, **kwargs):
         """ Modify the context """
+        from pprint import pprint
         context = super().get_context_data(**kwargs)
         # print('===== ProfileView get_context_data ======')
         # TODO: Revisit the following for better query techniques.
         student = getattr(self.request.user, 'student', None)
         if student:
             taken = student.taken.all()
+            print("========================= Resources on Student.taken ===================================")
+            res_taken = student.taken.resources
+            pprint(res_taken)
+            pprint(student.taken.dates())
+            temp = ClassOffer.objects.resources()
+            pprint(temp)
             res = []
             # res = [Resource.objects.alive(start=cur.start_date, end=cur.end_date, skips=cur.skip_weeks).all() for cur in taken]
             for cur in taken:
