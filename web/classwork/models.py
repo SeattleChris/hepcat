@@ -130,13 +130,7 @@ class Resource(models.Model):
         (3, _('Admin')),)
     PUBLISH_CHOICES = (
         (0, _('On Sign-up, before week 1)')),
-        (1, _('After week 1')),
-        (2, _('After week 2')),
-        (3, _('After week 3')),
-        (4, _('After week 4')),
-        (5, _('After week 5')),
-        # TODO: Make this adaptable to any class duration.
-        # TODO: Make options for weekly vs. daily classes?
+        *[(num, _('After class {}'.format(num))) for num in range(1, settings.SESSION_MAX_WEEKS)],
         (200, _('After completion')))
 
     # id = auto-created
