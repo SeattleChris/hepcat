@@ -242,6 +242,7 @@ DEFAULT_MAX_DAY_SHIFT = int(os.environ.get('DEFAULT_MAX_DAY_SHIFT', -2))  # Nega
 DEFAULT_SESSION_WEEKS = int(os.environ.get('DEFAULT_SESSION_WEEKS', 5))
 SESSION_LOW_WEEKS = int(os.environ.get('SESSION_LOW_WEEKS', 1 + DEFAULT_SESSION_WEEKS // 2))
 SESSION_MAX_WEEKS = int(os.environ.get('SESSION_MAXIMUM_WEEKS', DEFAULT_SESSION_WEEKS + SESSION_LOW_WEEKS - 1))
+SESSION_MAX_SKIP = int(os.environ.get('SESSION_MAXIMUM_SKIP', SESSION_LOW_WEEKS - 1))
 DEFAULT_SESSION_EXPIRE = int(os.environ.get('DEFAULT_SESSION_EXPIRE', 8))  # number of days after the first classes.
 SHORT_SESSION_EXPIRE = int(os.environ.get('SHORT_SESSION_EXPIRE', 2))  # number of days after the first classes.
 DEFAULT_CLASS_MINUTES = int(os.environ.get('DEFAULT_CLASS_MINUTES', 60))

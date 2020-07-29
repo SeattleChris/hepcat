@@ -85,10 +85,9 @@ class ResourceManager(models.Manager):
         now = date.today()
         week = timedelta(days=7)
         weeks_since = (now - start) // week
+        dates = [start + week * i for i in range(settings.SESSION_MAX_WEEKS - 1)]
         early = min(start, now)
-        dates = [early, start]
-        dates += [start + week * i for i in range(1, 5)]
-        dates[5] = end
+        dates = [early] + dates + [end]
 
         return self.get_queryset().annotate(
                 publish=Case(
@@ -481,6 +480,8 @@ class ClassOfferManager(models.Manager):
 
     def get_queryset(self, *args, **kwargs):
         day, week = timedelta(days=1), timedelta(days=7)
+        sess_max = settings.SESSION_MAX_WEEKS
+        skip_max = settings.SESSION_MAX_SKIP
         return super().get_queryset(*args, **kwargs).annotate(
                 dif=Case(
                     When(Q(session__key_day_date__week_day=1),
@@ -503,53 +504,18 @@ class ClassOfferManager(models.Manager):
             ).annotate(  # TODO: Rename to start_date and replace the @property version.
                 start=Case(
                     When(shifted=0,  then=F('session__key_day_date')),
-                    When(shifted=-6, then=F('session__key_day_date') - 6*day),
-                    When(shifted=-5, then=F('session__key_day_date') - 5*day),
-                    When(shifted=-4, then=F('session__key_day_date') - 4*day),
-                    When(shifted=-3, then=F('session__key_day_date') - 3*day),
-                    When(shifted=-2, then=F('session__key_day_date') - 2*day),
-                    When(shifted=-1, then=F('session__key_day_date') - 1*day),
-                    When(shifted=1,  then=F('session__key_day_date') + 1*day),
-                    When(shifted=2,  then=F('session__key_day_date') + 2*day),
-                    When(shifted=3,  then=F('session__key_day_date') + 3*day),
-                    When(shifted=4,  then=F('session__key_day_date') + 4*day),
-                    When(shifted=5,  then=F('session__key_day_date') + 5*day),
-                    When(shifted=6,  then=F('session__key_day_date') + 6*day),
+                    *[When(shifted=i, then=F('session__key_day_date') + i*day) for i in range(-6, 7)],
                     default=F('session__key_day_date'),
                     output_field=models.DateField()),
                 no_skip_end=Case(
                     When(subject__num_weeks=settings.DEFAULT_SESSION_WEEKS,
                          then=F('session__key_day_date') + week * (settings.DEFAULT_SESSION_WEEKS)),
-                    When(subject__num_weeks=1,  then=F('session__key_day_date')),
-                    When(subject__num_weeks=2,  then=F('session__key_day_date') + 1*week),
-                    When(subject__num_weeks=3,  then=F('session__key_day_date') + 2*week),
-                    When(subject__num_weeks=4,  then=F('session__key_day_date') + 3*week),
-                    When(subject__num_weeks=5,  then=F('session__key_day_date') + 4*week),
-                    When(subject__num_weeks=6,  then=F('session__key_day_date') + 5*week),
-                    When(subject__num_weeks=7,  then=F('session__key_day_date') + 6*week),
-                    When(subject__num_weeks=8,  then=F('session__key_day_date') + 7*week),
-                    When(subject__num_weeks=9,  then=F('session__key_day_date') + 8*week),
-                    When(subject__num_weeks=10, then=F('session__key_day_date') + 9*week),
-                    When(subject__num_weeks=11, then=F('session__key_day_date') + 10*week),
-                    When(subject__num_weeks=12, then=F('session__key_day_date') + 11*week),
-                    When(subject__num_weeks=13, then=F('session__key_day_date') + 12*week),
-                    When(subject__num_weeks=14, then=F('session__key_day_date') + 13*week),
-                    When(subject__num_weeks=15, then=F('session__key_day_date') + 14*week),
-                    When(subject__num_weeks=16, then=F('session__key_day_date') + 15*week),
-                    When(subject__num_weeks=17, then=F('session__key_day_date') + 16*week),
-                    When(subject__num_weeks=18, then=F('session__key_day_date') + 17*week),
-                    When(subject__num_weeks=19, then=F('session__key_day_date') + 18*week),
-                    When(subject__num_weeks=20, then=F('session__key_day_date') + 19*week),
+                    *[When(subject__num_weeks=i+1,  then=F('session__key_day_date') + i*week) for i in range(sess_max)],
                     default=F('session__key_day_date') + week * settings.DEFAULT_SESSION_WEEKS,
                     output_field=models.DateField())
             ).annotate(
                 end=Case(
-                    When(skip_weeks=0, then=F('no_skip_end')),
-                    When(skip_weeks=1, then=F('no_skip_end') + 1*week),
-                    When(skip_weeks=2, then=F('no_skip_end') + 2*week),
-                    When(skip_weeks=3, then=F('no_skip_end') + 3*week),
-                    When(skip_weeks=4, then=F('no_skip_end') + 4*week),
-                    When(skip_weeks=5, then=F('no_skip_end') + 5*week),
+                    *[When(skip_weeks=i, then=F('no_skip_end') + i*week) for i in range(skip_max + 1)],
                     default=F('no_skip_end'),
                     output_field=models.DateField()),
             )
