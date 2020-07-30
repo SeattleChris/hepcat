@@ -1,8 +1,8 @@
 from django.db import models
-from django.db.models import Q, F, Func, Value, Case, When, Count, Max, OuterRef, Subquery, ExpressionWrapper as EW
-# Avg, Sum, Min
-from django.db.models.functions import Trunc, Now, Least, Extract  # , ExtractWeek, ExtractIsoYear
-from .transforms import AddDate, DateDiff, DayYear, NumDay, DateFromNum, MakeDate, DateToday
+from django.db.models import Q, F, Func, Case, When, Count, Max, OuterRef, Subquery, ExpressionWrapper as EW
+# Avg, Sum, Min, Value
+from django.db.models.functions import Least, Extract  # , ExtractWeek, ExtractIsoYear, Trunc, Now,
+# from .transforms import AddDate, DateDiff, DayYear, NumDay, DateFromNum, MakeDate, DateToday
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
@@ -86,45 +86,27 @@ class ResourceManager(models.Manager):
             pass
         elif not isinstance(type_user, int) or type_user < 0 or type_user > 3:
             raise TypeError(_("The type_user parameter must be an appropriate string or integer"))
-        # now = date.today()
-        # now = Trunc(Now(), 'day', output_field=models.DateField())
         now = Func(function='CURDATE', output_field=models.DateField())
-        week = timedelta(days=7)
-
-        # days_since = DateDiff(now, start)
-        # td_since = now - start
-        # days_since =
-        # td_weeks_since = ExtractWeek(now) - ExtractWeek(start)  # + 53 * (ExtractIsoYear(now) - ExtractIsoYear(start))
-        # td_weeks_since = EW(td_weeks_since, output_field=models.SmallIntegerField())
-        # weeks_since = td_since // week  # TODO: This works when given a date obj, but not an OuterRef obj.
         early = Least(start, now)
         dates = [Func(start, 7 * i, function='ADDDATE') for i in range(settings.SESSION_MAX_WEEKS - 1)]
         dates = [early] + dates + [end]
-        # AddDate, DateDiff, DayYear, NumDay, DateFromNum, MakeDate, DateToday
-        # ADDDATE, DATEDIFF, DAYOFYEAR, TO_DAYS, FROM_DAYS, MAKEDATE, CURDATE
+        # MySQL Functions: ADDDATE, DATEDIFF, DAYOFYEAR, TO_DAYS, FROM_DAYS, MAKEDATE, CURDATE
         return self.get_queryset().annotate(
                 publish=Case(
                     *[When(Q(avail=num), then=date) for num, date in enumerate(dates)],
-                    default=None,
+                    default=end,
                     output_field=models.DateField()),
                 days_since=Func(start, now, function='DATEDIFF', output_field=models.SmallIntegerField()),
-            ).annotate(
-                # weeks_since=EW(F('days_since') // 7, output_field=models.SmallInterField()),
-                not_expired=Case(
-                    When(Q(expire=0), then=True),
-                    When(Q(days_since__lt=7*(F('avail') + F('expire') + skips)), then=True),
-                    default=False,
-                    # default=EW(
-                    #     7 * (F('avail') + F('expire') + skips) < F('days_since'),
-                    #     output_field=models.BooleanField()),
-                    output_field=models.BooleanField()),
-                # weeks_since=EW(days_since // 7, output_field=models.SmallIntegerField()),
-                # pos=Func(F('title'), Value(search), function='INSTR'),
+            # ).annotate(
+            #     is_allowed=Case(
+            #         When(Q(expire=0) & Q(publish__lte=now), then=True),
+            #         When(Q(days_since__lt=7*(F('avail') + F('expire') + skips)) & Q(publish__lte=now), then=True),
+            #         default=False,
+            #         output_field=models.BooleanField()),
             ).filter(
-            #     # Q(expire=0) | Q(expire__lt=F('avail') + F('weeks_since') - skips),
-                not_expired=True,
-                publish__isnull=False, publish__lte=now,
-            #     # user_type__lte=type_user  # TODO: Refactor to filter out user_type is called before this method.
+                # is_allowed=True,
+                Q(expire=0) | Q(days_since__lt=7*(F('avail') + F('expire') + skips)),
+                publish__lte=now,
             )
 
 
