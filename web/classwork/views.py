@@ -193,13 +193,13 @@ class ProfileView(DetailView):
         # TODO: Revisit the following for better query techniques.
         student = getattr(self.request.user, 'student', None)
         if student:
-            taken = student.taken.all()
+            taken = student.taken.all()  # Has start & end since ClassOffer manager calls 'with_dates' for all queries.
             print("========================= Resources on Student.taken ===================================")
-            res_taken = student.taken.resources
-            pprint(res_taken)
-            pprint(student.taken.dates())
-            temp = ClassOffer.objects.resources()
-            pprint(temp)
+            # res_taken = student.taken.resources
+            # pprint(res_taken())
+            # temp = ClassOffer.objects.resources()
+            # pprint(temp)
+            print("---------------------------------------------------------------------------------------")
             res = []
             # res = [Resource.objects.alive(start=cur.start_date, end=cur.end_date, skips=cur.skip_weeks).all() for cur in taken]
             for cur in taken:
@@ -280,8 +280,8 @@ class RegisterView(CreateView):
         # print('================ RegisterView.get_form_kwargs =================')
         kwargs = super(RegisterView, self).get_form_kwargs()
         sess = self.kwargs.get('display_session', None)
-        date = self.kwargs.get('display_date', None)
-        class_choices = ClassOffer.objects.filter(session__in=decide_session(sess=sess, display_date=date))
+        display_date = self.kwargs.get('display_date', None)
+        class_choices = ClassOffer.objects.filter(session__in=decide_session(sess=sess, display_date=display_date))
         kwargs['class_choices'] = class_choices
         return kwargs
 

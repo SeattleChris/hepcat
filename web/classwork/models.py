@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import Q, F, Func, Case, When, Count, Max, OuterRef, Subquery, ExpressionWrapper as EW
+from django.db.models import Q, F, Func, Case, When, Count, Max, OuterRef, Subquery, DateField, ExpressionWrapper as EW
 # Avg, Sum, Min, Value
 from django.db.models.functions import Least, Extract  # , ExtractWeek, ExtractIsoYear, Trunc, Now,
 # from .transforms import AddDate, DateDiff, DayYear, NumDay, DateFromNum, MakeDate, DateToday
@@ -504,22 +504,31 @@ class CustomQuerySet(models.QuerySet):
                     When(session__max_day_shift__lt=F('dif')-7, then=F('dif')-7),
                     When(Q(session__max_day_shift__gt=0) & Q(session__max_day_shift__lt=F('dif')), then=F('dif')-7),
                     default=F('dif'), output_field=models.SmallIntegerField()),
-                no_skip_end=Case(
-                    When(subject__num_weeks=settings.DEFAULT_SESSION_WEEKS,
-                         then=F('session__key_day_date') + week * (settings.DEFAULT_SESSION_WEEKS)),
-                    *[When(subject__num_weeks=i+1,  then=F('session__key_day_date') + i*week) for i in range(sess_max)],
-                    default=F('session__key_day_date') + week * settings.DEFAULT_SESSION_WEEKS,
-                    output_field=models.DateField()),
+                # no_skip_end=Case(
+                #     When(subject__num_weeks=settings.DEFAULT_SESSION_WEEKS,
+                #          then=F('session__key_day_date') + week * (settings.DEFAULT_SESSION_WEEKS - 1)),
+                #     *[When(subject__num_weeks=i+1, then=F('session__key_day_date') + i*week) for i in range(sess_max)],
+                #     default=F('session__key_day_date') + week * (settings.DEFAULT_SESSION_WEEKS - 1),
+                #     output_field=models.DateField()),
             ).annotate(  # TODO: Rename to start_date and replace the @property version.
-                start=Case(
-                    When(shifted=0,  then=F('session__key_day_date')),
-                    *[When(shifted=i, then=F('session__key_day_date') + i*day) for i in range(-6, 7)],
-                    default=F('session__key_day_date'),
-                    output_field=models.DateField()),
-                end=Case(
-                    *[When(skip_weeks=i, then=F('no_skip_end') + i*week) for i in range(skip_max + 1)],
-                    default=F('no_skip_end'),
-                    output_field=models.DateField()),
+                start_date=Func(F('session__key_day_date'), F('shifted'), function='ADDDATE', output_field=DateField()),
+                # start_date=Case(
+                #     When(shifted=0,  then=F('session__key_day_date')),
+                #     *[When(
+                #             shifted=i,
+                #             then=Func(F('session__key_day_date'), i, function='ADDDATE'))
+                #         for i in range(-6, 7)],
+                #     default=F('session__key_day_date'),
+                #     output_field=models.DateField()),
+                # end_date=Case(
+                #     *[When(
+                #             skip_weeks=i,
+                #             then=Func(F('no_skip_end') + i * 7, function='ADDDATE'))
+                #         for i in range(skip_max + 1)],
+                #     default=F('no_skip_end'),
+                #     output_field=models.DateField()),
+            ).annotate(
+                end_date=Func(F('start_date'), 7 * (F('session__num_weeks') - 1 + F('skip_weeks')), function='ADDDATE')
             )
 
     def check_alive_params(self, start, end, skips, type_user, *args, **kwargs):
@@ -567,7 +576,7 @@ class CustomQuerySet(models.QuerySet):
             #     publish__lte=now,
             ).values()
 
-    def alive_resources(self):
+    def resources(self):
         # related_qs = Resource.objects
         related_qs = self
         res = related_qs.alive(
@@ -751,21 +760,21 @@ class ClassOffer(models.Model):
         return _(explain)
 
     @property
-    def end_time(self):  # TODO: Replace with annotation if possible
+    def end_time(self):  # TODO: ?Replace with annotation if possible
         """ A time obj (date and timezone unaware) computed based on the start time and subject.num_minutes. """
         start = dt.combine(date(2009, 2, 13), self.start_time)  # arbitrary date on day of timestamp 1234567890.
         end = start + timedelta(minutes=self.subject.num_minutes)
         return end.time()
 
     @property
-    def day(self):  # TODO: Replace with annotation if possible
+    def day(self):  # TODO: ?Replace with annotation if possible
         """ Returns a string for the day of the week, plural if there are multiple weeks, for this ClassOffer. """
         day = self.DOW_CHOICES[self.class_day][1]
         day += 's' if self.subject.num_weeks > 1 else ''
         return day
 
     @property
-    def start_date(self):  # TODO: Replace with annotation if possible
+    def old_start_date(self):  # TODO: Replace with annotation if possible
         """ Returns a date object (time and timezone unaware) for the first day of this ClassOffer. """
         start = self.session.key_day_date
         dif = self.class_day - start.weekday()
@@ -779,7 +788,7 @@ class ClassOffer(models.Model):
         return start + timedelta(days=dif)
 
     @property
-    def end_date(self):  # TODO: Replace with annotation if possible
+    def old_end_date(self):  # TODO: Replace with annotation if possible
         """ Returns the computed end date (time and timezone unaware) for this class offer. """
         return self.start_date + timedelta(days=7*(self.subject.num_weeks + self.skip_weeks - 1))
 
