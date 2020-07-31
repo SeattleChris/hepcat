@@ -194,6 +194,15 @@ class UserHC(AbstractUser):
     def full_name(self):
         return self.get_full_name() or _("Name Not Found")
 
+    @property
+    def user_roles(self):
+        user_val, typelist = 0, []
+        for i, ea in enumerate((self.is_student, self.is_teacher, self.is_admin, self.is_superuser)):
+            if ea:
+                user_val += 2 ** i
+                typelist.append(ea.verbose_name)
+        return (user_val, typelist)
+
     def make_username(self):
         """ Instead of user selecting a username, we will generate it from their info, using casefold()
             instead of lower() since it is better for some international character sets.
