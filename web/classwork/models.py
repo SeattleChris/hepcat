@@ -481,7 +481,7 @@ class Session(models.Model):
 
 class CustomQuerySet(models.QuerySet):
 
-    def dates(self):
+    def with_dates(self):
         day, week = timedelta(days=1), timedelta(days=7)
         sess_max = settings.SESSION_MAX_WEEKS
         skip_max = settings.SESSION_MAX_SKIP
@@ -522,15 +522,62 @@ class CustomQuerySet(models.QuerySet):
                     output_field=models.DateField()),
             )
 
-    def resources(self):
-        # res = Resource.objects.alive(
-        #         start=OuterRef('start'),
-        #         end=OuterRef('end'),
-        #         skips=OuterRef('skip_weeks')
-        #     ).filter(
-        #         Q(classoffer=OuterRef('pk')) | Q(subject=OuterRef('subject'))
-        #     ).distinct(
-        #     )
+    def check_alive_params(self, start, end, skips, type_user, *args, **kwargs):
+        print("====================== check alive parmas =============================")
+        qs = Resource.objects
+        if self.model == ClassOffer:
+            qs = qs.filter(Q(classoffer=OuterRef('pk')) | Q(subject=OuterRef('subject')))  # .distinct()
+        if not isinstance(start, (date, OuterRef)) or not isinstance(end, (date, OuterRef)):
+            raise TypeError(_("Both start and end parameters must be date objects or OuterRefs to DateFields. "))
+        if not isinstance(skips, (int, OuterRef)):
+            raise TypeError(_("The skips parameter must be an integer or an OuterRef to an appropriate field type. "))
+        user_lookup = {'public': 0, 'student': 1, 'teacher': 2, 'admin': 3, }
+        if isinstance(type_user, str):
+            type_user = user_lookup.get(type_user, 0)
+        if isinstance(type_user, OuterRef):
+            pass
+        elif not isinstance(type_user, int) or type_user < 0 or type_user > 3:
+            raise TypeError(_("The type_user parameter must be an appropriate string or integer"))
+        # TODO: filter for user_type__lt=type_user
+        return (qs, *args, kwargs)
+
+    def alive(self, start=None, end=None, skips=0, type_user=0, *args, **kwargs):
+        """ Will filter and annotate to return only currently published Resource for the given context. """
+        resource_queryset, *args, kwargs = self.check_alive_params(start, end, skips, type_user, *args, **kwargs)
+        # now = kwargs('check_date', None)
+        now = Func(function='CURDATE', output_field=models.DateField())
+        dates = [Least(start, now)]
+        dates += [Func(start, 7 * i, function='ADDDATE') for i in range(settings.SESSION_MAX_WEEKS - 1)]
+        # MySQL Functions: ADDDATE, DATEDIFF, DAYOFYEAR, TO_DAYS, FROM_DAYS, MAKEDATE, CURDATE
+        return resource_queryset.annotate(
+                publish=Case(
+                    *[When(Q(avail=num), then=date) for num, date in enumerate(dates)],
+                    default=end,  # Uses default if 'after class ends' was selected option (value = 200).
+                    output_field=models.DateField()),
+                days_since=Func(start, now, function='DATEDIFF', output_field=models.SmallIntegerField()),
+            ).annotate(
+                is_allowed=Case(
+                    When(Q(expire=0) & Q(publish__lte=now), then=True),
+                    When(Q(days_since__lt=7*(F('avail') + F('expire') + skips)) & Q(publish__lte=now), then=True),
+                    default=False,
+                    output_field=models.BooleanField()),
+            # ).filter(
+            #     # is_allowed=True,
+            #     Q(expire=0) | Q(days_since__lt=7*(F('avail') + F('expire') + skips)),
+            #     publish__lte=now,
+            ).values()
+
+    def alive_resources(self):
+        # related_qs = Resource.objects
+        related_qs = self
+        res = related_qs.alive(
+                start=OuterRef('start'),
+                end=OuterRef('end'),
+                skips=OuterRef('skip_weeks')
+            # ).filter(
+            #     Q(classoffer=OuterRef('pk')) | Q(subject=OuterRef('subject'))
+            # ).distinct(
+            )
         # ---------------------------------------------------------------------------------------------------- #
         # print('---------------------------- Try it MANUALLY! -----------------------------------------------')
 
@@ -569,7 +616,7 @@ class CustomQuerySet(models.QuerySet):
 class ClassOfferManager(models.Manager):
 
     def get_queryset(self):
-        return CustomQuerySet(self.model, using=self._db).dates()
+        return CustomQuerySet(self.model, using=self._db).with_dates()
         # day, week = timedelta(days=1), timedelta(days=7)
         # sess_max = settings.SESSION_MAX_WEEKS
         # skip_max = settings.SESSION_MAX_SKIP
@@ -655,6 +702,17 @@ class ClassOffer(models.Model):
     date_modified = models.DateField(auto_now=True, )
     # resource_set exists but only includes Resources connected directly to this ClassOffer, not its Subject.
     objects = ClassOfferManager()
+
+    def resources(self):
+        """ Expanding the resource_set to include resources attached to the Subject of the given ClassOffer. """
+        user = self.request.user
+        user_val, user_roles = user.user_roles
+        user_type = 3 if user_val >= 4 else user_val
+        qs = Resource.objects
+        qs = qs.filter(Q(subject=self.subject) | Q(classoffer=self)).order_by('id').distinct('id')
+        qs = qs.alive(start=self.start, end=self.end, skips=self.skip_weeks, type_user=user_type)
+        # union of self.resource_set and Resource.objects.filter(Q(subject=self.subject))
+        return qs
 
     @property
     def full_price(self):
