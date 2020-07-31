@@ -252,51 +252,42 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
     def test_start_date_negative_shift(self):
         model = ClassOffer.objects.first()
         session = Session.objects.first()  # expected to be connected to model
-        if session.max_day_shift >= 0:
-            session.max_day_shift = -2
-            session.save()
+        session.max_day_shift = -2
+        session.save()
         key_day_of_week = session.key_day_date.weekday()
-        if model.class_day == key_day_of_week:
-            model.class_day += -1 if key_day_of_week > 0 else 6
-            model.save()
-        actual_date_shift = model.class_day - key_day_of_week
-        if actual_date_shift > 0:
-            actual_date_shift -= 7
-        result_date = session.key_day_date + timedelta(days=actual_date_shift)
+        date_shift = -1
+        model.class_day = key_day_of_week + date_shift
+        model.save()
+        expected_date = session.key_day_date + timedelta(days=date_shift)
 
         self.assertEquals(model.session, session)
         self.assertLess(session.max_day_shift, 0)
         self.assertNotEquals(model.class_day, key_day_of_week)
-        self.assertNotEquals(actual_date_shift, 0)
-        self.assertEquals(model.start_date, result_date)
+        self.assertNotEquals(date_shift, 0)
+        self.assertEquals(model.start_date, expected_date)
 
     def test_start_date_positive_shift(self):
         model = ClassOffer.objects.first()
         session = Session.objects.first()  # expected to be connected to model
-        if session.max_day_shift <= 0:
-            session.max_day_shift = 2
-            session.save()
+        session.max_day_shift = 2
+        session.save()
         key_day_of_week = session.key_day_date.weekday()
-        if model.class_day == key_day_of_week:
-            model.class_day += 1 if key_day_of_week < 6 else -6
-            model.save()
-        actual_date_shift = model.class_day - key_day_of_week
-        if actual_date_shift < 0:
-            actual_date_shift += 7
-        result_date = session.key_day_date + timedelta(days=actual_date_shift)
+        date_shift = 1
+        model.class_day = key_day_of_week + date_shift
+        model.save()
+        result_date = session.key_day_date + timedelta(days=date_shift)
 
         self.assertEquals(model.session, session)
         self.assertGreater(session.max_day_shift, 0)
         self.assertNotEquals(model.class_day, key_day_of_week)
-        self.assertNotEquals(actual_date_shift, 0)
+        self.assertNotEquals(date_shift, 0)
         self.assertEquals(model.start_date, result_date)
 
     def test_start_date_out_of_negative_shift_range_opposite_direction(self):
         model = ClassOffer.objects.first()
         session = Session.objects.first()  # expected to be connected to model
-        if session.max_day_shift >= 0 or session.max_day_shift == -6:
-            session.max_day_shift = -2
-            session.save()
+        session.max_day_shift = -2
+        session.save()
         key_day_of_week = session.key_day_date.weekday()
         shift = 1
         result_date = session.key_day_date + timedelta(days=shift)
@@ -314,9 +305,8 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
     def test_start_date_out_of_positive_shift_range_opposite_direction(self):
         model = ClassOffer.objects.first()
         session = Session.objects.first()  # expected to be connected to model
-        if session.max_day_shift <= 0 or session.max_day_shift == 6:
-            session.max_day_shift = 2
-            session.save()
+        session.max_day_shift = 2
+        session.save()
         key_day_of_week = session.key_day_date.weekday()
         shift = -1
         result_date = session.key_day_date + timedelta(days=shift)
@@ -334,9 +324,8 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
     def test_start_date_beyond_negative_shift_range(self):
         model = ClassOffer.objects.first()
         session = Session.objects.first()  # expected to be connected to model
-        if session.max_day_shift >= 0 or session.max_day_shift == -6:
-            session.max_day_shift = -2
-            session.save()
+        session.max_day_shift = -2
+        session.save()
         key_day_of_week = session.key_day_date.weekday()
         shift = session.max_day_shift - 1
         result_date = session.key_day_date + timedelta(days=(shift + 7))
@@ -354,9 +343,8 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
     def test_start_date_beyond_positive_shift_range(self):
         model = ClassOffer.objects.first()
         session = Session.objects.first()  # expected to be connected to model
-        if session.max_day_shift <= 0 or session.max_day_shift == 6:
-            session.max_day_shift = 2
-            session.save()
+        session.max_day_shift = 2
+        session.save()
         key_day_of_week = session.key_day_date.weekday()
         shift = session.max_day_shift + 1
         result_date = session.key_day_date + timedelta(days=(shift - 7))
@@ -374,13 +362,11 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
     def test_end_date_no_skips(self):
         subject = Subject.objects.first()
         session = Session.objects.first()
-        if session.skip_weeks > 0:
-            session.skip_weeks = 0
-            session.save()
+        session.skip_weeks = 0
+        session.save()
         model = ClassOffer.objects.first()
-        if model.skip_weeks > 0:
-            model.skip_weeks = 0
-            model.save()
+        model.skip_weeks = 0
+        model.save()
         expected = model.start_date + timedelta(days=7*(subject.num_weeks - 1))
 
         self.assertEquals(model.subject, subject)
@@ -392,13 +378,11 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
     def test_end_date_skips_on_session_not_classoffer(self):
         subject = Subject.objects.first()
         session = Session.objects.first()
-        if session.skip_weeks == 0:
-            session.skip_weeks = 1
-            session.save()
+        session.skip_weeks = 1
+        session.save()
         model = ClassOffer.objects.first()
-        if model.skip_weeks > 0:
-            model.skip_weeks = 0
-            model.save()
+        model.skip_weeks = 0
+        model.save()
         expected = model.start_date + timedelta(days=7*(subject.num_weeks - 1))
 
         self.assertEquals(model.subject, subject)
@@ -410,13 +394,11 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
     def test_end_date_with_skips(self):
         subject = Subject.objects.first()
         session = Session.objects.first()
-        if session.skip_weeks == 0:
-            session.skip_weeks = 1
-            session.save()
+        session.skip_weeks = 1
+        session.save()
         model = ClassOffer.objects.first()
-        if model.skip_weeks == 0:
-            model.skip_weeks = 1
-            model.save()
+        model.skip_weeks = 1
+        model.save()
         expected = model.start_date + timedelta(days=7*(subject.num_weeks + model.skip_weeks - 1))
 
         self.assertEquals(model.subject, subject)
