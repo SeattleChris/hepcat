@@ -186,7 +186,7 @@ class Resource(models.Model):
         return "{} - {} - {}".format(self.title, self.related_type, self.content_type)
 
     def __repr__(self):
-        return '<Resource: {} | Type: {} >'.format(self.related_type, self.content_type)
+        return '<Resource: {} | ID: {} | Type: {} >'.format(self.related_type, self.id, self.content_type)
 
 
 class Subject(models.Model):
@@ -585,11 +585,13 @@ class CustomQuerySet(models.QuerySet):
     def resources(self):
         """ Return a queryset of Resource objects that are alive and connected to the current queryset. """
         # Assume the 'self' queryset has already been filtered to the ClassOffers that we care about.
+        # from pprint import pprint
+        # print("======================== ClassOffer Query =========================")
         arr = [self.alive(model=ea) for ea in self.all()]
         collected = arr.pop()
-        collected.union(*arr)
-        collected = collected.sort_by('pk')
-        print(collected)
+        collected = collected.union(*arr)
+        collected = collected.order_by('-publish')
+        # pprint(collected)
 
         return collected
 
