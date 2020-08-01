@@ -587,14 +587,14 @@ class CustomQuerySet(models.QuerySet):
         """ Return a queryset of actual Resource objects that are alive and connected to the ClassOffers in query. """
         # Assume the 'self' queryset has already been filtered to the ClassOffers that we care about.
         arr = [self.alive(model=ea) for ea in self.all()]
-        qs_collected = arr.pop()
-        qs_collected.union(*arr)
-        return qs_collected
+        collected = arr.pop()
+        collected.union(*arr)
+        print(collected)
+
+        return collected
 
     def recent_resource_per_classoffer(self):
-        # related_qs = Resource.objects
-        related_qs = self
-        res = related_qs.alive(
+        res = self.alive(
                 start=OuterRef('start_date'),
                 end=OuterRef('end_date'),
                 skips=OuterRef('skip_weeks')
@@ -603,7 +603,6 @@ class CustomQuerySet(models.QuerySet):
         result = self.annotate(
                 resources=Subquery(res),
             )
-        # print(result)
         return result
 
 
