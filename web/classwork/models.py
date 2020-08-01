@@ -505,15 +505,16 @@ class CustomQuerySet(models.QuerySet):
                     When(session__max_day_shift__lt=F('dif')-7, then=F('dif')-7),
                     When(Q(session__max_day_shift__gt=0) & Q(session__max_day_shift__lt=F('dif')), then=F('dif')-7),
                     default=F('dif'), output_field=models.SmallIntegerField()),
-            ).annotate(  # TODO: Rename to start_date and replace the @property version.
+            ).annotate(
                 start_date=Func(F('session__key_day_date'), F('shifted'), function='ADDDATE', output_field=DateField()),
             ).annotate(
                 end_date=Func(F('start_date'), 7 * (F('session__num_weeks') - 1 + F('skip_weeks')), function='ADDDATE',
-                              output_field=DateField())
+                              output_field=DateField()),
             )
 
     def prepare_alive_params(self, *args, **kwargs):
         qs = Resource.objects
+        start, end, skips, type_user = None, None, 0, 0
         model = kwargs.pop('model', None)
         if model:
             start = model.start_date
@@ -521,22 +522,23 @@ class CustomQuerySet(models.QuerySet):
             skips = model.skip_weeks
             user = kwargs.pop('user', None)
             if user:
-                user = self.request.user
+                user = user.user if isinstance(user, (Student, Staff)) else user
                 user_val, user_roles = user.user_roles
                 type_user = 3 if user_val >= 4 else user_val
             else:
                 type_user = kwargs.pop('type_user', 0)
+            # TODO: filter for user_type__lt=type_user
             qs = qs.filter(Q(classoffer=model.pk) | Q(subject=model.subject))
             qs = qs.order_by('pk').distinct()
         else:
-            start = kwargs.pop('start', None)
-            end = kwargs.pop('end', None)
-            skips = kwargs.pop('skips', None)
-            type_user = kwargs.pop('type_user', None)
-            start = kwargs.pop('start', None)
+            start = kwargs.pop('start', OuterRef('start_date'))
+            end = kwargs.pop('end', OuterRef('end_date'))
+            skips = kwargs.pop('skips', OuterRef('skip_weeks'))
+            type_user = kwargs.pop('type_user', 0)
         if not model and self.model == ClassOffer:
             qs = qs.filter(Q(classoffer=OuterRef('pk')) | Q(subject=OuterRef('subject')))
             qs = qs.order_by('pk').distinct()
+
         if not isinstance(start, (date, OuterRef)) or not isinstance(end, (date, OuterRef)):
             raise TypeError(_("Both start and end parameters must be date objects or OuterRefs to DateFields. "))
         if not isinstance(skips, (int, OuterRef)):
@@ -544,12 +546,9 @@ class CustomQuerySet(models.QuerySet):
         if isinstance(type_user, str):
             user_lookup = {'public': 0, 'student': 1, 'teacher': 2, 'admin': 3, }
             type_user = user_lookup.get(type_user, 0)
-        if isinstance(type_user, OuterRef):
-            pass
-        elif not isinstance(type_user, int) or type_user < 0 or type_user > 3:
+        if not isinstance(type_user, int) and 0 <= type_user <= 3:
             raise TypeError(_("The type_user parameter must be an appropriate string or integer"))
         # now = kwargs('check_date', None)
-        # TODO: filter for user_type__lt=type_user
         return (qs, start, end, skips, *args, kwargs)
 
     def alive(self, *args, **kwargs):
@@ -584,16 +583,17 @@ class CustomQuerySet(models.QuerySet):
             )
 
     def resources(self):
-        """ Return a queryset of actual Resource objects that are alive and connected to the ClassOffers in query. """
+        """ Return a queryset of Resource objects that are alive and connected to the current queryset. """
         # Assume the 'self' queryset has already been filtered to the ClassOffers that we care about.
         arr = [self.alive(model=ea) for ea in self.all()]
         collected = arr.pop()
         collected.union(*arr)
+        collected = collected.sort_by('pk')
         print(collected)
 
         return collected
 
-    def recent_resource_per_classoffer(self):
+    def most_recent_resource_per_classoffer(self):
         res = self.alive(
                 start=OuterRef('start_date'),
                 end=OuterRef('end_date'),
@@ -607,6 +607,7 @@ class CustomQuerySet(models.QuerySet):
 
 
 class ClassOfferManager(models.Manager):
+    # use_for_related_fields = True
 
     def get_queryset(self):
         return CustomQuerySet(self.model, using=self._db).with_dates()
