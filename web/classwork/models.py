@@ -1,6 +1,8 @@
 from django.db import models
-from django.db.models import Q, F, Case, When, Count, Max, OuterRef, Subquery, ExpressionWrapper as EW  # Min, Avg, Sum
-from django.db.models.functions import Extract  # , ExtractYear, ExtractMonth, ExtractDay, Trunc
+from django.db.models import Q, F, Func, Case, When, Count, Max, OuterRef, Subquery, DateField, ExpressionWrapper as EW
+# Avg, Sum, Min, Value
+from django.db.models.functions import Least, Extract  # , ExtractWeek, ExtractIsoYear, Trunc, Now,
+# from .transforms import AddDate, DateDiff, DayYear, NumDay, DateFromNum, MakeDate, DateToday
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
@@ -73,30 +75,38 @@ class ResourceManager(models.Manager):
 
     def alive(self, start=None, end=None, skips=0, type_user=0):
         """ Will filter and annotate to return only currently published Resource for the given context. """
-        if not isinstance(start, date) or not isinstance(end, date):
-            raise TypeError(_("Both start and end parameters must be date objects. "))
-        if not isinstance(skips, int):
-            raise TypeError(_("The skips parameter must be an integer. "))
+        if not isinstance(start, (date, OuterRef)) or not isinstance(end, (date, OuterRef)):
+            raise TypeError(_("Both start and end parameters must be date objects or OuterRefs to DateFields. "))
+        if not isinstance(skips, (int, OuterRef)):
+            raise TypeError(_("The skips parameter must be an integer or an OuterRef to an appropriate field type. "))
         user_lookup = {'public': 0, 'student': 1, 'teacher': 2, 'admin': 3, }
         if isinstance(type_user, str):
             type_user = user_lookup.get(type_user, 0)
-        if not isinstance(type_user, int) or type_user < 0 or type_user > 3:
+        if isinstance(type_user, OuterRef):
+            pass
+        elif not isinstance(type_user, int) or type_user < 0 or type_user > 3:
             raise TypeError(_("The type_user parameter must be an appropriate string or integer"))
-        now = date.today()
-        week = timedelta(days=7)
-        weeks_since = (now - start) // week
-        early = min(start, now)
-        dates = [early] + [start + week * i for i in range(settings.SESSION_MAX_WEEKS - 1)] + [end]
-
+        now = Func(function='CURDATE', output_field=models.DateField())
+        early = Least(start, now)
+        dates = [Func(start, 7 * i, function='ADDDATE') for i in range(settings.SESSION_MAX_WEEKS - 1)]
+        dates = [early] + dates + [end]
+        # MySQL Functions: ADDDATE, DATEDIFF, DAYOFYEAR, TO_DAYS, FROM_DAYS, MAKEDATE, CURDATE
         return self.get_queryset().annotate(
                 publish=Case(
                     *[When(Q(avail=num), then=date) for num, date in enumerate(dates)],
-                    default=None,
+                    default=end,
                     output_field=models.DateField()),
+                days_since=Func(start, now, function='DATEDIFF', output_field=models.SmallIntegerField()),
+            # ).annotate(
+            #     is_allowed=Case(
+            #         When(Q(expire=0) & Q(publish__lte=now), then=True),
+            #         When(Q(days_since__lt=7*(F('avail') + F('expire') + skips)) & Q(publish__lte=now), then=True),
+            #         default=False,
+            #         output_field=models.BooleanField()),
             ).filter(
-                Q(expire=0) | Q(expire__lt=F('avail') + weeks_since - skips),
-                publish__isnull=False, publish__lte=now,
-                # user_type__lte=type_user  # TODO: Refactor to filter out user_type is called before this method.
+                # is_allowed=True,
+                Q(expire=0) | Q(days_since__lt=7*(F('avail') + F('expire') + skips)),
+                publish__lte=now,
             )
 
 
@@ -471,13 +481,13 @@ class Session(models.Model):
 
 class CustomQuerySet(models.QuerySet):
 
-    def dates(self):
+    def with_dates(self):
         day, week = timedelta(days=1), timedelta(days=7)
         sess_max = settings.SESSION_MAX_WEEKS
         skip_max = settings.SESSION_MAX_SKIP
         return self.annotate(
                 dif=Case(
-                    When(Q(session__key_day_date__week_day=1),
+                    When(Q(session__key_day_date__week_day=1),  # On the DB Sunday is 1, but is 6 in Python.
                          then=EW(
                             F('class_day') + 2 - 7 - Extract('session__key_day_date', 'week_day'),
                             output_field=models.SmallIntegerField())),
@@ -493,42 +503,129 @@ class CustomQuerySet(models.QuerySet):
                     When(Q(session__max_day_shift__gt=F('dif')+7), then=F('dif')+7),
                     When(session__max_day_shift__lt=F('dif')-7, then=F('dif')-7),
                     When(Q(session__max_day_shift__gt=0) & Q(session__max_day_shift__lt=F('dif')), then=F('dif')-7),
-                    default=F('dif'), output_field=models.SmallIntegerField())
+                    default=F('dif'), output_field=models.SmallIntegerField()),
+                # no_skip_end=Case(
+                #     When(subject__num_weeks=settings.DEFAULT_SESSION_WEEKS,
+                #          then=F('session__key_day_date') + week * (settings.DEFAULT_SESSION_WEEKS - 1)),
+                #     *[When(subject__num_weeks=i+1, then=F('session__key_day_date') + i*week) for i in range(sess_max)],
+                #     default=F('session__key_day_date') + week * (settings.DEFAULT_SESSION_WEEKS - 1),
+                #     output_field=models.DateField()),
             ).annotate(  # TODO: Rename to start_date and replace the @property version.
-                start=Case(
-                    When(shifted=0,  then=F('session__key_day_date')),
-                    *[When(shifted=i, then=F('session__key_day_date') + i*day) for i in range(-6, 7)],
-                    default=F('session__key_day_date'),
-                    output_field=models.DateField()),
-                no_skip_end=Case(
-                    When(subject__num_weeks=settings.DEFAULT_SESSION_WEEKS,
-                         then=F('session__key_day_date') + week * (settings.DEFAULT_SESSION_WEEKS)),
-                    *[When(subject__num_weeks=i+1,  then=F('session__key_day_date') + i*week) for i in range(sess_max)],
-                    default=F('session__key_day_date') + week * settings.DEFAULT_SESSION_WEEKS,
-                    output_field=models.DateField())
+                start_date=Func(F('session__key_day_date'), F('shifted'), function='ADDDATE', output_field=DateField()),
+                # start_date=Case(
+                #     When(shifted=0,  then=F('session__key_day_date')),
+                #     *[When(
+                #             shifted=i,
+                #             then=Func(F('session__key_day_date'), i, function='ADDDATE'))
+                #         for i in range(-6, 7)],
+                #     default=F('session__key_day_date'),
+                #     output_field=models.DateField()),
+                # end_date=Case(
+                #     *[When(
+                #             skip_weeks=i,
+                #             then=Func(F('no_skip_end') + i * 7, function='ADDDATE'))
+                #         for i in range(skip_max + 1)],
+                #     default=F('no_skip_end'),
+                #     output_field=models.DateField()),
             ).annotate(
-                end=Case(
-                    *[When(skip_weeks=i, then=F('no_skip_end') + i*week) for i in range(skip_max + 1)],
-                    default=F('no_skip_end'),
-                    output_field=models.DateField()),
+                end_date=Func(F('start_date'), 7 * (F('session__num_weeks') - 1 + F('skip_weeks')), function='ADDDATE')
             )
 
+    def check_alive_params(self, start, end, skips, type_user, *args, **kwargs):
+        print("====================== check alive parmas =============================")
+        qs = Resource.objects
+        if self.model == ClassOffer:
+            qs = qs.filter(Q(classoffer=OuterRef('pk')) | Q(subject=OuterRef('subject')))  # .distinct()
+        if not isinstance(start, (date, OuterRef)) or not isinstance(end, (date, OuterRef)):
+            raise TypeError(_("Both start and end parameters must be date objects or OuterRefs to DateFields. "))
+        if not isinstance(skips, (int, OuterRef)):
+            raise TypeError(_("The skips parameter must be an integer or an OuterRef to an appropriate field type. "))
+        user_lookup = {'public': 0, 'student': 1, 'teacher': 2, 'admin': 3, }
+        if isinstance(type_user, str):
+            type_user = user_lookup.get(type_user, 0)
+        if isinstance(type_user, OuterRef):
+            pass
+        elif not isinstance(type_user, int) or type_user < 0 or type_user > 3:
+            raise TypeError(_("The type_user parameter must be an appropriate string or integer"))
+        # TODO: filter for user_type__lt=type_user
+        return (qs, *args, kwargs)
+
+    def alive(self, start=None, end=None, skips=0, type_user=0, *args, **kwargs):
+        """ Will filter and annotate to return only currently published Resource for the given context. """
+        resource_queryset, *args, kwargs = self.check_alive_params(start, end, skips, type_user, *args, **kwargs)
+        # now = kwargs('check_date', None)
+        now = Func(function='CURDATE', output_field=models.DateField())
+        dates = [Least(start, now)]
+        dates += [Func(start, 7 * i, function='ADDDATE') for i in range(settings.SESSION_MAX_WEEKS - 1)]
+        # MySQL Functions: ADDDATE, DATEDIFF, DAYOFYEAR, TO_DAYS, FROM_DAYS, MAKEDATE, CURDATE
+        return resource_queryset.annotate(
+                publish=Case(
+                    *[When(Q(avail=num), then=date) for num, date in enumerate(dates)],
+                    default=end,  # Uses default if 'after class ends' was selected option (value = 200).
+                    output_field=models.DateField()),
+                days_since=Func(start, now, function='DATEDIFF', output_field=models.SmallIntegerField()),
+            ).annotate(
+                is_allowed=Case(
+                    When(Q(expire=0) & Q(publish__lte=now), then=True),
+                    When(Q(days_since__lt=7*(F('avail') + F('expire') + skips)) & Q(publish__lte=now), then=True),
+                    default=False,
+                    output_field=models.BooleanField()),
+            # ).filter(
+            #     # is_allowed=True,
+            #     Q(expire=0) | Q(days_since__lt=7*(F('avail') + F('expire') + skips)),
+            #     publish__lte=now,
+            ).values()
+
     def resources(self):
-        res = Resource.objects.filter(
-                Q(classoffer=OuterRef('pk')) | Q(subject=OuterRef('subject'))
-            # ).distinct(
-            ).alive(
+        # related_qs = Resource.objects
+        related_qs = self
+        res = related_qs.alive(
                 start=OuterRef('start'),
                 end=OuterRef('end'),
                 skips=OuterRef('skip_weeks')
+            # ).filter(
+            #     Q(classoffer=OuterRef('pk')) | Q(subject=OuterRef('subject'))
+            # ).distinct(
             )
-        return self.dates().annotate(resources=Subquery(res))
+        # ---------------------------------------------------------------------------------------------------- #
+        # print('---------------------------- Try it MANUALLY! -----------------------------------------------')
+
+        # # weeks_since = td_since // week  # TODO: This works when given a date obj, but not an OuterRef obj.
+        # now = Trunc(Now(), 'day', output_field=models.DateField())
+        # start = OuterRef('start')
+        # early = Min(start, now)
+        # # td_since = EW(now - start, output_field=models.DurationField())
+        # # td_since_year = ExtractYear(now) - ExtractYear(start)
+        # td_weeks_since = ExtractWeek(now) - ExtractWeek(start) + 53 * (ExtractYear(now) - ExtractYear(start))
+        # week = timedelta(days=7)
+        # end = OuterRef('end')
+        # skips = OuterRef('skip_weeks')
+        # dates = [early] + [start + week * i for i in range(settings.SESSION_MAX_WEEKS - 1)] + [end]
+        # # What is the suggestion of double stack OuterRef.  It might be needed for annotations, not just nested qs.
+        # alive_made = Resource.objects.annotate(
+        #         publish=Case(
+        #             *[When(Q(avail=num), then=date) for num, date in enumerate(dates)],
+        #             default=None,
+        #             output_field=models.DateField()),
+        #         # weeks_since=EW(td_weeks_since, output_field=models.SmallIntegerField()),
+        #         # weeks_since=td_weeks_since
+        #     ).filter(
+        #         # Q(expire=0) | Q(expire__lt=F('avail') + F('weeks_since') - skips),
+        #         Q(expire=0) | Q(expire__lt=F('avail') + td_weeks_since - skips),
+        #         publish__isnull=False, publish__lte=now,
+        #         # user_type__lte=type_user  # TODO: Refactor to filter out user_type is called before this method.
+        #     )
+        # result = self.annotate(resources=Subquery(alive_made))
+        # print('----------------------------- ClassOffer objects resources! -----------------------------------')
+        result = self.annotate(resources=Subquery(res))
+        # print(result)
+        return result
 
 
 class ClassOfferManager(models.Manager):
 
     def get_queryset(self):
-        return CustomQuerySet(self.model, using=self._db)
+        return CustomQuerySet(self.model, using=self._db).with_dates()
         # day, week = timedelta(days=1), timedelta(days=7)
         # sess_max = settings.SESSION_MAX_WEEKS
         # skip_max = settings.SESSION_MAX_SKIP
@@ -615,6 +712,17 @@ class ClassOffer(models.Model):
     # resource_set exists but only includes Resources connected directly to this ClassOffer, not its Subject.
     objects = ClassOfferManager()
 
+    def resources(self):
+        """ Expanding the resource_set to include resources attached to the Subject of the given ClassOffer. """
+        user = self.request.user
+        user_val, user_roles = user.user_roles
+        user_type = 3 if user_val >= 4 else user_val
+        qs = Resource.objects
+        qs = qs.filter(Q(subject=self.subject) | Q(classoffer=self)).order_by('id').distinct('id')
+        qs = qs.alive(start=self.start, end=self.end, skips=self.skip_weeks, type_user=user_type)
+        # union of self.resource_set and Resource.objects.filter(Q(subject=self.subject))
+        return qs
+
     @property
     def full_price(self):
         """ This is full, at-the-door, price """
@@ -652,21 +760,21 @@ class ClassOffer(models.Model):
         return _(explain)
 
     @property
-    def end_time(self):  # TODO: Replace with annotation if possible
+    def end_time(self):  # TODO: ?Replace with annotation if possible
         """ A time obj (date and timezone unaware) computed based on the start time and subject.num_minutes. """
         start = dt.combine(date(2009, 2, 13), self.start_time)  # arbitrary date on day of timestamp 1234567890.
         end = start + timedelta(minutes=self.subject.num_minutes)
         return end.time()
 
     @property
-    def day(self):  # TODO: Replace with annotation if possible
+    def day(self):  # TODO: ?Replace with annotation if possible
         """ Returns a string for the day of the week, plural if there are multiple weeks, for this ClassOffer. """
         day = self.DOW_CHOICES[self.class_day][1]
         day += 's' if self.subject.num_weeks > 1 else ''
         return day
 
     @property
-    def start_date(self):  # TODO: Replace with annotation if possible
+    def old_start_date(self):  # TODO: Replace with annotation if possible
         """ Returns a date object (time and timezone unaware) for the first day of this ClassOffer. """
         start = self.session.key_day_date
         dif = self.class_day - start.weekday()
@@ -680,7 +788,7 @@ class ClassOffer(models.Model):
         return start + timedelta(days=dif)
 
     @property
-    def end_date(self):  # TODO: Replace with annotation if possible
+    def old_end_date(self):  # TODO: Replace with annotation if possible
         """ Returns the computed end date (time and timezone unaware) for this class offer. """
         return self.start_date + timedelta(days=7*(self.subject.num_weeks + self.skip_weeks - 1))
 
