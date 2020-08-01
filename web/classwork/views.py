@@ -196,15 +196,15 @@ class ProfileView(DetailView):
             taken = student.taken.all()  # Has start & end since ClassOffer manager calls 'with_dates' for all queries.
             print("========================= Resources on Student.taken ===================================")
             # res_taken = student.taken.resources
-            # pprint(res_taken())
-            # temp = ClassOffer.objects.resources()
-            # pprint(temp)
-            print("---------------------------------------------------------------------------------------")
-            res = []
-            # res = [Resource.objects.alive(start=cur.start_date, end=cur.end_date, skips=cur.skip_weeks).all() for cur in taken]
-            for cur in taken:
-                qr = Resource.objects.alive(start=cur.start_date, end=cur.end_date, skips=cur.skip_weeks)
-                res += qr.all()
+            # pprint(f"Context Res Taken: {res_taken().all()} ")
+            # print("---------------------------------------------------------------------------------------")
+            # res = []
+            # # res = [Resource.objects.alive(start=cur.start_date, end=cur.end_date, skips=cur.skip_weeks).all() for cur in taken]
+            # for cur in taken:
+            #     qr = Resource.objects.alive(start=cur.start_date, end=cur.end_date, skips=cur.skip_weeks)
+            #     res += qr.all()
+            res = student.taken.resources().all()
+            pprint(f"List created for all res: {res} ")
             context['had'] = taken
             ct = {ea[0]: [] for ea in Resource.CONTENT_CHOICES}
             [ct[ea.content_type].append(ea) for ea in res]
