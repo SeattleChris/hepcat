@@ -194,7 +194,7 @@ class ProfileView(DetailView):
             context['had'] = student.taken.all()  # Has dates since ClassOffer manager annotates for all querysets.
             # TODO: Revisit the following for better dictionary creation.
             ct = {ea[0]: [] for ea in Resource.CONTENT_CHOICES}
-            [ct[ea.content_type].append(ea) for ea in student.taken.resources().all()]
+            [ct[ea.get('content_type', None)].append(ea) for ea in student.taken.resources().all()]
             context['resources'] = {key: vals for (key, vals) in ct.items() if len(vals) > 0}
             # context['resources'] only has the ct keys if the values have data.
         else:

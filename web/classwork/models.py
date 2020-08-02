@@ -512,7 +512,7 @@ class CustomQuerySet(models.QuerySet):
                               output_field=DateField()),
             )
 
-    def prepare_alive_params(self, *args, **kwargs):
+    def prepare_get_resources_params(self, *args, **kwargs):
         qs = Resource.objects
         start, end, skips, type_user = None, None, 0, 0
         model = kwargs.pop('model', None)
@@ -551,9 +551,13 @@ class CustomQuerySet(models.QuerySet):
         # now = kwargs('check_date', None)
         return (qs, start, end, skips, *args, kwargs)
 
-    def alive(self, *args, **kwargs):
-        """ Will filter and annotate to return only currently published Resource for the given context. """
-        resource_queryset, start, end, skips, *args, kwargs = self.prepare_alive_params(*args, **kwargs)
+    def get_resources(self, *args, **kwargs):
+        """ Returns a filtered & annotated queryset of Resources connected to the current ClassOffer queryset.
+            Unless over-ridden by later processing of this queryset, it will be ordered with most recent first.
+            Filter these results by 'alive=True' to get only currently published, and not expired, results.
+            Distinct resources, across ClassOffers, requires '.values()' that does not include these annotations.
+        """
+        resource_queryset, start, end, skips, *args, kwargs = self.prepare_get_resources_params(*args, **kwargs)
         now = Func(function='CURDATE', output_field=models.DateField())
         dates = [Least(start, now)]
         dates += [Func(start, 7 * i, function='ADDDATE') for i in range(settings.SESSION_MAX_WEEKS - 1)]
@@ -570,28 +574,25 @@ class CustomQuerySet(models.QuerySet):
                     default=Func(F('publish'), 7 * (F('expire') + skips),
                                  function='ADDDATE', output_field=models.DateField()),
                     output_field=models.DateField()),
-                is_allowed=Case(
+                alive=Case(
                     When(Q(publish__gt=now), then=False),
                     When(Q(expire=0), then=True),
                     When(Q(days_since__lt=7*(F('avail') + F('expire') + skips)), then=True),
                     default=False,
                     output_field=models.BooleanField()),
-            ).filter(
-                is_allowed=True,
-            #     Q(expire=0) | Q(days_since__lt=7*(F('avail') + F('expire') + skips)),
-            #     publish__lte=now,
-            )
+            ).order_by('-publish')  # Most recent first. May be overridden later, depending on how this data is used.
 
     def resources(self):
-        """ Return a queryset of Resource objects that are alive and connected to the current queryset. """
+        """ Return a queryset.values() of Resource objects that are alive and connected to the current queryset. """
         # Assume the 'self' queryset has already been filtered to the ClassOffers that we care about.
-        # from pprint import pprint
         # print("======================== ClassOffer Query =========================")
-        arr = [self.alive(model=ea) for ea in self.all()]
-        collected = arr.pop()
-        collected = collected.union(*arr)
-        collected = collected.order_by('-publish')
-        # pprint(collected)
+        resource_fields = ('id', 'content_type', 'user_type', 'imagepath', 'description', )
+        arr = [self.get_resources(model=ea).filter(alive=True).order_by().values(*resource_fields) for ea in self.all()]
+        if len(arr):
+            collected = arr.pop()
+            collected = collected.union(*arr)
+        else:
+            collected = Resource.objects.none().values()
 
         return collected
 
