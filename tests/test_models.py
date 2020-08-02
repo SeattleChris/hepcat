@@ -22,7 +22,7 @@ class LocationModelTests(SimpleModelTests, TestCase):
 class ResourceModelTests(SimpleModelTests, TransactionTestCase):
     fixtures = ['tests/fixtures/db_basic.json', 'tests/fixtures/db_hidden.json']
     Model = Resource
-    repr_dict = {'Resource': 'related_type', 'Type': 'content_type'}
+    repr_dict = {'Resource': 'id', 'Related': 'related_type', 'Type': 'content_type'}
     str_list = ['title', 'related_type', 'content_type']
     ProfileStudent = Student
 
@@ -253,12 +253,12 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         model = ClassOffer.objects.first()
         session = Session.objects.first()  # expected to be connected to model
         session.max_day_shift = -2
-        session.save()
         key_day_of_week = session.key_day_date.weekday()
         date_shift = -1
         model.class_day = key_day_of_week + date_shift
-        model.save()
         expected_date = session.key_day_date + timedelta(days=date_shift)
+        model.save()
+        model = ClassOffer.objects.first()
 
         self.assertEquals(model.session, session)
         self.assertLess(session.max_day_shift, 0)
@@ -270,12 +270,12 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         model = ClassOffer.objects.first()
         session = Session.objects.first()  # expected to be connected to model
         session.max_day_shift = 2
-        session.save()
         key_day_of_week = session.key_day_date.weekday()
         date_shift = 1
         model.class_day = key_day_of_week + date_shift
-        model.save()
         result_date = session.key_day_date + timedelta(days=date_shift)
+        model.save()
+        model = ClassOffer.objects.first()
 
         self.assertEquals(model.session, session)
         self.assertGreater(session.max_day_shift, 0)
@@ -287,7 +287,6 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         model = ClassOffer.objects.first()
         session = Session.objects.first()  # expected to be connected to model
         session.max_day_shift = -2
-        session.save()
         key_day_of_week = session.key_day_date.weekday()
         shift = 1
         result_date = session.key_day_date + timedelta(days=shift)
@@ -296,6 +295,7 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
             target -= 7
         model.class_day = target
         model.save()
+        model = ClassOffer.objects.first()
 
         self.assertEquals(model.session, session)
         self.assertLess(session.max_day_shift, 0)
@@ -306,7 +306,6 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         model = ClassOffer.objects.first()
         session = Session.objects.first()  # expected to be connected to model
         session.max_day_shift = 2
-        session.save()
         key_day_of_week = session.key_day_date.weekday()
         shift = -1
         result_date = session.key_day_date + timedelta(days=shift)
@@ -315,6 +314,7 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
             target_day += 7
         model.class_day = target_day
         model.save()
+        model = ClassOffer.objects.first()
 
         self.assertEquals(model.session, session)
         self.assertGreater(session.max_day_shift, 0)
@@ -325,7 +325,6 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         model = ClassOffer.objects.first()
         session = Session.objects.first()  # expected to be connected to model
         session.max_day_shift = -2
-        session.save()
         key_day_of_week = session.key_day_date.weekday()
         shift = session.max_day_shift - 1
         result_date = session.key_day_date + timedelta(days=(shift + 7))
@@ -334,6 +333,7 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
             target += 7
         model.class_day = target
         model.save()
+        model = ClassOffer.objects.first()
 
         self.assertEquals(model.session, session)
         self.assertLess(session.max_day_shift, 0)
@@ -344,7 +344,6 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         model = ClassOffer.objects.first()
         session = Session.objects.first()  # expected to be connected to model
         session.max_day_shift = 2
-        session.save()
         key_day_of_week = session.key_day_date.weekday()
         shift = session.max_day_shift + 1
         result_date = session.key_day_date + timedelta(days=(shift - 7))
@@ -353,9 +352,11 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
             target -= 7
         model.class_day = target
         model.save()
+        model = ClassOffer.objects.first()
 
         self.assertEquals(model.session, session)
-        self.assertGreater(session.max_day_shift, 0)
+        self.assertEqual(session.max_day_shift, 2)
+        self.assertEqual(shift, 3)
         self.assertNotEquals(model.class_day, key_day_of_week)
         self.assertEquals(model.start_date, result_date)
 
@@ -363,11 +364,11 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         subject = Subject.objects.first()
         session = Session.objects.first()
         session.skip_weeks = 0
-        session.save()
         model = ClassOffer.objects.first()
         model.skip_weeks = 0
-        model.save()
         expected = model.start_date + timedelta(days=7*(subject.num_weeks - 1))
+        model.save()
+        model = ClassOffer.objects.first()
 
         self.assertEquals(model.subject, subject)
         self.assertEquals(model.session, session)
@@ -379,11 +380,11 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         subject = Subject.objects.first()
         session = Session.objects.first()
         session.skip_weeks = 1
-        session.save()
         model = ClassOffer.objects.first()
         model.skip_weeks = 0
-        model.save()
         expected = model.start_date + timedelta(days=7*(subject.num_weeks - 1))
+        model.save()
+        model = ClassOffer.objects.first()
 
         self.assertEquals(model.subject, subject)
         self.assertEquals(model.session, session)
@@ -395,11 +396,11 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         subject = Subject.objects.first()
         session = Session.objects.first()
         session.skip_weeks = 1
-        session.save()
         model = ClassOffer.objects.first()
         model.skip_weeks = 1
-        model.save()
         expected = model.start_date + timedelta(days=7*(subject.num_weeks + model.skip_weeks - 1))
+        model.save()
+        model = ClassOffer.objects.first()
 
         self.assertEquals(model.subject, subject)
         self.assertEquals(model.session, session)
