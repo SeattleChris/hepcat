@@ -186,7 +186,7 @@ class Resource(models.Model):
         return "{} - {} - {}".format(self.title, self.related_type, self.content_type)
 
     def __repr__(self):
-        return '<Resource: {} | ID: {} | Type: {} >'.format(self.related_type, self.id, self.content_type)
+        return '<Resource: {} | Related: {} | Type: {} >'.format(self.id, self.related_type, self.content_type)
 
 
 class Subject(models.Model):
