@@ -35,6 +35,8 @@
 | :heavy_check_mark: | Tests: Add initial testing including coverage reports                                       |
 | :heavy_check_mark: | Tests: Checking date computations on Session model and Admin form                           |
 | :heavy_check_mark: | Tests: UserHC model - create user; Profile create on UserHC; Basics for all models.         |
+| :heavy_check_mark: | User Views: Profile - resources filtered to currently allowed and no duplicates.            |
+|                    | User Views: Profile - resources display, layout, and navigation in a useful way.            |
 |                    | User Views: About Us - show profile info for only teachers and staff, plus general business |
 |                    | User Views: Contact Us (including contact form), Info - general site resources, sub-pages   |
 |                    | User Views: General site clean up before first launch                                       |
@@ -85,8 +87,24 @@
 - [s] Stretch Goal. Not for current feature plan.
 
 Current Status:
-2020-07-24 02:56:03
+2020-08-01 20:00:44
 <!-- Ctrl-Shift-I to generate timestamp -->
+
+### Bug Fixes
+
+- [ ] Teacher reference in ClassOffer listing (update now that teachers are many-to-many with classoffers.)
+- [ ] ClassOffer Manager computing dates: Error when the 'class_day' is just beyond the range of 'max_day_shift'.
+- [ ] ProfileView is showing the dictionaries after the updates to the technique for getting the correct data.
+
+### Views
+
+- [ ] Student Profile: Resources filtered to currently available.
+- [ ] Student Profile: Resources no duplicates.
+- [ ] Student Profile: Resources displayed and can be navigated in a useful way.
+- [ ] Staff Profile: How to manage if they are also a Student?
+- [ ] Staff Profile: What info do they want as a staff view? Or just handle that in the admin views?
+- [ ] About Us - Shows only Teachers and Staff.
+- [ ] About US - order of teacher & staff info can be controlled by an admin.
 
 ### Tests
 

@@ -144,7 +144,9 @@ class Resource(models.Model):
 
     # id = auto-created
     related_type = models.CharField(max_length=15, default='Subject', choices=MODEL_CHOICES, editable=False, )
+    # subjects = models.ManyToManyField('Subject', related_name='resources', blank=True, )
     subject = models.ForeignKey('Subject', on_delete=models.SET_NULL, null=True, blank=True, )
+    # classoffers = models.ManyToManyField('ClassOffer', related_name='class_resources', blank=True, )
     classoffer = models.ForeignKey('ClassOffer', on_delete=models.SET_NULL, null=True, blank=True, )
     content_type = models.CharField(max_length=15, choices=CONTENT_CHOICES, )
     user_type = models.PositiveSmallIntegerField(default=1, choices=USER_CHOICES, help_text=_('Who is this for?'), )
@@ -184,7 +186,7 @@ class Resource(models.Model):
         return "{} - {} - {}".format(self.title, self.related_type, self.content_type)
 
     def __repr__(self):
-        return '<Resource: {} | Type: {} >'.format(self.related_type, self.content_type)
+        return '<Resource: {} | Related: {} | Type: {} >'.format(self.id, self.related_type, self.content_type)
 
 
 class Subject(models.Model):
@@ -237,7 +239,7 @@ class Subject(models.Model):
     pre_pay_discount = models.DecimalField(max_digits=6, decimal_places=2, default=settings.DEFAULT_PRE_DISCOUNT, )
     multiple_purchase_discount = models.DecimalField(max_digits=6, decimal_places=2, default=settings.MULTI_DISCOUNT, )
     qualifies_as_multi_class_discount = models.BooleanField(default=True, )
-
+    # resources exists from ManyToMany from Resource
     date_added = models.DateField(auto_now_add=True, )
     date_modified = models.DateField(auto_now=True, )
 
@@ -482,9 +484,9 @@ class Session(models.Model):
 class CustomQuerySet(models.QuerySet):
 
     def with_dates(self):
-        day, week = timedelta(days=1), timedelta(days=7)
-        sess_max = settings.SESSION_MAX_WEEKS
-        skip_max = settings.SESSION_MAX_SKIP
+        # day, week = timedelta(days=1), timedelta(days=7)
+        # sess_max = settings.SESSION_MAX_WEEKS
+        # skip_max = settings.SESSION_MAX_SKIP
         return self.annotate(
                 dif=Case(
                     When(Q(session__key_day_date__week_day=1),  # On the DB Sunday is 1, but is 6 in Python.
@@ -494,8 +496,7 @@ class CustomQuerySet(models.QuerySet):
                     default=EW(
                         F('class_day') + 2 - Extract('session__key_day_date', 'week_day'),
                         output_field=models.SmallIntegerField()),
-                    output_field=models.SmallIntegerField()
-                ),
+                    output_field=models.SmallIntegerField()),
             ).annotate(
                 shifted=Case(
                     When(dif=0, then=0),
@@ -504,56 +505,59 @@ class CustomQuerySet(models.QuerySet):
                     When(session__max_day_shift__lt=F('dif')-7, then=F('dif')-7),
                     When(Q(session__max_day_shift__gt=0) & Q(session__max_day_shift__lt=F('dif')), then=F('dif')-7),
                     default=F('dif'), output_field=models.SmallIntegerField()),
-                # no_skip_end=Case(
-                #     When(subject__num_weeks=settings.DEFAULT_SESSION_WEEKS,
-                #          then=F('session__key_day_date') + week * (settings.DEFAULT_SESSION_WEEKS - 1)),
-                #     *[When(subject__num_weeks=i+1, then=F('session__key_day_date') + i*week) for i in range(sess_max)],
-                #     default=F('session__key_day_date') + week * (settings.DEFAULT_SESSION_WEEKS - 1),
-                #     output_field=models.DateField()),
-            ).annotate(  # TODO: Rename to start_date and replace the @property version.
-                start_date=Func(F('session__key_day_date'), F('shifted'), function='ADDDATE', output_field=DateField()),
-                # start_date=Case(
-                #     When(shifted=0,  then=F('session__key_day_date')),
-                #     *[When(
-                #             shifted=i,
-                #             then=Func(F('session__key_day_date'), i, function='ADDDATE'))
-                #         for i in range(-6, 7)],
-                #     default=F('session__key_day_date'),
-                #     output_field=models.DateField()),
-                # end_date=Case(
-                #     *[When(
-                #             skip_weeks=i,
-                #             then=Func(F('no_skip_end') + i * 7, function='ADDDATE'))
-                #         for i in range(skip_max + 1)],
-                #     default=F('no_skip_end'),
-                #     output_field=models.DateField()),
             ).annotate(
-                end_date=Func(F('start_date'), 7 * (F('session__num_weeks') - 1 + F('skip_weeks')), function='ADDDATE')
+                start_date=Func(F('session__key_day_date'), F('shifted'), function='ADDDATE', output_field=DateField()),
+            ).annotate(
+                end_date=Func(F('start_date'), 7 * (F('session__num_weeks') - 1 + F('skip_weeks')), function='ADDDATE',
+                              output_field=DateField()),
             )
 
-    def check_alive_params(self, start, end, skips, type_user, *args, **kwargs):
-        print("====================== check alive parmas =============================")
+    def prepare_get_resources_params(self, *args, **kwargs):
         qs = Resource.objects
-        if self.model == ClassOffer:
-            qs = qs.filter(Q(classoffer=OuterRef('pk')) | Q(subject=OuterRef('subject')))  # .distinct()
+        start, end, skips, type_user = None, None, 0, 0
+        model = kwargs.pop('model', None)
+        if model:
+            start = model.start_date
+            end = model.end_date
+            skips = model.skip_weeks
+            user = kwargs.pop('user', None)
+            if user:
+                user = user.user if isinstance(user, (Student, Staff)) else user
+                user_val, user_roles = user.user_roles
+                type_user = 3 if user_val >= 4 else user_val
+            else:
+                type_user = kwargs.pop('type_user', 0)
+            # TODO: filter for user_type__lt=type_user
+            qs = qs.filter(Q(classoffer=model.pk) | Q(subject=model.subject))
+            qs = qs.order_by('pk').distinct()
+        else:
+            start = kwargs.pop('start', OuterRef('start_date'))
+            end = kwargs.pop('end', OuterRef('end_date'))
+            skips = kwargs.pop('skips', OuterRef('skip_weeks'))
+            type_user = kwargs.pop('type_user', 0)
+        if not model and self.model == ClassOffer:
+            qs = qs.filter(Q(classoffer=OuterRef('pk')) | Q(subject=OuterRef('subject')))
+            qs = qs.order_by('pk').distinct()
+
         if not isinstance(start, (date, OuterRef)) or not isinstance(end, (date, OuterRef)):
             raise TypeError(_("Both start and end parameters must be date objects or OuterRefs to DateFields. "))
         if not isinstance(skips, (int, OuterRef)):
             raise TypeError(_("The skips parameter must be an integer or an OuterRef to an appropriate field type. "))
-        user_lookup = {'public': 0, 'student': 1, 'teacher': 2, 'admin': 3, }
         if isinstance(type_user, str):
+            user_lookup = {'public': 0, 'student': 1, 'teacher': 2, 'admin': 3, }
             type_user = user_lookup.get(type_user, 0)
-        if isinstance(type_user, OuterRef):
-            pass
-        elif not isinstance(type_user, int) or type_user < 0 or type_user > 3:
+        if not isinstance(type_user, int) and 0 <= type_user <= 3:
             raise TypeError(_("The type_user parameter must be an appropriate string or integer"))
-        # TODO: filter for user_type__lt=type_user
-        return (qs, *args, kwargs)
-
-    def alive(self, start=None, end=None, skips=0, type_user=0, *args, **kwargs):
-        """ Will filter and annotate to return only currently published Resource for the given context. """
-        resource_queryset, *args, kwargs = self.check_alive_params(start, end, skips, type_user, *args, **kwargs)
         # now = kwargs('check_date', None)
+        return (qs, start, end, skips, *args, kwargs)
+
+    def get_resources(self, *args, **kwargs):
+        """ Returns a filtered & annotated queryset of Resources connected to the current ClassOffer queryset.
+            Unless over-ridden by later processing of this queryset, it will be ordered with most recent first.
+            Filter these results by 'alive=True' to get only currently published, and not expired, results.
+            Distinct resources, across ClassOffers, requires '.values()' that does not include these annotations.
+        """
+        resource_queryset, start, end, skips, *args, kwargs = self.prepare_get_resources_params(*args, **kwargs)
         now = Func(function='CURDATE', output_field=models.DateField())
         dates = [Least(start, now)]
         dates += [Func(start, 7 * i, function='ADDDATE') for i in range(settings.SESSION_MAX_WEEKS - 1)]
@@ -565,64 +569,48 @@ class CustomQuerySet(models.QuerySet):
                     output_field=models.DateField()),
                 days_since=Func(start, now, function='DATEDIFF', output_field=models.SmallIntegerField()),
             ).annotate(
-                is_allowed=Case(
-                    When(Q(expire=0) & Q(publish__lte=now), then=True),
-                    When(Q(days_since__lt=7*(F('avail') + F('expire') + skips)) & Q(publish__lte=now), then=True),
+                expire_date=Case(
+                    When(Q(expire=0), then=None),
+                    default=Func(F('publish'), 7 * (F('expire') + skips),
+                                 function='ADDDATE', output_field=models.DateField()),
+                    output_field=models.DateField()),
+                alive=Case(
+                    When(Q(publish__gt=now), then=False),
+                    When(Q(expire=0), then=True),
+                    When(Q(days_since__lt=7*(F('avail') + F('expire') + skips)), then=True),
                     default=False,
                     output_field=models.BooleanField()),
-            # ).filter(
-            #     # is_allowed=True,
-            #     Q(expire=0) | Q(days_since__lt=7*(F('avail') + F('expire') + skips)),
-            #     publish__lte=now,
-            ).values()
+            ).order_by('-publish')  # Most recent first. May be overridden later, depending on how this data is used.
 
     def resources(self):
-        # related_qs = Resource.objects
-        related_qs = self
-        res = related_qs.alive(
-                start=OuterRef('start'),
-                end=OuterRef('end'),
-                skips=OuterRef('skip_weeks')
-            # ).filter(
-            #     Q(classoffer=OuterRef('pk')) | Q(subject=OuterRef('subject'))
-            # ).distinct(
-            )
-        # ---------------------------------------------------------------------------------------------------- #
-        # print('---------------------------- Try it MANUALLY! -----------------------------------------------')
+        """ Return a queryset.values() of Resource objects that are alive and connected to the current queryset. """
+        # Assume the 'self' queryset has already been filtered to the ClassOffers that we care about.
+        # print("======================== ClassOffer Query =========================")
+        resource_fields = ('id', 'content_type', 'user_type', 'imagepath', 'description', )
+        arr = [self.get_resources(model=ea).filter(alive=True).order_by().values(*resource_fields) for ea in self.all()]
+        if len(arr):
+            collected = arr.pop()
+            collected = collected.union(*arr)
+        else:
+            collected = Resource.objects.none().values()
 
-        # # weeks_since = td_since // week  # TODO: This works when given a date obj, but not an OuterRef obj.
-        # now = Trunc(Now(), 'day', output_field=models.DateField())
-        # start = OuterRef('start')
-        # early = Min(start, now)
-        # # td_since = EW(now - start, output_field=models.DurationField())
-        # # td_since_year = ExtractYear(now) - ExtractYear(start)
-        # td_weeks_since = ExtractWeek(now) - ExtractWeek(start) + 53 * (ExtractYear(now) - ExtractYear(start))
-        # week = timedelta(days=7)
-        # end = OuterRef('end')
-        # skips = OuterRef('skip_weeks')
-        # dates = [early] + [start + week * i for i in range(settings.SESSION_MAX_WEEKS - 1)] + [end]
-        # # What is the suggestion of double stack OuterRef.  It might be needed for annotations, not just nested qs.
-        # alive_made = Resource.objects.annotate(
-        #         publish=Case(
-        #             *[When(Q(avail=num), then=date) for num, date in enumerate(dates)],
-        #             default=None,
-        #             output_field=models.DateField()),
-        #         # weeks_since=EW(td_weeks_since, output_field=models.SmallIntegerField()),
-        #         # weeks_since=td_weeks_since
-        #     ).filter(
-        #         # Q(expire=0) | Q(expire__lt=F('avail') + F('weeks_since') - skips),
-        #         Q(expire=0) | Q(expire__lt=F('avail') + td_weeks_since - skips),
-        #         publish__isnull=False, publish__lte=now,
-        #         # user_type__lte=type_user  # TODO: Refactor to filter out user_type is called before this method.
-        #     )
-        # result = self.annotate(resources=Subquery(alive_made))
-        # print('----------------------------- ClassOffer objects resources! -----------------------------------')
-        result = self.annotate(resources=Subquery(res))
-        # print(result)
+        return collected
+
+    def most_recent_resource_per_classoffer(self):
+        res = self.alive(
+                start=OuterRef('start_date'),
+                end=OuterRef('end_date'),
+                skips=OuterRef('skip_weeks')
+            ).order_by('-publish').values()[:1]
+
+        result = self.annotate(
+                resources=Subquery(res),
+            )
         return result
 
 
 class ClassOfferManager(models.Manager):
+    # use_for_related_fields = True
 
     def get_queryset(self):
         return CustomQuerySet(self.model, using=self._db).with_dates()
@@ -702,23 +690,23 @@ class ClassOffer(models.Model):
     _num_level = models.IntegerField(default=0, editable=False, )
     manager_approved = models.BooleanField(default=settings.ASSUME_CLASS_APPROVE, )
     location = models.ForeignKey('Location', on_delete=models.SET_NULL, null=True, )
-    teachers = models.ManyToManyField('Staff', related_name='taught', limit_choices_to={'user__is_active': True})
+    teachers = models.ManyToManyField('Staff', related_name='taught', limit_choices_to={'user__is_active': True}, )
     class_day = models.SmallIntegerField(choices=DOW_CHOICES, default=settings.DEFAULT_KEY_DAY, )
     start_time = models.TimeField()
     skip_weeks = models.PositiveSmallIntegerField(_('skipped mid-session class weeks'), default=0, )
     skip_tagline = models.CharField(max_length=46, blank=True, )
     date_added = models.DateField(auto_now_add=True, )
     date_modified = models.DateField(auto_now=True, )
-    # resource_set exists but only includes Resources connected directly to this ClassOffer, not its Subject.
+    # class_resources exists, but only includes directly connected Resources, but not those through Subject.
     objects = ClassOfferManager()
 
-    def resources(self):
+    def all_resources(self):
         """ Expanding the resource_set to include resources attached to the Subject of the given ClassOffer. """
         user = self.request.user
         user_val, user_roles = user.user_roles
         user_type = 3 if user_val >= 4 else user_val
         qs = Resource.objects
-        qs = qs.filter(Q(subject=self.subject) | Q(classoffer=self)).order_by('id').distinct('id')
+        qs = qs.filter(Q(subject=self.subject) | Q(classoffer=self)).order_by('id').distinct()
         qs = qs.alive(start=self.start, end=self.end, skips=self.skip_weeks, type_user=user_type)
         # union of self.resource_set and Resource.objects.filter(Q(subject=self.subject))
         return qs
@@ -870,7 +858,7 @@ class Student(AbstractProfile):
     level = models.IntegerField(_('skill level'), default=0, blank=True, )
     taken = models.ManyToManyField(ClassOffer, related_name='students', through='Registration', )
     # interest = models.ManyToManyField(Subject, related_names='interests', through='Requests', )
-    credit = models.DecimalField(max_digits=6, decimal_places=2, default=0.0)
+    credit = models.DecimalField(max_digits=6, decimal_places=2, default=0.0, )
     # TODO: Implement self-referencing key for a 'refer-a-friend' discount.
     # refer = models.ForeignKey(User, symmetrical=False, on_delete=models.SET_NULL,
     #                           null=True, blank=True, related_names='referred', )

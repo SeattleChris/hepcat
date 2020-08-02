@@ -5,14 +5,14 @@ from django.utils.translation import gettext_lazy as _
 from django.shortcuts import get_object_or_404, redirect  # used for Payments
 from django.template.response import TemplateResponse  # used for Payments
 from payments import get_payment_model, RedirectNeeded  # used for Payments
-from django.db.models import Q, F, Case, When, DateField, BooleanField, SmallIntegerField, DurationField, ExpressionWrapper as EW  # ,
-from django.db.models.functions import Trunc  # , Extract, ExtractYear, ExtractMonth, ExtractDay
+# from django.db.models import Q, F, Case, When, DateField, BooleanField, SmallIntegerField, DurationField, ExpressionWrapper as EW  # ,
+# from django.db.models.functions import Trunc  # , Extract, ExtractYear, ExtractMonth, ExtractDay
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth import get_user_model
 from .forms import RegisterForm, PaymentForm  # , ProfileForm, UserForm
 from .models import (SiteContent, Resource, Location, ClassOffer, Subject,  # ? Session,
                      Staff, Student, Payment, Registration, Session)
-from datetime import timedelta, date, datetime
+from datetime import datetime as dt
 User = get_user_model()
 
 # TODO: Clean out excessive print lines telling us where we are.
@@ -25,7 +25,7 @@ def decide_session(sess=None, display_date=None):
     """
     query = Session.objects
     if sess is None:
-        target = display_date or datetime.now()
+        target = display_date or dt.now()
         query = query.filter(publish_date__lte=target, expire_date__gte=target)
     elif display_date:
         raise SyntaxError(_("You can't filter by both Session and Display Date"))
@@ -187,36 +187,20 @@ class ProfileView(DetailView):
 
     def get_context_data(self, **kwargs):
         """ Modify the context """
-        from pprint import pprint
         context = super().get_context_data(**kwargs)
         # print('===== ProfileView get_context_data ======')
-        # TODO: Revisit the following for better query techniques.
         student = getattr(self.request.user, 'student', None)
         if student:
-            taken = student.taken.all()  # Has start & end since ClassOffer manager calls 'with_dates' for all queries.
-            print("========================= Resources on Student.taken ===================================")
-            # res_taken = student.taken.resources
-            # pprint(res_taken())
-            # temp = ClassOffer.objects.resources()
-            # pprint(temp)
-            print("---------------------------------------------------------------------------------------")
-            res = []
-            # res = [Resource.objects.alive(start=cur.start_date, end=cur.end_date, skips=cur.skip_weeks).all() for cur in taken]
-            for cur in taken:
-                qr = Resource.objects.alive(start=cur.start_date, end=cur.end_date, skips=cur.skip_weeks)
-                res += qr.all()
-            context['had'] = taken
+            context['had'] = student.taken.all()  # Has dates since ClassOffer manager annotates for all querysets.
+            # TODO: Revisit the following for better dictionary creation.
             ct = {ea[0]: [] for ea in Resource.CONTENT_CHOICES}
-            [ct[ea.content_type].append(ea) for ea in res]
-            # ct is now is a dictionary of all possible content types, with values
-            # of the current user resources that are past their avail date.
+            [ct[ea.get('content_type', None)].append(ea) for ea in student.taken.resources().all()]
             context['resources'] = {key: vals for (key, vals) in ct.items() if len(vals) > 0}
             # context['resources'] only has the ct keys if the values have data.
         else:
             context['had'] = None
             context['resources'] = {}
         return context
-
     # end class ProfileView
 
 
