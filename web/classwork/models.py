@@ -183,10 +183,11 @@ class Resource(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return "{} - {} - {}".format(self.title, self.related_type, self.content_type)
+        return self.title
+        # return "{} - {} - {}".format(self.title, self.related_type, self.content_type)
 
     def __repr__(self):
-        return '<Resource: {} | Related: {} | Type: {} >'.format(self.id, self.related_type, self.content_type)
+        return '<Resource: {} | Type: {} >'.format(self.title, self.content_type)
 
 
 class Subject(models.Model):
@@ -512,7 +513,7 @@ class CustomQuerySet(models.QuerySet):
                               output_field=DateField()),
             )
 
-    def prepare_get_resources_params(self, *args, **kwargs):
+    def prepare_get_resources_params(self, **kwargs):
         qs = Resource.objects
         start, end, skips, type_user = None, None, 0, 0
         model = kwargs.pop('model', None)
@@ -549,20 +550,20 @@ class CustomQuerySet(models.QuerySet):
         if not isinstance(type_user, int) and 0 <= type_user <= 3:
             raise TypeError(_("The type_user parameter must be an appropriate string or integer"))
         # now = kwargs('check_date', None)
-        return (qs, start, end, skips, *args, kwargs)
+        return (qs, start, end, skips, kwargs)
 
-    def get_resources(self, *args, **kwargs):
+    def get_resources(self, live=False, **kwargs):
         """ Returns a filtered & annotated queryset of Resources connected to the current ClassOffer queryset.
             Unless over-ridden by later processing of this queryset, it will be ordered with most recent first.
-            Filter these results by 'alive=True' to get only currently published, and not expired, results.
+            Filter these results by 'live=True' to get only currently published, and not expired, results.
             Distinct resources, across ClassOffers, requires '.values()' that does not include these annotations.
         """
-        resource_queryset, start, end, skips, *args, kwargs = self.prepare_get_resources_params(*args, **kwargs)
+        resource_queryset, start, end, skips, kwargs = self.prepare_get_resources_params(**kwargs)
         now = Func(function='CURDATE', output_field=models.DateField())
         dates = [Least(start, now)]
         dates += [Func(start, 7 * i, function='ADDDATE') for i in range(settings.SESSION_MAX_WEEKS - 1)]
         # MySQL Functions: ADDDATE, DATEDIFF, DAYOFYEAR, TO_DAYS, FROM_DAYS, MAKEDATE, CURDATE
-        return resource_queryset.annotate(
+        resource_queryset = resource_queryset.annotate(
                 publish=Case(
                     *[When(Q(avail=num), then=date) for num, date in enumerate(dates)],
                     default=end,  # Uses default if 'after class ends' was selected option (value = 200).
@@ -574,20 +575,24 @@ class CustomQuerySet(models.QuerySet):
                     default=Func(F('publish'), 7 * (F('expire') + skips),
                                  function='ADDDATE', output_field=models.DateField()),
                     output_field=models.DateField()),
-                alive=Case(
+                live=Case(
                     When(Q(publish__gt=now), then=False),
                     When(Q(expire=0), then=True),
                     When(Q(days_since__lt=7*(F('avail') + F('expire') + skips)), then=True),
                     default=False,
                     output_field=models.BooleanField()),
             ).order_by('-publish')  # Most recent first. May be overridden later, depending on how this data is used.
+        if live:
+            resource_queryset = resource_queryset.filter(live=True)
+
+        return resource_queryset
 
     def resources(self):
         """ Return a queryset.values() of Resource objects that are alive and connected to the current queryset. """
         # Assume the 'self' queryset has already been filtered to the ClassOffers that we care about.
         # print("======================== ClassOffer Query =========================")
-        resource_fields = ('id', 'content_type', 'user_type', 'imagepath', 'description', )
-        arr = [self.get_resources(model=ea).filter(alive=True).order_by().values(*resource_fields) for ea in self.all()]
+        resource_fields = ('id', 'content_type', 'imagepath', 'description', )
+        arr = [self.get_resources(model=ea, live=True).order_by().values(*resource_fields) for ea in self.all()]
         if len(arr):
             collected = arr.pop()
             collected = collected.union(*arr)
