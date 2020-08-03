@@ -119,54 +119,97 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         initial_max_level = ClassOffer.objects.all().aggregate(Max('_num_level')).get('_num_level__max', 0)
         initial_res_count = Resource.objects.count()
         no_res_results = ClassOffer.objects.filter(_num_level__gt=initial_max_level).resources()
-        n, i, subj_all, res_all = 0, 0, [], []
+        avail, expire, subj_all, res_all = 0, 0, [], []
         for lvl, display in Subject.LEVEL_CHOICES[:2]:
             res_lvl = Resource.objects.create(
                 content_type='text',
-                title='_'.join((lvl, 'all', str(n), str(i))),
-                avail=n,
-                expire=i
+                title='_'.join((lvl, 'all', str(avail), str(expire))),
+                user_type=1,
+                avail=avail,
+                expire=expire,
             )
             res_lvl.save()
             res_all.append(res_lvl)
             for ver, _ in Subject.VERSION_CHOICES[:3]:
                 subj = Subject.objects.create(title='_'.join((lvl, ver)), level=lvl, version=ver)
                 subj.save()
+                subj_all.append(subj)
                 res = Resource.objects.create(
                     content_type='text',
-                    title='_'.join((lvl, ver, str(n), str(i))),
-                    avail=n,
-                    expire=i
+                    title='_'.join((lvl, ver, str(avail), str(expire))),
+                    user_type=1,
+                    avail=avail,
+                    expire=expire,
                 )
                 res.save()
+                res_all.append(res)
                 co = ClassOffer.objects.create(subject=subj, session=sess, start_time=(time(17)))
                 co.save()
                 subj.resource_set.add(res, res_lvl)
-                subj_all.append(subj)
-                res_all.append(res)
-                n = 0 if n + 1 > sess.num_weeks else n + 1
+                avail = 0 if avail + 1 > sess.num_weeks else avail + 1
         co_resources = ClassOffer.objects.resources()
         res_count = len(res_all) + initial_res_count
         resource_count = Resource.objects.all().count()
 
         self.assertTrue(len(no_res_results) == 0)
+        self.assertLessEqual(sess.end_date, date.today())
         self.assertEquals(len(co_resources), res_count)
         self.assertEquals(len(co_resources), resource_count)
 
     @skip("Not Implemented")
     def test_manager_queryset_resources_various_expire(self):
-        # n, i = sess.num_weeks, 0
-        # for lvl, display in Subject.LEVEL_CHOICES:
-        #     for ver, _ in Subject.VERSION_CHOICES:
-        #         Subject.objects.create(title='_'.join((lvl, ver)), level=lvl, version=ver)
-        #         Resource.objects.create(content_type='text', title='_'.join((lvl, ver, n, i)), avail=n, expire=i)
-        #         if n + 1 > sess.num_weeks:
-        #             n = 0
-        #             i = (i + 2) % 3
-        #         else:
-        #             n += 1
-        # end test_manager_queryset_resources_various_expire
-        pass
+        from users.models import UserHC
+
+        user = UserHC.objects.create_user(email="fake@faker.com", password=1234, first_name='fa', last_name='la')
+        student = user.student
+        user.save()
+        now = date.today()
+        cur_week = 3
+        start = now - timedelta(days=7) * (cur_week - 1)
+        sess_cur = Session.objects.create(name="Current Test", key_day_date=start, publish_date=start - timedelta(14))
+        res_total_count = Resource.objects.count()
+        # classoffer_count = ClassOffer.objects.count()
+        avail, expire, res_goal_count = 0, 0, 0
+        for lvl, display in Subject.LEVEL_CHOICES:
+            res_lvl = Resource.objects.create(
+                content_type='text',
+                title='_'.join((lvl, 'all', str(avail), str(expire))),
+                user_type=1,
+                avail=avail,
+                expire=expire,
+            )
+            res_lvl.save()
+            res_total_count += 1
+            for ver, _ in Subject.VERSION_CHOICES:
+                subj = Subject.objects.create(title='_'.join((lvl, ver)), level=lvl, version=ver)
+                subj.save()
+                res = Resource.objects.create(
+                    content_type='text',
+                    title='_'.join((lvl, ver, str(avail), str(expire))),
+                    user_type=1,
+                    avail=avail,
+                    expire=expire,
+                )
+                res.save()
+                res_total_count += 1
+                co = ClassOffer.objects.create(subject=subj, session=sess_cur, start_time=(time(17)))
+                co.save()
+                student.taken.add(co)
+                subj.resource_set.add(res, res_lvl)
+                avail_week = 1 if avail == 0 else avail
+                res_goal_count += 2 if avail <= cur_week and (expire == 0 or expire + avail_week >= cur_week) else 0
+                if avail + 1 > sess_cur.num_weeks:
+                    avail = 0
+                    expire = (expire + 1) % 3
+                else:
+                    avail += 1
+        classoffers_created = len(Subject.LEVEL_CHOICES) * len(Subject.VERSION_CHOICES)  # 80
+        taken_count = student.taken.count()
+        taken_live_resources = student.taken.resources()
+
+        self.assertEquals(res_total_count, Resource.objects.count())
+        self.assertEqual(classoffers_created, taken_count)
+        self.assertEquals(res_goal_count, len(taken_live_resources))
 
     def test_full_price(self):
         subject = Subject.objects.first()
