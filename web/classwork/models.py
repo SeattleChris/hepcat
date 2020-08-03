@@ -587,12 +587,13 @@ class CustomQuerySet(models.QuerySet):
 
         return resource_queryset
 
-    def resources(self):
+    def resources(self, **kwargs):
         """ Return a queryset.values() of Resource objects that are alive and connected to the current queryset. """
         # Assume the 'self' queryset has already been filtered to the ClassOffers that we care about.
         # print("======================== ClassOffer Query =========================")
         resource_fields = ('id', 'content_type', 'imagepath', 'description', )
-        arr = [self.get_resources(model=ea, live=True).order_by().values(*resource_fields) for ea in self.all()]
+        kwargs['live'] = True
+        arr = [self.get_resources(model=ea, **kwargs).order_by().values(*resource_fields) for ea in self.all()]
         if len(arr):
             collected = arr.pop()
             collected = collected.union(*arr)
@@ -606,10 +607,10 @@ class CustomQuerySet(models.QuerySet):
                 start=OuterRef('start_date'),
                 end=OuterRef('end_date'),
                 skips=OuterRef('skip_weeks')
-            ).order_by('-publish').values()[:1]
+            ).values()[:1]
 
         result = self.annotate(
-                resources=Subquery(res),
+                recent_resource=Subquery(res),
             )
         return result
 
@@ -661,7 +662,8 @@ class ClassOfferManager(models.Manager):
         #     )
 
     def resources(self, *args, **kwargs):
-        return self.get_queryset().resources()
+
+        return self.get_queryset().resources(**kwargs)
         # return CustomQuerySet(self.model, using=self._db).resources()
         # res = Resource.objects.filter(
         #         Q(classoffer=OuterRef('pk')) | Q(subject=OuterRef('subject'))
@@ -672,6 +674,9 @@ class ClassOfferManager(models.Manager):
         #         skips=OuterRef('skip_weeks')
         #     )
         # return self.get_queryset().annotate(resources=Subquery(res))
+
+    def most_recent_resource_per_classoffer(self):
+        return self.get_queryset().most_recent_resource_per_classoffer()
 
 
 class ClassOffer(models.Model):
