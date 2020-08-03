@@ -1,10 +1,11 @@
 from django.test import TestCase, TransactionTestCase
 from django.conf import settings
+from django.db.models import Max
 from unittest import skip
 from .helper import SimpleModelTests
 from classwork.models import Location, Resource, SiteContent, Subject, ClassOffer, Student
 from classwork.models import Session, Payment, Registration, Notify
-from datetime import date, timedelta, datetime as dt  # time,
+from datetime import date, time, timedelta, datetime as dt
 
 # Create your tests here.
 
@@ -112,6 +113,60 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
     repr_dict = {'Class Id': 'id', 'Subject': 'subject', 'Session': 'session'}
     str_list = ['subject', 'session']
     defaults = {}
+
+    def test_manager_queryset_resources_no_expire(self):
+        sess = Session.objects.first()
+        initial_max_level = ClassOffer.objects.all().aggregate(Max('_num_level')).get('_num_level__max', 0)
+        initial_res_count = Resource.objects.count()
+        no_res_results = ClassOffer.objects.filter(_num_level__gt=initial_max_level).resources()
+        n, i, subj_all, res_all = 0, 0, [], []
+        for lvl, display in Subject.LEVEL_CHOICES[:2]:
+            res_lvl = Resource.objects.create(
+                content_type='text',
+                title='_'.join((lvl, 'all', str(n), str(i))),
+                avail=n,
+                expire=i
+            )
+            res_lvl.save()
+            res_all.append(res_lvl)
+            for ver, _ in Subject.VERSION_CHOICES[:3]:
+                subj = Subject.objects.create(title='_'.join((lvl, ver)), level=lvl, version=ver)
+                subj.save()
+                res = Resource.objects.create(
+                    content_type='text',
+                    title='_'.join((lvl, ver, str(n), str(i))),
+                    avail=n,
+                    expire=i
+                )
+                res.save()
+                co = ClassOffer.objects.create(subject=subj, session=sess, start_time=(time(17)))
+                co.save()
+                subj.resource_set.add(res, res_lvl)
+                subj_all.append(subj)
+                res_all.append(res)
+                n = 0 if n + 1 > sess.num_weeks else n + 1
+        co_resources = ClassOffer.objects.resources()
+        res_count = len(res_all) + initial_res_count
+        resource_count = Resource.objects.all().count()
+
+        self.assertTrue(len(no_res_results) == 0)
+        self.assertEquals(len(co_resources), res_count)
+        self.assertEquals(len(co_resources), resource_count)
+
+    @skip("Not Implemented")
+    def test_manager_queryset_resources_various_expire(self):
+        # n, i = sess.num_weeks, 0
+        # for lvl, display in Subject.LEVEL_CHOICES:
+        #     for ver, _ in Subject.VERSION_CHOICES:
+        #         Subject.objects.create(title='_'.join((lvl, ver)), level=lvl, version=ver)
+        #         Resource.objects.create(content_type='text', title='_'.join((lvl, ver, n, i)), avail=n, expire=i)
+        #         if n + 1 > sess.num_weeks:
+        #             n = 0
+        #             i = (i + 2) % 3
+        #         else:
+        #             n += 1
+        # end test_manager_queryset_resources_various_expire
+        pass
 
     def test_full_price(self):
         subject = Subject.objects.first()
@@ -367,8 +422,8 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         self.assertEquals(model.start_date, result_date)
 
     def test_end_date_no_skips(self):
-        subject = Subject.objects.first()
-        session = Session.objects.first()
+        subject = Subject.objects.first()  # expected to be connected to model
+        session = Session.objects.first()  # expected to be connected to model
         session.skip_weeks = 0
         session.save()
         model = ClassOffer.objects.first()
@@ -384,8 +439,8 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         self.assertEquals(model.end_date, expected)
 
     def test_end_date_skips_on_session_not_classoffer(self):
-        subject = Subject.objects.first()
-        session = Session.objects.first()
+        subject = Subject.objects.first()  # expected to be connected to model
+        session = Session.objects.first()  # expected to be connected to model
         session.skip_weeks = 1
         session.save()
         model = ClassOffer.objects.first()
@@ -401,8 +456,8 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         self.assertEquals(model.end_date, expected)
 
     def test_end_date_with_skips(self):
-        subject = Subject.objects.first()
-        session = Session.objects.first()
+        subject = Subject.objects.first()  # expected to be connected to model
+        session = Session.objects.first()  # expected to be connected to model
         session.skip_weeks = 1
         session.save()
         model = ClassOffer.objects.first()
