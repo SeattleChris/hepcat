@@ -200,7 +200,7 @@ class UserHC(AbstractUser):
         for i, ea in enumerate((self.is_student, self.is_teacher, self.is_admin, self.is_superuser)):
             if ea:
                 user_val += 2 ** i
-                typelist.append(ea.verbose_name)
+                typelist.append(getattr(ea, 'verbose_name', getattr(ea, 'name', 'unknown')))
         return (user_val, typelist)
 
     def make_username(self):
