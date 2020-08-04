@@ -485,9 +485,6 @@ class Session(models.Model):
 class CustomQuerySet(models.QuerySet):
 
     def with_dates(self):
-        # day, week = timedelta(days=1), timedelta(days=7)
-        # sess_max = settings.SESSION_MAX_WEEKS
-        # skip_max = settings.SESSION_MAX_SKIP
         return self.annotate(
                 dif=Case(
                     When(Q(session__key_day_date__week_day=1),  # On the DB Sunday is 1, but is 6 in Python.
@@ -578,7 +575,7 @@ class CustomQuerySet(models.QuerySet):
                 live=Case(
                     When(Q(publish__gt=now), then=False),
                     When(Q(expire=0), then=True),
-                    When(Q(days_since__lt=7*(F('avail') + F('expire') + skips)), then=True),
+                    When(Q(days_since__lte=7*(F('avail') + F('expire') + skips - 1)), then=True),
                     default=False,
                     output_field=models.BooleanField()),
             ).order_by('-publish')  # Most recent first. May be overridden later, depending on how this data is used.
@@ -587,91 +584,38 @@ class CustomQuerySet(models.QuerySet):
 
         return resource_queryset
 
-    def resources(self):
+    def resources(self, **kwargs):
         """ Return a queryset.values() of Resource objects that are alive and connected to the current queryset. """
         # Assume the 'self' queryset has already been filtered to the ClassOffers that we care about.
-        # print("======================== ClassOffer Query =========================")
-        resource_fields = ('id', 'content_type', 'imagepath', 'description', )
-        arr = [self.get_resources(model=ea, live=True).order_by().values(*resource_fields) for ea in self.all()]
+        resource_fields = ('title', 'id', 'content_type', )  # , 'imagepath',
+        kwargs['live'] = True  # Calling resources will always only return currently available resources.
+        arr = [self.get_resources(model=ea, **kwargs).order_by().values(*resource_fields) for ea in self.all()]
+        # TODO: Look into 'defer' as a query option instead of 'values' to have a qs of models instead of dicts.
         if len(arr):
-            collected = arr.pop()
-            collected = collected.union(*arr)
+            collected = arr[0].union(*arr[1:])
         else:
             collected = Resource.objects.none().values()
-
         return collected
 
     def most_recent_resource_per_classoffer(self):
-        res = self.alive(
+        res = self.get_resources(
                 start=OuterRef('start_date'),
                 end=OuterRef('end_date'),
                 skips=OuterRef('skip_weeks')
-            ).order_by('-publish').values()[:1]
+            ).values('title')[:1]
 
         result = self.annotate(
-                resources=Subquery(res),
+                recent_resource=Subquery(res),
             )
         return result
 
 
 class ClassOfferManager(models.Manager):
-    # use_for_related_fields = True
-
-    def get_queryset(self):
-        return CustomQuerySet(self.model, using=self._db).with_dates()
-        # day, week = timedelta(days=1), timedelta(days=7)
-        # sess_max = settings.SESSION_MAX_WEEKS
-        # skip_max = settings.SESSION_MAX_SKIP
-        # return super().get_queryset().annotate(
-        #         dif=Case(
-        #             When(Q(session__key_day_date__week_day=1),
-        #                  then=EW(
-        #                     F('class_day') + 2 - 7 - Extract('session__key_day_date', 'week_day'),
-        #                     output_field=models.SmallIntegerField())),
-        #             default=EW(
-        #                 F('class_day') + 2 - Extract('session__key_day_date', 'week_day'),
-        #                 output_field=models.SmallIntegerField()),
-        #             output_field=models.SmallIntegerField()
-        #         ),
-        #     ).annotate(
-        #         shifted=Case(
-        #             When(dif=0, then=0),
-        #             When(Q(session__max_day_shift__lt=0) & Q(session__max_day_shift__gt=F('dif')), then=F('dif')+7),
-        #             When(Q(session__max_day_shift__gt=F('dif')+7), then=F('dif')+7),
-        #             When(session__max_day_shift__lt=F('dif')-7, then=F('dif')-7),
-        #             When(Q(session__max_day_shift__gt=0) & Q(session__max_day_shift__lt=F('dif')), then=F('dif')-7),
-        #             default=F('dif'), output_field=models.SmallIntegerField())
-        #     ).annotate(  # TODO: Rename to start_date and replace the @property version.
-        #         start=Case(
-        #             When(shifted=0,  then=F('session__key_day_date')),
-        #             *[When(shifted=i, then=F('session__key_day_date') + i*day) for i in range(-6, 7)],
-        #             default=F('session__key_day_date'),
-        #             output_field=models.DateField()),
-        #         no_skip_end=Case(
-        #             When(subject__num_weeks=settings.DEFAULT_SESSION_WEEKS,
-        #                  then=F('session__key_day_date') + week * (settings.DEFAULT_SESSION_WEEKS)),
-        #             *[When(subject__num_weeks=i+1,  then=F('session__key_day_date') + i*week) for i in range(sess_max)],
-        #             default=F('session__key_day_date') + week * settings.DEFAULT_SESSION_WEEKS,
-        #             output_field=models.DateField())
-        #     ).annotate(
-        #         end=Case(
-        #             *[When(skip_weeks=i, then=F('no_skip_end') + i*week) for i in range(skip_max + 1)],
-        #             default=F('no_skip_end'),
-        #             output_field=models.DateField()),
-        #     )
-
-    def resources(self, *args, **kwargs):
-        return self.get_queryset().resources()
-        # return CustomQuerySet(self.model, using=self._db).resources()
-        # res = Resource.objects.filter(
-        #         Q(classoffer=OuterRef('pk')) | Q(subject=OuterRef('subject'))
-        #     ).distinct(
-        #     ).alive(
-        #         start=OuterRef('start'),
-        #         end=OuterRef('end'),
-        #         skips=OuterRef('skip_weeks')
-        #     )
-        # return self.get_queryset().annotate(resources=Subquery(res))
+    def get_queryset(self): return CustomQuerySet(self.model, using=self._db).with_dates()
+    def get_resources(self, **kwargs): return self.get_queryset().get_resources(**kwargs)
+    def resources(self, **kwargs): return self.get_queryset().resources(**kwargs)
+    def most_recent_resource_per_classoffer(self): return self.get_queryset().most_recent_resource_per_classoffer()
+    # TODO: If all the methods are just querysets, then refactor to use CustomQuerySet as manager.
 
 
 class ClassOffer(models.Model):
@@ -686,8 +630,7 @@ class ClassOffer(models.Model):
         (3, _('Thursday')),
         (4, _('Friday')),
         (5, _('Saturday')),
-        (6, _('Sunday'))
-    )
+        (6, _('Sunday')))
     # id = auto-created
     # students exists as the students signed up for this ClassOffer
     subject = models.ForeignKey('Subject', on_delete=models.SET_NULL, null=True, )
@@ -702,19 +645,17 @@ class ClassOffer(models.Model):
     skip_tagline = models.CharField(max_length=46, blank=True, )
     date_added = models.DateField(auto_now_add=True, )
     date_modified = models.DateField(auto_now=True, )
-    # class_resources exists, but only includes directly connected Resources, but not those through Subject.
+    # resource_set exits, but only directly connected Resources, not those connected through Subject.
+    # # future: class_resources exists, but only includes directly connected Resources, but not those through Subject.
     objects = ClassOfferManager()
 
-    def all_resources(self):
+    def model_resources(self, live=False):
         """ Expanding the resource_set to include resources attached to the Subject of the given ClassOffer. """
-        user = self.request.user
-        user_val, user_roles = user.user_roles
-        user_type = 3 if user_val >= 4 else user_val
-        qs = Resource.objects
-        qs = qs.filter(Q(subject=self.subject) | Q(classoffer=self)).order_by('id').distinct()
-        qs = qs.alive(start=self.start, end=self.end, skips=self.skip_weeks, type_user=user_type)
-        # union of self.resource_set and Resource.objects.filter(Q(subject=self.subject))
-        return qs
+        # user = self.request.user
+        # user_val, user_roles = user.user_roles
+        # user_type = 3 if user_val >= 4 else user_val
+        user_type = 3  # TODO: Determine what is wanted for filtering by user role level.
+        return ClassOffer.objects.filter(id=self.id).get_resources(live=live, type_user=user_type, model=self)
 
     @property
     def full_price(self):
