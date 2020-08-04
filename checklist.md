@@ -87,14 +87,17 @@
 - [s] Stretch Goal. Not for current feature plan.
 
 Current Status:
-2020-08-01 20:00:44
+2020-08-03 23:57:14
 <!-- Ctrl-Shift-I to generate timestamp -->
 
 ### Bug Fixes
 
 - [ ] Teacher reference in ClassOffer listing (update now that teachers are many-to-many with classoffers.)
-- [ ] ClassOffer Manager computing dates: Error when the 'class_day' is just beyond the range of 'max_day_shift'.
+- [x] ClassOffer Manager computing dates: Error when the 'class_day' is just beyond the range of 'max_day_shift'.
 - [ ] ProfileView is showing the dictionaries after the updates to the technique for getting the correct data.
+- [ ] ClassOffer manager and model methods for returning Resources attached by ClassOffer or Subject.
+  - [x] Initial tests.
+  - [ ] Fully covering new features.
 
 ### Views
 
