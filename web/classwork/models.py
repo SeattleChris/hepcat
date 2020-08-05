@@ -564,7 +564,8 @@ class CustomQuerySet(models.QuerySet):
         now = Func(function='CURDATE', output_field=models.DateField())
         dates = [Least(start, now)]
         dates += [Func(start, 7 * i, function='ADDDATE') for i in range(settings.SESSION_MAX_WEEKS - 1)]
-        # print("======================== Get Resources =================================================")
+        print("======================== Get Resources =================================================")
+        print(start)
         # print(dates)
         # MySQL Functions: ADDDATE, DATEDIFF, DAYOFYEAR, TO_DAYS, FROM_DAYS, MAKEDATE, CURDATE
         resource_queryset = resource_queryset.annotate(
@@ -612,19 +613,19 @@ class CustomQuerySet(models.QuerySet):
 
     def most_recent_resource_per_classoffer(self):
         """ This feature is not yet implemented correctly. """
-        res = self.get_resources(
-                start=OuterRef('start_date'),
-                end=OuterRef('end_date'),
-                skips=OuterRef('skip_weeks')
-            )
-        try:
-            result = self.annotate(
-                    recent_resource=Subquery(res.values('title')[:1]),
-                )
-            print(result)
-        except Exception as e:
-            print("Exception in ClassOffer manager method: most_recent_resource_per_classoffer ")
-            print(e)
+        # res = self.get_resources(
+        #         start=OuterRef('start_date'),
+        #         end=OuterRef('end_date'),
+        #         skips=OuterRef('skip_weeks')
+        #     )
+        # try:
+        #     result = self.annotate(
+        #             recent_resource=Subquery(res.values('title')[:1]),
+        #         )
+        #     print(result)
+        # except Exception as e:
+        #     print("Exception in ClassOffer manager method: most_recent_resource_per_classoffer ")
+        #     print(e)
         raise NotImplementedError
         # return result
 
@@ -670,16 +671,16 @@ class ClassOffer(models.Model):
 
     def model_resources(self, live=False):
         """ Expanding the resource_set to include resources attached to the Subject of the given ClassOffer. """
-        # user = self.request.user
-        # user_val, user_roles = user.user_roles
-        # user_type = 3 if user_val >= 4 else user_val
-        user_type = 3  # TODO: Determine what is wanted for filtering by user role level.
-        try:
-            result = ClassOffer.objects.filter(id=self.id).get_resources(live=live, type_user=user_type, model=self)
-            print(result)
-        except Exception as e:
-            print('Current algorithm raised an error: ')
-            raise e
+        # # user = self.request.user
+        # # user_val, user_roles = user.user_roles
+        # # user_type = 3 if user_val >= 4 else user_val
+        # user_type = 3  # TODO: Determine what is wanted for filtering by user role level.
+        # try:
+        #     result = ClassOffer.objects.filter(id=self.id).get_resources(live=live, type_user=user_type, model=self)
+        #     print(result)
+        # except Exception as e:
+        #     print('Current algorithm raised an error: ')
+        #     raise e
         raise NotImplementedError
 
     @property
