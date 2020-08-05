@@ -575,20 +575,25 @@ class CustomQuerySet(models.QuerySet):
                 live=Case(
                     When(Q(publish__gt=now), then=False),
                     When(Q(expire=0), then=True),
+                    When(Q(avail=0) & Q(days_since__lte=7*(F('expire') + skips)), then=True),  # avail=0|1 same result
                     When(Q(days_since__lte=7*(F('avail') + F('expire') + skips - 1)), then=True),
                     default=False,
                     output_field=models.BooleanField()),
             ).order_by('-publish')  # Most recent first. May be overridden later, depending on how this data is used.
         if live:
             resource_queryset = resource_queryset.filter(live=True)
-
+        elif kwargs.get('live_by_date', None):
+            resource_queryset = resource_queryset.filter(
+                Q(expire_date__isnull=True) | Q(expire_date__gte=now),
+                publish__lte=now
+            )
         return resource_queryset
 
     def resources(self, **kwargs):
         """ Return a queryset.values() of Resource objects that are alive and connected to the current queryset. """
-        # Assume the 'self' queryset has already been filtered to the ClassOffers that we care about.
         resource_fields = ('title', 'id', 'content_type', )  # , 'imagepath',
         kwargs['live'] = True  # Calling resources will always only return currently available resources.
+        # kwargs['live_by_date'] = True
         arr = [self.get_resources(model=ea, **kwargs).order_by().values(*resource_fields) for ea in self.all()]
         # TODO: Look into 'defer' as a query option instead of 'values' to have a qs of models instead of dicts.
         if len(arr):
@@ -602,10 +607,10 @@ class CustomQuerySet(models.QuerySet):
                 start=OuterRef('start_date'),
                 end=OuterRef('end_date'),
                 skips=OuterRef('skip_weeks')
-            ).values('title')[:1]
+            )
 
         result = self.annotate(
-                recent_resource=Subquery(res),
+                recent_resource=Subquery(res.values('title')[:1]),
             )
         return result
 
@@ -655,7 +660,13 @@ class ClassOffer(models.Model):
         # user_val, user_roles = user.user_roles
         # user_type = 3 if user_val >= 4 else user_val
         user_type = 3  # TODO: Determine what is wanted for filtering by user role level.
-        return ClassOffer.objects.filter(id=self.id).get_resources(live=live, type_user=user_type, model=self)
+        try:
+            result = ClassOffer.objects.filter(id=self.id).get_resources(live=live, type_user=user_type, model=self)
+            print(result)
+        except Exception as e:
+            print('Current algorithm raised an error: ')
+            raise e
+        raise NotImplementedError
 
     @property
     def full_price(self):
