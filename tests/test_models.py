@@ -1,6 +1,6 @@
 from django.test import TestCase, TransactionTestCase
 from django.conf import settings
-from django.db.models import Max
+from django.db.models import Max, Subquery
 from unittest import skip
 from .helper import SimpleModelTests
 from classwork.models import Location, Resource, SiteContent, Subject, ClassOffer, Student
@@ -301,6 +301,32 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         self.assertEqual(len(expected_res), len(actual_res))
         # self.assertTrue(ea in init_res for ea in initial_all_resources)  # kill this?
         # self.assertTrue(all(ea in co_resources for ea in all_resources))
+
+    def test_manager_get_resources_as_subquery(self):
+        classoffers = ClassOffer.objects.all()
+        expected_res = []
+        for ea in list(classoffers) + [ea.subject for ea in classoffers]:
+            expected_res.extend([res for res in ea.resource_set.all() if res not in expected_res])
+        for res in expected_res:
+            res.expire = 0
+            res.save()
+        expected_titles = [getattr(ea, 'title', '') for ea in expected_res]
+        res = ClassOffer.objects.get_resources().order_by().values('title')[:1]
+        result = ClassOffer.objects.annotate(recent_resource=Subquery(res))
+        actual_titles = [ea.recent_resource for ea in result]
+
+        self.assertEqual(len(expected_res), len(result))
+        self.assertSetEqual(set(expected_titles), set(actual_titles))
+        # end test_manager_get_resources_as_subquery
+
+    def test_not_implemented_manager_most_recent_resource_per_classoffer(self):
+        with self.assertRaises(NotImplementedError):
+            ClassOffer.objects.most_recent_resource_per_classoffer()
+
+    def test_not_implemented_model_resources(self):
+        first = ClassOffer.objects.first()
+        with self.assertRaises(NotImplementedError):
+            first.model_resources()
 
     @skip("Not Implemented Feature")
     def test_manager_most_recent_resource_per_classoffer(self):
