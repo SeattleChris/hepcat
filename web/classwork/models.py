@@ -518,22 +518,27 @@ class CustomQuerySet(models.QuerySet):
             start = model.start_date
             end = model.end_date
             skips = model.skip_weeks
-            user = kwargs.pop('user', None)
-            if user:
-                user = user.user if isinstance(user, (Student, Staff)) else user
-                user_val, user_roles = user.user_roles
-                type_user = 3 if user_val >= 4 else user_val
-            else:
-                type_user = kwargs.pop('type_user', 0)
-            # TODO: filter for user_type__lt=type_user
             qs = qs.filter(Q(classoffer=model.pk) | Q(subject=model.subject))
             qs = qs.order_by('pk').distinct()
         else:
-            start = kwargs.pop('start', OuterRef('start_date'))
-            end = kwargs.pop('end', OuterRef('end_date'))
-            skips = kwargs.pop('skips', OuterRef('skip_weeks'))
+            start = kwargs.pop('start', None)
+            end = kwargs.pop('end', None)
+            skips = kwargs.pop('skips', None)
+        user = kwargs.pop('user', None)
+        if user:
+            student = user if isinstance(user, Student) else None
+            user = user.user if isinstance(user, (Student, Staff)) else user
+            user_val, user_roles = user.user_roles
+            type_user = 3 if user_val >= 4 else user_val
+            if student:
+                pass
+        else:
             type_user = kwargs.pop('type_user', 0)
+        # TODO: filter for user_type__lt=type_user
         if not model and self.model == ClassOffer:
+            start = start or OuterRef('start_date')
+            end = end or OuterRef('end_date')
+            skips = skips or OuterRef('skip_weeks')
             qs = qs.filter(Q(classoffer=OuterRef('pk')) | Q(subject=OuterRef('subject')))
             qs = qs.order_by('pk').distinct()
 
@@ -559,13 +564,15 @@ class CustomQuerySet(models.QuerySet):
         now = Func(function='CURDATE', output_field=models.DateField())
         dates = [Least(start, now)]
         dates += [Func(start, 7 * i, function='ADDDATE') for i in range(settings.SESSION_MAX_WEEKS - 1)]
+        # print("======================== Get Resources =================================================")
+        # print(dates)
         # MySQL Functions: ADDDATE, DATEDIFF, DAYOFYEAR, TO_DAYS, FROM_DAYS, MAKEDATE, CURDATE
         resource_queryset = resource_queryset.annotate(
                 publish=Case(
                     *[When(Q(avail=num), then=date) for num, date in enumerate(dates)],
                     default=end,  # Uses default if 'after class ends' was selected option (value = 200).
                     output_field=models.DateField()),
-                days_since=Func(start, now, function='DATEDIFF', output_field=models.SmallIntegerField()),
+                days_since=Func(now, start, function='DATEDIFF', output_field=models.SmallIntegerField()),
             ).annotate(
                 expire_date=Case(
                     When(Q(expire=0), then=None),
@@ -575,20 +582,26 @@ class CustomQuerySet(models.QuerySet):
                 live=Case(
                     When(Q(publish__gt=now), then=False),
                     When(Q(expire=0), then=True),
+                    When(Q(avail=0) & Q(days_since__lte=7*(F('expire') + skips)), then=True),  # avail=0|1 same result
                     When(Q(days_since__lte=7*(F('avail') + F('expire') + skips - 1)), then=True),
                     default=False,
                     output_field=models.BooleanField()),
             ).order_by('-publish')  # Most recent first. May be overridden later, depending on how this data is used.
         if live:
             resource_queryset = resource_queryset.filter(live=True)
-
+        elif kwargs.get('live_by_date', None):
+            resource_queryset = resource_queryset.filter(
+                Q(expire_date__isnull=True) | Q(expire_date__gte=now),
+                publish__lte=now
+            )
         return resource_queryset
 
     def resources(self, **kwargs):
         """ Return a queryset.values() of Resource objects that are alive and connected to the current queryset. """
-        # Assume the 'self' queryset has already been filtered to the ClassOffers that we care about.
         resource_fields = ('title', 'id', 'content_type', )  # , 'imagepath',
-        kwargs['live'] = True  # Calling resources will always only return currently available resources.
+        # kwargs['live'] = True  # Calling resources will always only return currently available resources.
+        kwargs.setdefault('live', True)  # unless set False in kwargs, will only return currently available resources.
+        # kwargs['live_by_date'] = True
         arr = [self.get_resources(model=ea, **kwargs).order_by().values(*resource_fields) for ea in self.all()]
         # TODO: Look into 'defer' as a query option instead of 'values' to have a qs of models instead of dicts.
         if len(arr):
@@ -598,16 +611,22 @@ class CustomQuerySet(models.QuerySet):
         return collected
 
     def most_recent_resource_per_classoffer(self):
+        """ This feature is not yet implemented correctly. """
         res = self.get_resources(
                 start=OuterRef('start_date'),
                 end=OuterRef('end_date'),
                 skips=OuterRef('skip_weeks')
-            ).values('title')[:1]
-
-        result = self.annotate(
-                recent_resource=Subquery(res),
             )
-        return result
+        try:
+            result = self.annotate(
+                    recent_resource=Subquery(res.values('title')[:1]),
+                )
+            print(result)
+        except Exception as e:
+            print("Exception in ClassOffer manager method: most_recent_resource_per_classoffer ")
+            print(e)
+        raise NotImplementedError
+        # return result
 
 
 class ClassOfferManager(models.Manager):
@@ -655,7 +674,13 @@ class ClassOffer(models.Model):
         # user_val, user_roles = user.user_roles
         # user_type = 3 if user_val >= 4 else user_val
         user_type = 3  # TODO: Determine what is wanted for filtering by user role level.
-        return ClassOffer.objects.filter(id=self.id).get_resources(live=live, type_user=user_type, model=self)
+        try:
+            result = ClassOffer.objects.filter(id=self.id).get_resources(live=live, type_user=user_type, model=self)
+            print(result)
+        except Exception as e:
+            print('Current algorithm raised an error: ')
+            raise e
+        raise NotImplementedError
 
     @property
     def full_price(self):
