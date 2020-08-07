@@ -479,8 +479,12 @@ class CustomQuerySet(models.QuerySet):
         start, end, skips, type_user, max_weeks = None, None, None, None, None
         model = kwargs.pop('model', None)
         if model:
-            start = model.start_date
-            end = model.end_date
+            start = getattr(model, 'start_date', None)
+            end = getattr(model, 'end_date', None)
+            if start is None or end is None:
+                model = ClassOffer.objects.filter(id=model.id).first()
+                start = getattr(model, 'start_date', None)
+                end = getattr(model, 'end_date', None)
             skips = model.skip_weeks
             max_weeks = getattr(getattr(model, 'session', object), 'num_weeks', None)
             qs = qs.filter(Q(classoffer=model.pk) | Q(subject=model.subject))
@@ -514,8 +518,8 @@ class CustomQuerySet(models.QuerySet):
             raise TypeError(_("The skips parameter must be an integer or an OuterRef to an appropriate field type. "))
         if isinstance(type_user, str):
             user_lookup = {'public': 0, 'student': 1, 'teacher': 2, 'admin': 3, }
-            type_user = user_lookup.get(type_user, 100)
-        if not isinstance(type_user, int) and 0 <= type_user <= 3:
+            type_user = user_lookup.get(type_user, len(Resource.USER_CHOICES))
+        if not isinstance(type_user, int) or type_user < 0 or type_user > len(Resource.USER_CHOICES) - 1:
             raise TypeError(_("The type_user parameter must be an appropriate string or integer"))
         # now = kwargs('check_date', None)
         max_weeks = settings.SESSION_MAX_WEEKS if max_weeks is None else max_weeks
