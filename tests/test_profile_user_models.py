@@ -444,6 +444,11 @@ class UserManagerTests(TestCase):
         with self.assertRaises(ValueError):
             UserHC.objects.normalize_email(bad_input)
 
+    def test_type_error_normalize_email(self):
+        bad_input = (1, 'bad', 'input', )
+        with self.assertRaises(TypeError):
+            UserHC.objects.normalize_email(bad_input)
+
     def test_set_user_no_email(self):
         first_name = "emailess"
         last_name = "troglodyte"
@@ -456,9 +461,46 @@ class UserManagerTests(TestCase):
     def test_set_existing_email_user(self):
         pass
 
-    @skip("Not Implemented")
-    def test_set_user_not_email_is_username(self):
-        pass
+    def test_set_user_bad_email_is_username(self):
+        kwargs = {'uses_email_username': True, 'email': None, 'username': None, 'password': 1234}
+        kwargs['first_name'] = "email_less"
+        kwargs['last_name'] = "try_email_username_foolishly"
+        with self.assertRaises(ValueError):
+            UserHC.objects.create_user(**kwargs)
+
+    def test_set_user_duplicate_email_username(self):
+        kwargs = {'email': 'fake@site.come', 'username': None, 'password': 1234}
+        first = UserHC.objects.create_user(first_name="first_in", last_name="my_email_first", **kwargs)
+        first.save()
+
+        self.assertEqual(first.username, kwargs['email'].casefold())
+        with self.assertRaises(ValueError):
+            UserHC.objects.create_user(**kwargs)
+
+    def test_set_user_duplicate_email_and_names(self):
+        # from django.db.utils import IntegrityError
+        first = UserHC.objects.first()
+        if first:
+            key_list = ['username', 'email', 'first_name', 'last_name']
+            kwargs = {key: getattr(first, key) for key in key_list}
+        else:
+            kwargs = {'username': None, 'email': 'fake@site.come', 'password': 1234}
+            kwargs['first_name'] = "fake_first"
+            kwargs['last_name'] = "fake_last"
+            first = UserHC.objects.create_user(**kwargs)
+            first.save()
+            del kwargs['password']
+
+        # self.assertEqual(first.username, kwargs['email'].casefold())
+        with self.assertRaises(ValueError):
+            UserHC.objects.create_user(**kwargs)
+
+    def test_create_superuser_no_name_or_username(self):
+        kwargs = {'username': None, 'email': 'fake@site.come', 'password': 1234}
+        first = UserHC.objects.create_superuser(**kwargs)
+        first.save()
+        self.assertEqual(first.username, kwargs['email'].casefold())
+        self.assertTrue(first.is_superuser)
 
     def test_create_user_teacher(self):
         kwargs = USER_DEFAULTS.copy()
@@ -496,14 +538,6 @@ class UserManagerTests(TestCase):
         username = "bad_super"
         with self.assertRaises(ValueError):
             UserHC.objects.create_superuser(username, **kwargs)
-
-    @skip("Not Implemented")
-    def test_find_or_create_anon(self):
-        pass
-
-    @skip("Not Implemented")
-    def test_find_or_create_name(self):
-        pass
 
     def test_make_username_use_email(self):
         """ Notice that switching to True for 'uses_email_username' is not enough to modify the 'username'. """
