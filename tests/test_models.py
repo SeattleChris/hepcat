@@ -44,6 +44,10 @@ class ResourceModelTests(SimpleModelTests, TransactionTestCase):
     # classoffer = ClassOffer.objects.get(id=1) is connected to resource and a Session, Subject, Location.
     # there is a student with id=1, and they have a registration for this classoffer.
 
+    def test_manager_live_not_implemented(self):
+        with self.assertRaises(NotImplementedError):
+            Resource.objects.live()
+
     @skip("Not Implemented")
     def test_publish_not_view_if_not_joined(self):
         """ For a User NOT signed in a ClassOffer, determine they are NOT allowed to see an associated Resource. """
@@ -297,14 +301,74 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         self.assertEqual(len(expected_res), len(result))
         self.assertSetEqual(set(expected_titles), set(actual_titles))
 
+    def test_manager_resources_params_student_user(self):
+        student = Student.objects.first()
+        sess = Session.objects.first()
+        new_co = ClassOffer.objects.create(subject=Subject.objects.first(), session=sess, start_time=time(19, 0))
+        student.taken.add(new_co)
+        taken = student.taken.all()
+        res_by_classoffer = ClassOffer.objects.resources(user=student)
+        res_by_taken = student.taken.resources()
+
+        self.assertSetEqual(set([repr(ea) for ea in taken]), set([repr(ea) for ea in ClassOffer.objects.all()]))
+        self.assertEqual(len(res_by_classoffer), len(res_by_taken))
+        self.assertTrue(all(ea in res_by_taken for ea in res_by_classoffer))
+        # end test_manager_resources_params_student_user
+
+    def test_manager_resources_params_start_and_end(self):
+        with self.assertRaises(TypeError):
+            ClassOffer.objects.get_resources(start='bad', end='bad', skips=0, type_user=0, max_weeks=0)
+        # end test_manager_resources_params_start_and_end
+
+    def test_manager_resources_params_skips(self):
+        end = date.today()
+        start = end - timedelta(days=14)
+        with self.assertRaises(TypeError):
+            ClassOffer.objects.get_resources(start=start, end=end, skips='bad', type_user=0, max_weeks=0)
+        # end test_manager_resources_params_skips
+
+    # @skip("Not Implemented")
+    def test_manager_resources_params_type_user_str(self):
+        # start, end, skips, type_user, max_weeks = None, None, None, None, None
+        end = date.today()
+        start = end - timedelta(days=14)
+        with self.assertRaises(TypeError):
+            ClassOffer.objects.get_resources(start=start, end=end, skips=0, type_user='bad', max_weeks=0)
+        # admin
+        # end test_manager_resources_params_type_user_str
+
+    # @skip("Not Implemented")
+    def test_manager_resources_params_type_user_int(self):
+        end = date.today()
+        start = end - timedelta(days=14)
+        with self.assertRaises(TypeError):
+            ClassOffer.objects.get_resources(start=start, end=end, skips=0, type_user=('bad', 'input', ), max_weeks=0)
+
+    # @skip("Not Implemented")
+    def test_manager_resources_params_live_by_date(self):
+        start = date.today() - timedelta(days=21)
+        sess = Session.objects.create(name="test manager", key_day_date=start, publish_date=start)
+        subj = Subject.objects.create(version=Subject.VERSION_CHOICES[0][0], title='clean subj')
+        new_res_expired = Resource.objects.create(content_type='text', user_type=0, avail=1, expire=1, title="Missed")
+        new_res_live = Resource.objects.create(content_type='text', user_type=0, avail=1, expire=0, title="Live")
+        new_co = ClassOffer.objects.create(subject=subj, session=sess, start_time=time(19, 0))
+        new_res_expired.save()
+        new_res_live.save()
+        new_co.save()
+        subj.resource_set.add(new_res_expired, new_res_live)
+        expected_res = [new_res_live]
+        res_by_classoffer = ClassOffer.objects.get_resources(model=new_co, live=False, live_by_date=True)
+        all_res_by_classoffer = ClassOffer.objects.get_resources(model=new_co, live=False)
+        expected_all_res = expected_res + [new_res_expired]
+
+        self.assertEqual(len(res_by_classoffer), len(expected_res))
+        self.assertSetEqual(set([repr(ea) for ea in expected_res]), set([repr(ea) for ea in res_by_classoffer]))
+        self.assertEqual(len(all_res_by_classoffer), len(expected_all_res))
+        self.assertSetEqual(set([repr(ea) for ea in expected_all_res]), set([repr(ea) for ea in all_res_by_classoffer]))
+
     def test_not_implemented_manager_most_recent_resource_per_classoffer(self):
         with self.assertRaises(NotImplementedError):
             ClassOffer.objects.most_recent_resource_per_classoffer()
-
-    def test_not_implemented_model_resources(self):
-        first = ClassOffer.objects.first()
-        with self.assertRaises(NotImplementedError):
-            first.model_resources()
 
     @skip("Not Implemented Feature")
     def test_manager_most_recent_resource_per_classoffer(self):
@@ -358,6 +422,11 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         self.assertEquals(len(expected_res), len(actual_res))
         self.assertTrue(all(ea in expected_res for ea in actual_res))
         # self.assertSetEqual(set(expected_titles), set(actual_titles))
+
+    def test_not_implemented_model_resources(self):
+        first = ClassOffer.objects.first()
+        with self.assertRaises(NotImplementedError):
+            first.model_resources()
 
     @skip("Not Implemented Feature")
     def test_model_resources(self):
