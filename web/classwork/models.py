@@ -69,7 +69,7 @@ class ResourceManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset()
 
-    def alive(self, start=None, end=None, skips=0, type_user=0, **kwargs):
+    def live(self, start=None, end=None, skips=0, type_user=0, **kwargs):
         """ Will filter and annotate to return only currently published Resource for the given context. """
         raise NotImplementedError
 
@@ -514,7 +514,7 @@ class CustomQuerySet(models.QuerySet):
             raise TypeError(_("The skips parameter must be an integer or an OuterRef to an appropriate field type. "))
         if isinstance(type_user, str):
             user_lookup = {'public': 0, 'student': 1, 'teacher': 2, 'admin': 3, }
-            type_user = user_lookup.get(type_user, 0)
+            type_user = user_lookup.get(type_user, 100)
         if not isinstance(type_user, int) and 0 <= type_user <= 3:
             raise TypeError(_("The type_user parameter must be an appropriate string or integer"))
         # now = kwargs('check_date', None)
