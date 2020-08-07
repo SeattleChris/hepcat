@@ -539,6 +539,31 @@ class UserManagerTests(TestCase):
         with self.assertRaises(ValueError):
             UserHC.objects.create_superuser(username, **kwargs)
 
+    def test_find_or_create_anon(self):
+        initial_users = list(UserHC.objects.all())
+        kwargs = {'email': 'fake@site.come', 'password': 1234}
+        kwargs['first_name'] = "fake_anon_first"
+        kwargs['last_name'] = "fake_anon_last"
+        del kwargs['password']
+        result = UserHC.objects.find_or_create_for_anon(**kwargs)
+
+        self.assertNotIsInstance(result, tuple)
+        self.assertIsInstance(result, UserHC)
+        self.assertNotIn(result, initial_users)
+
+    def test_anon_is_existing_user(self):
+        kwargs = {'email': 'fake@site.come', 'password': 1234}
+        kwargs['first_name'] = "fake_first"
+        kwargs['last_name'] = "fake_last"
+        first = UserHC.objects.create_user(**kwargs)
+        first.save()
+        del kwargs['password']
+        result = UserHC.objects.find_or_create_for_anon(**kwargs)
+
+        self.assertIsInstance(result, tuple)
+        self.assertEqual('existing', result[1])
+        self.assertEqual(first, result[0])
+
     def test_make_username_use_email(self):
         """ Notice that switching to True for 'uses_email_username' is not enough to modify the 'username'. """
         kwargs = USER_DEFAULTS.copy()
