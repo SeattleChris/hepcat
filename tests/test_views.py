@@ -2,10 +2,11 @@ from django.test import Client, TestCase  # , TransactionTestCase
 from django.urls import reverse
 from unittest import skip
 # from .helper import SimpleModelTests
-from classwork.views import AboutUsListView  # , SubjectProgressView, ClassOfferDetailView, ClassOfferListView, Checkin
+from classwork.views import decide_session, AboutUsListView, ClassOfferListView
+# , SubjectProgressView, ClassOfferDetailView, Checkin
 from classwork.models import Staff, SiteContent
 from users.models import UserHC
-# from classwork.models import Location, Resource, SiteContent, Subject, ClassOffer, Profile
+from classwork.models import ClassOffer  # , Location, Resource, SiteContent, Subject, Profile
 # from classwork.models import Session, Payment, Registration, Notify
 # from datetime import date, timedelta
 # @skip("Not Implemented")
@@ -53,18 +54,39 @@ class AboutUsListTests(TestCase):
         self.assertEqual(test_text, about.text)
 
 
-class CheckinViewTests(TestCase):
-
-    @skip("Not Implemented")
-    def test_get_queryset(self):
-        pass
-
-    @skip("Not Implemented")
-    def test_get_context_data(self):
-        pass
-
-
 class ClassOfferListViewTests(TestCase):
+    view = ClassOfferListView.as_view()
+    # view.kwargs = {}
+    client = Client()
+
+    # @skip("Not Implemented")
+    def test_get_queryset(self):
+        """ Expect to only contain the Sessions returned by decide_session as requested (or default). """
+        # kwargs = {}
+        sessions = decide_session()
+        expected_qs = ClassOffer.objects.filter(session__in=sessions)
+        expected_qs = expected_qs.order_by('session__key_day_date', '_num_level').all()
+        expected = [repr(ea) for ea in expected_qs]
+        actual = self.view.get_queryset()
+
+        self.assertQuerysetEqual(actual, expected)
+
+    # @skip("Not Implemented")
+    def test_get_context_data(self):
+        # kwargs = {}
+        sessions = decide_session()
+        context_sessions = ', '.join([ea.name for ea in sessions])
+        expected_subset = {'sessions': context_sessions}
+        display_session_subset = {'display_session': None}
+        display_date_subset = {'display_date': None}
+        actual = self.view.get_context_data()
+
+        self.assertDictContainsSubset(expected_subset, actual)
+        self.assertDictContainsSubset(display_session_subset, actual)
+        self.assertDictContainsSubset(display_date_subset, actual)
+
+
+class CheckinViewTests(TestCase):
 
     @skip("Not Implemented")
     def test_get_queryset(self):
