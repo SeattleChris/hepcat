@@ -564,6 +564,24 @@ class UserManagerTests(TestCase):
         self.assertEqual('existing', result[1])
         self.assertEqual(first, result[0])
 
+    def test_find_or_create_by_name(self):
+        kwargs = {'email': 'fake@site.come', 'password': 1234}
+        kwargs['first_name'] = "fake_first"
+        kwargs['last_name'] = "fake_last"
+        first = UserHC.objects.create_user(**kwargs)
+        first.save()
+        del kwargs['password']
+        kwargs['possible_friends'] = UserHC.objects.filter(email=kwargs['email'])
+        result = UserHC.objects.find_or_create_by_name(**kwargs)
+
+        self.assertEqual(first, result)
+
+    def test_find_or_create_by_name_bad_possible_users(self):
+        kwargs = {'first_name': None, 'last_name': None, 'possible_users': 'bad input'}
+
+        with self.assertRaises(TypeError):
+            UserHC.objects.find_or_create_by_name(**kwargs)
+
     def test_make_username_use_email(self):
         """ Notice that switching to True for 'uses_email_username' is not enough to modify the 'username'. """
         kwargs = USER_DEFAULTS.copy()
