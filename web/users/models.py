@@ -118,14 +118,16 @@ class UserManagerHC(UserManager):
         """
         email = self.normalize_email(email) if email else None
         first_name, last_name = kwargs.get('first_name'), kwargs.get('last_name')
-        found, q = 0, UserHC.objects
-        found += q.filter(email=email).count() if email else 0
+        q = UserHC.objects
+        found_email = q.filter(email=email).count() if email else 0
         q = q.filter(last_name__iexact=last_name) if last_name else q
         q = q.filter(first_name__iexact=first_name) if first_name else q
-        found += q.count() if first_name or last_name else 0
-        if found:
+        found_name = q.count() if first_name or last_name else 0
+        if found_email or found_name:
             # TODO: redirect to login, auto-filling appropriate fields. This should also work if they have no account.
             print('---- Maybe they have had classes before? -----')
+            found = q.filter(email=email).first()
+            return (found, 'existing')  # TODO: ?Update this to cause a redirect?
         else:
             print('----- Creating a new user! -----')
             return self.create_user(self, email=email, **kwargs)  # create a new user with this data
