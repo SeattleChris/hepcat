@@ -1,6 +1,6 @@
 from django.test import TestCase, TransactionTestCase
 from django.conf import settings
-from django.db.models import Max, Subquery
+from django.db.models import Max, Subquery, Func, DateField, CharField
 from unittest import skip
 from .helper import SimpleModelTests
 from classwork.models import Location, Resource, SiteContent, Subject, ClassOffer, Student
@@ -165,16 +165,32 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         user = UserHC.objects.create_user(email="fake@faker.com", password=1234, first_name='fa', last_name='la')
         user.save()
         student = user.student
-        now = dt.utcnow().date()
+        # now = dt.utcnow().date()
+        # print("====================== Test Manager Queryset Resources Various Expire ==========================")
+        now = date.today()
+        print(now)
+        # d = str(now.strftime("%m/%d/%Y"))
+        # print(d)
+        # now = dt.strptime(d, "%m/%d/%Y").date()
+        # print(now)
+        # now = date(2020, 8, 5)
+        # print(now)
         cur_week = 3
-        start = now - timedelta(days=7*(cur_week - 1))
+        start_days_adj = -7 * (cur_week - 1)
+        start = now + timedelta(days=start_days_adj)
+        # start = now - timedelta(days=7*(cur_week - 1))
+        # now = Func(function='CURDATE', output_field=DateField())
+        # start = Func(Func(function='CURDATE'), start_days_adj, function='ADDDATE', output_field=CharField())
         sess_cur = Session.objects.create(name="Current Test", key_day_date=start, publish_date=start - timedelta(14))
+        sess_cur.save()
+        # print('Same' if start == sess_cur.key_day_date else sess_cur.key_day_date)
         res_total_count = Resource.objects.count()
         # classoffer_count = ClassOffer.objects.count()
+        res_expected = []
         avail, expire, res_goal_count = 0, 0, 0
-        res_goal_list = []
         for lvl, display in Subject.LEVEL_CHOICES:
             student_has_level = False
+            # print(f"Level: {lvl} Avail: {avail} Expire: {expire} ")
             res_lvl = Resource.objects.create(
                 content_type='text',
                 title='_'.join((lvl, 'all', str(avail % 3), '0')),
@@ -203,11 +219,11 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
                 avail_week = 1 if avail == 0 else avail
                 if avail <= cur_week and (expire == 0 or (avail_week + expire) >= cur_week):
                     res_goal_count += 1 if student_has_level else 2
-                    res_goal_list.append(res)
-                    pprint(f"Append with: {res} => ({avail}, {expire}) ")
+                    res_expected.append(res)
+                    # pprint(f"Append with: {res} => ({avail}, {expire}) ")
                     if not student_has_level:
-                        res_goal_list.append(res_lvl)
-                        pprint(f"Append with: {res_lvl} => ({avail}, {expire}) ")
+                        res_expected.append(res_lvl)
+                        # pprint(f"Append with: {res_lvl} => ({avail}, {expire}) ")
                         student_has_level = True
                 if avail + 1 > sess_cur.num_weeks:
                     avail = 0
@@ -215,21 +231,26 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
                 else:
                     avail += 1
         student.save()
-        classoffers_created = len(Subject.LEVEL_CHOICES) * len(Subject.VERSION_CHOICES)  # 80
-        print("============= test_manager_queryset_resources_various_expire ===============")
-        temp1 = [ea.get('title', '') for ea in student.taken.resources()]
-        # pprint(temp)
-        temp2 = [getattr(ea, 'title', '') for ea in res_goal_list]
-        both_have = list(set(temp1) & set(temp2))
-        print("Student Taken Resources unique")
-        pprint([ea for ea in temp1 if ea not in both_have])
-        print("Res goal list unique")
-        pprint([ea for ea in temp2 if ea not in both_have])
-        print("----------------------------------------------------------------------------")
-        self.assertEqual(classoffers_created, student.taken.count())
+        classoffers_created_count = len(Subject.LEVEL_CHOICES) * len(Subject.VERSION_CHOICES)  # 80
+        # print("============= test_manager_queryset_resources_various_expire ===============")
+        # # pprint(temp)
+        # normal = ClassOffer.objects.get(id=7)
+        # pprint(normal.__dict__)
+        # problem = ClassOffer.objects.get(id=8)
+        # pprint(problem.__dict__)
+        # print("---------------------- what's wrong? --------------------------------")
+        expected_titles = [getattr(ea, 'title', '') for ea in res_expected]
+        actual_titles = [ea.get('title', '') for ea in student.taken.resources()]
+        # both_have = list(set(actual_titles) & set(expected_titles))
+        # print("Res goal list unique")
+        # pprint([ea for ea in expected_titles if ea not in both_have])
+        # print("Student Taken Resources unique")
+        # pprint([ea for ea in actual_titles if ea not in both_have])
+        # print("----------------------------------------------------------------------------")
+        self.assertEqual(classoffers_created_count, student.taken.count())
         self.assertEqual(res_total_count, Resource.objects.count())
         self.assertNotEqual(res_total_count, res_goal_count)
-        self.assertSetEqual(set(temp1), set(temp2))
+        self.assertSetEqual(set(actual_titles), set(expected_titles))
         self.assertEqual(res_goal_count, len(student.taken.resources()))
 
     def test_manager_queryset_resources_with_user_kwarg(self):
