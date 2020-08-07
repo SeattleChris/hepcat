@@ -69,7 +69,7 @@ class ResourceManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset()
 
-    def alive(self, start=None, end=None, skips=0, type_user=0, **kwargs):
+    def live(self, start=None, end=None, skips=0, type_user=0, **kwargs):
         """ Will filter and annotate to return only currently published Resource for the given context. """
         raise NotImplementedError
 
@@ -479,8 +479,12 @@ class CustomQuerySet(models.QuerySet):
         start, end, skips, type_user, max_weeks = None, None, None, None, None
         model = kwargs.pop('model', None)
         if model:
-            start = model.start_date
-            end = model.end_date
+            start = getattr(model, 'start_date', None)
+            end = getattr(model, 'end_date', None)
+            if start is None or end is None:
+                model = ClassOffer.objects.filter(id=model.id).first()
+                start = getattr(model, 'start_date', None)
+                end = getattr(model, 'end_date', None)
             skips = model.skip_weeks
             max_weeks = getattr(getattr(model, 'session', object), 'num_weeks', None)
             qs = qs.filter(Q(classoffer=model.pk) | Q(subject=model.subject))
@@ -514,8 +518,8 @@ class CustomQuerySet(models.QuerySet):
             raise TypeError(_("The skips parameter must be an integer or an OuterRef to an appropriate field type. "))
         if isinstance(type_user, str):
             user_lookup = {'public': 0, 'student': 1, 'teacher': 2, 'admin': 3, }
-            type_user = user_lookup.get(type_user, 0)
-        if not isinstance(type_user, int) and 0 <= type_user <= 3:
+            type_user = user_lookup.get(type_user, len(Resource.USER_CHOICES))
+        if not isinstance(type_user, int) or type_user < 0 or type_user > len(Resource.USER_CHOICES) - 1:
             raise TypeError(_("The type_user parameter must be an appropriate string or integer"))
         # now = kwargs('check_date', None)
         max_weeks = settings.SESSION_MAX_WEEKS if max_weeks is None else max_weeks
@@ -685,37 +689,18 @@ class ClassOffer(models.Model):
         return _(explain)
 
     @property
-    def end_time(self):  # TODO: ?Replace with annotation if possible
+    def end_time(self):
         """ A time obj (date and timezone unaware) computed based on the start time and subject.num_minutes. """
         start = dt.combine(date(2009, 2, 13), self.start_time)  # arbitrary date on day of timestamp 1234567890.
         end = start + timedelta(minutes=self.subject.num_minutes)
         return end.time()
 
     @property
-    def day(self):  # TODO: ?Replace with annotation if possible
+    def day(self):
         """ Returns a string for the day of the week, plural if there are multiple weeks, for this ClassOffer. """
         day = self.DOW_CHOICES[self.class_day][1]
         day += 's' if self.subject.num_weeks > 1 else ''
         return day
-
-    @property
-    def old_start_date(self):  # TODO: Replace with annotation if possible
-        """ Returns a date object (time and timezone unaware) for the first day of this ClassOffer. """
-        start = self.session.key_day_date
-        dif = self.class_day - start.weekday()
-        if dif == 0:
-            return start
-        shift = self.session.max_day_shift
-        if dif < shift < 0 or 0 < dif + 7 < shift:
-            dif += 7
-        elif shift < dif - 7 < 0 or 0 < shift < dif:
-            dif -= 7
-        return start + timedelta(days=dif)
-
-    @property
-    def old_end_date(self):  # TODO: Replace with annotation if possible
-        """ Returns the computed end date (time and timezone unaware) for this class offer. """
-        return self.start_date + timedelta(days=7*(self.subject.num_weeks + self.skip_weeks - 1))
 
     @property
     def day_short(self):
