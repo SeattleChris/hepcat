@@ -689,37 +689,18 @@ class ClassOffer(models.Model):
         return _(explain)
 
     @property
-    def end_time(self):  # TODO: ?Replace with annotation if possible
+    def end_time(self):
         """ A time obj (date and timezone unaware) computed based on the start time and subject.num_minutes. """
         start = dt.combine(date(2009, 2, 13), self.start_time)  # arbitrary date on day of timestamp 1234567890.
         end = start + timedelta(minutes=self.subject.num_minutes)
         return end.time()
 
     @property
-    def day(self):  # TODO: ?Replace with annotation if possible
+    def day(self):
         """ Returns a string for the day of the week, plural if there are multiple weeks, for this ClassOffer. """
         day = self.DOW_CHOICES[self.class_day][1]
         day += 's' if self.subject.num_weeks > 1 else ''
         return day
-
-    @property
-    def old_start_date(self):  # TODO: Replace with annotation if possible
-        """ Returns a date object (time and timezone unaware) for the first day of this ClassOffer. """
-        start = self.session.key_day_date
-        dif = self.class_day - start.weekday()
-        if dif == 0:
-            return start
-        shift = self.session.max_day_shift
-        if dif < shift < 0 or 0 < dif + 7 < shift:
-            dif += 7
-        elif shift < dif - 7 < 0 or 0 < shift < dif:
-            dif -= 7
-        return start + timedelta(days=dif)
-
-    @property
-    def old_end_date(self):  # TODO: Replace with annotation if possible
-        """ Returns the computed end date (time and timezone unaware) for this class offer. """
-        return self.start_date + timedelta(days=7*(self.subject.num_weeks + self.skip_weeks - 1))
 
     @property
     def day_short(self):
