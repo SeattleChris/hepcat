@@ -313,7 +313,6 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         self.assertSetEqual(set([repr(ea) for ea in taken]), set([repr(ea) for ea in ClassOffer.objects.all()]))
         self.assertEqual(len(res_by_classoffer), len(res_by_taken))
         self.assertTrue(all(ea in res_by_taken for ea in res_by_classoffer))
-        # end test_manager_resources_params_student_user
 
     def test_manager_resources_params_start_and_end(self):
         with self.assertRaises(TypeError):
@@ -325,26 +324,19 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         start = end - timedelta(days=14)
         with self.assertRaises(TypeError):
             ClassOffer.objects.get_resources(start=start, end=end, skips='bad', type_user=0, max_weeks=0)
-        # end test_manager_resources_params_skips
 
-    # @skip("Not Implemented")
     def test_manager_resources_params_type_user_str(self):
-        # start, end, skips, type_user, max_weeks = None, None, None, None, None
         end = date.today()
         start = end - timedelta(days=14)
         with self.assertRaises(TypeError):
             ClassOffer.objects.get_resources(start=start, end=end, skips=0, type_user='bad', max_weeks=0)
-        # admin
-        # end test_manager_resources_params_type_user_str
 
-    # @skip("Not Implemented")
     def test_manager_resources_params_type_user_int(self):
         end = date.today()
         start = end - timedelta(days=14)
         with self.assertRaises(TypeError):
             ClassOffer.objects.get_resources(start=start, end=end, skips=0, type_user=('bad', 'input', ), max_weeks=0)
 
-    # @skip("Not Implemented")
     def test_manager_resources_params_live_by_date(self):
         start = date.today() - timedelta(days=21)
         sess = Session.objects.create(name="test manager", key_day_date=start, publish_date=start)
