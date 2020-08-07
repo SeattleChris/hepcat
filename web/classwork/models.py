@@ -73,41 +73,41 @@ class ResourceManager(models.Manager):
         #         some_value='Hello'
         #     )
 
-    def alive(self, start=None, end=None, skips=0, type_user=0):
-        """ Will filter and annotate to return only currently published Resource for the given context. """
-        if not isinstance(start, (date, OuterRef)) or not isinstance(end, (date, OuterRef)):
-            raise TypeError(_("Both start and end parameters must be date objects or OuterRefs to DateFields. "))
-        if not isinstance(skips, (int, OuterRef)):
-            raise TypeError(_("The skips parameter must be an integer or an OuterRef to an appropriate field type. "))
-        user_lookup = {'public': 0, 'student': 1, 'teacher': 2, 'admin': 3, }
-        if isinstance(type_user, str):
-            type_user = user_lookup.get(type_user, 0)
-        if isinstance(type_user, OuterRef):
-            pass
-        elif not isinstance(type_user, int) or type_user < 0 or type_user > 3:
-            raise TypeError(_("The type_user parameter must be an appropriate string or integer"))
-        now = Func(function='CURDATE', output_field=models.DateField())
-        early = Least(start, now)
-        dates = [Func(start, 7 * i, function='ADDDATE') for i in range(settings.SESSION_MAX_WEEKS - 1)]
-        dates = [early] + dates + [end]
-        # MySQL Functions: ADDDATE, DATEDIFF, DAYOFYEAR, TO_DAYS, FROM_DAYS, MAKEDATE, CURDATE
-        return self.get_queryset().annotate(
-                publish=Case(
-                    *[When(Q(avail=num), then=date) for num, date in enumerate(dates)],
-                    default=end,
-                    output_field=models.DateField()),
-                days_since=Func(start, now, function='DATEDIFF', output_field=models.SmallIntegerField()),
-            # ).annotate(
-            #     is_allowed=Case(
-            #         When(Q(expire=0) & Q(publish__lte=now), then=True),
-            #         When(Q(days_since__lt=7*(F('avail') + F('expire') + skips)) & Q(publish__lte=now), then=True),
-            #         default=False,
-            #         output_field=models.BooleanField()),
-            ).filter(
-                # is_allowed=True,
-                Q(expire=0) | Q(days_since__lt=7*(F('avail') + F('expire') + skips)),
-                publish__lte=now,
-            )
+    # def alive(self, start=None, end=None, skips=0, type_user=0):
+    #     """ Will filter and annotate to return only currently published Resource for the given context. """
+    #     if not isinstance(start, (date, OuterRef)) or not isinstance(end, (date, OuterRef)):
+    #         raise TypeError(_("Both start and end parameters must be date objects or OuterRefs to DateFields. "))
+    #     if not isinstance(skips, (int, OuterRef)):
+    #         raise TypeError(_("The skips parameter must be an integer or an OuterRef to an appropriate field type. "))
+    #     user_lookup = {'public': 0, 'student': 1, 'teacher': 2, 'admin': 3, }
+    #     if isinstance(type_user, str):
+    #         type_user = user_lookup.get(type_user, 0)
+    #     if isinstance(type_user, OuterRef):
+    #         pass
+    #     elif not isinstance(type_user, int) or type_user < 0 or type_user > 3:
+    #         raise TypeError(_("The type_user parameter must be an appropriate string or integer"))
+    #     now = Func(function='CURDATE', output_field=models.DateField())
+    #     early = Least(start, now)
+    #     dates = [Func(start, 7 * i, function='ADDDATE') for i in range(settings.SESSION_MAX_WEEKS - 1)]
+    #     dates = [early] + dates + [end]
+    #     # MySQL Functions: ADDDATE, DATEDIFF, DAYOFYEAR, TO_DAYS, FROM_DAYS, MAKEDATE, CURDATE
+    #     return self.get_queryset().annotate(
+    #             publish=Case(
+    #                 *[When(Q(avail=num), then=date) for num, date in enumerate(dates)],
+    #                 default=end,
+    #                 output_field=models.DateField()),
+    #             days_since=Func(start, now, function='DATEDIFF', output_field=models.SmallIntegerField()),
+    #         # ).annotate(
+    #         #     is_allowed=Case(
+    #         #         When(Q(expire=0) & Q(publish__lte=now), then=True),
+    #         #         When(Q(days_since__lt=7*(F('avail') + F('expire') + skips)) & Q(publish__lte=now), then=True),
+    #         #         default=False,
+    #         #         output_field=models.BooleanField()),
+    #         ).filter(
+    #             # is_allowed=True,
+    #             Q(expire=0) | Q(days_since__lt=7*(F('avail') + F('expire') + skips)),
+    #             publish__lte=now,
+    #         )
 
 
 class Resource(models.Model):
@@ -512,18 +512,20 @@ class CustomQuerySet(models.QuerySet):
 
     def prepare_get_resources_params(self, **kwargs):
         qs = Resource.objects
-        start, end, skips, type_user = None, None, 0, 0
+        start, end, skips, type_user, max_weeks = None, None, None, None, None
         model = kwargs.pop('model', None)
         if model:
             start = model.start_date
             end = model.end_date
             skips = model.skip_weeks
+            max_weeks = getattr(getattr(model, 'session', object), 'num_weeks', None)
             qs = qs.filter(Q(classoffer=model.pk) | Q(subject=model.subject))
             qs = qs.order_by('pk').distinct()
         else:
             start = kwargs.pop('start', None)
             end = kwargs.pop('end', None)
             skips = kwargs.pop('skips', None)
+            max_weeks = kwargs.pop('max_weeks', None)
         user = kwargs.pop('user', None)
         if user:
             student = user if isinstance(user, Student) else None
@@ -538,7 +540,8 @@ class CustomQuerySet(models.QuerySet):
         if not model and self.model == ClassOffer:
             start = start or OuterRef('start_date')
             end = end or OuterRef('end_date')
-            skips = skips or OuterRef('skip_weeks')
+            skips = skips if skips is not None else OuterRef('skip_weeks')
+            # max_weeks = max_weeks or OuterRef('subject__num_weeks')
             qs = qs.filter(Q(classoffer=OuterRef('pk')) | Q(subject=OuterRef('subject')))
             qs = qs.order_by('pk').distinct()
 
@@ -552,7 +555,8 @@ class CustomQuerySet(models.QuerySet):
         if not isinstance(type_user, int) and 0 <= type_user <= 3:
             raise TypeError(_("The type_user parameter must be an appropriate string or integer"))
         # now = kwargs('check_date', None)
-        return (qs, start, end, skips, kwargs)
+        max_weeks = settings.SESSION_MAX_WEEKS if max_weeks is None else max_weeks
+        return (qs, start, end, skips, int(max_weeks), kwargs)
 
     def get_resources(self, live=False, **kwargs):
         """ Returns a filtered & annotated queryset of Resources connected to the current ClassOffer queryset.
@@ -560,20 +564,21 @@ class CustomQuerySet(models.QuerySet):
             Filter these results by 'live=True' to get only currently published, and not expired, results.
             Distinct resources, across ClassOffers, requires '.values()' that does not include these annotations.
         """
-        resource_queryset, start, end, skips, kwargs = self.prepare_get_resources_params(**kwargs)
+        resource_queryset, start, end, skips, max_weeks, kwargs = self.prepare_get_resources_params(**kwargs)
         now = Func(function='CURDATE', output_field=models.DateField())
+        # now = dt.utcnow().date()
         dates = [Least(start, now)]
-        dates += [Func(start, 7 * i, function='ADDDATE') for i in range(settings.SESSION_MAX_WEEKS - 1)]
-        print("======================== Get Resources =================================================")
-        print(start)
-        # print(dates)
+        dates += [Func(start, 7 * i, function='ADDDATE', output_field=models.DateField()) for i in range(max_weeks - 1)]
+        # dates += [Func(start, 7 * i, function='ADDDATE') for i in range(max_weeks - 1)]
+        # dates = [Least(start, now)] + dates + [end]
+        # print("======================== Get Resources =================================================")
         # MySQL Functions: ADDDATE, DATEDIFF, DAYOFYEAR, TO_DAYS, FROM_DAYS, MAKEDATE, CURDATE
         resource_queryset = resource_queryset.annotate(
                 publish=Case(
                     *[When(Q(avail=num), then=date) for num, date in enumerate(dates)],
                     default=end,  # Uses default if 'after class ends' was selected option (value = 200).
                     output_field=models.DateField()),
-                days_since=Func(now, start, function='DATEDIFF', output_field=models.SmallIntegerField()),
+                days_since=Func(now, start, function='DATEDIFF', output_field=models.IntegerField()),
             ).annotate(
                 expire_date=Case(
                     When(Q(expire=0), then=None),
@@ -583,11 +588,18 @@ class CustomQuerySet(models.QuerySet):
                 live=Case(
                     When(Q(publish__gt=now), then=False),
                     When(Q(expire=0), then=True),
+                    When(Q(avail__gt=max_weeks), then=Q(days_since__lte=7*(max_weeks + F('expire') + skips - 1))),
                     When(Q(avail=0) & Q(days_since__lte=7*(F('expire') + skips)), then=True),  # avail=0|1 same result
                     When(Q(days_since__lte=7*(F('avail') + F('expire') + skips - 1)), then=True),
                     default=False,
                     output_field=models.BooleanField()),
             ).order_by('-publish')  # Most recent first. May be overridden later, depending on how this data is used.
+        # if not isinstance(start, OuterRef):
+        #     print(start)
+        #     print(max_weeks)
+        #     print(resource_queryset.values('avail', 'expire', 'publish', 'expire_date', 'days_since'))
+        #     # print(resource_queryset.values('expire'))
+        #     print(resource_queryset.values('live'))
         if live:
             resource_queryset = resource_queryset.filter(live=True)
         elif kwargs.get('live_by_date', None):
@@ -599,10 +611,12 @@ class CustomQuerySet(models.QuerySet):
 
     def resources(self, **kwargs):
         """ Return a queryset.values() of Resource objects that are alive and connected to the current queryset. """
+        # from pprint import pprint
         resource_fields = ('title', 'id', 'content_type', )  # , 'imagepath',
         # kwargs['live'] = True  # Calling resources will always only return currently available resources.
         kwargs.setdefault('live', True)  # unless set False in kwargs, will only return currently available resources.
         # kwargs['live_by_date'] = True
+        # print("============================ ClassOffer.objects.resources ======================================")
         arr = [self.get_resources(model=ea, **kwargs).order_by().values(*resource_fields) for ea in self.all()]
         # TODO: Look into 'defer' as a query option instead of 'values' to have a qs of models instead of dicts.
         if len(arr):
