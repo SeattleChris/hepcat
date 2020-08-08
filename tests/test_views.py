@@ -1,22 +1,116 @@
 from django.test import Client, TestCase  # , TransactionTestCase
 from django.urls import reverse
 from unittest import skip
+from django.conf import settings
 # from .helper import SimpleModelTests
 from classwork.views import decide_session, AboutUsListView, ClassOfferListView
 # , SubjectProgressView, ClassOfferDetailView, Checkin
-from classwork.models import Staff, SiteContent
+from classwork.models import Staff, Student, SiteContent
+from classwork.models import Session, Subject, ClassOffer  # , Location, Resource, SiteContent, Profile
+# from classwork.models import Payment, Registration, Notify
 from users.models import UserHC
-from classwork.models import ClassOffer  # , Location, Resource, SiteContent, Subject, Profile
-# from classwork.models import Session, Payment, Registration, Notify
-# from datetime import date, timedelta
+from datetime import date, time, timedelta, datetime as dt
 # @skip("Not Implemented")
 USER_DEFAULTS = {'email': 'user_fake@fakesite.com', 'password': '1234', 'first_name': 'f_user', 'last_name': 'fake_y'}
 
 
 class AboutUsListTests(TestCase):
     ProfileStaff_query = Staff.objects  # Profile.objects.filter(is_staff=True) if single Profile model.
+    ProfileStudent_query = Student.objects  # Profile.objects.filter(is_student=True) if single Profile model.
 
-    def test_queryset_is_only_active_staff(self):
+    def get_staff_list(self, transform, is_ordered):
+        """ Used to get the transformed list of expected staff users. """
+        staff_query = self.ProfileStaff_query.filter(user__is_active=True)
+        if is_ordered:
+            order = getattr(self, 'query_order_by', [])
+            staff_query = staff_query.order_by(*order) if order else staff_query
+        return [transform(ea) for ea in staff_query.all()]
+
+    def test_queryset_has_active_admin(self):
+        """ The queryset should have currently active admin staff members. """
+        kwargs = USER_DEFAULTS.copy()
+        kwargs['is_admin'] = True
+        user = UserHC.objects.create_user(**kwargs)
+        user.save()
+        staff = getattr(user, 'staff', None)
+        view = AboutUsListView()
+        view_queryset = view.get_queryset()
+        is_ordered = getattr(view_queryset, 'ordered', False)
+        transform = repr
+        all_staff_list = self.get_staff_list(transform, is_ordered)
+
+        self.assertTrue(user.is_staff)
+        self.assertQuerysetEqual(view_queryset, all_staff_list, transform=transform, ordered=is_ordered)
+        self.assertIsNotNone(staff)
+        self.assertIn(staff, list(view_queryset.all()))
+
+    def test_queryset_has_active_teachers(self):
+        """ The queryset should have currently active teacher staff members. """
+        kwargs = USER_DEFAULTS.copy()
+        kwargs['is_teacher'] = True
+        user = UserHC.objects.create_user(**kwargs)
+        user.save()
+        staff = getattr(user, 'staff', None)
+        view = AboutUsListView()
+        view_queryset = view.get_queryset()
+        is_ordered = getattr(view_queryset, 'ordered', False)
+        transform = repr
+        all_staff_list = self.get_staff_list(transform, is_ordered)
+
+        self.assertTrue(user.is_staff)
+        self.assertQuerysetEqual(view_queryset, all_staff_list, transform=transform, ordered=is_ordered)
+        self.assertIsNotNone(staff)
+        self.assertIn(staff, list(view_queryset.all()))
+
+    def test_queryset_not_have_inactive_staff(self):
+        """ The queryset should not have inactive staff users. """
+        kwargs = USER_DEFAULTS.copy()
+        kwargs['is_teacher'] = True
+        kwargs['is_active'] = False
+        user = UserHC.objects.create_user(**kwargs)
+        user.save()
+        staff = getattr(user, 'staff', None)
+        view = AboutUsListView()
+        view_queryset = view.get_queryset()
+        is_ordered = getattr(view_queryset, 'ordered', False)
+        transform = repr
+        all_staff_list = self.get_staff_list(transform, is_ordered)
+
+        self.assertTrue(user.is_staff)
+        self.assertFalse(user.is_active)
+        self.assertQuerysetEqual(view_queryset, all_staff_list, transform=transform, ordered=is_ordered)
+        self.assertIsNotNone(staff)
+        self.assertNotIn(staff, list(view_queryset.all()))
+        self.assertIn(staff, self.ProfileStaff_query.filter(user__is_active=False))
+
+    def test_queryset_not_have_students(self):
+        """ The queryset should not have student only users. """
+        kwargs = USER_DEFAULTS.copy()
+        kwargs['is_admin'] = False
+        kwargs['is_student'] = True
+        user = UserHC.objects.create_user(**kwargs)
+        user.save()
+        staff = getattr(user, 'staff', None)
+        student = getattr(user, 'student', None)
+        view = AboutUsListView()
+        view_queryset = view.get_queryset()
+        is_ordered = getattr(view_queryset, 'ordered', False)
+        transform = repr
+        all_staff_list = self.get_staff_list(transform, is_ordered)
+        users_from_view_qs = [getattr(ea, 'user', None) for ea in view_queryset.all()]
+        student_query = self.ProfileStudent_query.filter(user__is_active=True)
+
+        self.assertTrue(user.is_student)
+        self.assertFalse(user.is_staff)
+        self.assertQuerysetEqual(view_queryset, all_staff_list, transform=transform, ordered=is_ordered)
+        self.assertIsNone(staff)
+        self.assertNotIn(user, users_from_view_qs)
+        self.assertIsNotNone(student)
+        self.assertIn(student, list(student_query.all()))
+
+    @skip("Not Implemented")
+    def test_queryset_has_expected_profile_order(self):
+        """ The queryset should have currently active staff members. """
         kwargs = USER_DEFAULTS.copy()
         kwargs['is_admin'] = True
         user = UserHC.objects.create_user(**kwargs)
@@ -24,13 +118,8 @@ class AboutUsListTests(TestCase):
         view = AboutUsListView()
         view_queryset = view.get_queryset()
         is_ordered = getattr(view_queryset, 'ordered', False)
-        staff_query = self.ProfileStaff_query.filter(user__is_active=True)
-        if is_ordered:
-            order = getattr(self, 'query_order_by', [])
-            staff_query = staff_query.order_by(*order) if order else staff_query
         transform = repr
-        all_staff_list = [transform(ea) for ea in staff_query.all()]
-
+        all_staff_list = self.get_staff_list(transform, is_ordered)
         self.assertTrue(user.is_staff)
         self.assertQuerysetEqual(view_queryset, all_staff_list, transform=transform, ordered=is_ordered)
 
@@ -55,21 +144,6 @@ class AboutUsListTests(TestCase):
 
 
 class ClassOfferListViewTests(TestCase):
-    view = ClassOfferListView.as_view()
-    # view.kwargs = {}
-    client = Client()
-
-    # @skip("Not Implemented")
-    def test_get_queryset(self):
-        """ Expect to only contain the Sessions returned by decide_session as requested (or default). """
-        # kwargs = {}
-        sessions = decide_session()
-        expected_qs = ClassOffer.objects.filter(session__in=sessions)
-        expected_qs = expected_qs.order_by('session__key_day_date', '_num_level').all()
-        expected = [repr(ea) for ea in expected_qs]
-        actual = self.view.get_queryset()
-
-        self.assertQuerysetEqual(actual, expected)
 
     # @skip("Not Implemented")
     def test_get_context_data(self):
@@ -79,7 +153,7 @@ class ClassOfferListViewTests(TestCase):
         expected_subset = {'sessions': context_sessions}
         display_session_subset = {'display_session': None}
         display_date_subset = {'display_date': None}
-        actual = self.view.get_context_data()
+        actual = self.viewClass.get_context_data()
 
         self.assertDictContainsSubset(expected_subset, actual)
         self.assertDictContainsSubset(display_session_subset, actual)
