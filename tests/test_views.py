@@ -143,6 +143,54 @@ class AboutUsListTests(TestCase):
         self.assertEqual(test_text, about.text)
 
 
+class TestFormLoginRequired:
+    url_name = ''  # 'url_name' for the desired path '/url/to/view'
+    # url = reverse(url_name)
+    login_cred = {'username': '', 'password': ''}    # defined in fixture or with factory in setUp()
+    expected_template = ''
+    expected_form = ''
+    expected_error_field = ''
+    login_redirect = '/login/'
+    success_redirect = ''
+    bad_data = {}
+    good_data = {}
+
+    def test_call_view_deny_anonymous(self):
+        """ Login is required for either get or post. """
+        response = self.client.get(self.url, follow=True)
+        self.assertRedirects(response, self.login_redirect)
+        response = self.client.post(self.url, follow=True)
+        self.assertRedirects(response, self.login_redirect)
+
+    def test_call_view_load(self):
+        """ After login, can get the form. """
+        self.client.login(**self.login_cred)
+        response = self.client.get(self.url)
+        # self.assertContains()
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, self.expected_template)
+
+    def test_call_view_fail_blank(self):
+        """ Submitting a blank form should get a form error. """
+        self.client.login(**self.login_cred)
+        data = {}  # blank data dictionary (on purpose)
+        response = self.client.post(self.url, data)
+        self.assertFormError(response, self.expected_form, self.expected_error_field, 'This field is required.')
+        # etc. ...
+
+    def test_call_view_fail_invalid(self):
+        """ Submitting an invalid form should get a form error. """
+        self.client.login(**self.login_cred)
+        response = self.client.post(self.url, self.bad_data)
+        self.assertFormError(response, self.expected_form, self.expected_error_field, 'This field is required.')
+
+    def test_call_view_success_invalid(self):
+        """ Submitting a valid form should give expected redirect. """
+        self.client.login(**self.login_cred)
+        response = self.client.post(self.url, self.bad_data)
+        self.assertRedirects(response, self.success_redirect)
+
+
 class ClassOfferListViewTests(TestCase):
 
     # @skip("Not Implemented")
