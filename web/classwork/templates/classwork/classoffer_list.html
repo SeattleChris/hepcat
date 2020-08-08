@@ -30,7 +30,8 @@
         <span class="shorten2" data-text="{{classoffer.day_short}}, ">
           {{ classoffer.day }},
         </span>
-        <span class="nowrap shorten" data-text="{{classoffer.start_time|date:'g'}} - {{classoffer.end_time|date:'gA'|lower}}">
+        <span class="nowrap shorten"
+              data-text="{{classoffer.start_time|date:'g'}} - {{classoffer.end_time|date:'gA'|lower}}">
           {{ classoffer.start_time|date:"g:i" }} - {{ classoffer.end_time|date:"g:iA"|lower }}
         </span>
       </li>
@@ -56,7 +57,7 @@
       <li>One Day Workshop</li>
       {% endif %}
       {% if classoffer.location.id %}
-      <li>at <a href="{% url 'location_detail' id=classoffer.location.id %}">{{ classoffer.location }}</a></li>
+      <li>at <a href="{{ classoffer.location.get_absolute_url }}">{{ classoffer.location }}</a></li>
       {% else %}
       <li>at location TBA</li>
       {% endif %}
@@ -80,7 +81,7 @@
       {% endif %}
     </p>
     <p>
-      <a href="{% url 'classoffer_detail' id=classoffer.id %}">More Details</a> |
+      <a href="{{ classoffer.get_absolute_url }}">More Details</a> |
       <a href="{% url 'register' %}">Sign Up Now!</a>
     </p>
   </article>

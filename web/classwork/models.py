@@ -57,6 +57,9 @@ class Location(models.Model):
     date_added = models.DateField(auto_now_add=True, )
     date_modified = models.DateField(auto_now=True, )
 
+    def get_absolute_url(self):
+        return reverse('location_detail', args=[str(self.id)])
+
     def __str__(self):
         return self.name
 
@@ -145,6 +148,9 @@ class Resource(models.Model):
         elif self.classoffer: self.related_type = 'ClassOffer'  # noqa e701
         else: self.related_type = 'Other'  # noqa e701
         super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        return reverse('resource_detail', args=[str(self.id)])
 
     def __str__(self):
         return self.title
@@ -725,6 +731,9 @@ class ClassOffer(models.Model):
         self.set_num_level()
         super().save(*args, **kwargs)
 
+    def get_absolute_url(self):
+        return reverse('classoffer_detail', args=[str(self.id)])
+
     def __str__(self):
         return '{} - {}'.format(self.subject, self.session)
 
@@ -1147,6 +1156,9 @@ class Payment(BasePayment):
             result += 'by ' + str(self.paid_by)
         result += 'for ' + str(self.student) + ' attending ' + str(self.description)
         return result
+
+    def get_absolute_url(self):
+        return reverse('payment', args=[str(self.id)])
 
     def __str__(self):
         return self._payment_description

@@ -23,7 +23,7 @@
     <h4>{{key}}</h4>
     <ul>
       {% for res in values %}
-      <li><a href="{% url 'resource_detail' id=res.id %}">res: {{res}}</a></li>
+      <li><a href="{{ res.get_absolute_url }}">res: {{res}}</a></li>
       {% endfor %}
     </ul>
   </article>
