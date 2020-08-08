@@ -192,6 +192,47 @@ class TestFormLoginRequired:
 
 
 class ClassOfferListViewTests(TestCase):
+    url_name = 'classoffer_list'  # '/url/to/view'
+    url = reverse(url_name)
+    expected_template = ''
+    viewClass = ClassOfferListView()
+    modelClass = ClassOffer
+    query_order_by = ('session__key_day_date', '_num_level', )
+
+    def setUp(self):
+        levels = [lvl for lvl, display in Subject.LEVEL_CHOICES]
+        ver = Subject.VERSION_CHOICES[0][0]
+        subjs = [Subject.objects.create(level=lvl, version=ver, title='_'.join((lvl, ver))) for lvl in levels]
+        dur = settings.DEFAULT_SESSION_WEEKS
+        now = dt.utcnow().date()
+        class_day = now.weekday()
+        sess_names = ['old_sess', 'curr_sess', 'new_sess']
+        classoffers = {}
+        for num, name in enumerate(sess_names):
+            key_date = now + timedelta(days=7*dur*(num - 1))
+            sess = Session.objects.create(name=name, key_day_date=key_date)
+            co_kwargs = {'session': sess, 'start_time': time(19, 0), 'class_day': class_day}
+            classoffers[name] = [ClassOffer.objects.create(subject=subj, **co_kwargs) for subj in subjs]
+        self.classoffers = classoffers
+
+    # @skip("Not Implemented")
+    def test_get_queryset(self):
+        """ Expect to only contain the Sessions returned by decide_session as requested (or default). """
+        view_queryset = self.viewClass.get_queryset()
+        is_ordered = getattr(view_queryset, 'ordered', False)
+        transform = repr
+        sessions = decide_session()
+        model_query = ClassOffer.objects.filter(session__in=sessions)
+        found_query = model_query
+        if is_ordered:
+            order = getattr(self, 'query_order_by', [])
+            model_query = model_query.order_by(*order) if order else model_query
+        model_list = [transform(ea) for ea in model_query.all()]
+        expected_list = [transform(ea) for ea in self.classoffers['curr_sess']]
+
+        self.assertQuerysetEqual(view_queryset, model_list, transform=transform, ordered=is_ordered)
+        self.assertQuerysetEqual(found_query, expected_list, transform=transform, ordered=False)
+        self.assertQuerysetEqual(view_queryset, expected_list, transform=transform, ordered=False)
 
     # @skip("Not Implemented")
     def test_get_context_data(self):
