@@ -146,7 +146,8 @@ class Checkin(ListView):
         display_date = self.kwargs.get('display_date', None)
         sessions = decide_session(sess=display_session, display_date=display_date)
         self.kwargs['sessions'] = sessions
-        selected_classes = ClassOffer.objects.filter(session__in=[ea.id for ea in sessions]).order_by('-class_day', 'start_time')
+        sess_ids = [ea.id for ea in sessions]  # TODO: Use a qs for efficiency.
+        selected_classes = ClassOffer.objects.filter(session__in=sess_ids).order_by('-class_day', 'start_time')
         return selected_classes
 
     def get_context_data(self, **kwargs):
