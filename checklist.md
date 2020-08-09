@@ -87,7 +87,7 @@
 - [s] Stretch Goal. Not for current feature plan.
 
 Current Status:
-2020-08-03 23:57:14
+2020-08-08 23:50:06
 <!-- Ctrl-Shift-I to generate timestamp -->
 
 ### Bug Fixes
@@ -97,17 +97,53 @@ Current Status:
 - [ ] ProfileView is showing the dictionaries after the updates to the technique for getting the correct data.
 - [ ] ClassOffer manager and model methods for returning Resources attached by ClassOffer or Subject.
   - [x] Initial tests.
-  - [ ] Fully covering new features.
+  - [ ] Tests fully covering new features.
+- [ ] ?Should tests use `django.utils.timezone`?
+- [ ] ?Should tests use [django.utils.dateparse](https://docs.djangoproject.com/en/3.0/ref/utils/)?
+
+### Optimization and Structure improvements
+
+- [ ] Revisit `success_url` for RegisterView, PaymentProcessView
+  - [ ] `success_url = reverse_lazy('author-list')` in the View class is an option, but ...
+    - [ ] You don’t even need to provide a success_url for CreateView or UpdateView
+      - [ ] they will use get_absolute_url() on the model object if available.
+      - [ ] [Generic Views](https://docs.djangoproject.com/en/3.0/topics/class-based-views/generic-editing/)
+- [ ] Look into Login restrictions
+  - [ ] `@login_required` decorator.
+  - [ ] `LoginRequiredMixin` for any view class that must have login?
+- [ ] Is the current User model using an EmailValidator, or should this be updated?
+  - [ ] [EmailValidator](https://docs.djangoproject.com/en/3.0/ref/validators/)
+- [ ] ? Update [HTTP Error Handlers](https://docs.djangoproject.com/en/3.0/ref/urls/) ?
+- [ ] Using [reverse_lazy](https://docs.djangoproject.com/en/3.0/ref/urlresolvers/) well?
+- [ ] [select_related](https://docs.djangoproject.com/en/3.0/ref/models/querysets/#django.db.models.query.QuerySet.select_related)
+- [ ] Revisit [Optimization techniques](https://docs.djangoproject.com/en/3.0/topics/db/optimization/)
+  - [ ] Profile the actual cost to ensure the refactor is actually cheaper for our context.
+  - [ ] Create well designed database indexes
+    - [ ] [meta](https://docs.djangoproject.com/en/3.0/ref/models/options/#django.db.models.Options.indexes)
+    - [ ] [Field.db_index]
+  - [ ] If only need id, use foreign key directly: e.g. `entry.blog_id` is cheaper than `entry.blog.id`
+  - [ ] Use QuerySet `select_related()` and `prefetch_related()` and `prefetch_related_objects()`
+  - [ ] Use `QuerySet.defer()` and `QuerySet.only()`
+  - [ ] Use QuerySet `update()` and `delete()` instead of loading and saving individually.
 
 ### Views
 
-- [ ] Student Profile: Resources filtered to currently available.
-- [ ] Student Profile: Resources no duplicates.
+- [x] Student Profile: Resources filtered to currently available.
+- [x] Student Profile: Resources no duplicates.
 - [ ] Student Profile: Resources displayed and can be navigated in a useful way.
 - [ ] Staff Profile: How to manage if they are also a Student?
 - [ ] Staff Profile: What info do they want as a staff view? Or just handle that in the admin views?
-- [ ] About Us - Shows only Teachers and Staff.
+- [x] About Us - Shows only Teachers and Staff.
 - [ ] About US - order of teacher & staff info can be controlled by an admin.
+- [x] Utilize get_absolute_url for all detail views.
+- [ ] Check for any model properties that should use `key_lazy` or `key_lazy_text` or `cached_property`?
+  - [ ] [key_lazy utils](https://docs.djangoproject.com/en/3.0/ref/utils/#django.utils.functional.cached_property)
+  - [ ] [cached_property](https://docs.djangoproject.com/en/3.0/ref/utils/#django.utils.functional.cached_property)
+- [ ] Check if display_session values need `escape_uri_path` because of possible spaces or other user input oddities.
+  - [ ] [escape_uri_path](https://docs.djangoproject.com/en/3.0/ref/utils/#django.utils.functional.cached_property)
+- [ ] Tests: use [django.utils.module_loading](https://docs.djangoproject.com/en/3.0/ref/utils/)
+  - [x] `tests/views/test_views.py` file
+  - [ ] other files
 
 ### Tests
 
