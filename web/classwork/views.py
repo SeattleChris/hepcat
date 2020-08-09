@@ -27,7 +27,7 @@ def decide_session(sess=None, display_date=None):
     """
     query = Session.objects
     if sess is None:
-        target = display_date or dt.now()
+        target = display_date or dt.now().date()
         query = query.filter(publish_date__lte=target, expire_date__gte=target)
     elif display_date:
         raise SyntaxError(_("You can't filter by both Session and Display Date"))
@@ -37,8 +37,8 @@ def decide_session(sess=None, display_date=None):
         query = query.filter(name__in=sess)
     sess_data = query.all()
     if not sess_data and not sess:
-        result = Session.objects.filter(publish_date__lte=target).order_by('-key_day_date')[:1]
-        sess_data = result if result else Session.objects.none()
+        result = Session.objects.filter(publish_date__lte=target).latest('key_day_date')
+        sess_data = [result] if result else Session.objects.none()
     return sess_data  # a list of Session records, even if only 0-1 session
 
 
@@ -146,8 +146,8 @@ class Checkin(ListView):
         display_date = self.kwargs.get('display_date', None)
         sessions = decide_session(sess=display_session, display_date=display_date)
         self.kwargs['sessions'] = sessions
-        sess_ids = [ea.id for ea in sessions]  # TODO: Use a qs for efficiency.
-        selected_classes = ClassOffer.objects.filter(session__in=sess_ids).order_by('-class_day', 'start_time')
+        # sess_ids = [ea.id for ea in sessions]  # TODO: Use a qs for efficiency.
+        selected_classes = ClassOffer.objects.filter(session__in=sessions).order_by('-class_day', 'start_time')
         return selected_classes
 
     def get_context_data(self, **kwargs):
@@ -160,8 +160,12 @@ class Checkin(ListView):
         context['display_date'] = self.kwargs.pop('display_date', None)
         earliest, latest = None, None
         if context['display_session'] != 'all':
-            earliest = sessions.order_by('key_day_date')[:1]
-            latest = sessions.order_by('-key_day_date')[:1]
+            if isinstance(sessions, list):  # TODO: Find Django function to order model instances.
+                earliest = sessions[0]
+                latest = sessions[-1]
+            else:
+                earliest = sessions.earliest('key_day_date')
+                latest = sessions.latest('key_day_date')
         context['prev_session'] = earliest.prev_session if earliest else None
         context['next_session'] = latest.next_session if latest else None
         return context
