@@ -22,6 +22,7 @@ urlpatterns = [  # All following are in root
     path('payment/success/<int:id>', PaymentProcessView.as_view(), name='payment_success'),
     path('payment/done/<int:id>', PaymentProcessView.as_view(template_name='payment/success.html'),
          name='payment_done'),
+    path('profile/<int:id>', ProfileView.as_view(), name='profile_user'),
     path('profile/', ProfileView.as_view(), name='profile_page'),
     path('resource/<int:id>', ResourceDetailView.as_view(), name='resource_detail'),
  ]

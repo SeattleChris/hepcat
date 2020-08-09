@@ -3,6 +3,7 @@ from django.views.generic import ListView, CreateView, DetailView, UpdateView
 # from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 from django.shortcuts import get_object_or_404, redirect  # used for Payments
+from django.http import Http404
 from django.template.response import TemplateResponse  # used for Payments
 from payments import get_payment_model, RedirectNeeded  # used for Payments
 # from django.db.models import Q, F, Case, When, DateField, ExpressionWrapper as EW
@@ -191,6 +192,13 @@ class ProfileView(DetailView):
     def get_object(self):
         # print('=== ProfileView get_object ====')
         user = self.request.user
+        if 'id' in self.kwargs:
+            if not user.is_admin:
+                return redirect('profile_page')
+            try:
+                user = User.objects.get(id=self.kwargs['id'])
+            except User.DoesNotExist:
+                raise Http404(_("Page does not exist"))
         profile = getattr(user, 'profile', user.staff if user.is_staff else getattr(user, 'student', None))
         return profile
 
