@@ -246,5 +246,5 @@ SESSION_MAX_SKIP = int(os.environ.get('SESSION_MAXIMUM_SKIP', SESSION_LOW_WEEKS 
 DEFAULT_SESSION_EXPIRE = int(os.environ.get('DEFAULT_SESSION_EXPIRE', 8))  # number of days after the first classes.
 SHORT_SESSION_EXPIRE = int(os.environ.get('SHORT_SESSION_EXPIRE', 2))  # number of days after the first classes.
 DEFAULT_CLASS_MINUTES = int(os.environ.get('DEFAULT_CLASS_MINUTES', 60))
-
+COMMON_LEVELS_COUNT = int(os.environ.get('COMMON_LEVELS_COUNT', 2))
 # # Global variables: expect decimal values for DEFAULT_CLASS_PRICE, DEFAULT_PRE_DISCOUNT, MULTI_DISCOUNT

@@ -224,9 +224,10 @@ class Subject(models.Model):
 
     @property
     def _str_slug(self):
-        slug = f'{self.level}{self.version}'
-        if self.level not in ['Beg', 'L2']:
-            slug += f': {self.title}'
+        slug = str(self.level) + str(self.version)
+        common_levels = [code for code, display in self.LEVEL_CHOICES[:int(settings.COMMON_LEVELS_COUNT)]]
+        if self.level not in common_levels:
+            slug += ': {}'.format(self.title)
         return slug
 
     def save(self, *args, **kwargs):
@@ -803,28 +804,20 @@ class Student(AbstractProfile):
     # to set their own rules for number of versions needed and other version translation decisions.
 
     @property
-    def highest_subject(self, subjects=True):  # , classoffers=False
+    def highest_subject(self):
         """ We will want to know what is the student's class level which by default will be the highest
             class level they have taken. We also want to be able to override this from a teacher or
             admin input to deal with students who have had instruction or progress elsewhere.
         """
         data = self.taken_subjects.aggregate(Max('level_num'))
         max_level = data['level_num__max']
-        if subjects:
-            data['subjects'] = self.taken_subjects.filter(level_num=max_level)
-        # if classoffers:
-        #     data['classoffers'] = self.taken.filter(subject__level_num=max_level).order_by('-session_id__key_day_date')
-        #     # TODO: Determine if ClassOffer should have this value or if we should get it from Subject.
-        #     by_classoffer = self.taken.aggregate(max_classoffer=Max('_num_level'))
-        #     c_max = by_classoffer['max_classoffer']
-        #     by_classoffer['collect_classoffer'] = self.taken.filter(_num_level=c_max).order_by('-session__key_day_date')
-        #     data.update(by_classoffer)
+        data['subjects'] = self.taken_subjects.filter(level_num=max_level)
         return data
 
     @property
     def taken_subjects(self):
         """ Since all taken subjects are related through ClassOffer, we check taken to see the subject names. """
-        return Subject.objects.filter(id__in=self.taken.values_list('subject')).distinct()
+        return Subject.objects.filter(id__in=self.taken.values_list('subject', flat=True)).distinct()
 
     @property
     def beg(self):
