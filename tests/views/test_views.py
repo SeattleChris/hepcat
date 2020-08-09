@@ -261,14 +261,10 @@ class ClassOfferListViewTests(TestCase):
             model_query = model_query.order_by(*order) if order else model_query
         model_list = [transform(ea) for ea in model_query.all()]
         expected_list = [transform(ea) for ea in self.classoffers['curr_sess']]
-        response = self.client.get(self.url)
 
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, self.expected_template)
-
-        self.assertQuerysetEqual(view_queryset, model_list, transform=transform, ordered=is_ordered)
         self.assertQuerysetEqual(found_query, expected_list, transform=transform, ordered=False)
         self.assertQuerysetEqual(view_queryset, expected_list, transform=transform, ordered=False)
+        self.assertQuerysetEqual(view_queryset, model_list, transform=transform, ordered=is_ordered)
 
     # @skip("Not Implemented")
     def test_get_context_data(self):
