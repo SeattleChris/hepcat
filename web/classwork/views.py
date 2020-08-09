@@ -38,7 +38,10 @@ def decide_session(sess=None, display_date=None):
         query = query.filter(name__in=sess)
     sess_data = query.all()
     if not sess_data and not sess:
-        result = Session.objects.filter(publish_date__lte=target).latest('key_day_date')
+        try:
+            result = Session.objects.filter(publish_date__lte=target).latest('key_day_date')
+        except Session.DoesNotExist:
+            result = None
         sess_data = [result] if result else Session.objects.none()
     return sess_data  # a list of Session records, even if only 0-1 session
 
