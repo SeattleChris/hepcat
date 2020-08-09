@@ -445,6 +445,12 @@ class Session(models.Model):
         # except Session.DoesNotExist as e: print(f"There is no next session: {e} ")
         super().save(*args, **kwargs)
 
+    def get_admin_absolute_url(self):
+        return reverse('checkin_session', args=[str(self)])
+
+    def get_absolute_url(self):
+        return reverse('classoffer_display_session', args=[str(self)])
+
     def __str__(self):
         return self.name
 
