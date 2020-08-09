@@ -191,8 +191,9 @@ Each organization installing this app while have some unique settings. Some of t
 * DEFAULT_SESSION_EXPIRE: For a typical session, expire publishing it how many days after the first class?
 * SHORT_SESSION_EXPIRE: For a session under minimum_weeks, expire publishing it how many days after the first class?
 * DEFAULT_CLASS_MINUTES: The typical length of time of a single class day.
+* COMMON_LEVELS_COUNT: The number of levels that are almost always run (each level can have multiple versions).
 
-*Note: The last 18 are all optional pre-populated values, overwritable per product. For DEFAULT_CLASS_PRICE, DEFAULT_PRE_DISCOUNT, MULTI_DISCOUNT - whole numbers should have '.0' at the end.
+*Note: The last 20 are all optional pre-populated values, overwritable per product. For DEFAULT_CLASS_PRICE, DEFAULT_PRE_DISCOUNT, MULTI_DISCOUNT - whole numbers should have '.0' at the end.
 The last seven are expected to be integers.
 
 ## Deployment

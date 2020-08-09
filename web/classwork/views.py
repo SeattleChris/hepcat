@@ -3,6 +3,7 @@ from django.views.generic import ListView, CreateView, DetailView, UpdateView
 # from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 from django.shortcuts import get_object_or_404, redirect  # used for Payments
+from django.http import Http404
 from django.template.response import TemplateResponse  # used for Payments
 from payments import get_payment_model, RedirectNeeded  # used for Payments
 # from django.db.models import Q, F, Case, When, DateField, ExpressionWrapper as EW
@@ -27,7 +28,7 @@ def decide_session(sess=None, display_date=None):
     """
     query = Session.objects
     if sess is None:
-        target = display_date or dt.now()
+        target = display_date or dt.now().date()
         query = query.filter(publish_date__lte=target, expire_date__gte=target)
     elif display_date:
         raise SyntaxError(_("You can't filter by both Session and Display Date"))
@@ -37,8 +38,8 @@ def decide_session(sess=None, display_date=None):
         query = query.filter(name__in=sess)
     sess_data = query.all()
     if not sess_data and not sess:
-        result = Session.objects.filter(publish_date__lte=target).order_by('-key_day_date')[:1]
-        sess_data = result if result else Session.objects.none()
+        result = Session.objects.filter(publish_date__lte=target).latest('key_day_date')
+        sess_data = [result] if result else Session.objects.none()
     return sess_data  # a list of Session records, even if only 0-1 session
 
 
@@ -146,7 +147,8 @@ class Checkin(ListView):
         display_date = self.kwargs.get('display_date', None)
         sessions = decide_session(sess=display_session, display_date=display_date)
         self.kwargs['sessions'] = sessions
-        selected_classes = ClassOffer.objects.filter(session__in=[ea.id for ea in sessions]).order_by('-class_day', 'start_time')
+        # sess_ids = [ea.id for ea in sessions]  # TODO: Use a qs for efficiency.
+        selected_classes = ClassOffer.objects.filter(session__in=sessions).order_by('-class_day', 'start_time')
         return selected_classes
 
     def get_context_data(self, **kwargs):
@@ -159,8 +161,12 @@ class Checkin(ListView):
         context['display_date'] = self.kwargs.pop('display_date', None)
         earliest, latest = None, None
         if context['display_session'] != 'all':
-            earliest = sessions.order_by('key_day_date')[:1]
-            latest = sessions.order_by('-key_day_date')[:1]
+            if isinstance(sessions, list):  # TODO: Find Django function to order model instances.
+                earliest = sessions[0]
+                latest = sessions[-1]
+            else:
+                earliest = sessions.earliest('key_day_date')
+                latest = sessions.latest('key_day_date')
         context['prev_session'] = earliest.prev_session if earliest else None
         context['next_session'] = latest.next_session if latest else None
         return context
@@ -186,6 +192,13 @@ class ProfileView(DetailView):
     def get_object(self):
         # print('=== ProfileView get_object ====')
         user = self.request.user
+        if 'id' in self.kwargs:
+            if not user.is_admin:
+                return redirect('profile_page')
+            try:
+                user = User.objects.get(id=self.kwargs['id'])
+            except User.DoesNotExist:
+                raise Http404(_("Page does not exist"))
         profile = getattr(user, 'profile', user.staff if user.is_staff else getattr(user, 'student', None))
         return profile
 

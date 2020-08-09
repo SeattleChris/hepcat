@@ -103,6 +103,10 @@ Current Status:
 
 ### Optimization and Structure improvements
 
+- [ ] Look into methods for Session model prev_session and next_session.
+  - [x] instance methods .get_next_by_FOO and .get_previous_by_FOO for Session model next and previous
+    - [x] Does not work on unsaved models, which may be our main use case for these properties.
+  - [ ] QuerySet methods latest(<field_name>) and earliest(<field_name>)
 - [ ] Revisit `success_url` for RegisterView, PaymentProcessView
   - [ ] `success_url = reverse_lazy('author-list')` in the View class is an option, but ...
     - [ ] You don’t even need to provide a success_url for CreateView or UpdateView
