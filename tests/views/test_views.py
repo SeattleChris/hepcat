@@ -1,4 +1,4 @@
-from django.test import Client, TestCase  # , TransactionTestCase
+from django.test import Client, RequestFactory, TestCase  # , TransactionTestCase
 from django.urls import reverse
 from unittest import skip
 from django.conf import settings
@@ -207,9 +207,10 @@ class TestFormLoginRequired:
 
 class ClassOfferListViewTests(TestCase):
     url_name = 'classoffer_list'  # '/url/to/view'
+    allowed_methods = {'get', 'post', }
     url = reverse(url_name)
     modelClass = ClassOffer
-    viewClass = ClassOfferListView()
+    viewClass = ClassOfferListView
     expected_template = viewClass.template_name
     query_order_by = ('session__key_day_date', '_num_level', )
 
@@ -229,10 +230,27 @@ class ClassOfferListViewTests(TestCase):
             classoffers[name] = [ClassOffer.objects.create(subject=subj, **co_kwargs) for subj in subjs]
         self.classoffers = classoffers
 
+    def setup_view(self, method, req_kwargs=None, template_name=None, *args, **kwargs):
+        """A view instance that mimics as_view() returned callable. For args and kwargs match format as reverse(). """
+        if isinstance(method, str):
+            method = method.lower()
+        if method not in self.allowed_methods:
+            raise TypeError("Method '{}' not recognized as an allowed method string. ".format(method))
+        req_kwargs = req_kwargs or {}
+        factory = RequestFactory()
+        request = getattr(factory, method)('/', **req_kwargs)
+        template_name = template_name or getattr(self, 'template_name', None) or self.viewClass.template_name
+        view = self.viewClass(template_name=template_name)
+        view.request = request
+        view.args = args
+        view.kwargs = kwargs
+        return view
+
     # @skip("Not Implemented")
     def test_get_queryset(self):
         """ Expect to only contain the Sessions returned by decide_session as requested (or default). """
-        view_queryset = self.viewClass.get_queryset()
+        view = self.setup_view('get')
+        view_queryset = view.get_queryset()
         is_ordered = getattr(view_queryset, 'ordered', False)
         transform = repr
         sessions = decide_session()
@@ -254,13 +272,13 @@ class ClassOfferListViewTests(TestCase):
 
     # @skip("Not Implemented")
     def test_get_context_data(self):
-        # kwargs = {}
+        view = self.setup_view('get')
         sessions = decide_session()
         context_sessions = ', '.join([ea.name for ea in sessions])
         expected_subset = {'sessions': context_sessions}
         display_session_subset = {'display_session': None}
         display_date_subset = {'display_date': None}
-        actual = self.viewClass.get_context_data()
+        actual = view.get_context_data()
 
         self.assertDictContainsSubset(expected_subset, actual)
         self.assertDictContainsSubset(display_session_subset, actual)
