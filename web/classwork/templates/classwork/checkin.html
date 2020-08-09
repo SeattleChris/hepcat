@@ -19,7 +19,7 @@
         NA |
       {% endif %}
       {% if reg.payment %}
-        <a href="{% url 'payment' id=reg.payment.id %}">{{reg.payment.id}}</a> |
+        <a href="{{ reg.payment.get_absolute_url }}">{{reg.payment.id}}</a> |
       {% endif %}
       {% if reg.owed is None %}
         Unpaid |

@@ -20,7 +20,8 @@ urlpatterns = [  # All following are in root
     path('payment/<int:id>', payment_details, name='payment'),
     path('payment/fail/<int:id>', PaymentProcessView.as_view(template_name='payment/fail.html'), name='payment_fail'),
     path('payment/success/<int:id>', PaymentProcessView.as_view(), name='payment_success'),
-    path('payment/done/<int:id>', PaymentProcessView.as_view(template_name='payment/success.html'), name='payment_done'),
+    path('payment/done/<int:id>', PaymentProcessView.as_view(template_name='payment/success.html'),
+        name='payment_done'),
     path('profile/', ProfileView.as_view(), name='profile_page'),
     path('resource/<int:id>', ResourceDetailView.as_view(), name='resource_detail'),
  ]

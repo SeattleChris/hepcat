@@ -19,7 +19,9 @@
       To make it easier for class check-in, and to get the pre-paid price of {{ payment.pre_total }},
       please complete the payment below.
     </p>
-    <p><a href="{% url 'payment' payment.id %}">home</a></p>
+    <p><a href="{{ payment.get_absolute_url }}">Payment Details</a>
+       | <a href="{% url 'home' %}" title="Swing Dance - Lindy Hop Classes">Home</a>
+    </p>
   </article>
 </section>
 

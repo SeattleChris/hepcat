@@ -19,7 +19,7 @@
     <p>
       | By Bus | Google Maps |
     </p>
-    <p><a href="{% url 'location_detail' id=location.id %}">{{ location }}</a></p>
+    <p><a href="{{ location.get_absolute_url }}">{{ location }}</a></p>
   </article>
   {% endfor %}
   <hr />

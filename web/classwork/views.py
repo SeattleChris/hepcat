@@ -5,7 +5,8 @@ from django.utils.translation import gettext_lazy as _
 from django.shortcuts import get_object_or_404, redirect  # used for Payments
 from django.template.response import TemplateResponse  # used for Payments
 from payments import get_payment_model, RedirectNeeded  # used for Payments
-# from django.db.models import Q, F, Case, When, DateField, BooleanField, SmallIntegerField, DurationField, ExpressionWrapper as EW  # ,
+# from django.db.models import Q, F, Case, When, DateField, ExpressionWrapper as EW
+# from django.db.models import BooleanField, SmallIntegerField, DurationField
 # from django.db.models.functions import Trunc  # , Extract, ExtractYear, ExtractMonth, ExtractDay
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth import get_user_model
@@ -13,6 +14,7 @@ from .forms import RegisterForm, PaymentForm  # , ProfileForm, UserForm
 from .models import (SiteContent, Resource, Location, ClassOffer, Subject,  # ? Session,
                      Staff, Student, Payment, Registration, Session)
 from datetime import datetime as dt
+from pprint import pprint
 User = get_user_model()
 
 # TODO: Clean out excessive print lines telling us where we are.
@@ -35,8 +37,8 @@ def decide_session(sess=None, display_date=None):
         query = query.filter(name__in=sess)
     sess_data = query.all()
     if not sess_data and not sess:
-        result = Session.objects.filter(publish_date__lte=target).order_by('-key_day_date').first()
-        sess_data = [result] if result else []
+        result = Session.objects.filter(publish_date__lte=target).order_by('-key_day_date')[:1]
+        sess_data = result if result else Session.objects.none()
     return sess_data  # a list of Session records, even if only 0-1 session
 
 
@@ -106,7 +108,8 @@ class ClassOfferListView(ListView):
 
     def get_queryset(self):
         """ We can limit the classes list by session, what is published on a given date, or currently published. """
-        # print("============ ClassOfferListView.get_queryset ================")
+        print("============ ClassOfferListView.get_queryset ================")
+        pprint(self.kwargs)
         display_session = self.kwargs.get('display_session', None)
         display_date = self.kwargs.get('display_date', None)
         sessions = decide_session(sess=display_session, display_date=display_date)
@@ -117,7 +120,8 @@ class ClassOfferListView(ListView):
 
     def get_context_data(self, **kwargs):
         """ Get context of class list we are showing, typically currently published or modified by URL parameters """
-        # print("============ ClassOfferListView.get_context_data ================")
+        print("============ ClassOfferListView.get_context_data ================")
+        pprint(kwargs)
         context = super().get_context_data(**kwargs)
         sessions = self.kwargs.pop('sessions', None)
         context['sessions'] = ', '.join([ea.name for ea in sessions])
@@ -142,7 +146,7 @@ class Checkin(ListView):
         display_date = self.kwargs.get('display_date', None)
         sessions = decide_session(sess=display_session, display_date=display_date)
         self.kwargs['sessions'] = sessions
-        selected_classes = ClassOffer.objects.filter(session__in=sessions).order_by('-class_day', 'start_time')
+        selected_classes = ClassOffer.objects.filter(session__in=[ea.id for ea in sessions]).order_by('-class_day', 'start_time')
         return selected_classes
 
     def get_context_data(self, **kwargs):
@@ -155,8 +159,8 @@ class Checkin(ListView):
         context['display_date'] = self.kwargs.pop('display_date', None)
         earliest, latest = None, None
         if context['display_session'] != 'all':
-            earliest = sessions.order_by('key_day_date').first()
-            latest = sessions.order_by('-key_day_date').first()
+            earliest = sessions.order_by('key_day_date')[:1]
+            latest = sessions.order_by('-key_day_date')[:1]
         context['prev_session'] = earliest.prev_session if earliest else None
         context['next_session'] = latest.next_session if latest else None
         return context
