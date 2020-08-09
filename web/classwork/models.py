@@ -316,27 +316,53 @@ class Session(models.Model):
     @property
     def prev_session(self):
         """ Return the Session that comes before the current Session, or 'None' if none exists. """
-        return self.last_session(since=self.key_day_date)
+        try:
+            prev_sess = self.get_previous_by_key_day_date(num_weeks__gt=settings.SESSION_LOW_WEEKS)
+        except self.DoesNotExist:
+            prev_sess = None
+        result = self.last_session(since=self.key_day_date)
+        print("================================== Prev Session =================================")
+        if not result and not prev_sess:
+            print("No prev Session")
+        else:
+            print(prev_sess == result)
+        return result
 
     @property
     def next_session(self):
         """ Returns the Session that comes after the current Session, or 'None' if none exists. """
+        # try:
+        #     next_sess = self.get_next_by_key_day_date(num_weeks__gt=settings.SESSION_LOW_WEEKS)
+        # except self.DoesNotExist:
+        #     next_sess = None
         key_day = self.key_day_date
         key_day = key_day() if callable(key_day) else key_day
         key_day = key_day.isoformat() if isinstance(key_day, (date, dt)) else key_day
         later = Session.objects.filter(key_day_date__gt=key_day)
         next_one_or_none = later.order_by('key_day_date').first()
+        try:
+            next_sess = later.filter(num_weeks__gt=settings.SESSION_LOW_WEEKS).earliest('key_day_date')
+        except self.DoesNotExist:
+            next_sess = None
+        print("================================== Next Session =================================")
+        if not next_one_or_none and not next_sess:
+            print("No next Session")
+        else:
+            print(next_sess == next_one_or_none)
         return next_one_or_none
 
     @classmethod
     def last_session(cls, since=None):
         """ Returns the Session starting the latest, or latest prior to given 'since' date. Return None if none. """
         query = cls.objects
-        # TODO: Look into get_next_by_FOO() and get_previous_by_FOO(), they raise Model.DoesNotExist
         if since:
             # TODO: Check isinstance an appropriate datetime obj
             query = query.filter(key_day_date__lt=since)
-        return query.order_by('-key_day_date').first()
+        try:
+            result = query.latest('key_day_date')  # .order_by('-key_day_date').first()
+        except cls.DoesNotExist:
+            result = None
+        return result
 
     @classmethod
     def _default_date(cls, field, since=None):
@@ -540,7 +566,7 @@ class CustomQuerySet(models.QuerySet):
 
     def get_resources(self, live=False, **kwargs):
         """ Returns a filtered & annotated queryset of Resources connected to the current ClassOffer queryset.
-            Unless over-ridden by later processing of this queryset, it will be ordered with most recent first.
+            False: Unless over-ridden by later processing of this queryset, it will be ordered with most recent first.
             Filter these results by 'live=True' to get only currently published, and not expired, results.
             Distinct resources, across ClassOffers, requires '.values()' that does not include these annotations.
         """
@@ -570,7 +596,8 @@ class CustomQuerySet(models.QuerySet):
                     When(Q(days_since__lte=7*(F('avail') + F('expire') + skips - 1)), then=True),
                     default=False,
                     output_field=models.BooleanField()),
-            ).order_by('-publish')  # Most recent first. May be overridden later, depending on how this data is used.
+            )
+        #    ).order_by('-publish')  # Most recent first. May be overridden later, depending on how this data is used.
         if live:
             resource_queryset = resource_queryset.filter(live=True)
         elif kwargs.get('live_by_date', None):
@@ -771,11 +798,14 @@ class AbstractProfile(models.Model):
     def get_full_name(self):
         return self.user.get_full_name()
 
+    def get_absolute_url(self):
+        return reverse("profile_user", kwargs={"id": self.user_id})
+
     def __str__(self):
         return self.full_name
 
     def __repr__(self):
-        return "<Profile: {} | User id: {} >".format(self.full_name, self.user.id)
+        return "<Profile: {} | User id: {} >".format(self.full_name, self.user_id)
 
 
 class Staff(AbstractProfile):
