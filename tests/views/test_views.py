@@ -3,13 +3,26 @@ from django.urls import reverse
 from unittest import skip
 from django.conf import settings
 # from .helper import SimpleModelTests
-from classwork.views import decide_session, AboutUsListView, ClassOfferListView
-# , SubjectProgressView, ClassOfferDetailView, Checkin
-from classwork.models import Staff, Student, SiteContent
-from classwork.models import Session, Subject, ClassOffer  # , Location, Resource, SiteContent, Profile
+from django.utils.module_loading import import_string
+# from classwork.views import decide_session, AboutUsListView, ClassOfferListView
+# from classwork.models import Staff, Student, SiteContent
+# from classwork.models import Session, Subject, ClassOffer  # , Location, Resource, SiteContent, Profile
 # from classwork.models import Payment, Registration, Notify
-from users.models import UserHC
-from datetime import date, time, timedelta, datetime as dt
+# from users.models import UserHC
+from datetime import time, timedelta, datetime as dt  # date,
+decide_session = import_string('classwork.views.decide_session')
+AboutUsListView = import_string('classwork.views.AboutUsListView')
+ClassOfferListView = import_string('classwork.views.ClassOfferListView')
+# , SubjectProgressView, ClassOfferDetailView, Checkin
+Staff = import_string('classwork.models.Staff')
+Student = import_string('classwork.models.Student')
+SiteContent = import_string('classwork.models.SiteContent')
+Session = import_string('classwork.models.Session')
+Subject = import_string('classwork.models.Subject')
+ClassOffer = import_string('classwork.models.ClassOffer')
+# , Location, Resource, SiteContent, Profile, Payment, Registration, Notify
+UserHC = import_string('users.models.UserHC')
+
 # @skip("Not Implemented")
 USER_DEFAULTS = {'email': 'user_fake@fakesite.com', 'password': '1234', 'first_name': 'f_user', 'last_name': 'fake_y'}
 
@@ -17,6 +30,7 @@ USER_DEFAULTS = {'email': 'user_fake@fakesite.com', 'password': '1234', 'first_n
 class AboutUsListTests(TestCase):
     ProfileStaff_query = Staff.objects  # Profile.objects.filter(is_staff=True) if single Profile model.
     ProfileStudent_query = Student.objects  # Profile.objects.filter(is_student=True) if single Profile model.
+    viewClass = AboutUsListView()
 
     def get_staff_list(self, transform, is_ordered):
         """ Used to get the transformed list of expected staff users. """
@@ -33,8 +47,7 @@ class AboutUsListTests(TestCase):
         user = UserHC.objects.create_user(**kwargs)
         user.save()
         staff = getattr(user, 'staff', None)
-        view = AboutUsListView()
-        view_queryset = view.get_queryset()
+        view_queryset = self.viewClass.get_queryset()
         is_ordered = getattr(view_queryset, 'ordered', False)
         transform = repr
         all_staff_list = self.get_staff_list(transform, is_ordered)
@@ -147,7 +160,8 @@ class TestFormLoginRequired:
     url_name = ''  # 'url_name' for the desired path '/url/to/view'
     # url = reverse(url_name)
     login_cred = {'username': '', 'password': ''}    # defined in fixture or with factory in setUp()
-    expected_template = ''
+    viewClass = None
+    expected_template = getattr(viewClass, 'template_name', '')
     expected_form = ''
     expected_error_field = ''
     login_redirect = '/login/'
@@ -194,9 +208,9 @@ class TestFormLoginRequired:
 class ClassOfferListViewTests(TestCase):
     url_name = 'classoffer_list'  # '/url/to/view'
     url = reverse(url_name)
-    expected_template = ''
-    viewClass = ClassOfferListView()
     modelClass = ClassOffer
+    viewClass = ClassOfferListView()
+    expected_template = viewClass.template_name
     query_order_by = ('session__key_day_date', '_num_level', )
 
     def setUp(self):
@@ -229,6 +243,10 @@ class ClassOfferListViewTests(TestCase):
             model_query = model_query.order_by(*order) if order else model_query
         model_list = [transform(ea) for ea in model_query.all()]
         expected_list = [transform(ea) for ea in self.classoffers['curr_sess']]
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, self.expected_template)
 
         self.assertQuerysetEqual(view_queryset, model_list, transform=transform, ordered=is_ordered)
         self.assertQuerysetEqual(found_query, expected_list, transform=transform, ordered=False)
