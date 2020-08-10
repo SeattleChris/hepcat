@@ -21,9 +21,10 @@ OTHER_USER = {'email': 'other@fakesite.com', 'password': '1234', 'first_name': '
 
 
 class AboutUsListTests(TestCase):
+    url_name = 'aboutus'
+    viewClass = import_string('classwork.views.AboutUsListView')
     ProfileStaff_query = Staff.objects  # Profile.objects.filter(is_staff=True) if single Profile model.
     ProfileStudent_query = Student.objects  # Profile.objects.filter(is_student=True) if single Profile model.
-    viewClass = import_string('classwork.views.AboutUsListView')
     view = viewClass()
 
     def get_staff_list(self, transform, is_ordered):
@@ -133,7 +134,7 @@ class AboutUsListTests(TestCase):
         initial_about = SiteContent.objects.filter(name=target_name).first()
         initial_about = getattr(initial_about, 'text', '') if initial_about else ''
         c = Client()
-        url = reverse("aboutus")
+        url = reverse(self.url_name)
         initial_response = c.get(url)
         about = SiteContent.objects.create(name=target_name, text=test_text)
         about.save()
@@ -260,7 +261,10 @@ class MimicAsView:
 
 
 class ClassOfferListViewTests(MimicAsView, TestCase):
+    url_name = 'classoffer_list'
     viewClass = ClassOfferListView = import_string('classwork.views.ClassOfferListView')
+    display_session_url_name = 'classoffer_display_session'
+    display_date_url_name = 'classoffer_display_date'
     query_order_by = ('session__key_day_date', '_num_level', )
 
     def setUp(self):
@@ -300,7 +304,9 @@ class ClassOfferListViewTests(MimicAsView, TestCase):
         self.assertDictContainsSubset(display_date_subset, actual)
 
 
+@skip("Not Implemented")
 class CheckinListViewTests(MimicAsView, TestCase):
+    url_name = 'checkin'
     viewClass = import_string('classwork.views.Checkin')
 
     def setUp(self):
@@ -318,8 +324,8 @@ class CheckinListViewTests(MimicAsView, TestCase):
 
 class ProfileViewTests(MimicAsView, TestCase):
     url_name = 'profile_page'
-    ProfileView = import_string('classwork.views.ProfileView')
-    viewClass = ProfileView
+    viewClass = ProfileView = import_string('classwork.views.ProfileView')
+    user_url_name = 'profile_user'
 
     def setUp(self):
         self.view = self.setup_view('get')
@@ -445,8 +451,40 @@ class ProfileViewTests(MimicAsView, TestCase):
         self.client_visit_view(good_text_2)
 
 
-class RegisterViewTests(TestCase):
-    viewClass = None
+@skip("Not Implemented Feature")
+class SubjectProgressListViewTests(MimicAsView, TestCase):
+    url_name = ''  # None created yet in classwork.urls
+    viewClass = SubjectProgressView = import_string('classwork.views.SubjectProgressView')
+
+
+@skip("Not Implemented")
+class LocationListViewTests(MimicAsView, TestCase):
+    url_name = 'location_list'
+    viewClass = LocationListView = import_string('classwork.views.LocationListView')
+
+
+@skip("Not Implemented")
+class LocationDetailViewTests(MimicAsView, TestCase):
+    url_name = 'location_detail'
+    viewClass = LocationDetailView = import_string('classwork.views.LocationDetailView')
+
+
+@skip("Not Implemented")
+class ClassOfferDetailViewTests(MimicAsView, TestCase):
+    url_name = 'classoffer_detail'
+    viewClass = ClassOfferDetailView = import_string('classwork.views.ClassOfferDetailView')
+
+
+@skip("Not Implemented")
+class ResourceDetailViewTests(MimicAsView, TestCase):
+    url_name = 'location_list'
+    viewClass = ResourceDetailView = import_string('classwork.views.ResourceDetailView')
+
+
+@skip("Not Implemented")
+class RegisterCreateViewTests(MimicAsView, TestCase):
+    url_name = 'register'
+    viewClass = RegisterView = import_string('classwork.views.RegisterView')
 
     @skip("Not Implemented")
     def test_get_form_kwargs(self):
@@ -461,13 +499,21 @@ class RegisterViewTests(TestCase):
         pass
 
 
-class PaymentProcessViewTests(TestCase):
+@skip("Not Implemented")
+class PaymentProcessViewTests(MimicAsView, TestCase):
+    url_name = 'payment_success'
+    viewClass = PaymentProcessView = import_string('classwork.views.PaymentProcessView')
+    fail_url_name = 'payment_fail'
+    fail_template_name = 'payment/fail.html'
+    done_url_name = 'payment_done'
+    done_template_name = 'payment/success.html'
 
     @skip("Not Implemented")
     def test_get_context_data(self):
         pass
 
 
+@skip("Not Implemented")
 class Views_payment_details_Tests(TestCase):
 
     @skip("Not Implemented")
