@@ -2,9 +2,8 @@ from django.test import TestCase, TransactionTestCase
 from django.conf import settings
 from django.db.models import Max, Subquery
 from unittest import skip
-from .helper import SimpleModelTests
-from classwork.models import Location, Resource, SiteContent, Subject, ClassOffer, Student
-from classwork.models import Session, Payment, Registration, Notify
+from .helper import SimpleModelTests, SiteContent, Location, Resource, UserHC, Student, Session, Subject, ClassOffer
+from .helper import Payment, Registration, Notify
 from datetime import date, time, timedelta, datetime as dt
 
 # Create your tests here.
@@ -162,7 +161,6 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
 
     def test_manager_queryset_resources_various_expire(self):
         """ Making many ClassOffers that today is the week 3 class with resources on all weeks with 0 <= expire < 3. """
-        from users.models import UserHC
         user = UserHC.objects.create_user(email="fake@faker.com", password=1234, first_name='fa', last_name='la')
         user.save()
         student = user.student

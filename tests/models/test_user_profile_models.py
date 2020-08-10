@@ -1,10 +1,7 @@
 from django.test import TestCase
-# from django.conf import settings
 from unittest import skip
-from .helper import SimpleModelTests, AbstractProfileModelTests
-from classwork.models import Location, Session, Subject, ClassOffer, Staff, Student
-# from classwork.models import Resource, SiteContent, Payment, Registration, Notify
-from users.models import UserHC
+from .helper import SimpleModelTests, AbstractProfileModelTests, UserHC
+from .helper import Location, Session, Subject, ClassOffer, Staff, Student
 from datetime import date, time  # , timedelta, datetime as dt
 
 

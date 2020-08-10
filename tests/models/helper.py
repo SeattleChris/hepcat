@@ -1,9 +1,22 @@
 from django.db.models.fields import NOT_PROVIDED
 from django.db.models import CharField, TextField, URLField, DateField, TimeField
 from django.db.models import PositiveSmallIntegerField, SmallIntegerField, base as db_models_base
-from classwork.models import Staff, Student
-from users.models import UserHC
 from datetime import date, time  # , timedelta
+from django.utils.module_loading import import_string
+# from classwork.models import Location, Session, Subject, ClassOffer, Staff, Student
+UserHC = import_string('users.models.UserHC')
+Staff = import_string('classwork.models.Staff')
+
+Student = import_string('classwork.models.Student')
+Session = import_string('classwork.models.Session')
+Subject = import_string('classwork.models.Subject')
+ClassOffer = import_string('classwork.models.ClassOffer')
+SiteContent = import_string('classwork.models.SiteContent')
+Resource = import_string('classwork.models.Resource')
+Location = import_string('classwork.models.Location')
+Payment = import_string('classwork.models.Payment')
+Registration = import_string('classwork.models.Registration')
+Notify = import_string('classwork.models.Notify')
 
 
 class SimpleModelTests:
