@@ -301,6 +301,44 @@ class ProfileViewTests(MimicAsView, TestCase):
         self.assertEqual(other.student, actual)
 
     @skip("Not Implemented")
+    def test_get_object_view_other_redirects(self):
+        kwargs = USER_DEFAULTS.copy()
+        kwargs['is_student'] = True
+        user = UserHC.objects.create_user(**kwargs)
+        user.save()
+        other_kwargs = OTHER_USER.copy()
+        other_kwargs['is_student'] = True
+        other = UserHC.objects.create_user(**other_kwargs)
+        other.save()
+        self.view.request.user = user
+        self.view.kwargs['id'] = other.id
+        self.assertIsNotNone(getattr(user, 'student', None))
+        self.assertTrue(user.is_student)
+        self.assertFalse(user.is_staff)
+        self.assertTrue(other.is_student)
+        self.assertIsNotNone(getattr(other, 'student', None))
+        self.assertRedirects(self.view.get_object(), reverse(self.url_name))
+        # actual = self.view.get_object()
+        # self.assertEqual(user.student, actual)
+
+    def test_get_object_view_not_existing_student_by_admin(self):
+        from django.http import Http404
+
+        kwargs = USER_DEFAULTS.copy()
+        kwargs['is_admin'] = True
+        user = UserHC.objects.create_user(**kwargs)
+        user.save()
+        self.view.request.user = user
+        last_user = UserHC.objects.order_by('id').last()
+        target_id = last_user.id + 1
+        self.view.kwargs['id'] = target_id
+
+        self.assertIsNotNone(getattr(user, 'staff', None))
+        self.assertIsNone(UserHC.objects.filter(id=target_id).first())
+        with self.assertRaises(Http404):
+            self.view.get_object()
+
+    @skip("Not Implemented")
     def test_get_context_data(self):
         pass
 
