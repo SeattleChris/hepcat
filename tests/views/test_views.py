@@ -2,13 +2,7 @@ from django.test import Client, RequestFactory, TestCase  # , TransactionTestCas
 from django.urls import reverse
 from unittest import skip
 from django.conf import settings
-# from .helper import SimpleModelTests
 from django.utils.module_loading import import_string
-# from classwork.views import decide_session, AboutUsListView, ClassOfferListView
-# from classwork.models import Staff, Student, SiteContent
-# from classwork.models import Session, Subject, ClassOffer  # , Location, Resource, SiteContent, Profile
-# from classwork.models import Payment, Registration, Notify
-# from users.models import UserHC
 from datetime import time, timedelta, datetime as dt  # date,
 decide_session = import_string('classwork.views.decide_session')
 AboutUsListView = import_string('classwork.views.AboutUsListView')
@@ -207,30 +201,9 @@ class TestFormLoginRequired:
         self.assertRedirects(response, self.success_redirect)
 
 
-class ClassOfferListViewTests(TestCase):
-    url_name = 'classoffer_list'  # '/url/to/view'
-    allowed_methods = {'get', 'post', }
-    url = reverse(url_name)
-    modelClass = ClassOffer
-    viewClass = ClassOfferListView
-    expected_template = viewClass.template_name
-    query_order_by = ('session__key_day_date', '_num_level', )
-
-    def setUp(self):
-        levels = [lvl for lvl, display in Subject.LEVEL_CHOICES]
-        ver = Subject.VERSION_CHOICES[0][0]
-        subjs = [Subject.objects.create(level=lvl, version=ver, title='_'.join((lvl, ver))) for lvl in levels]
-        dur = settings.DEFAULT_SESSION_WEEKS
-        now = dt.utcnow().date()
-        class_day = now.weekday()
-        sess_names = ['old_sess', 'curr_sess', 'new_sess']
-        classoffers = {}
-        for num, name in enumerate(sess_names):
-            key_date = now + timedelta(days=7*dur*(num - 1))
-            sess = Session.objects.create(name=name, key_day_date=key_date)
-            co_kwargs = {'session': sess, 'start_time': time(19, 0), 'class_day': class_day}
-            classoffers[name] = [ClassOffer.objects.create(subject=subj, **co_kwargs) for subj in subjs]
-        self.classoffers = classoffers
+class MimicAsView:
+    viewClass = None
+    query_order_by = None  # expected tuple or list if order_by is needed.
 
     def setup_view(self, method, req_kwargs=None, template_name=None, *args, **init_kwargs):
         """A view instance that mimics as_view() returned callable. For args and kwargs match format as reverse(). """
@@ -250,16 +223,42 @@ class ClassOfferListViewTests(TestCase):
         view.request = request
         view.args = args
         view.kwargs = init_kwargs
-        # # emulate View.as_view() would seem to put these on EACH http method of view.
-        # view.view_class = self.viewClass
-        # view.init_kwargs = init_kwargs
         return view
 
-    # @skip("Not Implemented")
+    def prep_http_method(self, method):
+        # # emulate View.as_view() would seem to put these on EACH http method of view.
+        method.view_class = self.viewClass
+        method.init_kwargs = self.kwargs
+        return method
+
+    def setup_three_sessions(self):
+        levels = [lvl for lvl, display in Subject.LEVEL_CHOICES]
+        ver = Subject.VERSION_CHOICES[0][0]
+        subjs = [Subject.objects.create(level=lvl, version=ver, title='_'.join((lvl, ver))) for lvl in levels]
+        dur = settings.DEFAULT_SESSION_WEEKS
+        now = dt.utcnow().date()
+        class_day = now.weekday()
+        sess_names = ['old_sess', 'curr_sess', 'new_sess']
+        classoffers = {}
+        for num, name in enumerate(sess_names):
+            key_date = now + timedelta(days=7*dur*(num - 1))
+            sess = Session.objects.create(name=name, key_day_date=key_date)
+            co_kwargs = {'session': sess, 'start_time': time(19, 0), 'class_day': class_day}
+            classoffers[name] = [ClassOffer.objects.create(subject=subj, **co_kwargs) for subj in subjs]
+        return classoffers
+
+
+class ClassOfferListViewTests(MimicAsView, TestCase):
+    viewClass = ClassOfferListView
+    query_order_by = ('session__key_day_date', '_num_level', )
+
+    def setUp(self):
+        self.classoffers = self.setup_three_sessions()
+        self.view = self.setup_view('get')
+
     def test_get_queryset(self):
         """ Expect to only contain the Sessions returned by decide_session as requested (or default). """
-        view = self.setup_view('get')
-        view_queryset = view.get_queryset()
+        view_queryset = self.view.get_queryset()
         is_ordered = getattr(view_queryset, 'ordered', False)
         transform = repr
         sessions = decide_session()
@@ -275,18 +274,15 @@ class ClassOfferListViewTests(TestCase):
         self.assertQuerysetEqual(view_queryset, expected_list, transform=transform, ordered=False)
         self.assertSetEqual(set(expected_list), set(model_list))
         self.assertSetEqual(set(transform(ea) for ea in view_queryset.all()), set(model_list))
-        # self.maxDiff = None
         # self.assertQuerysetEqual(view_queryset, model_list, transform=transform, ordered=is_ordered)
 
-    # @skip("Not Implemented")
     def test_get_context_data(self):
-        view = self.setup_view('get')
         sessions = decide_session()
         context_sessions = ', '.join([ea.name for ea in sessions])
         expected_subset = {'sessions': context_sessions}
         display_session_subset = {'display_session': None}
         display_date_subset = {'display_date': None}
-        actual = view.get_context_data()
+        actual = self.view.get_context_data()
 
         self.assertDictContainsSubset(expected_subset, actual)
         self.assertDictContainsSubset(display_session_subset, actual)
@@ -294,6 +290,10 @@ class ClassOfferListViewTests(TestCase):
 
 
 class CheckinViewTests(TestCase):
+
+    def setUp(self):
+        self.classoffers = self.setup_three_sessions()
+        self.view = self.setup_view('get')
 
     @skip("Not Implemented")
     def test_get_queryset(self):
@@ -304,119 +304,82 @@ class CheckinViewTests(TestCase):
         pass
 
 
-class ProfileViewTests(TestCase):
-    url_name = 'classoffer_list'  # '/url/to/view'
-    # http_method_names = {'get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'trace', }
-    # modelClass = ClassOffer
+class ProfileViewTests(MimicAsView, TestCase):
     viewClass = ProfileView
-    expected_template = viewClass.template_name
-    query_order_by = ('session__key_day_date', '_num_level', )
 
-    def setup_view(self, method, req_kwargs=None, template_name=None, *args, **init_kwargs):
-        """A view instance that mimics as_view() returned callable. For args and kwargs match format as reverse(). """
-        req_kwargs = req_kwargs or {}
-        if isinstance(method, str):
-            method = method.lower()
-        allowed_methods = getattr(self.viewClass, 'http_method_names', {'get', })
-        if method not in allowed_methods or not getattr(self.viewClass, method, None):
-            raise ValueError("Method '{}' not recognized as an allowed method string. ".format(method))
-        factory = RequestFactory()
-        request = getattr(factory, method)('/', **req_kwargs)
+    def setUp(self):
+        self.view = self.setup_view('get')
 
-        key = 'template_name'
-        template_name = template_name or getattr(self, key, None) or getattr(self.viewClass, key, None)
-        view = self.viewClass(template_name=template_name, **init_kwargs)
-        # emulate View.setup()
-        view.request = request
-        view.args = args
-        view.kwargs = init_kwargs
-        # # emulate View.as_view() would seem to put these on EACH http method of view.
-        # view.view_class = self.viewClass
-        # view.init_kwargs = init_kwargs
-        return view
-
-    # @skip("Not Implemented")
     def test_get_object_superuser(self):
-        view = self.setup_view('get')
         kwargs = USER_DEFAULTS.copy()
         kwargs['username'] = None
         user = UserHC.objects.create_superuser(**kwargs)
         user.save()
-        view.request.user = user
-        actual = view.get_object()
+        self.view.request.user = user
+        actual = self.view.get_object()
         self.assertIsNotNone(getattr(user, 'staff', None))
         self.assertTrue(user.is_staff)
         self.assertTrue(user.is_student)
         self.assertIsNotNone(getattr(user, 'student', None))
         self.assertEqual(user.staff, actual)
 
-    # @skip("Not Implemented")
     def test_get_object_admin(self):
-        view = self.setup_view('get')
         kwargs = USER_DEFAULTS.copy()
         kwargs['is_admin'] = True
         user = UserHC.objects.create_user(**kwargs)
         user.save()
-        view.request.user = user
-        actual = view.get_object()
+        self.view.request.user = user
+        actual = self.view.get_object()
         self.assertIsNotNone(getattr(user, 'staff', None))
         self.assertTrue(user.is_staff)
         self.assertEqual(user.staff, actual)
         self.assertFalse(user.is_student)
         self.assertIsNone(getattr(user, 'student', None))
 
-    # @skip("Not Implemented")
     def test_get_object_teacher(self):
-        view = self.setup_view('get')
         kwargs = USER_DEFAULTS.copy()
         kwargs['is_teacher'] = True
         user = UserHC.objects.create_user(**kwargs)
         user.save()
-        view.request.user = user
-        actual = view.get_object()
+        self.view.request.user = user
+        actual = self.view.get_object()
         self.assertIsNotNone(getattr(user, 'staff', None))
         self.assertTrue(user.is_staff)
         self.assertEqual(user.staff, actual)
         self.assertFalse(user.is_student)
         self.assertIsNone(getattr(user, 'student', None))
 
-    # @skip("Not Implemented")
     def test_get_object_student(self):
-        view = self.setup_view('get')
         kwargs = USER_DEFAULTS.copy()
         kwargs['is_student'] = True
         user = UserHC.objects.create_user(**kwargs)
         user.save()
-        view.request.user = user
-        actual = view.get_object()
+        self.view.request.user = user
+        actual = self.view.get_object()
         self.assertTrue(user.is_student)
         self.assertIsNotNone(getattr(user, 'student', None))
         self.assertEqual(user.student, actual)
         self.assertIsNone(getattr(user, 'staff', None))
         self.assertFalse(user.is_staff)
 
-    # @skip("Not Implemented")
     def test_get_object_student_teacher(self):
-        view = self.setup_view('get')
         kwargs = USER_DEFAULTS.copy()
         kwargs['is_student'] = True
         kwargs['is_teacher'] = True
         user = UserHC.objects.create_user(**kwargs)
         user.save()
-        view.request.user = user
-        actual = view.get_object()
+        self.view.request.user = user
+        actual = self.view.get_object()
         self.assertTrue(user.is_student)
         self.assertIsNotNone(getattr(user, 'student', None))
         self.assertIsNotNone(getattr(user, 'staff', None))
         self.assertTrue(user.is_staff)
         self.assertEqual(user.staff, actual)
 
-    # @skip("Not Implemented")
     def test_get_object_anonymous(self):
-        view = self.setup_view('get')
         user = AnonymousUser
-        view.request.user = user
-        actual = view.get_object()
+        self.view.request.user = user
+        actual = self.view.get_object()
 
         self.assertFalse(user.is_staff)
         self.assertIsNone(getattr(user, 'staff', None))
@@ -425,9 +388,7 @@ class ProfileViewTests(TestCase):
         self.assertIsNone(actual)
         self.assertEqual(getattr(user, 'student', None), actual)
 
-    # @skip("Not Implemented")
     def test_get_object_view_student_by_admin(self):
-        view = self.setup_view('get')
         kwargs = USER_DEFAULTS.copy()
         kwargs['is_admin'] = True
         user = UserHC.objects.create_user(**kwargs)
@@ -436,9 +397,9 @@ class ProfileViewTests(TestCase):
         other_kwargs['is_student'] = True
         other = UserHC.objects.create_user(**other_kwargs)
         other.save()
-        view.request.user = user
-        view.kwargs['id'] = other.id
-        actual = view.get_object()
+        self.view.request.user = user
+        self.view.kwargs['id'] = other.id
+        actual = self.view.get_object()
         self.assertIsNotNone(getattr(user, 'staff', None))
         self.assertTrue(user.is_staff)
         self.assertTrue(other.is_student)
