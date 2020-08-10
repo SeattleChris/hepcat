@@ -316,40 +316,21 @@ class Session(models.Model):
     @property
     def prev_session(self):
         """ Return the Session that comes before the current Session, or 'None' if none exists. """
-        try:
-            prev_sess = self.get_previous_by_key_day_date(num_weeks__gt=settings.SESSION_LOW_WEEKS)
-        except self.DoesNotExist:
-            prev_sess = None
-        result = self.last_session(since=self.key_day_date)
-        print("================================== Prev Session =================================")
-        if not result and not prev_sess:
-            print("No prev Session")
-        else:
-            print(prev_sess == result)
-        return result
+        return self.last_session(since=self.key_day_date)
 
     @property
     def next_session(self):
         """ Returns the Session that comes after the current Session, or 'None' if none exists. """
-        # try:
-        #     next_sess = self.get_next_by_key_day_date(num_weeks__gt=settings.SESSION_LOW_WEEKS)
-        # except self.DoesNotExist:
-        #     next_sess = None
         key_day = self.key_day_date
         key_day = key_day() if callable(key_day) else key_day
         key_day = key_day.isoformat() if isinstance(key_day, (date, dt)) else key_day
         later = Session.objects.filter(key_day_date__gt=key_day)
-        next_one_or_none = later.order_by('key_day_date').first()
+        # next_one_or_none = later.order_by('key_day_date').first()
         try:
             next_sess = later.filter(num_weeks__gt=settings.SESSION_LOW_WEEKS).earliest('key_day_date')
         except self.DoesNotExist:
             next_sess = None
-        print("================================== Next Session =================================")
-        if not next_one_or_none and not next_sess:
-            print("No next Session")
-        else:
-            print(next_sess == next_one_or_none)
-        return next_one_or_none
+        return next_sess
 
     @classmethod
     def last_session(cls, since=None):
