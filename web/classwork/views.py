@@ -3,7 +3,6 @@ from django.views.generic import ListView, CreateView, DetailView, UpdateView
 # from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 from django.shortcuts import get_object_or_404, redirect  # used for Payments
-from django.http import Http404
 from django.template.response import TemplateResponse  # used for Payments
 from payments import get_payment_model, RedirectNeeded  # used for Payments
 # from django.db.models import Q, F, Case, When, DateField, ExpressionWrapper as EW
@@ -15,7 +14,6 @@ from .forms import RegisterForm, PaymentForm  # , ProfileForm, UserForm
 from .models import (SiteContent, Resource, Location, ClassOffer, Subject,  # ? Session,
                      Staff, Student, Payment, Registration, Session)
 from datetime import datetime as dt
-from pprint import pprint
 User = get_user_model()
 
 # TODO: Clean out excessive print lines telling us where we are.
@@ -141,7 +139,7 @@ class Checkin(ListView):
 
     def get_queryset(self):
         """ List all the students from all the classes sorted according to the class property query_order_by.
-            Student list should be grouped in days, then in start_time order, and then alphabetical first name. 
+            Student list should be grouped in days, then in start_time order, and then alphabetical first name.
         """
         # print("============ Checkin.get_queryset ================")
         display_session = self.kwargs.get('display_session', None)
@@ -194,12 +192,12 @@ class ProfileView(DetailView):
         # print('=== ProfileView get_object ====')
         user = self.request.user
         if 'id' in self.kwargs:
-            if not user.is_admin:
-                return redirect('profile_page')
-            try:
-                user = User.objects.get(id=self.kwargs['id'])
-            except User.DoesNotExist:
-                raise Http404(_("Page does not exist"))
+            if user.is_admin:
+                try:
+                    user = User.objects.get(id=self.kwargs['id'])
+                except User.DoesNotExist as e:
+                    raise e
+                    # user = self.request.user
         profile = getattr(user, 'profile', user.staff if user.is_staff else getattr(user, 'student', None))
         return profile
 
