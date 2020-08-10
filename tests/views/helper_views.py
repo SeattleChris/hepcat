@@ -11,7 +11,8 @@ SiteContent = import_string('classwork.models.SiteContent')
 Session = import_string('classwork.models.Session')
 Subject = import_string('classwork.models.Subject')
 ClassOffer = import_string('classwork.models.ClassOffer')
-# , Location, Resource, SiteContent, Profile, Payment, Registration, Notify
+Resource = import_string('classwork.models.Resource')
+# , Location, SiteContent, Profile, Payment, Registration, Notify
 UserHC = import_string('users.models.UserHC')
 AnonymousUser = import_string('django.contrib.auth.models.AnonymousUser')
 USER_DEFAULTS = {'email': 'user_fake@fakesite.com', 'password': '1234', 'first_name': 'f_user', 'last_name': 'fake_y'}

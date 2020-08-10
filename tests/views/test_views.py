@@ -2,7 +2,7 @@ from django.test import Client, TestCase  # , TransactionTestCase, RequestFactor
 from django.urls import reverse
 from unittest import skip
 from django.utils.module_loading import import_string
-from .helper_views import MimicAsView, decide_session, Staff, Student, SiteContent
+from .helper_views import MimicAsView, decide_session, Staff, Student, SiteContent, Resource
 from .helper_views import UserHC, AnonymousUser, USER_DEFAULTS, OTHER_USER, ClassOffer  # Session, Subject,
 # @skip("Not Implemented")
 
@@ -300,8 +300,7 @@ class ProfileViewTests(MimicAsView, TestCase):
         self.assertIsNotNone(getattr(other, 'student', None))
         self.assertEqual(other.student, actual)
 
-    @skip("Not Implemented")
-    def test_get_object_view_other_redirects(self):
+    def test_not_permitted_view_other_shows_self(self):
         kwargs = USER_DEFAULTS.copy()
         kwargs['is_student'] = True
         user = UserHC.objects.create_user(**kwargs)
@@ -317,13 +316,10 @@ class ProfileViewTests(MimicAsView, TestCase):
         self.assertFalse(user.is_staff)
         self.assertTrue(other.is_student)
         self.assertIsNotNone(getattr(other, 'student', None))
-        self.assertRedirects(self.view.get_object(), reverse(self.url_name))
-        # actual = self.view.get_object()
-        # self.assertEqual(user.student, actual)
+        actual = self.view.get_object()
+        self.assertEqual(user.student, actual)
 
-    def test_get_object_view_not_existing_student_by_admin(self):
-        from django.http import Http404
-
+    def test_admin_view_not_existing_student_raise_error(self):
         kwargs = USER_DEFAULTS.copy()
         kwargs['is_admin'] = True
         user = UserHC.objects.create_user(**kwargs)
@@ -335,14 +331,35 @@ class ProfileViewTests(MimicAsView, TestCase):
 
         self.assertIsNotNone(getattr(user, 'staff', None))
         self.assertIsNone(UserHC.objects.filter(id=target_id).first())
-        with self.assertRaises(Http404):
+        with self.assertRaises(UserHC.DoesNotExist):
             self.view.get_object()
 
-    @skip("Not Implemented")
-    def test_get_context_data(self):
-        pass
-
     # @skip("Not Implemented")
+    def test_get_context_data(self):
+        classoffers = self.setup_three_sessions()
+        kwargs = USER_DEFAULTS.copy()
+        kwargs['is_student'] = True
+        user = UserHC.objects.create_user(**kwargs)
+        user.save()
+        self.view.request.user = user
+        self.view.object = self.view.get_object()  # This step normally done in self.view.get()
+        taken_list = [arr[0] for sess, arr in classoffers.items()]
+        first_subj = taken_list[0].subject
+        first_res = Resource.objects.create(content_type='text', title="First Subject Resource")
+        first_res.save()
+        first_subj.resource_set.add(first_res)
+        resources = [first_res]
+        for ea in taken_list:
+            res = Resource.objects.create(content_type='text', title=str(ea) + 'Res')
+            res.save()
+            ea.resource_set.add(res)
+            resources.append(res)
+        user.student.taken.add(*taken_list)
+        expected_subset = {'had': taken_list, 'resources': {'text': resources}}
+        actual_context = self.view.get_context_data(object=self.view.object)  # matches the typical call in get()
+        self.assertDictContainsSubset(expected_subset, actual_context)
+
+    @skip("Not Implemented")
     def test_visit_view(self):
         kwargs = USER_DEFAULTS.copy()
         kwargs['is_student'] = True
