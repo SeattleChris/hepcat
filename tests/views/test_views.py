@@ -305,10 +305,145 @@ class CheckinViewTests(TestCase):
 
 
 class ProfileViewTests(TestCase):
+    url_name = 'classoffer_list'  # '/url/to/view'
+    # http_method_names = {'get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'trace', }
+    # modelClass = ClassOffer
+    viewClass = ProfileView
+    expected_template = viewClass.template_name
+    query_order_by = ('session__key_day_date', '_num_level', )
 
-    @skip("Not Implemented")
-    def test_get_object(self):
-        pass
+    def setup_view(self, method, req_kwargs=None, template_name=None, *args, **init_kwargs):
+        """A view instance that mimics as_view() returned callable. For args and kwargs match format as reverse(). """
+        req_kwargs = req_kwargs or {}
+        if isinstance(method, str):
+            method = method.lower()
+        allowed_methods = getattr(self.viewClass, 'http_method_names', {'get', })
+        if method not in allowed_methods or not getattr(self.viewClass, method, None):
+            raise ValueError("Method '{}' not recognized as an allowed method string. ".format(method))
+        factory = RequestFactory()
+        request = getattr(factory, method)('/', **req_kwargs)
+
+        key = 'template_name'
+        template_name = template_name or getattr(self, key, None) or getattr(self.viewClass, key, None)
+        view = self.viewClass(template_name=template_name, **init_kwargs)
+        # emulate View.setup()
+        view.request = request
+        view.args = args
+        view.kwargs = init_kwargs
+        # # emulate View.as_view() would seem to put these on EACH http method of view.
+        # view.view_class = self.viewClass
+        # view.init_kwargs = init_kwargs
+        return view
+
+    # @skip("Not Implemented")
+    def test_get_object_superuser(self):
+        view = self.setup_view('get')
+        kwargs = USER_DEFAULTS.copy()
+        kwargs['username'] = None
+        user = UserHC.objects.create_superuser(**kwargs)
+        user.save()
+        view.request.user = user
+        actual = view.get_object()
+        self.assertIsNotNone(getattr(user, 'staff', None))
+        self.assertTrue(user.is_staff)
+        self.assertTrue(user.is_student)
+        self.assertIsNotNone(getattr(user, 'student', None))
+        self.assertEqual(user.staff, actual)
+
+    # @skip("Not Implemented")
+    def test_get_object_admin(self):
+        view = self.setup_view('get')
+        kwargs = USER_DEFAULTS.copy()
+        kwargs['is_admin'] = True
+        user = UserHC.objects.create_user(**kwargs)
+        user.save()
+        view.request.user = user
+        actual = view.get_object()
+        self.assertIsNotNone(getattr(user, 'staff', None))
+        self.assertTrue(user.is_staff)
+        self.assertEqual(user.staff, actual)
+        self.assertFalse(user.is_student)
+        self.assertIsNone(getattr(user, 'student', None))
+
+    # @skip("Not Implemented")
+    def test_get_object_teacher(self):
+        view = self.setup_view('get')
+        kwargs = USER_DEFAULTS.copy()
+        kwargs['is_teacher'] = True
+        user = UserHC.objects.create_user(**kwargs)
+        user.save()
+        view.request.user = user
+        actual = view.get_object()
+        self.assertIsNotNone(getattr(user, 'staff', None))
+        self.assertTrue(user.is_staff)
+        self.assertEqual(user.staff, actual)
+        self.assertFalse(user.is_student)
+        self.assertIsNone(getattr(user, 'student', None))
+
+    # @skip("Not Implemented")
+    def test_get_object_student(self):
+        view = self.setup_view('get')
+        kwargs = USER_DEFAULTS.copy()
+        kwargs['is_student'] = True
+        user = UserHC.objects.create_user(**kwargs)
+        user.save()
+        view.request.user = user
+        actual = view.get_object()
+        self.assertTrue(user.is_student)
+        self.assertIsNotNone(getattr(user, 'student', None))
+        self.assertEqual(user.student, actual)
+        self.assertIsNone(getattr(user, 'staff', None))
+        self.assertFalse(user.is_staff)
+
+    # @skip("Not Implemented")
+    def test_get_object_student_teacher(self):
+        view = self.setup_view('get')
+        kwargs = USER_DEFAULTS.copy()
+        kwargs['is_student'] = True
+        kwargs['is_teacher'] = True
+        user = UserHC.objects.create_user(**kwargs)
+        user.save()
+        view.request.user = user
+        actual = view.get_object()
+        self.assertTrue(user.is_student)
+        self.assertIsNotNone(getattr(user, 'student', None))
+        self.assertIsNotNone(getattr(user, 'staff', None))
+        self.assertTrue(user.is_staff)
+        self.assertEqual(user.staff, actual)
+
+    # @skip("Not Implemented")
+    def test_get_object_anonymous(self):
+        view = self.setup_view('get')
+        user = AnonymousUser
+        view.request.user = user
+        actual = view.get_object()
+
+        self.assertFalse(user.is_staff)
+        self.assertIsNone(getattr(user, 'staff', None))
+        self.assertIsNone(getattr(user, 'is_student', None))
+        self.assertIsNone(getattr(user, 'student', None))
+        self.assertIsNone(actual)
+        self.assertEqual(getattr(user, 'student', None), actual)
+
+    # @skip("Not Implemented")
+    def test_get_object_view_student_by_admin(self):
+        view = self.setup_view('get')
+        kwargs = USER_DEFAULTS.copy()
+        kwargs['is_admin'] = True
+        user = UserHC.objects.create_user(**kwargs)
+        user.save()
+        other_kwargs = OTHER_USER.copy()
+        other_kwargs['is_student'] = True
+        other = UserHC.objects.create_user(**other_kwargs)
+        other.save()
+        view.request.user = user
+        view.kwargs['id'] = other.id
+        actual = view.get_object()
+        self.assertIsNotNone(getattr(user, 'staff', None))
+        self.assertTrue(user.is_staff)
+        self.assertTrue(other.is_student)
+        self.assertIsNotNone(getattr(other, 'student', None))
+        self.assertEqual(other.student, actual)
 
     @skip("Not Implemented")
     def test_get_context_data(self):
