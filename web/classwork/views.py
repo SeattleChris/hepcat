@@ -38,7 +38,10 @@ def decide_session(sess=None, display_date=None):
         query = query.filter(name__in=sess)
     sess_data = query.all()
     if not sess_data and not sess:
-        result = Session.objects.filter(publish_date__lte=target).latest('key_day_date')
+        try:
+            result = Session.objects.filter(publish_date__lte=target).latest('key_day_date')
+        except Session.DoesNotExist:
+            result = None
         sess_data = [result] if result else Session.objects.none()
     return sess_data  # a list of Session records, even if only 0-1 session
 
@@ -109,8 +112,6 @@ class ClassOfferListView(ListView):
 
     def get_queryset(self):
         """ We can limit the classes list by session, what is published on a given date, or currently published. """
-        print("============ ClassOfferListView.get_queryset ================")
-        pprint(self.kwargs)
         display_session = self.kwargs.get('display_session', None)
         display_date = self.kwargs.get('display_date', None)
         sessions = decide_session(sess=display_session, display_date=display_date)
@@ -121,8 +122,7 @@ class ClassOfferListView(ListView):
 
     def get_context_data(self, **kwargs):
         """ Get context of class list we are showing, typically currently published or modified by URL parameters """
-        print("============ ClassOfferListView.get_context_data ================")
-        pprint(kwargs)
+        kwargs['object_list'] = kwargs.get('object_list', self.get_queryset())
         context = super().get_context_data(**kwargs)
         sessions = self.kwargs.pop('sessions', None)
         context['sessions'] = ', '.join([ea.name for ea in sessions])
@@ -137,18 +137,19 @@ class Checkin(ListView):
     template_name = 'classwork/checkin.html'
     context_object_name = 'class_list'
     display_session = None  # 'all' or <start_month>_<year> as stored in DB Session.name
+    query_order_by = ('-class_day', 'start_time', )
 
     def get_queryset(self):
-        """ List all the students from all the classes (grouped in days, then
-            in start_time order, and then alphabetical first name)
+        """ List all the students from all the classes sorted according to the class property query_order_by.
+            Student list should be grouped in days, then in start_time order, and then alphabetical first name. 
         """
         # print("============ Checkin.get_queryset ================")
         display_session = self.kwargs.get('display_session', None)
         display_date = self.kwargs.get('display_date', None)
         sessions = decide_session(sess=display_session, display_date=display_date)
         self.kwargs['sessions'] = sessions
-        # sess_ids = [ea.id for ea in sessions]  # TODO: Use a qs for efficiency.
-        selected_classes = ClassOffer.objects.filter(session__in=sessions).order_by('-class_day', 'start_time')
+        selected_classes = ClassOffer.objects.filter(session__in=sessions)
+        selected_classes = selected_classes.order_by(*self.query_order_by)
         return selected_classes
 
     def get_context_data(self, **kwargs):

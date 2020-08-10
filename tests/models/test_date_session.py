@@ -1,5 +1,5 @@
 from django.test import TransactionTestCase  # , TestCase
-from classwork.models import Session
+from .helper import Session
 from datetime import date, timedelta
 
 INITIAL = {
