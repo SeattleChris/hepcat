@@ -112,8 +112,6 @@ class ClassOfferListView(ListView):
 
     def get_queryset(self):
         """ We can limit the classes list by session, what is published on a given date, or currently published. """
-        print("============ ClassOfferListView.get_queryset ================")
-        pprint(self.kwargs)
         display_session = self.kwargs.get('display_session', None)
         display_date = self.kwargs.get('display_date', None)
         sessions = decide_session(sess=display_session, display_date=display_date)
@@ -124,8 +122,7 @@ class ClassOfferListView(ListView):
 
     def get_context_data(self, **kwargs):
         """ Get context of class list we are showing, typically currently published or modified by URL parameters """
-        print("============ ClassOfferListView.get_context_data ================")
-        pprint(kwargs)
+        kwargs['object_list'] = kwargs.get('object_list', self.get_queryset())
         context = super().get_context_data(**kwargs)
         sessions = self.kwargs.pop('sessions', None)
         context['sessions'] = ', '.join([ea.name for ea in sessions])
