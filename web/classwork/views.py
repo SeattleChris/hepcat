@@ -137,18 +137,19 @@ class Checkin(ListView):
     template_name = 'classwork/checkin.html'
     context_object_name = 'class_list'
     display_session = None  # 'all' or <start_month>_<year> as stored in DB Session.name
+    query_order_by = ('-class_day', 'start_time', )
 
     def get_queryset(self):
-        """ List all the students from all the classes (grouped in days, then
-            in start_time order, and then alphabetical first name)
+        """ List all the students from all the classes sorted according to the class property query_order_by.
+            Student list should be grouped in days, then in start_time order, and then alphabetical first name. 
         """
         # print("============ Checkin.get_queryset ================")
         display_session = self.kwargs.get('display_session', None)
         display_date = self.kwargs.get('display_date', None)
         sessions = decide_session(sess=display_session, display_date=display_date)
         self.kwargs['sessions'] = sessions
-        # sess_ids = [ea.id for ea in sessions]  # TODO: Use a qs for efficiency.
-        selected_classes = ClassOffer.objects.filter(session__in=sessions).order_by('-class_day', 'start_time')
+        selected_classes = ClassOffer.objects.filter(session__in=sessions)
+        selected_classes = selected_classes.order_by(*self.query_order_by)
         return selected_classes
 
     def get_context_data(self, **kwargs):
