@@ -5,8 +5,6 @@ from django.conf import settings
 from django.utils.module_loading import import_string
 from datetime import time, timedelta, datetime as dt  # date,
 decide_session = import_string('classwork.views.decide_session')
-AboutUsListView = import_string('classwork.views.AboutUsListView')
-ClassOfferListView = import_string('classwork.views.ClassOfferListView')
 # , SubjectProgressView, ClassOfferDetailView, Checkin
 Staff = import_string('classwork.models.Staff')
 Student = import_string('classwork.models.Student')
@@ -25,7 +23,8 @@ OTHER_USER = {'email': 'other@fakesite.com', 'password': '1234', 'first_name': '
 class AboutUsListTests(TestCase):
     ProfileStaff_query = Staff.objects  # Profile.objects.filter(is_staff=True) if single Profile model.
     ProfileStudent_query = Student.objects  # Profile.objects.filter(is_student=True) if single Profile model.
-    viewClass = AboutUsListView()
+    viewClass = import_string('classwork.views.AboutUsListView')
+    view = viewClass()
 
     def get_staff_list(self, transform, is_ordered):
         """ Used to get the transformed list of expected staff users. """
@@ -42,7 +41,7 @@ class AboutUsListTests(TestCase):
         user = UserHC.objects.create_user(**kwargs)
         user.save()
         staff = getattr(user, 'staff', None)
-        view_queryset = self.viewClass.get_queryset()
+        view_queryset = self.view.get_queryset()
         is_ordered = getattr(view_queryset, 'ordered', False)
         transform = repr
         all_staff_list = self.get_staff_list(transform, is_ordered)
@@ -59,8 +58,7 @@ class AboutUsListTests(TestCase):
         user = UserHC.objects.create_user(**kwargs)
         user.save()
         staff = getattr(user, 'staff', None)
-        view = AboutUsListView()
-        view_queryset = view.get_queryset()
+        view_queryset = self.view.get_queryset()
         is_ordered = getattr(view_queryset, 'ordered', False)
         transform = repr
         all_staff_list = self.get_staff_list(transform, is_ordered)
@@ -78,8 +76,7 @@ class AboutUsListTests(TestCase):
         user = UserHC.objects.create_user(**kwargs)
         user.save()
         staff = getattr(user, 'staff', None)
-        view = AboutUsListView()
-        view_queryset = view.get_queryset()
+        view_queryset = self.view.get_queryset()
         is_ordered = getattr(view_queryset, 'ordered', False)
         transform = repr
         all_staff_list = self.get_staff_list(transform, is_ordered)
@@ -100,8 +97,7 @@ class AboutUsListTests(TestCase):
         user.save()
         staff = getattr(user, 'staff', None)
         student = getattr(user, 'student', None)
-        view = AboutUsListView()
-        view_queryset = view.get_queryset()
+        view_queryset = self.view.get_queryset()
         is_ordered = getattr(view_queryset, 'ordered', False)
         transform = repr
         all_staff_list = self.get_staff_list(transform, is_ordered)
@@ -123,8 +119,7 @@ class AboutUsListTests(TestCase):
         kwargs['is_admin'] = True
         user = UserHC.objects.create_user(**kwargs)
         user.save()
-        view = AboutUsListView()
-        view_queryset = view.get_queryset()
+        view_queryset = self.view.get_queryset()
         is_ordered = getattr(view_queryset, 'ordered', False)
         transform = repr
         all_staff_list = self.get_staff_list(transform, is_ordered)
@@ -247,39 +242,25 @@ class MimicAsView:
             classoffers[name] = [ClassOffer.objects.create(subject=subj, **co_kwargs) for subj in subjs]
         return classoffers
 
-    def client_visit_view(self, test_text, url_name=None):
+    def client_visit_view(self, good_text, bad_text=None, url_name=None):
         url_name = url_name or self.url_name
         if not isinstance(url_name, str):
             raise TypeError("Need a string for the url_name. ")
+        if not isinstance(good_text, str):
+            raise TypeError("Must have a string for 'good_text' parameter. ")
+        if bad_text is not None and not isinstance(bad_text, str):
+            raise TypeError("If included, must have a string for 'bad_text' parameter. ")
         url = reverse(url_name)
-        if not isinstance(test_text, dict):
-            raise TypeError("The test_text dict must have a value for 'good', may have values for 'bad', and 'after'.")
         c = Client()
-        initial_response = c.get(url)
-        after_response = None
-        if 'after' in test_text:
-            func = test_text.get('action', self.no_func)
-            try:
-                func(*test_text['args'], **test_text['kwargs'])
-            except Exception:
-                self.no_func(*test_text['args'], **test_text['kwargs'])
-            after_response = c.get(url)
-
-        self.assertEqual(initial_response.status_code, 200)
-        if 'bad' in test_text:
-            self.assertNotContains(initial_response, test_text['bad'])
-        if 'after' in test_text:
-            self.assertNotContains(initial_response, test_text['after'])
-        self.assertContains(initial_response, test_text['good'])
-        if after_response:
-            self.assertContains(after_response, test_text['after'])
-
-    def no_func(self, *args, **kwargs):
-        raise ValueError("Did not get a function for action key. Got args: {}. Got kwargs: {}".format(args, kwargs))
+        response = c.get(url)
+        self.assertEqual(response.status_code, 200)
+        if bad_text:
+            self.assertNotContains(response, bad_text)
+        self.assertContains(response, good_text)
 
 
 class ClassOfferListViewTests(MimicAsView, TestCase):
-    viewClass = ClassOfferListView
+    viewClass = ClassOfferListView = import_string('classwork.views.ClassOfferListView')
     query_order_by = ('session__key_day_date', '_num_level', )
 
     def setUp(self):
@@ -452,16 +433,16 @@ class ProfileViewTests(MimicAsView, TestCase):
         self.view.request.user = user
         classoffers = self.setup_three_sessions()
         take_1 = classoffers['old_sess'][0]
-        avoid = classoffers['old_sess'][1]
         student = user.student
         student.taken.add(take_1)
-        test_text = {'good': str(take_1), 'bad': str(avoid)}
+        good_text = str(take_1)
+        avoid = classoffers['old_sess'][1]
+        bad_text = str(avoid)
+        self.client_visit_view(good_text, bad_text)
         take_2 = classoffers['curr_sess'][1]
-        test_text['after'] = str(take_2)
-        test_text['action'] = student.taken.add
-        test_text['args'] = [take_2]
-        test_text['kwargs'] = {}
-        self.client_visit_view(test_text)
+        student.taken.add(take_2)
+        good_text_2 = str(take_2)
+        self.client_visit_view(good_text_2)
 
 
 class RegisterViewTests(TestCase):
