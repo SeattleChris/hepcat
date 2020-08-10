@@ -5,7 +5,6 @@ from django.db import models
 from django.conf import settings
 from .models import (SiteContent, Resource, Subject, Session, ClassOffer,
                      Staff, Student, Payment, Registration, Location)
-# from .helper import date_with_day
 from datetime import timedelta, time, datetime as dt
 
 

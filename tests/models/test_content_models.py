@@ -1,6 +1,6 @@
 from django.test import TestCase, TransactionTestCase
 from unittest import skip
-from .helper import SimpleModelTests, SiteContent, Location, Resource, Student, ClassOffer
+from .helper_models import SimpleModelTests, SiteContent, Location, Resource, Student, ClassOffer
 # , UserHC, Session, Subject
 # Create your tests here.
 

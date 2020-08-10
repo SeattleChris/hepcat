@@ -2,7 +2,7 @@ from django.test import TestCase, TransactionTestCase
 from django.conf import settings
 from django.db.models import Max, Subquery
 from unittest import skip
-from .helper import SimpleModelTests, Resource, UserHC, Student, Session, Subject, ClassOffer
+from .helper_models import SimpleModelTests, Resource, UserHC, Student, Session, Subject, ClassOffer
 from datetime import date, time, timedelta, datetime as dt
 
 
