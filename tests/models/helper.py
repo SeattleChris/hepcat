@@ -3,10 +3,8 @@ from django.db.models import CharField, TextField, URLField, DateField, TimeFiel
 from django.db.models import PositiveSmallIntegerField, SmallIntegerField, base as db_models_base
 from datetime import date, time  # , timedelta
 from django.utils.module_loading import import_string
-# from classwork.models import Location, Session, Subject, ClassOffer, Staff, Student
 UserHC = import_string('users.models.UserHC')
 Staff = import_string('classwork.models.Staff')
-
 Student = import_string('classwork.models.Student')
 Session = import_string('classwork.models.Session')
 Subject = import_string('classwork.models.Subject')
