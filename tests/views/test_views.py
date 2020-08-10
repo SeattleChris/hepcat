@@ -7,7 +7,6 @@ from datetime import time, timedelta, datetime as dt  # date,
 decide_session = import_string('classwork.views.decide_session')
 AboutUsListView = import_string('classwork.views.AboutUsListView')
 ClassOfferListView = import_string('classwork.views.ClassOfferListView')
-ProfileView = import_string('classwork.views.ProfileView')
 # , SubjectProgressView, ClassOfferDetailView, Checkin
 Staff = import_string('classwork.models.Staff')
 Student = import_string('classwork.models.Student')
@@ -202,6 +201,7 @@ class TestFormLoginRequired:
 
 
 class MimicAsView:
+    url_name = ''
     viewClass = None
     query_order_by = None  # expected tuple or list if order_by is needed.
 
@@ -247,6 +247,36 @@ class MimicAsView:
             classoffers[name] = [ClassOffer.objects.create(subject=subj, **co_kwargs) for subj in subjs]
         return classoffers
 
+    def client_visit_view(self, test_text, url_name=None):
+        url_name = url_name or self.url_name
+        if not isinstance(url_name, str):
+            raise TypeError("Need a string for the url_name. ")
+        url = reverse(url_name)
+        if not isinstance(test_text, dict):
+            raise TypeError("The test_text dict must have a value for 'good', may have values for 'bad', and 'after'.")
+        c = Client()
+        initial_response = c.get(url)
+        after_response = None
+        if 'after' in test_text:
+            func = test_text.get('action', self.no_func)
+            try:
+                func(*test_text['args'], **test_text['kwargs'])
+            except Exception:
+                self.no_func(*test_text['args'], **test_text['kwargs'])
+            after_response = c.get(url)
+
+        self.assertEqual(initial_response.status_code, 200)
+        if 'bad' in test_text:
+            self.assertNotContains(initial_response, test_text['bad'])
+        if 'after' in test_text:
+            self.assertNotContains(initial_response, test_text['after'])
+        self.assertContains(initial_response, test_text['good'])
+        if after_response:
+            self.assertContains(after_response, test_text['after'])
+
+    def no_func(self, *args, **kwargs):
+        raise ValueError("Did not get a function for action key. Got args: {}. Got kwargs: {}".format(args, kwargs))
+
 
 class ClassOfferListViewTests(MimicAsView, TestCase):
     viewClass = ClassOfferListView
@@ -289,7 +319,8 @@ class ClassOfferListViewTests(MimicAsView, TestCase):
         self.assertDictContainsSubset(display_date_subset, actual)
 
 
-class CheckinViewTests(TestCase):
+class CheckinListViewTests(MimicAsView, TestCase):
+    viewClass = import_string('classwork.views.Checkin')
 
     def setUp(self):
         self.classoffers = self.setup_three_sessions()
@@ -305,6 +336,8 @@ class CheckinViewTests(TestCase):
 
 
 class ProfileViewTests(MimicAsView, TestCase):
+    url_name = 'profile_page'
+    ProfileView = import_string('classwork.views.ProfileView')
     viewClass = ProfileView
 
     def setUp(self):
@@ -410,8 +443,29 @@ class ProfileViewTests(MimicAsView, TestCase):
     def test_get_context_data(self):
         pass
 
+    # @skip("Not Implemented")
+    def test_visit_view(self):
+        kwargs = USER_DEFAULTS.copy()
+        kwargs['is_student'] = True
+        user = UserHC.objects.create_user(**kwargs)
+        user.save()
+        self.view.request.user = user
+        classoffers = self.setup_three_sessions()
+        take_1 = classoffers['old_sess'][0]
+        avoid = classoffers['old_sess'][1]
+        student = user.student
+        student.taken.add(take_1)
+        test_text = {'good': str(take_1), 'bad': str(avoid)}
+        take_2 = classoffers['curr_sess'][1]
+        test_text['after'] = str(take_2)
+        test_text['action'] = student.taken.add
+        test_text['args'] = [take_2]
+        test_text['kwargs'] = {}
+        self.client_visit_view(test_text)
+
 
 class RegisterViewTests(TestCase):
+    viewClass = None
 
     @skip("Not Implemented")
     def test_get_form_kwargs(self):
