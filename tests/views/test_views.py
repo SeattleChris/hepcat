@@ -13,6 +13,7 @@ from datetime import time, timedelta, datetime as dt  # date,
 decide_session = import_string('classwork.views.decide_session')
 AboutUsListView = import_string('classwork.views.AboutUsListView')
 ClassOfferListView = import_string('classwork.views.ClassOfferListView')
+ProfileView = import_string('classwork.views.ProfileView')
 # , SubjectProgressView, ClassOfferDetailView, Checkin
 Staff = import_string('classwork.models.Staff')
 Student = import_string('classwork.models.Student')
@@ -22,9 +23,10 @@ Subject = import_string('classwork.models.Subject')
 ClassOffer = import_string('classwork.models.ClassOffer')
 # , Location, Resource, SiteContent, Profile, Payment, Registration, Notify
 UserHC = import_string('users.models.UserHC')
-
+AnonymousUser = import_string('django.contrib.auth.models.AnonymousUser')
 # @skip("Not Implemented")
 USER_DEFAULTS = {'email': 'user_fake@fakesite.com', 'password': '1234', 'first_name': 'f_user', 'last_name': 'fake_y'}
+OTHER_USER = {'email': 'other@fakesite.com', 'password': '1234', 'first_name': 'other_user', 'last_name': 'fake_y'}
 
 
 class AboutUsListTests(TestCase):
@@ -230,20 +232,27 @@ class ClassOfferListViewTests(TestCase):
             classoffers[name] = [ClassOffer.objects.create(subject=subj, **co_kwargs) for subj in subjs]
         self.classoffers = classoffers
 
-    def setup_view(self, method, req_kwargs=None, template_name=None, *args, **kwargs):
+    def setup_view(self, method, req_kwargs=None, template_name=None, *args, **init_kwargs):
         """A view instance that mimics as_view() returned callable. For args and kwargs match format as reverse(). """
+        req_kwargs = req_kwargs or {}
         if isinstance(method, str):
             method = method.lower()
-        if method not in self.allowed_methods:
-            raise TypeError("Method '{}' not recognized as an allowed method string. ".format(method))
-        req_kwargs = req_kwargs or {}
+        allowed_methods = getattr(self.viewClass, 'http_method_names', {'get', })
+        if method not in allowed_methods or not getattr(self.viewClass, method, None):
+            raise ValueError("Method '{}' not recognized as an allowed method string. ".format(method))
         factory = RequestFactory()
         request = getattr(factory, method)('/', **req_kwargs)
-        template_name = template_name or getattr(self, 'template_name', None) or self.viewClass.template_name
-        view = self.viewClass(template_name=template_name)
+
+        key = 'template_name'
+        template_name = template_name or getattr(self, key, None) or getattr(self.viewClass, key, None)
+        view = self.viewClass(template_name=template_name, **init_kwargs)
+        # emulate View.setup()
         view.request = request
         view.args = args
-        view.kwargs = kwargs
+        view.kwargs = init_kwargs
+        # # emulate View.as_view() would seem to put these on EACH http method of view.
+        # view.view_class = self.viewClass
+        # view.init_kwargs = init_kwargs
         return view
 
     # @skip("Not Implemented")
@@ -264,7 +273,10 @@ class ClassOfferListViewTests(TestCase):
 
         self.assertQuerysetEqual(found_query, expected_list, transform=transform, ordered=False)
         self.assertQuerysetEqual(view_queryset, expected_list, transform=transform, ordered=False)
-        self.assertQuerysetEqual(view_queryset, model_list, transform=transform, ordered=is_ordered)
+        self.assertSetEqual(set(expected_list), set(model_list))
+        self.assertSetEqual(set(transform(ea) for ea in view_queryset.all()), set(model_list))
+        # self.maxDiff = None
+        # self.assertQuerysetEqual(view_queryset, model_list, transform=transform, ordered=is_ordered)
 
     # @skip("Not Implemented")
     def test_get_context_data(self):
