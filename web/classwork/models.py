@@ -87,10 +87,10 @@ class Resource(models.Model):
     # TODO: does it require an admin/teacher response before released?
     # TODO: Add sending email feature.
 
-    MODEL_CHOICES = (
-        ('Subject', _('Subject')),
-        ('ClassOffer', _('ClassOffer')),
-        ('Other', _('Other')))
+    # MODEL_CHOICES = (
+    #     ('Subject', _('Subject')),
+    #     ('ClassOffer', _('ClassOffer')),
+    #     ('Other', _('Other')))
     CONTENT_CHOICES = (
         ('url', _('External Link')),
         ('file', _('Formatted Text File')),
@@ -110,11 +110,11 @@ class Resource(models.Model):
         (200, _('After completion')))
 
     # id = auto-created
-    related_type = models.CharField(max_length=15, default='Subject', choices=MODEL_CHOICES, editable=False, )
-    # subjects = models.ManyToManyField('Subject', related_name='resources', blank=True, )
-    subject = models.ForeignKey('Subject', on_delete=models.SET_NULL, null=True, blank=True, )
-    # classoffers = models.ManyToManyField('ClassOffer', related_name='class_resources', blank=True, )
-    classoffer = models.ForeignKey('ClassOffer', on_delete=models.SET_NULL, null=True, blank=True, )
+    # related_type = models.CharField(max_length=15, default='Subject', choices=MODEL_CHOICES, editable=False, )
+    subjects = models.ManyToManyField('Subject', related_name='resources', blank=True, )
+    # subject = models.ForeignKey('Subject', on_delete=models.SET_NULL, null=True, blank=True, )
+    classoffers = models.ManyToManyField('ClassOffer', related_name='resources', blank=True, )
+    # classoffer = models.ForeignKey('ClassOffer', on_delete=models.SET_NULL, null=True, blank=True, )
     content_type = models.CharField(max_length=15, choices=CONTENT_CHOICES, )
     user_type = models.PositiveSmallIntegerField(default=1, choices=USER_CHOICES, help_text=_('Who is this for?'), )
     avail = models.PositiveSmallIntegerField(default=0, choices=PUBLISH_CHOICES,
@@ -143,18 +143,17 @@ class Resource(models.Model):
     #     }
     #     return content_path[self.content_type]
 
-    def save(self, *args, **kwargs):
-        if self.subject: self.related_type = 'Subject'  # noqa e701
-        elif self.classoffer: self.related_type = 'ClassOffer'  # noqa e701
-        else: self.related_type = 'Other'  # noqa e701
-        super().save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     if self.subject: self.related_type = 'Subject'  # noqa e701
+    #     elif self.classoffer: self.related_type = 'ClassOffer'  # noqa e701
+    #     else: self.related_type = 'Other'  # noqa e701
+    #     super().save(*args, **kwargs)
 
     def get_absolute_url(self):
         return reverse('resource_detail', args=[str(self.id)])
 
     def __str__(self):
         return self.title
-        # return "{} - {} - {}".format(self.title, self.related_type, self.content_type)
 
     def __repr__(self):
         return '<Resource: {} | Type: {} >'.format(self.title, self.content_type)
@@ -507,7 +506,7 @@ class CustomQuerySet(models.QuerySet):
                 end = getattr(model, 'end_date', None)
             skips = model.skip_weeks
             max_weeks = getattr(getattr(model, 'session', object), 'num_weeks', None)
-            qs = qs.filter(Q(classoffer=model.pk) | Q(subject=model.subject))
+            qs = qs.filter(Q(classoffers__id=model.pk) | Q(subjects=model.subject))
             qs = qs.order_by('pk').distinct()
         else:
             start = kwargs.pop('start', None)
@@ -529,7 +528,7 @@ class CustomQuerySet(models.QuerySet):
             start = start or OuterRef('start_date')
             end = end or OuterRef('end_date')
             skips = skips if skips is not None else OuterRef('skip_weeks')
-            qs = qs.filter(Q(classoffer=OuterRef('pk')) | Q(subject=OuterRef('subject')))
+            qs = qs.filter(Q(classoffers__id=OuterRef('pk')) | Q(subjects=OuterRef('subject')))
             qs = qs.order_by('pk').distinct()
 
         if not isinstance(start, (date, OuterRef)) or not isinstance(end, (date, OuterRef)):
