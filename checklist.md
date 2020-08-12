@@ -107,7 +107,7 @@ Current Status:
   - [?] Database current 'date' math should be in utc.
   - [?] Setting a Date (no time) for a Session should not get messed up by timezone issues.
     - [x] After midnight, now=date.today() or dt.combine(now, time(0)), with either CURDATE or UTC_DATE.
-    - [x] Afternoon:
+    - [x] Afternoon: CURDATE or UTC_DATE
     - [ ] Evening:
 
 ### Optimization and Structure improvements
