@@ -6,6 +6,7 @@ from .helper_models import SimpleModelTests, Student, ClassOffer, Payment, Regis
 
 class PaymentModelTests(SimpleModelTests, TestCase):
     Model = Payment
+    detail_url_name = 'payment'
     repr_dict = {'Payment': '_payment_description'}
     str_list = ['_payment_description']
     defaults = {}

@@ -293,9 +293,17 @@ class ProfileViewTests(MimicAsView, TestCase):
             ea.resources.add(res)
             resources.append(res)
         user.student.taken.add(*taken_list)
-        expected_subset = {'had': taken_list, 'resources': {'text': resources}}
+        taken_repr = [repr(ea) for ea in taken_list]
+        resource_fields = ('title', 'id', 'content_type', )  # , 'imagepath',
+        resources_as_dicts = [{key: getattr(ea, key, None) for key in resource_fields} for ea in resources]
         actual_context = self.view.get_context_data(object=self.view.object)  # matches the typical call in get()
-        self.assertDictContainsSubset(expected_subset, actual_context)
+        actual_had = actual_context.get('had', None)
+        actual_resources = actual_context.get('resources', {'text': [{}]})
+
+        self.assertQuerysetEqual(actual_had, taken_repr, ordered=False)
+        self.assertEqual(len(resources_as_dicts), len(actual_resources.get('text', [])))
+        self.assertTrue(all(ea in resources_as_dicts for ea in actual_resources.get('text', [])))
+        # self.assertSetEqual(set(resources_as_dicts), set(actual_resources.get('text')))
 
     @skip("Not Implemented")
     def test_visit_view(self):

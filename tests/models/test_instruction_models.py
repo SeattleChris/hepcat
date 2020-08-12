@@ -8,6 +8,7 @@ from datetime import date, time, timedelta, datetime as dt
 
 class SubjectModelTests(SimpleModelTests, TestCase):
     Model = Subject
+    # detail_url_name = 'subject_detail'  # Does Not Exist
     repr_dict = {'Subject': 'title', 'Level': 'level', 'Version': 'version'}
     str_list = ['_str_slug']
     defaults = {'title': 'test model'}
@@ -16,6 +17,7 @@ class SubjectModelTests(SimpleModelTests, TestCase):
 class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
     fixtures = ['tests/fixtures/db_basic.json', 'tests/fixtures/db_hidden.json']
     Model = ClassOffer
+    detail_url_name = 'classoffer_detail'
     repr_dict = {'Class Id': 'id', 'Subject': 'subject', 'Session': 'session'}
     str_list = ['subject', 'session']
     defaults = {}
@@ -67,16 +69,14 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         user = UserHC.objects.create_user(email="fake@faker.com", password=1234, first_name='fa', last_name='la')
         user.save()
         student = user.student
-        # now = date.today()
-        utcnow = dt.utcnow()
-        now = date(utcnow.year, utcnow.month, utcnow.day)
-        now = dt.combine(date.today(), time(0, 0))
+        now = date.today()
         cur_week = 3
         start = now - timedelta(days=7*(cur_week - 1))
-        start_string = start.strftime('%Y-%m-%d')
+        start_string = start.strftime('%Y-%m-%d')  # TODO: Remove after confirmation
+        day = start.weekday()
         sess_cur = Session.objects.create(name="Sess Cur", key_day_date=start, publish_date=start - timedelta(days=14))
         sess_cur.save()
-        if start_string != sess_cur.key_day_date.strftime('%Y-%m-%d'):
+        if start_string != sess_cur.key_day_date.strftime('%Y-%m-%d'):  # TODO: Remove after confirmation
             raise ArithmeticError(f"Session key_day_date set to {start_string}, but value is {sess_cur.key_day_date} ")
         res_total_count = Resource.objects.count()
         res_expected = []
@@ -94,7 +94,7 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
             for ver, _ in Subject.VERSION_CHOICES:
                 subj = Subject.objects.create(title='_'.join((lvl, ver)), level=lvl, version=ver)
                 subj.save()
-                co = ClassOffer.objects.create(subject=subj, session=sess_cur, start_time=(time(17, 0)))
+                co = ClassOffer.objects.create(subject=subj, session=sess_cur, start_time=(time(17, 0)), class_day=day)
                 co.save()
                 student.taken.add(co)
                 res = Resource.objects.create(
@@ -713,6 +713,33 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         self.assertEquals(model.subject, subject)
         self.assertNotEqual(model.num_level, original)
         self.assertEquals(model.num_level, expected)
+
+
+class SessionModelTests(SimpleModelTests, TestCase):
+    Model = Session
+    detail_url_name = 'classoffer_display_session'
+    detail_admin_url_name = 'checkin_session'
+    repr_dict = {'Session': 'name'}
+    str_list = ['name']
+    defaults = {'name': "test_model"}
+
+    def test_get_absolute_url(self, url_field='__str__'):
+        super().test_get_absolute_url(url_field=url_field)
+
+    def test_get_admin_absolute_url(self, url_field='__str__'):
+        from django.urls import reverse
+
+        fields = self.get_field_info()
+        model = self.create_model(create_method_name=self.create_method_name, **fields)
+        if self.detail_admin_url_name is None:
+            with self.assertRaises(AttributeError):
+                url = model.get_admin_absolute_url()
+            return
+        url = model.get_admin_absolute_url()
+        arg = getattr(model, url_field, None)
+        arg = arg() if callable(arg) else arg
+        expected = reverse(self.detail_admin_url_name, args=[arg])
+        self.assertEquals(url, expected)
 
 
 class SessionCoverageTests(TransactionTestCase):

@@ -12,12 +12,14 @@ class SiteContentModelTests(SimpleModelTests, TestCase):
 
 class LocationModelTests(SimpleModelTests, TestCase):
     Model = Location
+    detail_url_name = 'location_detail'
     repr_dict = {'Location': 'name', 'Link': 'map_link'}
 
 
 class ResourceModelTests(SimpleModelTests, TransactionTestCase):
     fixtures = ['tests/fixtures/db_basic.json', 'tests/fixtures/db_hidden.json']
     Model = Resource
+    detail_url_name = 'resource_detail'
     repr_dict = {'Resource': 'title', 'Type': 'content_type'}
     str_list = ['title', ]
     ProfileStudent = Student

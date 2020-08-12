@@ -111,7 +111,7 @@ class ResourceAdmin(admin.ModelAdmin):
         versions['kicking'] = 'Kicking: ' + ' '.join(ea for key, ea in main[1::2])
         versions['stepping'] = 'Stepping: ' + ' '.join(ea for key, ea in main[0::2])
         versions['all'] = 'All: ' + ' '.join(ea for key, ea in Subject.VERSION_CHOICES)
-        versions.extend(dict(Subject.VERSION_CHOICES))
+        versions.update(dict(Subject.VERSION_CHOICES))
 
         raise NotImplementedError(_("This is a not yet implemented feature of managing subject groups. "))
 
