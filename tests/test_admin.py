@@ -14,6 +14,7 @@ from datetime import date, time, timedelta
 from copy import deepcopy
 from types import GeneratorType
 from django.utils.module_loading import import_string
+ResourceAdmin = import_string('classwork.admin.ResourceAdmin')
 AdminSessionForm = import_string('classwork.admin.AdminSessionForm')
 ClassOfferAdmin = import_string('classwork.admin.ClassOfferAdmin')
 SessiontAdmin = import_string('classwork.admin.SessiontAdmin')
@@ -24,6 +25,7 @@ CustomUserAdmin = import_string('users.admin.CustomUserAdmin')
 StaffUserAdmin = import_string('users.admin.StaffUserAdmin')
 StudentUserAdmin = import_string('users.admin.StudentUserAdmin')
 # Location, Profile, Payment
+Resource = import_string('classwork.models.Resource')
 Session = import_string('classwork.models.Session')
 Subject = import_string('classwork.models.Subject')
 ClassOffer = import_string('classwork.models.ClassOffer')
@@ -72,14 +74,60 @@ class AdminSetupTests(TestCase):
         pass
 
 
+class AdminResourceTests(TestCase):
+
+    def test_admin_uses_correct_admin(self):
+        registered_admins_dict = main_admin.site._registry
+        model_admin = registered_admins_dict.get(Resource, None)
+        self.assertIsInstance(model_admin, ResourceAdmin)
+
+    def test_assignment_column(self):
+        key_day, name = date.today(), 'first'
+        publish = key_day - timedelta(days=7*3+1)
+        sess1 = Session.objects.create(name=name, key_day_date=key_day, num_weeks=5, publish_date=publish)
+        sess2 = Session.objects.create(name='second')
+        subj = Subject.objects.create(version=Subject.VERSION_CHOICES[0][0], title="test_subj")
+        subj2 = Subject.objects.create(version=Subject.VERSION_CHOICES[0][0], title="subj2")
+        first = ClassOffer.objects.create(subject=subj, session=sess1, start_time=time(19, 0))
+        second = ClassOffer.objects.create(subject=subj, session=sess2, start_time=time(19, 0))
+        third = ClassOffer.objects.create(subject=subj2, session=sess2, start_time=time(19, 0))
+        res_subj_1 = Resource.objects.create(content_type='text', title="Res for test_subj")
+        subj.resources.add(res_subj_1)
+        expected_res_subj_1 = [str(subj)]
+        res_is_two = Resource.objects.create(content_type='text', title="Res in subj2 and second classoffer")
+        res_subj_2 = Resource.objects.create(content_type='text', title="Res for subj2")
+        subj2.resources.add(res_subj_2, res_is_two)
+        second.resources.add(res_is_two)
+        expected_res_subj_2 = [str(subj2)]
+        expected_res_is_two = [str(subj2), str(second)]
+        res_first = Resource.objects.create(content_type='text', title="Res for First ClassOffer")
+        first.resources.add(res_first)
+        expected_res_first = [str(first)]
+        res_co_in_sess2 = Resource.objects.create(content_type='text', title="Res for Second ClassOffer")
+        res_co_in_sess2.classoffers.add(second, third)
+        expected_res_co_in_sess2 = [str(second), str(third)]
+        current_admin = ResourceAdmin(model=Resource, admin_site=AdminSite())
+
+        self.assertEqual(expected_res_subj_1, current_admin.assignment(res_subj_1))
+        self.assertEqual(expected_res_subj_2, current_admin.assignment(res_subj_2))
+        self.assertEqual(expected_res_is_two, current_admin.assignment(res_is_two))
+        self.assertEqual(expected_res_first, current_admin.assignment(res_first))
+        self.assertEqual(expected_res_co_in_sess2, current_admin.assignment(res_co_in_sess2))
+
+    def test_not_implemented_get_version_matrix(self):
+        current_admin = ResourceAdmin(model=Resource, admin_site=AdminSite())
+        with self.assertRaises(NotImplementedError):
+            current_admin.get_version_matrix()
+
+
 class AdminSessionModelManagement(TestCase):
     """ Tests for Session model create or modify in the Admin site. """
 
     def test_admin_uses_correct_admin(self):
         """ The admin site should use the SessiontAdmin for the Session model. """
         registered_admins_dict = main_admin.site._registry
-        sess_admin = registered_admins_dict.get(Session, None)
-        self.assertIsInstance(sess_admin, SessiontAdmin)
+        model_admin = registered_admins_dict.get(Session, None)
+        self.assertIsInstance(model_admin, SessiontAdmin)
 
     def test_admin_uses_expected_form(self):
         """ The admin SessiontAdmin utilizes the correct AdminSessionForm. """
@@ -216,8 +264,8 @@ class AdminClassOfferTests(TestCase):
 
     def test_admin_uses_correct_admin(self):
         registered_admins_dict = main_admin.site._registry
-        sess_admin = registered_admins_dict.get(ClassOffer, None)
-        self.assertIsInstance(sess_admin, ClassOfferAdmin)
+        model_admin = registered_admins_dict.get(ClassOffer, None)
+        self.assertIsInstance(model_admin, ClassOfferAdmin)
 
     def test_time_column(self):
         key_day, name = date.today(), 'first'
