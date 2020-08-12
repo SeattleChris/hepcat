@@ -103,6 +103,9 @@ Current Status:
 - [ ] Regain Admin feature: able to create/attach Resources.
 - [ ] Profile view: current solution does not have access to Resource.get_absolute_url() method for each one.
 - [ ] Update Tests to reflect changing Resource to ManyToMany with Subject and with ClassOffer
+- [ ] Datetime math issues
+  - [x] Database current 'date' math should be in utc.
+  - [ ] Setting a Date (no time) for a Session should not get messed up by timezone issues.
 
 ### Optimization and Structure improvements
 
