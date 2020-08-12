@@ -5,7 +5,6 @@ from django.db import models
 from django.conf import settings
 from .models import (SiteContent, Resource, Subject, Session, ClassOffer,
                      Staff, Student, Payment, Registration, Location)
-# from .helper import date_with_day
 from datetime import timedelta, time, datetime as dt
 
 
@@ -28,7 +27,6 @@ class ClassDayListFilter(admin.SimpleListFilter):
         field_key = 'class_day'
         if isinstance(model_admin, RegistrationAdmin):
             field_key = 'classoffer__' + field_key
-        print(field_key)
         for value, label in ClassOffer.DOW_CHOICES:
             if qs.filter(**{field_key: value}).exists():
                 yield (value, label)
@@ -44,7 +42,7 @@ class ClassDayListFilter(admin.SimpleListFilter):
 
 class ResourceInline(admin.StackedInline):
     """ Admin can add a Resource while on the Subject or ClassOffer add/change form. """
-    model = Resource
+    model = Resource  # Will be overridden by the child class.
     extra = 1
     fieldsets = (
         (None, {
@@ -57,6 +55,14 @@ class ResourceInline(admin.StackedInline):
         )
     # TODO: Modify which are shown
     formfield_overrides = {models.TextField: {'widget': Textarea(attrs={'cols': 60, 'rows': 2})}, }
+
+
+class ResourceSubjectInline(ResourceInline):
+    model = Resource.subjects.through
+
+
+class ResourceClassOfferInline(ResourceInline):
+    model = Resource.classoffers.through
 
 
 class StudentClassInline(admin.TabularInline):
@@ -73,7 +79,7 @@ class SubjectAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'title', 'level_num', 'level', 'version', )
     list_display_links = ('__str__', 'title', )
     list_filter = ('level_num', 'level', )
-    inlines = (ResourceInline, )
+    # inlines = (ResourceSubjectInline, )
     # TODO: What if we want to attach an already existing Resource?
     fields = (
         ('level', 'version', 'level_num'),
@@ -99,7 +105,7 @@ class ClassOfferAdmin(admin.ModelAdmin):
     list_display_links = ('__str__', )
     list_filter = ('session', 'subject', '_num_level', ClassDayListFilter, )
     ordering = ('session__key_day_date', '_num_level', )
-    inlines = (ResourceInline, )
+    # inlines = (ResourceClassOfferInline, )
     fieldsets = (
         (None, {
             'fields': (

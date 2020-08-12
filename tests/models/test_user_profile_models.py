@@ -1,7 +1,7 @@
 from django.test import TestCase
 from unittest import skip
-from .helper import SimpleModelTests, AbstractProfileModelTests, UserHC
-from .helper import Location, Session, Subject, ClassOffer, Staff, Student
+from .helper_models import SimpleModelTests, AbstractProfileModelTests, UserHC
+from .helper_models import Location, Session, Subject, ClassOffer, Staff, Student
 from datetime import date, time  # , timedelta, datetime as dt
 
 

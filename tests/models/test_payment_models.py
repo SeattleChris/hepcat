@@ -1,7 +1,7 @@
 from django.test import TestCase  # , TransactionTestCase
 from unittest import skip  # @skip("Not Implemented")
-from .helper import SimpleModelTests, Student, ClassOffer, Payment, Registration, Notify
-# from .helper import Resource, UserHC, Session, Subject
+from .helper_models import SimpleModelTests, Student, ClassOffer, Payment, Registration, Notify
+# from .helper_models import Resource, UserHC, Session, Subject
 
 
 class PaymentModelTests(SimpleModelTests, TestCase):

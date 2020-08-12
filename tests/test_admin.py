@@ -10,14 +10,27 @@ from django.contrib.auth.forms import UserChangeForm  # , UserCreationForm
 from django.contrib.sessions.models import Session as Session_contrib
 from django.contrib.contenttypes.models import ContentType
 # from django.forms import ValidationError
-from classwork.admin import AdminSessionForm, ClassOfferAdmin, SessiontAdmin, ClassDayListFilter, RegistrationAdmin
-from classwork.admin import admin as main_admin
-from classwork.models import Session, ClassOffer, Subject, Registration  # , Location, Profile, Payment
-from users.admin import StaffUserAdmin, StudentUserAdmin, CustomUserAdmin
-from users.models import StaffUser, StudentUser, UserHC as User
 from datetime import date, time, timedelta
 from copy import deepcopy
 from types import GeneratorType
+from django.utils.module_loading import import_string
+AdminSessionForm = import_string('classwork.admin.AdminSessionForm')
+ClassOfferAdmin = import_string('classwork.admin.ClassOfferAdmin')
+SessiontAdmin = import_string('classwork.admin.SessiontAdmin')
+ClassDayListFilter = import_string('classwork.admin.ClassDayListFilter')
+RegistrationAdmin = import_string('classwork.admin.RegistrationAdmin')
+main_admin = import_string('classwork.admin.admin')
+CustomUserAdmin = import_string('users.admin.CustomUserAdmin')
+StaffUserAdmin = import_string('users.admin.StaffUserAdmin')
+StudentUserAdmin = import_string('users.admin.StudentUserAdmin')
+# Location, Profile, Payment
+Session = import_string('classwork.models.Session')
+Subject = import_string('classwork.models.Subject')
+ClassOffer = import_string('classwork.models.ClassOffer')
+Registration = import_string('classwork.models.Registration')
+User = import_string('users.models.UserHC')
+StaffUser = import_string('users.models.StaffUser')
+StudentUser = import_string('users.models.StudentUser')
 
 
 class MockRequest:
