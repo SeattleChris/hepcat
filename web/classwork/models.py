@@ -105,7 +105,7 @@ class Resource(models.Model):
         (2, _('Teacher')),
         (3, _('Admin')),)
     PUBLISH_CHOICES = (
-        (0, _('On Sign-up, before week 1)')),
+        (0, _('On Sign-up, before starting')),
         *[(num, _('After class {}'.format(num))) for num in range(1, settings.SESSION_MAX_WEEKS)],
         (200, _('After completion')))
 
@@ -123,9 +123,9 @@ class Resource(models.Model):
     imagepath = models.ImageField(upload_to='resource/', help_text=_('If an image, upload here'), blank=True, )
     filepath = models.FileField(upload_to='resource/', help_text=_('If a file, upload here'), blank=True, )
     link = models.URLField(max_length=191, help_text=_('External or Internal links go here'), blank=True, )
-    text = models.TextField(help_text=_('Text chunk used in page or email publication'), blank=True, )
+    text = models.TextField(_("Text Content"), help_text=_('Content used in page or email publication'), blank=True, )
     title = models.CharField(max_length=60, )
-    description = models.TextField(blank=True, )
+    description = models.TextField(_("Staff Notes Description"), help_text=_("Only used as staff notes"), blank=True, )
     date_added = models.DateField(auto_now_add=True, )
     date_modified = models.DateField(auto_now=True, )
     objects = ResourceManager()

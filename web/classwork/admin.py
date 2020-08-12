@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.forms import ModelForm, Textarea, ValidationError
+from django.forms import ModelForm, Textarea, TextInput, ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.db import models
 from django.conf import settings
@@ -57,6 +57,16 @@ class ResourceInline(admin.StackedInline):
     formfield_overrides = {models.TextField: {'widget': Textarea(attrs={'cols': 60, 'rows': 2})}, }
 
 
+class AssociateSubjectResource(admin.StackedInline):
+    """ Custom technique for managing which Subjects and ClassOffers are associated to a Resource. """
+    model = Subject
+    fields = (
+        'level',
+    )
+
+    # end class AssociatedResourceInline
+
+
 class ResourceSubjectInline(ResourceInline):
     model = Resource.subjects.through
 
@@ -70,7 +80,42 @@ class StudentClassInline(admin.TabularInline):
     model = Registration
     extra = 2
 
-# Register your models here.
+# ##################################### ModelAdmin below ######################################
+
+
+class ResourceAdmin(admin.ModelAdmin):
+    """ Create and manage assignment of Resource content. """
+    model = Resource
+    list_display = ('__str__', 'content_type', 'assignment', 'user_type', 'avail', 'expire', )
+    list_display_links = ('__str__', )
+    list_filter = ('content_type', 'user_type', 'avail', )
+    fields = (
+        ('subjects', 'classoffers', ),
+        ('title', 'content_type', 'user_type', ),
+        ('avail', 'expire', ),
+        ('imagepath', 'filepath', 'link', ),
+        'text', 'description',
+        )
+
+    def assignment(self, obj):
+        result = [str(ea) for ea in obj.subjects.all()]
+        result += [str(ea) for ea in obj.classoffers.all()]
+        return result
+
+    def get_version_matrix(self):
+        """ Not Implemented. Scaffold hard-coded, this should reflect the class structure parameters set by admin. """
+        num_main_versions = 4
+        main = Subject.VERSION_CHOICES[:num_main_versions]
+        versions = {}
+        versions['main'] = 'Main: ' + ' '.join(ea for key, ea in main)
+        versions['kicking'] = 'Kicking: ' + ' '.join(ea for key, ea in main[1::2])
+        versions['stepping'] = 'Stepping: ' + ' '.join(ea for key, ea in main[0::2])
+        versions['all'] = 'All: ' + ' '.join(ea for key, ea in Subject.VERSION_CHOICES)
+        versions.extend(dict(Subject.VERSION_CHOICES))
+
+        raise NotImplementedError(_("This is a not yet implemented feature of managing subject groups. "))
+
+    # end class ResourceAdmin
 
 
 class SubjectAdmin(admin.ModelAdmin):
@@ -254,6 +299,7 @@ class RegistrationAdmin(admin.ModelAdmin):
 admin.site.site_header = settings.BUSINESS_NAME + ' Admin'
 admin.site.site_title = settings.BUSINESS_NAME + ' Admin'
 admin.site.index_title = 'Admin Home'
+admin.site.register(Resource, ResourceAdmin)
 admin.site.register(Subject, SubjectAdmin)
 admin.site.register(ClassOffer, ClassOfferAdmin)
 admin.site.register(Session, SessiontAdmin)
@@ -261,4 +307,4 @@ admin.site.register(Staff, StaffAdmin)
 admin.site.register(Student, StudentAdmin)
 admin.site.register(Registration, RegistrationAdmin)
 # For the following: each model in the tuple for the first parameter will use default admin.
-admin.site.register((SiteContent, Payment, Location, Resource))
+admin.site.register((SiteContent, Payment, Location))
