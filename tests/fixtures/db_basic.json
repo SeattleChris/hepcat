@@ -684,8 +684,8 @@
     "model": "classwork.resource",
     "pk": 1,
     "fields": {
-        "subject": 1,
-        "classoffer": null,
+        "subjects": [1],
+        "classoffers": [],
         "content_type": "text",
         "user_type": 1,
         "avail": 0,

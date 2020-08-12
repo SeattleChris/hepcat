@@ -285,12 +285,12 @@ class ProfileViewTests(MimicAsView, TestCase):
         first_subj = taken_list[0].subject
         first_res = Resource.objects.create(content_type='text', title="First Subject Resource")
         first_res.save()
-        first_subj.resource_set.add(first_res)
+        first_subj.resources.add(first_res)
         resources = [first_res]
         for ea in taken_list:
             res = Resource.objects.create(content_type='text', title=str(ea) + 'Res')
             res.save()
-            ea.resource_set.add(res)
+            ea.resources.add(res)
             resources.append(res)
         user.student.taken.add(*taken_list)
         expected_subset = {'had': taken_list, 'resources': {'text': resources}}
