@@ -102,6 +102,7 @@ Current Status:
 - [ ] ?Should tests use [django.utils.dateparse](https://docs.djangoproject.com/en/3.0/ref/utils/)?
 - [ ] Regain Admin feature: able to create/attach Resources.
 - [ ] Profile view: current solution does not have access to Resource.get_absolute_url() method for each one.
+- [ ] Update Tests to reflect changing Resource to ManyToMany with Subject and with ClassOffer
 
 ### Optimization and Structure improvements
 
