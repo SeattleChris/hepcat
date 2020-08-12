@@ -301,7 +301,9 @@ class ProfileViewTests(MimicAsView, TestCase):
         actual_resources = actual_context.get('resources', {'text': [{}]})
 
         self.assertQuerysetEqual(actual_had, taken_repr, ordered=False)
-        self.assertListEqual(resources_as_dicts, actual_resources.get('text'))
+        self.assertEqual(len(resources_as_dicts), len(actual_resources.get('text', [])))
+        self.assertTrue(all(ea in resources_as_dicts for ea in actual_resources.get('text', [])))
+        # self.assertSetEqual(set(resources_as_dicts), set(actual_resources.get('text')))
 
     @skip("Not Implemented")
     def test_visit_view(self):
