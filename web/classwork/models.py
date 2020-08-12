@@ -491,7 +491,7 @@ class CustomQuerySet(models.QuerySet):
             ).annotate(
                 end_date=Func(F('start_date'), 7 * (F('session__num_weeks') - 1 + F('skip_weeks')), function='ADDDATE',
                               output_field=DateField()),
-            )
+            )  # TODO: .select_related()
 
     def prepare_get_resources_params(self, **kwargs):
         qs = Resource.objects
@@ -550,13 +550,14 @@ class CustomQuerySet(models.QuerySet):
             Filter these results by 'live=True' to get only currently published, and not expired, results.
             Distinct resources, across ClassOffers, requires '.values()' that does not include these annotations.
         """
-        resource_queryset, start, end, skips, max_weeks, kwargs = self.prepare_get_resources_params(**kwargs)
-        now = Func(function='CURDATE', output_field=models.DateField())
+
+        res_qs, start, end, skips, max_weeks, kwargs = self.prepare_get_resources_params(**kwargs)
+        now = Func(function='UTC_DATE', output_field=models.DateField())
         dates = [Least(start, now)]
         dates += [Func(start, 7 * i, function='ADDDATE', output_field=models.DateField()) for i in range(max_weeks - 1)]
         # dates += [Func(start, 7 * i, function='ADDDATE') for i in range(max_weeks - 1)]
         # MySQL Functions: ADDDATE, DATEDIFF, DAYOFYEAR, TO_DAYS, FROM_DAYS, MAKEDATE, CURDATE
-        resource_queryset = resource_queryset.annotate(
+        res_qs = res_qs.annotate(
                 publish=Case(
                     *[When(Q(avail=num), then=date) for num, date in enumerate(dates)],
                     default=end,  # Uses default if 'after class ends' was selected option (value = 200).
@@ -577,15 +578,21 @@ class CustomQuerySet(models.QuerySet):
                     default=False,
                     output_field=models.BooleanField()),
             )
+
+        temp = None if isinstance(end, OuterRef) else res_qs.values('publish', 'days_since', 'live', 'avail', 'expire')
+        if temp and any(ea.get('avail', 0) == 3 for ea in temp):
+            print("============================ GET RESOURCES ANNOTATE ===============================")
+            print(start)
+            print(temp)
         #    ).order_by('-publish')  # Most recent first. May be overridden later, depending on how this data is used.
         if live:
-            resource_queryset = resource_queryset.filter(live=True)
+            res_qs = res_qs.filter(live=True)
         elif kwargs.get('live_by_date', None):
-            resource_queryset = resource_queryset.filter(
+            res_qs = res_qs.filter(
                 Q(expire_date__isnull=True) | Q(expire_date__gte=now),
                 publish__lte=now
             )
-        return resource_queryset
+        return res_qs
 
     def resources(self, **kwargs):
         """ Return a queryset.values() of Resource objects that are alive and connected to the current queryset. """
@@ -654,12 +661,12 @@ class ClassOffer(models.Model):
     skip_tagline = models.CharField(max_length=46, blank=True, )
     date_added = models.DateField(auto_now_add=True, )
     date_modified = models.DateField(auto_now=True, )
-    # resource_set exits, but only directly connected Resources, not those connected through Subject.
+    # resources exits, but only directly connected Resources, not those connected through Subject.
     # # future: class_resources exists, but only includes directly connected Resources, but not those through Subject.
     objects = ClassOfferManager()
 
     def model_resources(self, live=False):
-        """ Expanding the resource_set to include resources attached to the Subject of the given ClassOffer. """
+        """ Include not only self.resources, but also self.subject.resources. """
         # # user = self.request.user
         # # user_val, user_roles = user.user_roles
         # # user_type = 3 if user_val >= 4 else user_val
