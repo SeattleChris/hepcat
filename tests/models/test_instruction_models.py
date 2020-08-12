@@ -48,7 +48,7 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
                 res.save()
                 res_count += 1
                 expected_resources.append(res)
-                subj.resource_set.add(res, res_lvl)
+                subj.resources.add(res, res_lvl)
                 co = ClassOffer.objects.create(subject=subj, session=sess, start_time=(time(17, 0)))
                 co.save()
                 avail = 0 if avail + 1 > sess.num_weeks else avail + 1
@@ -67,13 +67,17 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         user = UserHC.objects.create_user(email="fake@faker.com", password=1234, first_name='fa', last_name='la')
         user.save()
         student = user.student
-        now = date.today()  # now = dt.utcnow().date()
+        # now = date.today()
+        utcnow = dt.utcnow()
+        now = date(utcnow.year, utcnow.month, utcnow.day)
+        now = dt.combine(date.today(), time(0, 0))
         cur_week = 3
         start = now - timedelta(days=7*(cur_week - 1))
+        start_string = start.strftime('%Y-%m-%d')
         sess_cur = Session.objects.create(name="Sess Cur", key_day_date=start, publish_date=start - timedelta(days=14))
         sess_cur.save()
-        if start != sess_cur.key_day_date:
-            raise ArithmeticError(f"Session key_day_date set to {start}, but value is {sess_cur.key_day_date} ")
+        if start_string != sess_cur.key_day_date.strftime('%Y-%m-%d'):
+            raise ArithmeticError(f"Session key_day_date set to {start_string}, but value is {sess_cur.key_day_date} ")
         res_total_count = Resource.objects.count()
         res_expected = []
         avail, expire, res_goal_count = 0, 0, 0
@@ -101,7 +105,7 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
                     expire=expire)
                 res.save()
                 res_total_count += 1
-                subj.resource_set.add(res, res_lvl)
+                subj.resources.add(res, res_lvl)
                 avail_week = 1 if avail == 0 else avail
                 if avail <= cur_week and (expire == 0 or (avail_week + expire) >= cur_week):
                     res_goal_count += 1 if student_has_level else 2
@@ -133,7 +137,7 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         classoffers = student.taken.all()
         expected_res = []
         for ea in list(classoffers) + [ea.subject for ea in classoffers]:
-            expected_res.extend([res for res in ea.resource_set.all() if res not in expected_res])
+            expected_res.extend([res for res in ea.resources.all() if res not in expected_res])
         for res in expected_res:
             res.expire = 0
             res.save()
@@ -163,7 +167,7 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
                     expire=expire)
                 res.save()
                 res_count += 1
-                subj.resource_set.add(res, res_lvl)
+                subj.resources.add(res, res_lvl)
                 co = ClassOffer.objects.create(subject=subj, session=sess, start_time=(time(17, 0)))
                 co.save()
                 classoffer_count += 1
@@ -190,7 +194,7 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         classoffers = ClassOffer.objects.all()
         expected_res = []
         for ea in list(classoffers) + [ea.subject for ea in classoffers]:
-            expected_res.extend([res for res in ea.resource_set.all() if res not in expected_res])
+            expected_res.extend([res for res in ea.resources.all() if res not in expected_res])
         for res in expected_res:
             res.expire = 0
             res.save()
@@ -248,7 +252,7 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         new_res_expired.save()
         new_res_live.save()
         new_co.save()
-        subj.resource_set.add(new_res_expired, new_res_live)
+        subj.resources.add(new_res_expired, new_res_live)
         expected_res = [new_res_live]
         res_by_classoffer = ClassOffer.objects.get_resources(model=new_co, live=False, live_by_date=True)
         all_res_by_classoffer = ClassOffer.objects.get_resources(model=new_co, live=False)
@@ -284,7 +288,7 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
                 )
                 res.save()
                 res_count += 1
-                subj.resource_set.add(res)
+                subj.resources.add(res)
                 co = ClassOffer.objects.create(subject=subj, session=sess, start_time=(time(17, 0)))
                 co.save()
                 while avail < sess.num_weeks:
@@ -298,7 +302,7 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
                     )
                     res.save()
                     res_count += 1
-                    subj.resource_set.add(res)
+                    subj.resources.add(res)
                 expected_res.append(res)
         resource_count = Resource.objects.all().count()
         actual_res = ClassOffer.objects.most_recent_resource_per_classoffer().values('recent_resource')
@@ -325,10 +329,10 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
     def test_model_resources(self):
         model = ClassOffer.objects.first()
         subject = model.subject
-        class_resource_count = model.resource_set.count()
-        subj_resource_count = subject.resource_set.count()
+        class_resource_count = model.resources.count()
+        subj_resource_count = subject.resources.count()
         resources_count = Resource.objects.count()
-        expected_resources = list(set(list(model.resource_set.all()) + list(subject.resource_set.all())))
+        expected_resources = list(set(list(model.resources.all()) + list(subject.resources.all())))
 
         level_choice = Subject.LEVEL_CHOICES[1][0]
         level_choice = Subject.LEVEL_CHOICES[0][0] if level_choice == subject.level else level_choice
@@ -337,15 +341,15 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         other_model = ClassOffer.objects.create(subject=other_subj, session=model.session, start_time=time(17, 0))
         other_subj_res = Resource.objects.create(content_type='text', avail=0, expire=0, title="Other Subject Res")
         other_co_res = Resource.objects.create(content_type='text', avail=0, expire=0, title="Other ClassOffer Res")
-        other_subj.resource_set.add(other_subj_res)
-        other_model.resource_set.add(other_co_res)
-        other_joined = list(other_subj.resource_set.all()) + list(other_model.resource_set.all())
+        other_subj.resources.add(other_subj_res)
+        other_model.resources.add(other_co_res)
+        other_joined = list(other_subj.resources.all()) + list(other_model.resources.all())
         resources_count += 2
 
         subj_res = Resource.objects.create(content_type='text', avail=0, expire=0, title="Subject Res")
         co_res = Resource.objects.create(content_type='text', avail=0, expire=0, title="ClassOffer Res")
-        subject.resource_set.add(subj_res)
-        model.resource_set.add(co_res)
+        subject.resources.add(subj_res)
+        model.resources.add(co_res)
         expected_resources.extend([subj_res, co_res])
         actual_resources = model.model_resources(live=False).all()
         subj_resource_count += 1
@@ -353,14 +357,14 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         resources_count += 2
 
         self.assertEqual(resources_count, Resource.objects.count())
-        self.assertEqual(subj_resource_count, subject.resource_set.count())
-        self.assertEqual(class_resource_count, model.resource_set.count())
+        self.assertEqual(subj_resource_count, subject.resources.count())
+        self.assertEqual(class_resource_count, model.resources.count())
         self.assertEqual(subj_resource_count + class_resource_count, len(actual_resources))
         self.assertTrue(all(ea in expected_resources for ea in actual_resources))
         self.assertTrue(all(ea in other_joined for ea in other_model.model_resources(live=False).all()))
         # self.assertSetEqual(set(expected_resources), set(actual_resources))
         # self.assertSetEqual(
-        #     set(other_subj.resource_set.all() + other_model.resource_set.all()),
+        #     set(other_subj.resources.all() + other_model.resources.all()),
         #     set(other_model.model_resources(live=False).all())
         #     )
 
