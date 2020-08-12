@@ -67,13 +67,17 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         user = UserHC.objects.create_user(email="fake@faker.com", password=1234, first_name='fa', last_name='la')
         user.save()
         student = user.student
-        now = date.today()  # now = dt.utcnow().date()
+        # now = date.today()
+        utcnow = dt.utcnow()
+        now = date(utcnow.year, utcnow.month, utcnow.day)
+        now = dt.combine(date.today(), time(0, 0))
         cur_week = 3
         start = now - timedelta(days=7*(cur_week - 1))
+        start_string = start.strftime('%Y-%m-%d')
         sess_cur = Session.objects.create(name="Sess Cur", key_day_date=start, publish_date=start - timedelta(days=14))
         sess_cur.save()
-        if start != sess_cur.key_day_date:
-            raise ArithmeticError(f"Session key_day_date set to {start}, but value is {sess_cur.key_day_date} ")
+        if start_string != sess_cur.key_day_date.strftime('%Y-%m-%d'):
+            raise ArithmeticError(f"Session key_day_date set to {start_string}, but value is {sess_cur.key_day_date} ")
         res_total_count = Resource.objects.count()
         res_expected = []
         avail, expire, res_goal_count = 0, 0, 0
