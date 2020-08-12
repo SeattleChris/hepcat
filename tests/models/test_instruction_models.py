@@ -70,11 +70,11 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         now = date.today()
         cur_week = 3
         start = now - timedelta(days=7*(cur_week - 1))
-        start_string = start.strftime('%Y-%m-%d')
+        start_string = start.strftime('%Y-%m-%d')  # TODO: Remove after confirmation
         day = start.weekday()
         sess_cur = Session.objects.create(name="Sess Cur", key_day_date=start, publish_date=start - timedelta(days=14))
         sess_cur.save()
-        if start_string != sess_cur.key_day_date.strftime('%Y-%m-%d'):
+        if start_string != sess_cur.key_day_date.strftime('%Y-%m-%d'):  # TODO: Remove after confirmation
             raise ArithmeticError(f"Session key_day_date set to {start_string}, but value is {sess_cur.key_day_date} ")
         res_total_count = Resource.objects.count()
         res_expected = []
