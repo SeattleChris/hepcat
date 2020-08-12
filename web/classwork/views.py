@@ -201,23 +201,30 @@ class ProfileView(DetailView):
         profile = getattr(user, 'profile', user.staff if user.is_staff else getattr(user, 'student', None))
         return profile
 
+    def make_resource_dict(self, co_connected):
+        # TODO: Revisit the following for better dictionary creation.
+        ct = {ea[0]: [] for ea in Resource.CONTENT_CHOICES}
+        [ct[ea.get('content_type', None)].append(ea) for ea in co_connected.resources().all()]
+        # return is a dict that only has the ct keys if the values have data.
+        return {key: vals for (key, vals) in ct.items() if len(vals) > 0}
+
     def get_context_data(self, **kwargs):
         """ Modify the context """
         context = super().get_context_data(**kwargs)
         # print('===== ProfileView get_context_data ======')
+        context.setdefault('had', None)
+        context.setdefault('taught', None)
+        context.setdefault('resources', {})
+        context.setdefault('teacher_resources', {})
         student = getattr(self.request.user, 'student', None)
+        staff = getattr(self.request.user, 'staff', None)
         if student:
-            context['had'] = student.taken.all()  # Has dates since ClassOffer manager annotates for all querysets.
-            # TODO: Revisit the following for better dictionary creation.
-            ct = {ea[0]: [] for ea in Resource.CONTENT_CHOICES}
-            [ct[ea.get('content_type', None)].append(ea) for ea in student.taken.resources().all()]
-            context['resources'] = {key: vals for (key, vals) in ct.items() if len(vals) > 0}
-            # context['resources'] only has the ct keys if the values have data.
-        else:
-            context['had'] = None
-            context['resources'] = {}
+            context['had'] = student.taken.all()
+            context['resources'] = self.make_resource_dict(student.taken)
+        if staff:
+            context['taught'] = staff.taught.all()
+            context['teacher_resources'] = self.make_resource_dict(staff.taught)
         return context
-    # end class ProfileView
 
 
 class RegisterView(CreateView):
