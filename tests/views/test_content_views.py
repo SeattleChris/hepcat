@@ -374,19 +374,19 @@ class ProfileViewTests(MimicAsView, TestCase):
         self.client_visit_view(good_text_2)
 
 
-@skip("Not Implemented")
+@skip("View does not need tests for its basic implementation. Revisit if features extended.")
 class LocationListViewTests(MimicAsView, TestCase):
     url_name = 'location_list'
     viewClass = LocationListView = import_string('classwork.views.LocationListView')
 
 
-@skip("Not Implemented")
+@skip("View does not need tests for its basic implementation. Revisit if features extended.")
 class LocationDetailViewTests(MimicAsView, TestCase):
     url_name = 'location_detail'
     viewClass = LocationDetailView = import_string('classwork.views.LocationDetailView')
 
 
-@skip("Not Implemented")
+@skip("View does not need tests for its basic implementation. Revisit if features extended.")
 class ResourceDetailViewTests(MimicAsView, TestCase):
     url_name = 'location_list'
     viewClass = ResourceDetailView = import_string('classwork.views.ResourceDetailView')
