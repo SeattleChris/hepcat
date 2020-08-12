@@ -67,13 +67,11 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         user = UserHC.objects.create_user(email="fake@faker.com", password=1234, first_name='fa', last_name='la')
         user.save()
         student = user.student
-        # now = date.today()
-        utcnow = dt.utcnow()
-        now = date(utcnow.year, utcnow.month, utcnow.day)
-        now = dt.combine(date.today(), time(0, 0))
+        now = date.today()
         cur_week = 3
         start = now - timedelta(days=7*(cur_week - 1))
         start_string = start.strftime('%Y-%m-%d')
+        day = start.weekday()
         sess_cur = Session.objects.create(name="Sess Cur", key_day_date=start, publish_date=start - timedelta(days=14))
         sess_cur.save()
         if start_string != sess_cur.key_day_date.strftime('%Y-%m-%d'):
@@ -94,7 +92,7 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
             for ver, _ in Subject.VERSION_CHOICES:
                 subj = Subject.objects.create(title='_'.join((lvl, ver)), level=lvl, version=ver)
                 subj.save()
-                co = ClassOffer.objects.create(subject=subj, session=sess_cur, start_time=(time(17, 0)))
+                co = ClassOffer.objects.create(subject=subj, session=sess_cur, start_time=(time(17, 0)), class_day=day)
                 co.save()
                 student.taken.add(co)
                 res = Resource.objects.create(

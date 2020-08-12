@@ -552,7 +552,7 @@ class CustomQuerySet(models.QuerySet):
         """
 
         res_qs, start, end, skips, max_weeks, kwargs = self.prepare_get_resources_params(**kwargs)
-        now = Func(function='UTC_DATE', output_field=models.DateField())
+        now = Func(function='CURDATE', output_field=models.DateField())  # TODO: decide CURDATE or UTC_DATE
         dates = [Least(start, now)]
         dates += [Func(start, 7 * i, function='ADDDATE', output_field=models.DateField()) for i in range(max_weeks - 1)]
         # dates += [Func(start, 7 * i, function='ADDDATE') for i in range(max_weeks - 1)]
@@ -578,13 +578,12 @@ class CustomQuerySet(models.QuerySet):
                     default=False,
                     output_field=models.BooleanField()),
             )
-
-        temp = None if isinstance(end, OuterRef) else res_qs.values('publish', 'days_since', 'live', 'avail', 'expire')
-        if temp and any(ea.get('avail', 0) == 3 for ea in temp):
-            print("============================ GET RESOURCES ANNOTATE ===============================")
-            print(start)
-            print(temp)
-        #    ).order_by('-publish')  # Most recent first. May be overridden later, depending on how this data is used.
+        # tmp = None if isinstance(end, OuterRef) else res_qs.values('publish', 'days_since', 'live', 'avail', 'expire')
+        # if tmp and any(ea.get('avail', 0) == 3 for ea in tmp):
+        #     print("============================ GET RESOURCES ANNOTATE ===============================")
+        #     print(start)
+        #     print(tmp)
+        # #    ).order_by('-publish')  # Most recent first. May be overridden later, depending on how this data is used.
         if live:
             res_qs = res_qs.filter(live=True)
         elif kwargs.get('live_by_date', None):

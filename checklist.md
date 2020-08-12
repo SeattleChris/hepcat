@@ -104,8 +104,11 @@ Current Status:
 - [ ] Profile view: current solution does not have access to Resource.get_absolute_url() method for each one.
 - [ ] Update Tests to reflect changing Resource to ManyToMany with Subject and with ClassOffer
 - [ ] Datetime math issues
-  - [x] Database current 'date' math should be in utc.
-  - [ ] Setting a Date (no time) for a Session should not get messed up by timezone issues.
+  - [?] Database current 'date' math should be in utc.
+  - [?] Setting a Date (no time) for a Session should not get messed up by timezone issues.
+    - [x] After midnight, now=date.today() or dt.combine(now, time(0)), with either CURDATE or UTC_DATE.
+    - [ ] Afternoon:
+    - [ ] Evening:
 
 ### Optimization and Structure improvements
 
