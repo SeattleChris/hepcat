@@ -715,6 +715,33 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         self.assertEquals(model.num_level, expected)
 
 
+class SessionModelTests(SimpleModelTests, TestCase):
+    Model = Session
+    detail_url_name = 'classoffer_display_session'
+    detail_admin_url_name = 'checkin_session'
+    repr_dict = {'Session': 'name'}
+    str_list = ['name']
+    defaults = {'name': "test_model"}
+
+    def test_get_absolute_url(self, url_field='__str__'):
+        super().test_get_absolute_url(url_field=url_field)
+
+    def test_get_admin_absolute_url(self, url_field='__str__'):
+        from django.urls import reverse
+
+        fields = self.get_field_info()
+        model = self.create_model(create_method_name=self.create_method_name, **fields)
+        if self.detail_admin_url_name is None:
+            with self.assertRaises(AttributeError):
+                url = model.get_admin_absolute_url()
+            return
+        url = model.get_admin_absolute_url()
+        arg = getattr(model, url_field, None)
+        arg = arg() if callable(arg) else arg
+        expected = reverse(self.detail_admin_url_name, args=[arg])
+        self.assertEquals(url, expected)
+
+
 class SessionCoverageTests(TransactionTestCase):
     fixtures = ['tests/fixtures/db_basic.json', 'tests/fixtures/db_hidden.json']
 
