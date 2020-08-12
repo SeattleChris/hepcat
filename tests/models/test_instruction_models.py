@@ -8,6 +8,7 @@ from datetime import date, time, timedelta, datetime as dt
 
 class SubjectModelTests(SimpleModelTests, TestCase):
     Model = Subject
+    # detail_url_name = 'subject_detail'  # Does Not Exist
     repr_dict = {'Subject': 'title', 'Level': 'level', 'Version': 'version'}
     str_list = ['_str_slug']
     defaults = {'title': 'test model'}
@@ -16,6 +17,7 @@ class SubjectModelTests(SimpleModelTests, TestCase):
 class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
     fixtures = ['tests/fixtures/db_basic.json', 'tests/fixtures/db_hidden.json']
     Model = ClassOffer
+    detail_url_name = 'classoffer_detail'
     repr_dict = {'Class Id': 'id', 'Subject': 'subject', 'Session': 'session'}
     str_list = ['subject', 'session']
     defaults = {}

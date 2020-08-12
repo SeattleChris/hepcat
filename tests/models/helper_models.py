@@ -1,6 +1,7 @@
 from django.db.models.fields import NOT_PROVIDED
 from django.db.models import CharField, TextField, URLField, DateField, TimeField
 from django.db.models import PositiveSmallIntegerField, SmallIntegerField, base as db_models_base
+from django.urls import reverse
 from datetime import date, time  # , timedelta
 from django.utils.module_loading import import_string
 UserHC = import_string('users.models.UserHC')
@@ -19,6 +20,7 @@ Notify = import_string('classwork.models.Notify')
 
 class SimpleModelTests:
     Model = None
+    detail_url_name = None
     repr_dict = {'ModelName': 'name'}
     str_list = ['name']
     defaults = {'name': "test model"}
@@ -122,9 +124,23 @@ class SimpleModelTests:
         self.assertEqual(model.__str__(), str_value)
         self.assertEqual(model.__repr__(), repr_value)
 
+    def test_get_absolute_url(self, url_field='id'):
+        fields = self.get_field_info()
+        model = self.create_model(create_method_name=self.create_method_name, **fields)
+        if self.detail_url_name is None:
+            with self.assertRaises(AttributeError):
+                url = model.get_absolute_url()
+            return
+        url = model.get_absolute_url()
+        arg = getattr(model, url_field, None)
+        arg = arg() if callable(arg) else arg
+        expected = reverse(self.detail_url_name, args=[arg])
+        self.assertEquals(url, expected)
+
 
 class AbstractProfileModelTests(SimpleModelTests):
     """ Extends SimpleModelTests with common tests for models based on the AbstractProfile model.  """
+    detail_url_name = 'profile_user'
     repr_dict = {'Profile': 'full_name', 'User id': 'user_id', }
     str_list = ['full_name', ]
     defaults = {'email': 'fake@site.com', 'password': '1234', 'first_name': 'fa', 'last_name': 'fake', }
@@ -161,6 +177,9 @@ class AbstractProfileModelTests(SimpleModelTests):
         expected = user.get_full_name()
         self.assertEqual(model.user, user)
         self.assertEqual(model.get_full_name(), expected)
+
+    def test_get_absolute_url(self, url_field='user_id'):
+        super().test_get_absolute_url(url_field=url_field)
 
 
 # class ExampleTests(TestCase):
