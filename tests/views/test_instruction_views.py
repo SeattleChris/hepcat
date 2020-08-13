@@ -48,14 +48,18 @@ class ClassOfferListViewTests(MimicAsView, TestCase):
         sessions = decide_session(sess=display_session, display_date=display_date)
         context_sessions = ', '.join([ea.name for ea in sessions])
         expected_subset = {'sessions': context_sessions}
-        display_session_subset = {'display_session': None}
-        display_date_subset = {'display_date': None}
+        display_session_subset = {'display_session': display_session}
+        display_date_subset = {'display_date': display_date}
         actual = self.view.get_context_data()
 
         self.assertDictContainsSubset(expected_subset, actual)
         self.assertDictContainsSubset(display_session_subset, actual)
         self.assertDictContainsSubset(display_date_subset, actual)
 
+    def test_get_context_data_when_session_is_list(self, display_date=None):
+        display_session = [co_list[0].session for sess_name, co_list in self.classoffers.items()]
+        display_date = display_date or self.view.kwargs.get('display_date', None)
+        self.test_get_context_data(display_session=display_session, display_date=display_date)
 
 @skip("Not Implemented")
 class CheckinListViewTests(MimicAsView, TestCase):
