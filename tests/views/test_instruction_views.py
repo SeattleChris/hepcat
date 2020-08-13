@@ -56,13 +56,9 @@ class ClassOfferListViewTests(MimicAsView, TestCase):
         self.assertDictContainsSubset(display_session_subset, actual)
         self.assertDictContainsSubset(display_date_subset, actual)
 
-    def test_get_context_data_when_session_is_list(self, display_date=None):
-        display_session = [co_list[0].session for sess_name, co_list in self.classoffers.items()]
-        display_date = display_date or self.view.kwargs.get('display_date', None)
-        self.test_get_context_data(display_session=display_session, display_date=display_date)
-
 
 class CheckinListViewTests(MimicAsView, TestCase):
+    """ Using MimicAsView, with three sessions and the viewClass created with a GET request. """
     url_name = 'checkin'
     viewClass = import_string('classwork.views.Checkin')
     query_order_by = viewClass.query_order_by
@@ -93,11 +89,11 @@ class CheckinListViewTests(MimicAsView, TestCase):
         self.assertSetEqual(set(transform(ea) for ea in view_queryset.all()), set(model_list))
 
     def test_get_context_data(self, display_session=None, display_date=None):
-        self.view.object_list = self.view.get_queryset()  # This step normally done in self.view.get()
         display_session = display_session or self.view.kwargs.get('display_session', None)
         display_date = display_date or self.view.kwargs.get('display_date', None)
         self.view.kwargs['display_session'] = display_session
         self.view.kwargs['display_date'] = display_date
+        self.view.object_list = self.view.get_queryset()  # This step normally done in self.view.get()
         sessions = decide_session(sess=display_session, display_date=display_date)
         context_sessions = ', '.join([ea.name for ea in sessions])
         expected_subset = {'sessions': context_sessions}
@@ -109,6 +105,20 @@ class CheckinListViewTests(MimicAsView, TestCase):
         self.assertDictContainsSubset(display_session_subset, actual)
         self.assertDictContainsSubset(display_date_subset, actual)
 
+    def test_get_context_data_with_display_session_value(self, display_date=None):
+        display_session = [getattr(co_list[0].session, 'name', '') for sess_name, co_list in self.classoffers.items()]
+        display_session = ','.join(display_session)
+        display_date = display_date or self.view.kwargs.get('display_date', None)
+        self.test_get_context_data(display_session=display_session, display_date=display_date)
+
+    def test_get_context_data_with_display_date_value(self, display_session=None):
+        """ Check that we still get a result even if all Sessions have expired. """
+        from datetime import timedelta
+        display_session = display_session or self.view.kwargs.get('display_session', None)
+        last_sess_co = self.classoffers['new_sess']
+        last_sess = getattr(last_sess_co[0], 'session', None)
+        display_date = str(last_sess.expire_date + timedelta(days=2))
+        self.test_get_context_data(display_session=display_session, display_date=display_date)
 
 
 @skip("Not Implemented Feature")

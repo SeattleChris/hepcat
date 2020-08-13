@@ -128,5 +128,9 @@ class CurrentSessionSelection(TransactionTestCase):
         self.assertIn(sess, result)
         self.assertTrue(len(result) == 2)
 
+    def test_raise_error_for_non_string_input(self):
+        """ The 'sess' (and 'display_date') parameters are expected to be strings. """
+        with self.assertRaises(TypeError):
+            decide_session(sess=['this', 'is', 'not', 'a', 'string'])
 
 # end test_decide_session file
