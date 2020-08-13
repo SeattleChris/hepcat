@@ -107,6 +107,7 @@ class ClassOfferListView(ListView):
     context_object_name = 'classoffers'
     display_session = None  # 'all' or <start_month>_<year> as stored in DB Session.name
     display_date = None     # <year>-<month>-<day>
+    query_order_by = ('session__key_day_date', '_num_level', )
 
     def get_queryset(self):
         """ We can limit the classes list by session, what is published on a given date, or currently published. """
@@ -115,7 +116,7 @@ class ClassOfferListView(ListView):
         sessions = decide_session(sess=display_session, display_date=display_date)
         self.kwargs['sessions'] = sessions
         q = ClassOffer.objects.filter(session__in=sessions)
-        q = q.order_by('session__key_day_date', '_num_level') if len(sessions) > 1 else q.order_by('_num_level')
+        q = q.order_by(*self.query_order_by) if getattr(self, 'query_order_by', None) else q
         return q
 
     def get_context_data(self, **kwargs):
@@ -154,20 +155,20 @@ class Checkin(ListView):
         """ Determine Session filter parameters. Reference to previous and next Session if feasible. """
         # print("============ Checkin.get_context_data ================")
         context = super().get_context_data(**kwargs)
-        sessions = self.kwargs.pop('sessions', None)
+        sessions = self.kwargs.pop('sessions', [])
         context['sessions'] = ', '.join([ea.name for ea in sessions])
         context['display_session'] = self.kwargs.pop('display_session', None)
         context['display_date'] = self.kwargs.pop('display_date', None)
         earliest, latest = None, None
         if context['display_session'] != 'all':
-            if isinstance(sessions, list):  # TODO: Find Django function to order model instances.
+            if isinstance(sessions, list) and len(sessions):  # TODO: Find Django function to order model instances.
                 earliest = sessions[0]
                 latest = sessions[-1]
             else:
                 earliest = sessions.earliest('key_day_date')
                 latest = sessions.latest('key_day_date')
-        context['prev_session'] = earliest.prev_session if earliest else None
-        context['next_session'] = latest.next_session if latest else None
+        context['prev_session'] = getattr(earliest, 'prev_session', None)  # earliest.prev_session if earliest else None
+        context['next_session'] = getattr(latest, 'next_session', None)    # latest.next_session if latest else None
         return context
 
 
