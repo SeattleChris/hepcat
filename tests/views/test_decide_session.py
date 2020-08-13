@@ -116,11 +116,12 @@ class CurrentSessionSelection(TransactionTestCase):
         self.assertCountEqual(all_sess, result)
 
     def test_requested_multiple_session_names(self):
-        """ The 'sess' parameter can be a list of session names, return all of them """
+        """ The 'sess' parameter can be a string of comma-seperated session names, return all of them """
         initial = Session.objects.first()
         names = ['defaults']
         sess = Session.objects.create(name=names[0])
-        names.append(initial.name)
+        names.append(getattr(initial, 'name', ''))
+        names = ','.join(names)
         result = decide_session(sess=names)
 
         self.assertIn(initial, result)

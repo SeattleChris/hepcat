@@ -31,8 +31,11 @@ def decide_session(sess=None, display_date=None):
     elif display_date:
         raise SyntaxError(_("You can't filter by both Session and Display Date"))
     elif sess != 'all':
-        if not isinstance(sess, list):
-            sess = [sess]
+        if not isinstance(sess, str):
+            raise TypeError(_("Parameter 'sess' expected a string with possible comma-seperated values. "))
+        sess = sess.split(',')
+        # if not isinstance(sess, list):
+        #     sess = [sess]
         query = query.filter(name__in=sess)
     sess_data = query.all()
     if not sess_data and not sess:
