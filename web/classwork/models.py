@@ -22,8 +22,6 @@ from datetime import date, timedelta, datetime as dt
 # TODO: Implement calling resource_filepath for resource uploads.
 
 # TODO: Use ForeignKey.limit_choices_to where appropriate.
-# TODO: Update to appropriately use ForeignKey.related_name
-# TODO: Decide if any ForeignKey should actually be ManytoManyField (incl above)
 # TODO: Add @staff_member_required decorator to admin views?
 
 
@@ -87,10 +85,6 @@ class Resource(models.Model):
     # TODO: does it require an admin/teacher response before released?
     # TODO: Add sending email feature.
 
-    # MODEL_CHOICES = (
-    #     ('Subject', _('Subject')),
-    #     ('ClassOffer', _('ClassOffer')),
-    #     ('Other', _('Other')))
     CONTENT_CHOICES = (
         ('url', _('External Link')),
         ('file', _('Formatted Text File')),
@@ -110,11 +104,8 @@ class Resource(models.Model):
         (200, _('After completion')))
 
     # id = auto-created
-    # related_type = models.CharField(max_length=15, default='Subject', choices=MODEL_CHOICES, editable=False, )
     subjects = models.ManyToManyField('Subject', related_name='resources', blank=True, )
-    # subject = models.ForeignKey('Subject', on_delete=models.SET_NULL, null=True, blank=True, )
     classoffers = models.ManyToManyField('ClassOffer', related_name='resources', blank=True, )
-    # classoffer = models.ForeignKey('ClassOffer', on_delete=models.SET_NULL, null=True, blank=True, )
     content_type = models.CharField(max_length=15, choices=CONTENT_CHOICES, )
     user_type = models.PositiveSmallIntegerField(default=1, choices=USER_CHOICES, help_text=_('Who is this for?'), )
     avail = models.PositiveSmallIntegerField(default=0, choices=PUBLISH_CHOICES,
@@ -142,12 +133,6 @@ class Resource(models.Model):
     #         'email': self.text
     #     }
     #     return content_path[self.content_type]
-
-    # def save(self, *args, **kwargs):
-    #     if self.subject: self.related_type = 'Subject'  # noqa e701
-    #     elif self.classoffer: self.related_type = 'ClassOffer'  # noqa e701
-    #     else: self.related_type = 'Other'  # noqa e701
-    #     super().save(*args, **kwargs)
 
     def get_absolute_url(self):
         return reverse('resource_detail', args=[str(self.id)])
@@ -491,7 +476,7 @@ class CustomQuerySet(models.QuerySet):
             ).annotate(
                 end_date=Func(F('start_date'), 7 * (F('session__num_weeks') - 1 + F('skip_weeks')), function='ADDDATE',
                               output_field=DateField()),
-            )  # TODO: .select_related()
+            ).select_related()
 
     def prepare_get_resources_params(self, **kwargs):
         qs = Resource.objects

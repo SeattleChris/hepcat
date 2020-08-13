@@ -99,14 +99,17 @@ class MimicAsView:
         method.init_kwargs = self.kwargs
         return method
 
-    def setup_three_sessions(self):
+    def setup_three_sessions(self, sess_names=('old_sess', 'curr_sess', 'new_sess', )):
+        """ Each Session of ClassOffer models are ordered by Subject.LEVEL_ORDER then BY Subject.LEVEL_CHOICES. """
+        levels = list(Subject.LEVEL_ORDER.keys())
+        levels += [lvl for lvl, display in Subject.LEVEL_CHOICES if lvl not in levels]
         levels = [lvl for lvl, display in Subject.LEVEL_CHOICES]
         ver = Subject.VERSION_CHOICES[0][0]
         subjs = [Subject.objects.create(level=lvl, version=ver, title='_'.join((lvl, ver))) for lvl in levels]
         dur = settings.DEFAULT_SESSION_WEEKS
-        now = dt.utcnow().date()
+        # now = dt.utcnow().date()
+        now = dt.now().date()
         class_day = now.weekday()
-        sess_names = ['old_sess', 'curr_sess', 'new_sess']
         classoffers = {}
         for num, name in enumerate(sess_names):
             key_date = now + timedelta(days=7*dur*(num - 1))

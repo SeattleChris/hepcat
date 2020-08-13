@@ -31,8 +31,11 @@ def decide_session(sess=None, display_date=None):
     elif display_date:
         raise SyntaxError(_("You can't filter by both Session and Display Date"))
     elif sess != 'all':
-        if not isinstance(sess, list):
-            sess = [sess]
+        if not isinstance(sess, str):
+            raise TypeError(_("Parameter 'sess' expected a string with possible comma-seperated values. "))
+        sess = sess.split(',')
+        # if not isinstance(sess, list):
+        #     sess = [sess]
         query = query.filter(name__in=sess)
     sess_data = query.all()
     if not sess_data and not sess:
@@ -107,6 +110,7 @@ class ClassOfferListView(ListView):
     context_object_name = 'classoffers'
     display_session = None  # 'all' or <start_month>_<year> as stored in DB Session.name
     display_date = None     # <year>-<month>-<day>
+    query_order_by = ('session__key_day_date', '_num_level', )
 
     def get_queryset(self):
         """ We can limit the classes list by session, what is published on a given date, or currently published. """
@@ -115,7 +119,7 @@ class ClassOfferListView(ListView):
         sessions = decide_session(sess=display_session, display_date=display_date)
         self.kwargs['sessions'] = sessions
         q = ClassOffer.objects.filter(session__in=sessions)
-        q = q.order_by('session__key_day_date', '_num_level') if len(sessions) > 1 else q.order_by('_num_level')
+        q = q.order_by(*self.query_order_by) if getattr(self, 'query_order_by', None) else q
         return q
 
     def get_context_data(self, **kwargs):
@@ -154,20 +158,20 @@ class Checkin(ListView):
         """ Determine Session filter parameters. Reference to previous and next Session if feasible. """
         # print("============ Checkin.get_context_data ================")
         context = super().get_context_data(**kwargs)
-        sessions = self.kwargs.pop('sessions', None)
+        sessions = self.kwargs.pop('sessions', [])
         context['sessions'] = ', '.join([ea.name for ea in sessions])
         context['display_session'] = self.kwargs.pop('display_session', None)
         context['display_date'] = self.kwargs.pop('display_date', None)
         earliest, latest = None, None
         if context['display_session'] != 'all':
-            if isinstance(sessions, list):  # TODO: Find Django function to order model instances.
+            if isinstance(sessions, list) and len(sessions):  # TODO: Find Django function to order model instances.
                 earliest = sessions[0]
                 latest = sessions[-1]
             else:
                 earliest = sessions.earliest('key_day_date')
                 latest = sessions.latest('key_day_date')
-        context['prev_session'] = earliest.prev_session if earliest else None
-        context['next_session'] = latest.next_session if latest else None
+        context['prev_session'] = getattr(earliest, 'prev_session', None)  # earliest.prev_session if earliest else None
+        context['next_session'] = getattr(latest, 'next_session', None)    # latest.next_session if latest else None
         return context
 
 
@@ -201,23 +205,30 @@ class ProfileView(DetailView):
         profile = getattr(user, 'profile', user.staff if user.is_staff else getattr(user, 'student', None))
         return profile
 
+    def make_resource_dict(self, co_connected):
+        # TODO: Revisit the following for better dictionary creation.
+        ct = {ea[0]: [] for ea in Resource.CONTENT_CHOICES}
+        [ct[ea.get('content_type', None)].append(ea) for ea in co_connected.resources().all()]
+        # return is a dict that only has the ct keys if the values have data.
+        return {key: vals for (key, vals) in ct.items() if len(vals) > 0}
+
     def get_context_data(self, **kwargs):
         """ Modify the context """
         context = super().get_context_data(**kwargs)
         # print('===== ProfileView get_context_data ======')
+        context.setdefault('had', None)
+        context.setdefault('taught', None)
+        context.setdefault('resources', {})
+        context.setdefault('teacher_resources', {})
         student = getattr(self.request.user, 'student', None)
+        staff = getattr(self.request.user, 'staff', None)
         if student:
-            context['had'] = student.taken.all()  # Has dates since ClassOffer manager annotates for all querysets.
-            # TODO: Revisit the following for better dictionary creation.
-            ct = {ea[0]: [] for ea in Resource.CONTENT_CHOICES}
-            [ct[ea.get('content_type', None)].append(ea) for ea in student.taken.resources().all()]
-            context['resources'] = {key: vals for (key, vals) in ct.items() if len(vals) > 0}
-            # context['resources'] only has the ct keys if the values have data.
-        else:
-            context['had'] = None
-            context['resources'] = {}
+            context['had'] = student.taken.all()
+            context['resources'] = self.make_resource_dict(student.taken)
+        if staff:
+            context['taught'] = staff.taught.all()
+            context['teacher_resources'] = self.make_resource_dict(staff.taught)
         return context
-    # end class ProfileView
 
 
 class RegisterView(CreateView):

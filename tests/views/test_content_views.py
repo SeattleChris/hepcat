@@ -272,8 +272,7 @@ class ProfileViewTests(MimicAsView, TestCase):
         with self.assertRaises(UserHC.DoesNotExist):
             self.view.get_object()
 
-    # @skip("Not Implemented")
-    def test_get_context_data(self):
+    def test_get_context_data_typical(self):
         classoffers = self.setup_three_sessions()
         kwargs = USER_DEFAULTS.copy()
         kwargs['is_student'] = True
@@ -293,17 +292,66 @@ class ProfileViewTests(MimicAsView, TestCase):
             ea.resources.add(res)
             resources.append(res)
         user.student.taken.add(*taken_list)
-        taken_repr = [repr(ea) for ea in taken_list]
+        expected_had = [repr(ea) for ea in taken_list]
+        expected_taught = None
         resource_fields = ('title', 'id', 'content_type', )  # , 'imagepath',
-        resources_as_dicts = [{key: getattr(ea, key, None) for key in resource_fields} for ea in resources]
+        expected_resources = [{key: getattr(ea, key, None) for key in resource_fields} for ea in resources]
+        expected_teacher_resources = []
         actual_context = self.view.get_context_data(object=self.view.object)  # matches the typical call in get()
         actual_had = actual_context.get('had', None)
+        actual_taught = actual_context.get('taught', None)
         actual_resources = actual_context.get('resources', {'text': [{}]})
+        actual_teacher_resources = actual_context.get('teacher_resources', {'text': [{}]})
 
-        self.assertQuerysetEqual(actual_had, taken_repr, ordered=False)
-        self.assertEqual(len(resources_as_dicts), len(actual_resources.get('text', [])))
-        self.assertTrue(all(ea in resources_as_dicts for ea in actual_resources.get('text', [])))
-        # self.assertSetEqual(set(resources_as_dicts), set(actual_resources.get('text')))
+        self.assertIsNotNone(getattr(user, 'student', None))
+        self.assertIsNone(getattr(user, 'staff', None))
+        self.assertQuerysetEqual(actual_had, expected_had, ordered=False)
+        self.assertEquals(actual_taught, expected_taught)
+        self.assertEqual(len(expected_resources), len(actual_resources.get('text', [])))
+        self.assertTrue(all(ea in expected_resources for ea in actual_resources.get('text', [])))
+        self.assertEqual(len(expected_teacher_resources), len(actual_teacher_resources.get('text', [])))
+        self.assertTrue(all(ea in expected_teacher_resources for ea in actual_teacher_resources.get('text', [])))
+
+    def test_get_context_data_not_student(self):
+        classoffers = self.setup_three_sessions()
+        kwargs = USER_DEFAULTS.copy()
+        kwargs['is_teacher'] = True
+        kwargs['is_student'] = False
+        user = UserHC.objects.create_user(**kwargs)
+        user.save()
+        self.view.request.user = user
+        self.view.object = self.view.get_object()  # This step normally done in self.view.get()
+        taught_list = [arr[0] for sess, arr in classoffers.items()]
+        first_subj = taught_list[0].subject
+        first_res = Resource.objects.create(content_type='text', title="First Subject Resource")
+        first_res.save()
+        first_subj.resources.add(first_res)
+        resources = [first_res]
+        for ea in taught_list:
+            res = Resource.objects.create(content_type='text', title=str(ea) + 'Res')
+            res.save()
+            ea.resources.add(res)
+            resources.append(res)
+        user.staff.taught.add(*taught_list)
+        expected_taught = [repr(ea) for ea in taught_list]
+        resource_fields = ('title', 'id', 'content_type', )  # , 'imagepath',
+        expected_teacher_resources = [{key: getattr(ea, key, None) for key in resource_fields} for ea in resources]
+        expected_had = None
+        expected_resources = []
+        actual_context = self.view.get_context_data(object=self.view.object)  # matches the typical call in get()
+        actual_had = actual_context.get('had', None)
+        actual_taught = actual_context.get('taught', None)
+        actual_resources = actual_context.get('resources', {'text': [{}]})
+        actual_teacher_resources = actual_context.get('teacher_resources', {'text': [{}]})
+
+        self.assertIsNone(getattr(user, 'student', None))
+        self.assertIsNotNone(getattr(user, 'staff', None))
+        self.assertEquals(actual_had, expected_had)
+        self.assertQuerysetEqual(actual_taught, expected_taught, ordered=False)
+        self.assertEqual(len(expected_resources), len(actual_resources.get('text', [])))
+        self.assertTrue(all(ea in expected_resources for ea in actual_resources.get('text', [])))
+        self.assertEqual(len(expected_teacher_resources), len(actual_teacher_resources.get('text', [])))
+        self.assertTrue(all(ea in expected_teacher_resources for ea in actual_teacher_resources.get('text', [])))
 
     @skip("Not Implemented")
     def test_visit_view(self):
@@ -326,19 +374,19 @@ class ProfileViewTests(MimicAsView, TestCase):
         self.client_visit_view(good_text_2)
 
 
-@skip("Not Implemented")
+@skip("View does not need tests for its basic implementation. Revisit if features extended.")
 class LocationListViewTests(MimicAsView, TestCase):
     url_name = 'location_list'
     viewClass = LocationListView = import_string('classwork.views.LocationListView')
 
 
-@skip("Not Implemented")
+@skip("View does not need tests for its basic implementation. Revisit if features extended.")
 class LocationDetailViewTests(MimicAsView, TestCase):
     url_name = 'location_detail'
     viewClass = LocationDetailView = import_string('classwork.views.LocationDetailView')
 
 
-@skip("Not Implemented")
+@skip("View does not need tests for its basic implementation. Revisit if features extended.")
 class ResourceDetailViewTests(MimicAsView, TestCase):
     url_name = 'location_list'
     viewClass = ResourceDetailView = import_string('classwork.views.ResourceDetailView')

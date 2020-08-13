@@ -43,7 +43,7 @@
 |                    | User Views: Social Justice Call                                                             |
 |                    | **Soft Launch**                                                                             |
 |                    | **Milestone 4 Completion**                                                                  |
-|                    | Tests: Models for classwork, users, and associated data                                     |
+| :heavy_check_mark: | Tests: Models for classwork, users, and associated data                                     |
 |                    | Tests: Views for classwork                                                                  |
 | :heavy_check_mark: | Tests: Admin functionality and views                                                        |
 |                    | Tests: User resources and profile view                                                      |
@@ -87,35 +87,35 @@
 - [s] Stretch Goal. Not for current feature plan.
 
 Current Status:
-2020-08-08 23:50:06
+2020-08-12 05:03:39
 <!-- Ctrl-Shift-I to generate timestamp -->
 
 ### Bug Fixes
 
 - [ ] Teacher reference in ClassOffer listing (update now that teachers are many-to-many with classoffers.)
 - [x] ClassOffer Manager computing dates: Error when the 'class_day' is just beyond the range of 'max_day_shift'.
-- [ ] ProfileView is showing the dictionaries after the updates to the technique for getting the correct data.
+- [ ] ProfileView fix listing of each resource (currently shows dictionaries)
 - [ ] ClassOffer manager and model methods for returning Resources attached by ClassOffer or Subject.
   - [x] Initial tests.
   - [ ] Tests fully covering new features.
-- [ ] ?Should tests use `django.utils.timezone`?
-- [ ] ?Should tests use [django.utils.dateparse](https://docs.djangoproject.com/en/3.0/ref/utils/)?
+- [n] ?Should tests use `django.utils.timezone`?
+- [n] ?Should tests use [django.utils.dateparse](https://docs.djangoproject.com/en/3.0/ref/utils/)?
 - [ ] Regain Admin feature: able to create/attach Resources.
 - [ ] Profile view: current solution does not have access to Resource.get_absolute_url() method for each one.
-- [ ] Update Tests to reflect changing Resource to ManyToMany with Subject and with ClassOffer
+- [x] Update Tests to reflect changing Resource to ManyToMany with Subject and with ClassOffer
 - [ ] Datetime math issues
   - [?] Database current 'date' math should be in utc.
   - [?] Setting a Date (no time) for a Session should not get messed up by timezone issues.
     - [x] After midnight, now=date.today() or dt.combine(now, time(0)), with either CURDATE or UTC_DATE.
-    - [ ] Afternoon:
-    - [ ] Evening:
+    - [x] Afternoon: CURDATE or UTC_DATE
+    - [ ] Evening: UTC_DATE misses when avail_week + expire == 3, but CURDATE does not!
 
 ### Optimization and Structure improvements
 
-- [ ] Look into methods for Session model prev_session and next_session.
+- [x] Look into methods for Session model prev_session and next_session.
   - [x] instance methods .get_next_by_FOO and .get_previous_by_FOO for Session model next and previous
     - [x] Does not work on unsaved models, which may be our main use case for these properties.
-  - [ ] QuerySet methods latest(<field_name>) and earliest(<field_name>)
+  - [x] QuerySet methods latest(<field_name>) and earliest(<field_name>)
 - [ ] Revisit `success_url` for RegisterView, PaymentProcessView
   - [ ] `success_url = reverse_lazy('author-list')` in the View class is an option, but ...
     - [ ] You don’t even need to provide a success_url for CreateView or UpdateView
@@ -124,8 +124,8 @@ Current Status:
 - [ ] Look into Login restrictions
   - [ ] `@login_required` decorator.
   - [ ] `LoginRequiredMixin` for any view class that must have login?
-- [ ] Is the current User model using an EmailValidator, or should this be updated?
-  - [ ] [EmailValidator](https://docs.djangoproject.com/en/3.0/ref/validators/)
+- [x] Is the current User model using an EmailValidator, or should this be updated?
+  - [x] [EmailValidator](https://docs.djangoproject.com/en/3.0/ref/validators/)
 - [ ] ? Update [HTTP Error Handlers](https://docs.djangoproject.com/en/3.0/ref/urls/) ?
 - [ ] Using [reverse_lazy](https://docs.djangoproject.com/en/3.0/ref/urlresolvers/) well?
 - [ ] [select_related](https://docs.djangoproject.com/en/3.0/ref/models/querysets/#django.db.models.query.QuerySet.select_related)
@@ -154,9 +154,9 @@ Current Status:
   - [ ] [cached_property](https://docs.djangoproject.com/en/3.0/ref/utils/#django.utils.functional.cached_property)
 - [ ] Check if display_session values need `escape_uri_path` because of possible spaces or other user input oddities.
   - [ ] [escape_uri_path](https://docs.djangoproject.com/en/3.0/ref/utils/#django.utils.functional.cached_property)
-- [ ] Tests: use [django.utils.module_loading](https://docs.djangoproject.com/en/3.0/ref/utils/)
+- [x] Tests: use [django.utils.module_loading](https://docs.djangoproject.com/en/3.0/ref/utils/)
   - [x] `tests/views/test_views.py` file
-  - [ ] other files
+  - [x] other files
 
 ### Tests
 
