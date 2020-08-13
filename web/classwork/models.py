@@ -537,7 +537,7 @@ class CustomQuerySet(models.QuerySet):
         """
 
         res_qs, start, end, skips, max_weeks, kwargs = self.prepare_get_resources_params(**kwargs)
-        now = Func(function='UTC_DATE', output_field=models.DateField())  # TODO: decide CURDATE or UTC_DATE
+        now = Func(function='CURDATE', output_field=models.DateField())  # TODO: decide CURDATE or UTC_DATE
         dates = [Least(start, now)]
         dates += [Func(start, 7 * i, function='ADDDATE', output_field=models.DateField()) for i in range(max_weeks - 1)]
         # dates += [Func(start, 7 * i, function='ADDDATE') for i in range(max_weeks - 1)]

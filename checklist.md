@@ -108,7 +108,7 @@ Current Status:
   - [?] Setting a Date (no time) for a Session should not get messed up by timezone issues.
     - [x] After midnight, now=date.today() or dt.combine(now, time(0)), with either CURDATE or UTC_DATE.
     - [x] Afternoon: CURDATE or UTC_DATE
-    - [ ] Evening:
+    - [ ] Evening: UTC_DATE misses when avail_week + expire == 3, but CURDATE does not!
 
 ### Optimization and Structure improvements
 
