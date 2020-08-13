@@ -12,34 +12,40 @@ class ClassOfferListViewTests(MimicAsView, TestCase):
     viewClass = ClassOfferListView = import_string('classwork.views.ClassOfferListView')
     display_session_url_name = 'classoffer_display_session'
     display_date_url_name = 'classoffer_display_date'
-    query_order_by = ('session__key_day_date', '_num_level', )
+    query_order_by = viewClass.query_order_by
 
     def setUp(self):
         self.classoffers = self.setup_three_sessions()
         self.view = self.setup_view('get')
 
-    def test_get_queryset(self):
+    def test_get_queryset(self, display_session=None, display_date=None):
         """ Expect to only contain the Sessions returned by decide_session as requested (or default). """
+        display_session = display_session or self.view.kwargs.get('display_session', None)
+        display_date = display_date or self.view.kwargs.get('display_date', None)
+        self.view.kwargs['display_session'] = display_session
+        self.view.kwargs['display_date'] = display_date
         view_queryset = self.view.get_queryset()
         is_ordered = getattr(view_queryset, 'ordered', False)
         transform = repr
-        sessions = decide_session()
+        sessions = decide_session(sess=display_session, display_date=display_date)
         model_query = ClassOffer.objects.filter(session__in=sessions)
-        found_query = model_query
         if is_ordered:
             order = getattr(self, 'query_order_by', [])
             model_query = model_query.order_by(*order) if order else model_query
         model_list = [transform(ea) for ea in model_query.all()]
         expected_list = [transform(ea) for ea in self.classoffers['curr_sess']]
 
-        self.assertQuerysetEqual(found_query, expected_list, transform=transform, ordered=False)
         self.assertQuerysetEqual(view_queryset, expected_list, transform=transform, ordered=False)
+        self.assertQuerysetEqual(view_queryset, model_list, transform=transform, ordered=is_ordered)
         self.assertSetEqual(set(expected_list), set(model_list))
         self.assertSetEqual(set(transform(ea) for ea in view_queryset.all()), set(model_list))
-        # self.assertQuerysetEqual(view_queryset, model_list, transform=transform, ordered=is_ordered)
 
-    def test_get_context_data(self):
-        sessions = decide_session()
+    def test_get_context_data(self, display_session=None, display_date=None):
+        display_session = display_session or self.view.kwargs.get('display_session', None)
+        display_date = display_date or self.view.kwargs.get('display_date', None)
+        self.view.kwargs['display_session'] = display_session
+        self.view.kwargs['display_date'] = display_date
+        sessions = decide_session(sess=display_session, display_date=display_date)
         context_sessions = ', '.join([ea.name for ea in sessions])
         expected_subset = {'sessions': context_sessions}
         display_session_subset = {'display_session': None}
