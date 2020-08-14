@@ -92,23 +92,23 @@ Current Status:
 
 ### Bug Fixes
 
-- [ ] Teacher reference in ClassOffer listing (update now that teachers are many-to-many with classoffers.)
-- [x] ClassOffer Manager computing dates: Error when the 'class_day' is just beyond the range of 'max_day_shift'.
+- [x] Teacher reference in ClassOffer listing (update now that teachers are many-to-many with classoffers.)
+- [x] ClassOffer Manager computing dates: Fix when the 'class_day' is just beyond the range of 'max_day_shift'.
 - [ ] ProfileView fix listing of each resource (currently shows dictionaries)
-- [ ] ClassOffer manager and model methods for returning Resources attached by ClassOffer or Subject.
+- [x] ClassOffer manager and model methods for returning Resources attached by ClassOffer or Subject.
   - [x] Initial tests.
-  - [ ] Tests fully covering new features.
+  - [x] Tests fully covering new features.
 - [n] ?Should tests use `django.utils.timezone`?
 - [n] ?Should tests use [django.utils.dateparse](https://docs.djangoproject.com/en/3.0/ref/utils/)?
 - [ ] Regain Admin feature: able to create/attach Resources.
 - [ ] Profile view: current solution does not have access to Resource.get_absolute_url() method for each one.
 - [x] Update Tests to reflect changing Resource to ManyToMany with Subject and with ClassOffer
-- [ ] Datetime math issues
-  - [?] Database current 'date' math should be in utc.
-  - [?] Setting a Date (no time) for a Session should not get messed up by timezone issues.
+- [x] Datetime math issues
+  - [x] Database current 'date' math should be in utc.
+  - [x] Setting a Date (no time) for a Session should not get messed up by timezone issues.
     - [x] After midnight, now=date.today() or dt.combine(now, time(0)), with either CURDATE or UTC_DATE.
     - [x] Afternoon: CURDATE or UTC_DATE
-    - [ ] Evening: UTC_DATE misses when avail_week + expire == 3, but CURDATE does not!
+    - [x] Evening: UTC_DATE misses when avail_week + expire == 3, but CURDATE does not!
 
 ### Optimization and Structure improvements
 
@@ -219,7 +219,7 @@ Current Status:
 - [x] Get Database and code working.
 - [x] Collect static working.
 - [x] Upload ver 0.4.1
-- [ ] Upload ver 0.4.4
+- [ ] Upload ver 0.4.5
 
 ### Deployment on AWS
 
