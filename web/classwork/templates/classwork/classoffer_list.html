@@ -65,7 +65,7 @@
       <li class="nowrap"><a href="{% url 'register' %}">Sign Up Now!</a></li>
     </ul>
     <p class="description">
-      Taught by: {{ classoffer.teachers }} <br />
+      Taught by: {{ classoffer.teachers.all|join:", " }} <br />
       {{ classoffer.subject.description }}
     </p>
     <p class="description">

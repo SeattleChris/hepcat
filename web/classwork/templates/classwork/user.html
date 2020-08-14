@@ -75,7 +75,7 @@
       {{classoffer.start_date|date:"M jS"}} to {{classoffer.end_date|date:"M jS"}} |
       {{classoffer.start_time|date:"g:i"}} - {{classoffer.end_time|date:"g:iA"|lower}}
       <br />
-      Taught by: {{classoffer.teachers}}
+      Taught by: {{ classoffer.teachers.all|join:", " }}
     </p>
   </article>
   {% endfor %}

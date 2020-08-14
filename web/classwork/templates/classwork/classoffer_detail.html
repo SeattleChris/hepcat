@@ -16,7 +16,7 @@
       <li>{{ classoffer.subject.tagline_3 }}</li>
       <li>{{ classoffer.day }} | {{ classoffer.start_time|date:"g:i" }} - {{ classoffer.end_time|date:"g:iA"|lower }} </li>
       <li>{{ classoffer.start_date|date:"F jS" }} - {{ classoffer.end_date|date:"F jS, Y" }}</li>
-      <li>Taught by: {{ classoffer.teachers }} </li>
+      <li>Taught by: {{ classoffer.teachers.all|join:", " }} </li>
     </ul>
 
     <p>
