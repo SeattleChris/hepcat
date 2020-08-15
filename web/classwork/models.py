@@ -770,6 +770,7 @@ class AbstractProfile(models.Model):
         return self.user.get_full_name()
 
     def get_absolute_url(self):
+        # Usually overwritten by concrete class url name, but this is available as a backup.
         return reverse("profile_user", kwargs={"id": self.user_id})
 
     def __str__(self):
@@ -789,6 +790,9 @@ class Staff(AbstractProfile):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._meta.get_field('bio').max_length = 1530  # Current for Chris is 1349 characters!
+
+    def get_absolute_url(self):
+        return reverse("profile_staff", kwargs={"id": self.user_id})
 
 
 class Student(AbstractProfile):
@@ -942,6 +946,9 @@ class Student(AbstractProfile):
             return 2
         beg_count = self.taken.filter(subject__level=Subject.LEVEL_CHOICES[0][0]).count()
         return 1 if beg_count > 0 else 0
+
+    def get_absolute_url(self):
+        return reverse("profile_student", kwargs={"id": self.user_id})
 
     def save(self, *args, **kwargs):
         if not self.level:
