@@ -186,14 +186,13 @@ class ResourceDetailView(DetailView):
 class ProfileView(DetailView):
     """Each user has a page where they can see resources that have been made available to them. """
     template_name = 'classwork/user.html'
-    model = Student
+    profile_type = ''
     context_object_name = 'profile'
     pk_url_kwarg = 'id'
     # TODO: Work on the actual layout and presentation of the avail Resources
     # TODO: Filter out the resources that are not meant for ProfileView
 
     def get_object(self):
-        # print('=== ProfileView get_object ====')
         user = self.request.user
         if 'id' in self.kwargs:
             if user.is_admin:
@@ -201,8 +200,13 @@ class ProfileView(DetailView):
                     user = User.objects.get(id=self.kwargs['id'])
                 except User.DoesNotExist as e:
                     raise e
-                    # user = self.request.user
-        profile = getattr(user, 'profile', user.staff if user.is_staff else getattr(user, 'student', None))
+        if self.profile_type:
+            profile = getattr(user, self.profile_type, None)
+            if not profile:
+                raise ObjectDoesNotExist(_("User {} does not have a {} profile.".format(user, self.profile_type)))
+        else:
+            profile = getattr(user, 'profile', user.staff if user.is_staff else getattr(user, 'student', None))
+            self.profile_type = '' if profile is None else str(profile._meta.model_name)
         return profile
 
     def make_resource_dict(self, co_connected):
@@ -216,18 +220,9 @@ class ProfileView(DetailView):
         """ Modify the context """
         context = super().get_context_data(**kwargs)
         # print('===== ProfileView get_context_data ======')
-        context.setdefault('had', None)
-        context.setdefault('taught', None)
-        context.setdefault('resources', {})
-        context.setdefault('teacher_resources', {})
-        student = getattr(self.request.user, 'student', None)
-        staff = getattr(self.request.user, 'staff', None)
-        if student:
-            context['had'] = student.taken.all()
-            context['resources'] = self.make_resource_dict(student.taken)
-        if staff:
-            context['taught'] = staff.taught.all()
-            context['teacher_resources'] = self.make_resource_dict(staff.taught)
+        co_connected = getattr(context['object'], 'taken' if self.profile_type == 'student' else 'taught', object)
+        context['classoffers'] = co_connected.all()
+        context['resources'] = self.make_resource_dict(co_connected)
         return context
 
 

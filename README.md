@@ -109,7 +109,6 @@ This is a specific subject, offered during a specific session. It includes infor
 
 [Development & Deployment](DEVELOPMENT.md)
 
-
 ## Architecture
 
 * python 3.7+
@@ -155,7 +154,7 @@ The following routes have been made or scaffolded (mostly in classwork app):
 |  " process/<token>/    | [process_data]           | (payments.urls)  | -                |
 |  " process/<variant>/  | [static_process_payment] | (payments.urls)  | -                |
 | /admin/                | -                        |(admin.site.urls) | -                |
-| **From our users app:**   |
+| **From our users app:**                                                                 |
 | /user/signup/                 | ['signup']           | SignUp | signup.html             |
 | /user/login/                  | ['login']                   |-| /django_registration/ ? |
 | /user/logout/                 | [logout']                   |-| /django_registration/ ? |
@@ -163,7 +162,7 @@ The following routes have been made or scaffolded (mostly in classwork app):
 | /user/password_change/done/   | ['password_change_done']    |-| /django_registration/ ? |
 | /user/password_reset/         | ['password_reset']          |-| /django_registration/ ? |
 | /user/password_reset/done/    | ['password_reset_done']     |-| /django_registration/ ? |
-| /user/reset/<uidb64>/<token>/ | ['password_reset_confirm']  |-| /django_registration/?  |
+| /user/reset/<uidb64>/<token>/ | ['password_reset_confirm']  |-| /django_registration/ ? |
 | /user/reset/done/             | ['password_reset_complete'] |-| /django_registration/ ? |
 
 <!-- TODO: Update the payment url and view -->

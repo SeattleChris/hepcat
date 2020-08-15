@@ -8,11 +8,13 @@ from datetime import date, time  # , timedelta, datetime as dt
 class StaffModelTests(AbstractProfileModelTests, TestCase):
     Model = Staff
     profile_attribute = 'staff'
+    detail_url_name = 'profile_staff'
 
 
 class StudentModelTests(AbstractProfileModelTests, TestCase):
     Model = Student
     profile_attribute = 'student'
+    detail_url_name = 'profile_student'
 
     def test_taken_subject_is_related_subjects(self):
         model = self.instance

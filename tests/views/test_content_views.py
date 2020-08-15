@@ -272,86 +272,44 @@ class ProfileViewTests(MimicAsView, TestCase):
         with self.assertRaises(UserHC.DoesNotExist):
             self.view.get_object()
 
-    def test_get_context_data_typical(self):
+    def test_get_context_data(self, profile_type='student'):
         classoffers = self.setup_three_sessions()
         kwargs = USER_DEFAULTS.copy()
-        kwargs['is_student'] = True
+        kwargs['is_student'] = True if profile_type == 'student' else False
+        kwargs['is_teacher'] = True if profile_type == 'staff' else False
         user = UserHC.objects.create_user(**kwargs)
         user.save()
+        connected_classoffers = user.student.taken if profile_type == 'student' else user.staff.taught
+        empty_profile = 'staff' if profile_type == 'student' else 'student'
         self.view.request.user = user
         self.view.object = self.view.get_object()  # This step normally done in self.view.get()
-        taken_list = [arr[0] for sess, arr in classoffers.items()]
-        first_subj = taken_list[0].subject
+        classoffer_list = [arr[0] for sess, arr in classoffers.items()]
+        first_subj = classoffer_list[0].subject
         first_res = Resource.objects.create(content_type='text', title="First Subject Resource")
         first_res.save()
         first_subj.resources.add(first_res)
         resources = [first_res]
-        for ea in taken_list:
+        for ea in classoffer_list:
             res = Resource.objects.create(content_type='text', title=str(ea) + 'Res')
             res.save()
             ea.resources.add(res)
             resources.append(res)
-        user.student.taken.add(*taken_list)
-        expected_had = [repr(ea) for ea in taken_list]
-        expected_taught = None
+        connected_classoffers.add(*classoffer_list)
+        expected_classoffers = [repr(ea) for ea in classoffer_list]
         resource_fields = ('title', 'id', 'content_type', )  # , 'imagepath',
         expected_resources = [{key: getattr(ea, key, None) for key in resource_fields} for ea in resources]
-        expected_teacher_resources = []
         actual_context = self.view.get_context_data(object=self.view.object)  # matches the typical call in get()
-        actual_had = actual_context.get('had', None)
-        actual_taught = actual_context.get('taught', None)
+        actual_classoffers = actual_context.get('classoffers', None)
         actual_resources = actual_context.get('resources', {'text': [{}]})
-        actual_teacher_resources = actual_context.get('teacher_resources', {'text': [{}]})
 
-        self.assertIsNotNone(getattr(user, 'student', None))
-        self.assertIsNone(getattr(user, 'staff', None))
-        self.assertQuerysetEqual(actual_had, expected_had, ordered=False)
-        self.assertEquals(actual_taught, expected_taught)
+        self.assertIsNotNone(getattr(user, profile_type, None))
+        self.assertIsNone(getattr(user, empty_profile, None))
+        self.assertQuerysetEqual(actual_classoffers, expected_classoffers, ordered=False)
         self.assertEqual(len(expected_resources), len(actual_resources.get('text', [])))
         self.assertTrue(all(ea in expected_resources for ea in actual_resources.get('text', [])))
-        self.assertEqual(len(expected_teacher_resources), len(actual_teacher_resources.get('text', [])))
-        self.assertTrue(all(ea in expected_teacher_resources for ea in actual_teacher_resources.get('text', [])))
 
     def test_get_context_data_not_student(self):
-        classoffers = self.setup_three_sessions()
-        kwargs = USER_DEFAULTS.copy()
-        kwargs['is_teacher'] = True
-        kwargs['is_student'] = False
-        user = UserHC.objects.create_user(**kwargs)
-        user.save()
-        self.view.request.user = user
-        self.view.object = self.view.get_object()  # This step normally done in self.view.get()
-        taught_list = [arr[0] for sess, arr in classoffers.items()]
-        first_subj = taught_list[0].subject
-        first_res = Resource.objects.create(content_type='text', title="First Subject Resource")
-        first_res.save()
-        first_subj.resources.add(first_res)
-        resources = [first_res]
-        for ea in taught_list:
-            res = Resource.objects.create(content_type='text', title=str(ea) + 'Res')
-            res.save()
-            ea.resources.add(res)
-            resources.append(res)
-        user.staff.taught.add(*taught_list)
-        expected_taught = [repr(ea) for ea in taught_list]
-        resource_fields = ('title', 'id', 'content_type', )  # , 'imagepath',
-        expected_teacher_resources = [{key: getattr(ea, key, None) for key in resource_fields} for ea in resources]
-        expected_had = None
-        expected_resources = []
-        actual_context = self.view.get_context_data(object=self.view.object)  # matches the typical call in get()
-        actual_had = actual_context.get('had', None)
-        actual_taught = actual_context.get('taught', None)
-        actual_resources = actual_context.get('resources', {'text': [{}]})
-        actual_teacher_resources = actual_context.get('teacher_resources', {'text': [{}]})
-
-        self.assertIsNone(getattr(user, 'student', None))
-        self.assertIsNotNone(getattr(user, 'staff', None))
-        self.assertEquals(actual_had, expected_had)
-        self.assertQuerysetEqual(actual_taught, expected_taught, ordered=False)
-        self.assertEqual(len(expected_resources), len(actual_resources.get('text', [])))
-        self.assertTrue(all(ea in expected_resources for ea in actual_resources.get('text', [])))
-        self.assertEqual(len(expected_teacher_resources), len(actual_teacher_resources.get('text', [])))
-        self.assertTrue(all(ea in expected_teacher_resources for ea in actual_teacher_resources.get('text', [])))
+        self.test_get_context_data(profile_type='staff')
 
     @skip("Not Implemented")
     def test_visit_view(self):
