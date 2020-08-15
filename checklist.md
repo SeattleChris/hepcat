@@ -94,14 +94,14 @@ Current Status:
 
 - [x] Teacher reference in ClassOffer listing (update now that teachers are many-to-many with classoffers.)
 - [x] ClassOffer Manager computing dates: Fix when the 'class_day' is just beyond the range of 'max_day_shift'.
-- [ ] ProfileView fix listing of each resource (currently shows dictionaries)
+- [x] ProfileView fix listing of each resource (currently shows dictionaries)
 - [x] ClassOffer manager and model methods for returning Resources attached by ClassOffer or Subject.
   - [x] Initial tests.
   - [x] Tests fully covering new features.
 - [n] ?Should tests use `django.utils.timezone`?
 - [n] ?Should tests use [django.utils.dateparse](https://docs.djangoproject.com/en/3.0/ref/utils/)?
 - [ ] Regain Admin feature: able to create/attach Resources.
-- [ ] Profile view: current solution does not have access to Resource.get_absolute_url() method for each one.
+- [x] Profile view: current solution does not have access to Resource.get_absolute_url() method for each one.
 - [x] Update Tests to reflect changing Resource to ManyToMany with Subject and with ClassOffer
 - [x] Datetime math issues
   - [x] Database current 'date' math should be in utc.
