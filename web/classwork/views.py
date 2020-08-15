@@ -11,8 +11,8 @@ from payments import get_payment_model, RedirectNeeded  # used for Payments
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth import get_user_model
 from .forms import RegisterForm, PaymentForm  # , ProfileForm, UserForm
-from .models import (SiteContent, Resource, Location, ClassOffer, Subject,  # ? Session,
-                     Staff, Student, Payment, Registration, Session)
+from .models import (SiteContent, Resource, Location, ClassOffer, Subject,  # ? Session, Student
+                     Staff, Payment, Registration, Session)
 from datetime import datetime as dt
 User = get_user_model()
 
@@ -52,12 +52,8 @@ class AboutUsListView(ListView):
     template_name = 'classwork/aboutus.html'
     model = Staff
     context_object_name = 'profiles'
-
-    def get_queryset(self):
-        staff = Staff.objects.filter(user__is_staff=True, user__is_active=True)
-        # TODO: sort them in some desired order.
-        staff = staff.order_by('listing', )
-        return staff
+    queryset = Staff.objects.filter(user__is_active=True, listing__gt=-1)  # user__is_staff=True,
+    ordering = ('listing', )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

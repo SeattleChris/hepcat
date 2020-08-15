@@ -1,6 +1,7 @@
 from django.test import Client, TestCase  # , TransactionTestCase, RequestFactory,
 from django.urls import reverse
 from unittest import skip
+from django.core.exceptions import ObjectDoesNotExist
 from django.utils.module_loading import import_string
 from .helper_views import MimicAsView, Staff, Student, SiteContent, Resource  # , decide_session,
 from .helper_views import UserHC, AnonymousUser, USER_DEFAULTS, OTHER_USER  # , ClassOffer, Session, Subject,
@@ -18,8 +19,10 @@ class AboutUsListTests(TestCase):
         """ Used to get the transformed list of expected staff users. """
         staff_query = self.ProfileStaff_query.filter(user__is_active=True)
         if is_ordered:
-            order = getattr(self, 'query_order_by', [])
-            staff_query = staff_query.order_by(*order) if order else staff_query
+            ordering = self.view.get_ordering()
+            if isinstance(ordering, str):
+                ordering = (ordering,)
+            staff_query = staff_query.order_by(*ordering) if ordering else staff_query
         return [transform(ea) for ea in staff_query.all()]
 
     def test_queryset_has_active_admin(self):
@@ -100,19 +103,23 @@ class AboutUsListTests(TestCase):
         self.assertIsNotNone(student)
         self.assertIn(student, list(student_query.all()))
 
-    @skip("Not Implemented")
     def test_queryset_has_expected_profile_order(self):
-        """ The queryset should have currently active staff members. """
-        kwargs = USER_DEFAULTS.copy()
-        kwargs['is_admin'] = True
-        user = UserHC.objects.create_user(**kwargs)
-        user.save()
+        """ The queryset should have the correct order for active staff members. """
+        profiles = []
+        for num in range(5):
+            kwargs = {key: '_'.join((str(num), val)) for key, val in USER_DEFAULTS.items()}
+            kwargs['is_admin'] = True
+            user = UserHC.objects.create_user(**kwargs)
+            user.save()
+            user.staff.listing = num
+            user.save()
+            profiles.append(user.staff)
         view_queryset = self.view.get_queryset()
         is_ordered = getattr(view_queryset, 'ordered', False)
         transform = repr
         all_staff_list = self.get_staff_list(transform, is_ordered)
-        self.assertTrue(user.is_staff)
         self.assertQuerysetEqual(view_queryset, all_staff_list, transform=transform, ordered=is_ordered)
+        self.assertQuerysetEqual(view_queryset, [repr(ea) for ea in profiles], ordered=True)
 
     def test_get_context_data(self):
         """ Testing site before and after having a 'business_about' SiteContent.  """
@@ -207,6 +214,27 @@ class ProfileViewTests(MimicAsView, TestCase):
         self.assertIsNotNone(getattr(user, 'staff', None))
         self.assertTrue(user.is_staff)
         self.assertEqual(user.staff, actual)
+
+    def test_get_object_with_profile_type(self, profile_type='student'):
+        self.view.kwargs['profile_type'] = profile_type
+        self.view.profile_type = profile_type
+        kwargs = USER_DEFAULTS.copy()
+        if profile_type == 'student':
+            kwargs['is_student'] = True
+            not_profile = 'staff'
+        else:
+            kwargs['is_teacher'] = True
+            not_profile = 'student'
+        user = UserHC.objects.create_user(**kwargs)
+        user.save()
+        self.view.request.user = user
+        actual = self.view.get_object()
+
+        self.assertIsNotNone(getattr(user, profile_type))
+        self.assertEqual(getattr(user, profile_type), actual)
+        with self.assertRaises(ObjectDoesNotExist):
+            self.view.profile_type = not_profile
+            getattr(user, not_profile)
 
     def test_get_object_anonymous(self):
         user = AnonymousUser

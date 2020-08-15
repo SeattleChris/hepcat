@@ -149,7 +149,7 @@ Current Status:
   - [x] On their default profile view, there is a link to the other profile.
 - [x] Staff Profile: What info do they want as a staff view? Or just handle that in the admin views?
 - [x] About Us - Shows only Teachers and Staff.
-- [ ] About US - order of teacher & staff info can be controlled by an admin.
+- [x] About US - order of teacher & staff info can be controlled by an admin.
 - [x] Utilize get_absolute_url for all detail views.
 - [ ] Check for any model properties that should use `key_lazy` or `key_lazy_text` or `cached_property`?
   - [ ] [key_lazy utils](https://docs.djangoproject.com/en/3.0/ref/utils/#django.utils.functional.cached_property)
