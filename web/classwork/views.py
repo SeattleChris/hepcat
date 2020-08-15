@@ -52,12 +52,8 @@ class AboutUsListView(ListView):
     template_name = 'classwork/aboutus.html'
     model = Staff
     context_object_name = 'profiles'
-
-    def get_queryset(self):
-        staff = Staff.objects.filter(user__is_staff=True, user__is_active=True)
-        # TODO: sort them in some desired order.
-        staff = staff.order_by('listing', )
-        return staff
+    queryset = Staff.objects.filter(user__is_staff=True, user__is_active=True)
+    ordering = ('listing', )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

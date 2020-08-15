@@ -19,8 +19,10 @@ class AboutUsListTests(TestCase):
         """ Used to get the transformed list of expected staff users. """
         staff_query = self.ProfileStaff_query.filter(user__is_active=True)
         if is_ordered:
-            order = getattr(self, 'query_order_by', [])
-            staff_query = staff_query.order_by(*order) if order else staff_query
+            ordering = self.view.get_ordering()
+            if isinstance(ordering, str):
+                ordering = (ordering,)
+            staff_query = staff_query.order_by(*ordering) if ordering else staff_query
         return [transform(ea) for ea in staff_query.all()]
 
     def test_queryset_has_active_admin(self):
@@ -101,19 +103,23 @@ class AboutUsListTests(TestCase):
         self.assertIsNotNone(student)
         self.assertIn(student, list(student_query.all()))
 
-    @skip("Not Implemented")
     def test_queryset_has_expected_profile_order(self):
-        """ The queryset should have currently active staff members. """
-        kwargs = USER_DEFAULTS.copy()
-        kwargs['is_admin'] = True
-        user = UserHC.objects.create_user(**kwargs)
-        user.save()
+        """ The queryset should have the correct order for active staff members. """
+        profiles = []
+        for num in range(5):
+            kwargs = {key: '_'.join((str(num), val)) for key, val in USER_DEFAULTS.items()}
+            kwargs['is_admin'] = True
+            user = UserHC.objects.create_user(**kwargs)
+            user.save()
+            user.staff.listing = num
+            user.save()
+            profiles.append(user.staff)
         view_queryset = self.view.get_queryset()
         is_ordered = getattr(view_queryset, 'ordered', False)
         transform = repr
         all_staff_list = self.get_staff_list(transform, is_ordered)
-        self.assertTrue(user.is_staff)
         self.assertQuerysetEqual(view_queryset, all_staff_list, transform=transform, ordered=is_ordered)
+        self.assertQuerysetEqual(view_queryset, [repr(ea) for ea in profiles], ordered=True)
 
     def test_get_context_data(self):
         """ Testing site before and after having a 'business_about' SiteContent.  """
