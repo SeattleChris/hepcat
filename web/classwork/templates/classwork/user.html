@@ -13,17 +13,16 @@
     {% if profile.bio %}
     <p>{{profile.bio}}</p>
     {% else %}
-    <p>Currently no profile available</p>
+    <p>Currently no profile bio available</p>
     {% endif %}
-    <h3>Resources</h3>
+  <h3>Resources</h3>
   </header>
-
   {% for key, values in resources.items %}
   <article>
     <h4>{{key}}</h4>
     <ul>
       {% for res in values %}
-      <li><a href="{{ res.get_absolute_url }}">res: {{res}}</a></li>
+      <li><a href="{% url 'resource_detail' id=res.id %}">{{ res.title }}</a></li>
       {% endfor %}
     </ul>
   </article>
@@ -63,12 +62,17 @@
     <p>
       Update Account Details
     </p>
+    <p>
+      <a href="{% url 'profile_staff' id=profile.user_id %}">Staff Profile</a> |
+      <a href="{% url 'profile_student' id=profile.user_id %}">Student Profile</a> |
+      <a href="{% url 'profile_user' id=profile.user_id %}">Default Profile</a>
+    </p>
 
     <h3>Class History</h3>
     <p>These are the classes we have records of you attending. Contact us if any seem missing. </p>
   </header>
 
-  {% for classoffer in had %}
+  {% for classoffer in classoffers %}
   <article class="class_history">
     <h4>{{classoffer}}</h4>
     <p>
