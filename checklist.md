@@ -87,7 +87,7 @@
 - [s] Stretch Goal. Not for current feature plan.
 
 Current Status:
-2020-08-12 05:03:39
+2020-08-14 21:17:31
 <!-- Ctrl-Shift-I to generate timestamp -->
 
 ### Bug Fixes
@@ -143,9 +143,11 @@ Current Status:
 
 - [x] Student Profile: Resources filtered to currently available.
 - [x] Student Profile: Resources no duplicates.
-- [ ] Student Profile: Resources displayed and can be navigated in a useful way.
-- [ ] Staff Profile: How to manage if they are also a Student?
-- [ ] Staff Profile: What info do they want as a staff view? Or just handle that in the admin views?
+- [x] Student Profile: Resources displayed and can be navigated in a useful way.
+- [x] Staff Profile: How to manage if they are also a Student?
+  - [x] There is a unique link to their Staff profile view and their Student profile view.
+  - [x] On their default profile view, there is a link to the other profile.
+- [x] Staff Profile: What info do they want as a staff view? Or just handle that in the admin views?
 - [x] About Us - Shows only Teachers and Staff.
 - [ ] About US - order of teacher & staff info can be controlled by an admin.
 - [x] Utilize get_absolute_url for all detail views.

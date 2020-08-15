@@ -62,12 +62,13 @@
     <p>
       Update Account Details
     </p>
+    {% if profile.user.is_staff and profile.user.is_student %}
     <p>
       <a href="{% url 'profile_staff' id=profile.user_id %}">Staff Profile</a> |
       <a href="{% url 'profile_student' id=profile.user_id %}">Student Profile</a> |
       <a href="{% url 'profile_user' id=profile.user_id %}">Default Profile</a>
     </p>
-
+    {% endif %}
     <h3>Class History</h3>
     <p>These are the classes we have records of you attending. Contact us if any seem missing. </p>
   </header>
