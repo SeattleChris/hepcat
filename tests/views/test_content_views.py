@@ -1,6 +1,7 @@
 from django.test import Client, TestCase  # , TransactionTestCase, RequestFactory,
 from django.urls import reverse
 from unittest import skip
+from django.core.exceptions import ObjectDoesNotExist
 from django.utils.module_loading import import_string
 from .helper_views import MimicAsView, Staff, Student, SiteContent, Resource  # , decide_session,
 from .helper_views import UserHC, AnonymousUser, USER_DEFAULTS, OTHER_USER  # , ClassOffer, Session, Subject,
@@ -207,6 +208,27 @@ class ProfileViewTests(MimicAsView, TestCase):
         self.assertIsNotNone(getattr(user, 'staff', None))
         self.assertTrue(user.is_staff)
         self.assertEqual(user.staff, actual)
+
+    def test_get_object_with_profile_type(self, profile_type='student'):
+        self.view.kwargs['profile_type'] = profile_type
+        self.view.profile_type = profile_type
+        kwargs = USER_DEFAULTS.copy()
+        if profile_type == 'student':
+            kwargs['is_student'] = True
+            not_profile = 'staff'
+        else:
+            kwargs['is_teacher'] = True
+            not_profile = 'student'
+        user = UserHC.objects.create_user(**kwargs)
+        user.save()
+        self.view.request.user = user
+        actual = self.view.get_object()
+
+        self.assertIsNotNone(getattr(user, profile_type))
+        self.assertEqual(getattr(user, profile_type), actual)
+        with self.assertRaises(ObjectDoesNotExist):
+            self.view.profile_type = not_profile
+            getattr(user, not_profile)
 
     def test_get_object_anonymous(self):
         user = AnonymousUser

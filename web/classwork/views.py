@@ -11,8 +11,8 @@ from payments import get_payment_model, RedirectNeeded  # used for Payments
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth import get_user_model
 from .forms import RegisterForm, PaymentForm  # , ProfileForm, UserForm
-from .models import (SiteContent, Resource, Location, ClassOffer, Subject,  # ? Session,
-                     Staff, Student, Payment, Registration, Session)
+from .models import (SiteContent, Resource, Location, ClassOffer, Subject,  # ? Session, Student
+                     Staff, Payment, Registration, Session)
 from datetime import datetime as dt
 User = get_user_model()
 
