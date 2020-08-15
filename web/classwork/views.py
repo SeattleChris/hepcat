@@ -52,7 +52,7 @@ class AboutUsListView(ListView):
     template_name = 'classwork/aboutus.html'
     model = Staff
     context_object_name = 'profiles'
-    queryset = Staff.objects.filter(user__is_staff=True, user__is_active=True)
+    queryset = Staff.objects.filter(user__is_active=True, listing__gt=-1)  # user__is_staff=True,
     ordering = ('listing', )
 
     def get_context_data(self, **kwargs):

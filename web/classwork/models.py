@@ -783,7 +783,8 @@ class AbstractProfile(models.Model):
 class Staff(AbstractProfile):
     """ A profile model appropriate for Staff users. """
 
-    listing = models.SmallIntegerField(help_text=_("listing order"), default=0, blank=True, )
+    listing = models.SmallIntegerField(default=10, blank=True,
+                                       help_text=_("Negative numbers will not be shown. "), )
     tax_doc = models.CharField(max_length=9, blank=True, )
     # taught exists from ClassOffer.teachers related_name
 
