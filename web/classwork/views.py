@@ -219,6 +219,7 @@ class ProfileView(DetailView):
         co_connected = getattr(context['object'], 'taken' if self.profile_type == 'student' else 'taught', object)
         context['classoffers'] = co_connected.all()
         context['resources'] = self.make_resource_dict(co_connected)
+        context['profile_type'] = self.profile_type
         return context
 
 

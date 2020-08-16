@@ -70,7 +70,9 @@
     </p>
     {% endif %}
     <h3>Class History</h3>
-    <p>These are the classes we have records of you attending. Contact us if any seem missing. </p>
+    <p>These are the classes we have records of you
+       {% if profile_type == 'student' %}attending{% else %}teaching{% endif %}.
+       Contact us if any seem missing. </p>
   </header>
 
   {% for classoffer in classoffers %}
