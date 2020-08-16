@@ -135,10 +135,6 @@ There are a low-cost and free tier options on [PythonAnywhere](https://www.pytho
   * Confirm env settings are used:
     * stop and restart env.
     * Type `printenv` and confirm some env values as expected from the file.
-* Create Superuser for the app, as the initial admin.
-  * On a console, with the virtual env running, navigate to the directory that has the 'manage.py' file.
-  * Using the values in the '.env', via our custom command file: `./manage.py createsu`
-  * Manually input email and password, using the default command: `./manage.py createsuperuser`
 * Setup Web App on Python Anywhere
   * Login [Python Anywhere](https://www.pythonanywhere.com/) and click 'Web' tab on the Dashboard.
   * Choose 'Manual Configuration' for the desired python version (eg Python 3.7)
@@ -160,13 +156,18 @@ There are a low-cost and free tier options on [PythonAnywhere](https://www.pytho
   * Optional: Enable 'Force HTTPS', then Reload (if wanted, perhaps change later).
   * Database Setup
     * on Python Anywhere Dashboard, click the 'Databases' tab
-    * Make or confirm the database for the app, ideally something different than `<user>$default`.
-    * Make sure the Database host, username, and password are set correctly in env and settings.
-    * Start a console on the app database (click on it under 'Your databases)
-      * Confirm the database is present, username is correct, etc. We don't expect tables yet.
-    * Open a bash console, start virtualenv, and navigate to the directory with the 'manage.py' file.
-    * Confirm the file has execute privileges (it probably does).
-    * Migrate database with: `./manage.py migrate`
+      * Make or confirm the database for the app, ideally something different than `<user>$default`.
+        * Notice that created databases actual name will be prepended with `<username>$`.
+        * Choose a good password, and make sure you know the full name and password to put into the '.env' file.
+    * On the PythonAnywhere Dashboard, click the 'Consoles' tab:
+      * Make sure the `.env` file has the correct settings for the database, stop and start the virtual environment.
+      * On bash console (w/ virtual env) navigate to the `hepcat/web` directory (or where `manage.py` is located).
+      * Confirm the 'manage.py' file has execute privileges (it probably does).
+      * Use the migrate manager command `./manage.py migrate` to create the database tables.
+  * Create Superuser for the app, as the initial admin.
+    * On a console, with the virtual env running, navigate to the directory that has the 'manage.py' file.
+    * Using the values in the '.env', via our custom command file: `./manage.py createsu`
+      * Or manually input email and password, using the default command: `./manage.py createsuperuser`
   * Prepare Static files and Media files:
     * Open a bash console, start virtualenv, and navigate to the directory with the 'manage.py' file.
     * Collect static files: `./manage.py collectstatic`
