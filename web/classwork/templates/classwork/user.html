@@ -60,7 +60,7 @@
       {% endif %}
     </ul>
     <p>
-      Update Account Details
+      <a href="{% url 'user_update' %}">Update User Account Details</a>
     </p>
     {% if profile.user.is_staff and profile.user.is_student %}
     <p>

@@ -8,24 +8,9 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 
-class UserForm(forms.ModelForm):
-
-    class Meta:
-        model = User
-        fields = [
-            'first_name', 'last_name', 'email',
-            'billing_address_1', 'billing_address_2', 'billing_city', 'billing_country_area', 'billing_postcode', ]
-
-
-class ProfileForm(forms.ModelForm):
-
-    class Meta:
-        model = Student  # 1-to-1 with users.UserHC, also has .taken for classoffers
-        fields = ['taken', ]
-
-
 class RegisterForm(forms.ModelForm):
     """ This is where existing and even new users/students can sign up for a ClassOffer """
+    # TODO: Lookup formsets. See if we can make a form combining fields from User and from Payment models.
     # TODO: Create the workflow for when (if) the user wants to fill out the registration form for someone else.
 
     user_answers = (('', _('Please Select an Answer')),

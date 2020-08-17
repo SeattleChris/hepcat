@@ -10,7 +10,7 @@ from payments import get_payment_model, RedirectNeeded  # used for Payments
 # from django.db.models.functions import Trunc  # , Extract, ExtractYear, ExtractMonth, ExtractDay
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth import get_user_model
-from .forms import RegisterForm, PaymentForm  # , ProfileForm, UserForm
+from .forms import RegisterForm, PaymentForm
 from .models import (SiteContent, Resource, Location, ClassOffer, Subject,  # ? Session, Student
                      Staff, Payment, Registration, Session)
 from datetime import datetime as dt
