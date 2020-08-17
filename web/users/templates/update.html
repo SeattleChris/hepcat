@@ -1,0 +1,19 @@
+{% extends 'generic/base.html' %}
+
+{% block head %}
+<title>Update User Account</title>
+{% endblock head %}
+
+
+{% block content %}
+<section>
+  <article>
+    <h2>Update Your Account Information</h2>
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit">Update</button>
+    </form>
+  </article>
+</section>
+  {% endblock content %}

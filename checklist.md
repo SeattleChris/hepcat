@@ -87,7 +87,7 @@
 - [s] Stretch Goal. Not for current feature plan.
 
 Current Status:
-2020-08-14 21:17:31
+2020-08-16 16:07:19
 <!-- Ctrl-Shift-I to generate timestamp -->
 
 ### Bug Fixes
@@ -109,6 +109,7 @@ Current Status:
     - [x] After midnight, now=date.today() or dt.combine(now, time(0)), with either CURDATE or UTC_DATE.
     - [x] Afternoon: CURDATE or UTC_DATE
     - [x] Evening: UTC_DATE misses when avail_week + expire == 3, but CURDATE does not!
+- [ ] Profile not created if Admin page creates a new Staff User or Student User.
 
 ### Optimization and Structure improvements
 
@@ -220,8 +221,9 @@ Current Status:
 - [x] Update models and migrations.
 - [x] Get Database and code working.
 - [x] Collect static working.
-- [x] Upload ver 0.4.1
-- [ ] Upload ver 0.4.5
+- [x] Upload ver 0.4.1.
+- [x] Upload ver 0.4.4.
+- [ ] Populate initial Class structure models.
 
 ### Deployment on AWS
 
