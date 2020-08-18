@@ -168,7 +168,7 @@ class UserManagerHC(UserManager):
 
 
 class UserHC(AbstractUser):
-    """ This will be the custom Users model for the site
+    """ This will be the custom Users model for the site.
         Inherits from: AbstractUser, AbstractBaseUser, models.Model, ModelBase, ...
     """
 
@@ -186,11 +186,16 @@ class UserHC(AbstractUser):
     billing_postcode = models.CharField(_('zipcode'), max_length=10, blank=True,
                                         help_text=_('Zip or Postal Code'), )
     billing_country_code = models.CharField(_('country'), default=settings.DEFAULT_COUNTRY, max_length=191, blank=True,)
-    # # # user.profile holds the linked profile for this user.
+    # # # user.student or user.staff holds the linked profile for this user.
     objects = UserManagerHC()
 
     class Meta(AbstractUser.Meta):
         swappable = 'AUTH_USER_MODEL'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._meta.get_field('username').verbose_name = _("email")
+        # self._meta.get_field('username').help_text = _("Or alternative username")
 
     @property
     def full_name(self):
@@ -246,3 +251,7 @@ class StudentUser(UserHC):
 
     class Meta:
         proxy = True
+
+
+StaffUser._meta.get_field('is_student').default = False
+StaffUser._meta.get_field('is_teacher').default = True
