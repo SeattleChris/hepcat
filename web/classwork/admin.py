@@ -249,7 +249,7 @@ class StaffAdmin(admin.ModelAdmin):
     model = Staff
     list_display = ('__str__', 'username', 'listing', 'bio_done', 'tax', )
     list_display_links = ('__str__', 'username', )
-    # TODO: Allow listing to be editable on Admin list view.
+    list_editable = ('listing', )
     list_filter = ('user__is_staff', 'user__is_active', )
     ordering = ('date_modified', 'date_added', )
     fields = (('user', 'listing', 'tax_doc'), 'bio', )
