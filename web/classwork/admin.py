@@ -261,7 +261,6 @@ class StaffAdmin(admin.ModelAdmin):
     list_filter = ('user__is_staff', 'user__is_active', )
     ordering = ('date_modified', 'date_added', )
     fields = (('user', 'listing', 'tax_doc'), 'bio', )
-    # queryset = 
 
     def bio_done(self, obj): return True if len(obj.bio) > 0 else False
     def tax(self, obj): return True if len(obj.tax_doc) > 0 else False

@@ -14,13 +14,9 @@ class SignUp(generic.CreateView):
 
 class Modify(generic.UpdateView):
     model = UserHC
-    # pk_url_kwarg = 'id'
     form_class = CustomUserChangeForm
     success_url = reverse_lazy('profile_page')
     template_name = 'update.html'
 
     def get_object(self, queryset=None):
-        # return super().get_object(queryset=queryset)
         return self.request.user
-
-    # end class Modify
