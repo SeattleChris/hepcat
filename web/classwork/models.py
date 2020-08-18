@@ -14,14 +14,12 @@ from decimal import Decimal  # used for Payments
 from payments import PurchasedItem
 from payments.models import BasePayment
 from datetime import date, timedelta, datetime as dt
-# from django.contrib.auth import get_user_model
-# User = get_user_model()
-# TODO: Should we be using get_user_model() instead of settings.AUTH_USER_MODEL ?
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 # Create your models here.
 # TODO: Implement calling resource_filepath for resource uploads.
-
-# TODO: Use ForeignKey.limit_choices_to where appropriate.
+# TODO: Use ForeignKey.limit_choices_to where appropriate. Does not work?
 # TODO: Add @staff_member_required decorator to admin views?
 
 
@@ -750,7 +748,7 @@ class AbstractProfile(models.Model):
     """ Extending user model to have profile fields as appropriate as either a student or a staff member. """
 
     # TODO: Allow users to modify their profile.
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True, )
+    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True, limit_choices_to={}, )
     bio = models.TextField(max_length=760, blank=True, )  # Staff will override max_length to be bigger.
     date_added = models.DateField(auto_now_add=True, )
     date_modified = models.DateField(auto_now=True, )
@@ -783,6 +781,7 @@ class AbstractProfile(models.Model):
 class Staff(AbstractProfile):
     """ A profile model appropriate for Staff users. """
 
+    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True, limit_choices_to={'is_staff': True}, )
     listing = models.SmallIntegerField(default=10, blank=True,
                                        help_text=_("Negative numbers will not be shown. "), )
     tax_doc = models.CharField(max_length=9, blank=True, )
@@ -794,6 +793,8 @@ class Staff(AbstractProfile):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._meta.get_field('bio').max_length = 1530  # Current for Chris is 1349 characters!
+        # self._meta.get_field('user').limit_choices_to = {'is_staff': True}  # Q(is_staff=True)
+        # self._meta.get_field('user').queryset = User.objects.filter(is_staff=True)  # Q(is_staff=True)
 
     def get_absolute_url(self):
         return reverse("profile_staff", kwargs={"id": self.user_id})
@@ -802,6 +803,7 @@ class Staff(AbstractProfile):
 class Student(AbstractProfile):
     """ A profile model appropriate for Student users. """
 
+    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True, limit_choices_to={'is_student': True})
     level = models.IntegerField(_('skill level'), default=0, blank=True, )
     taken = models.ManyToManyField(ClassOffer, related_name='students', through='Registration', )
     # interest = models.ManyToManyField(Subject, related_names='interests', through='Requests', )
@@ -811,6 +813,10 @@ class Student(AbstractProfile):
     #                           null=True, blank=True, related_names='referred', )
     # TODO: The following properties could be extracted further to allow the program admin user
     # to set their own rules for number of versions needed and other version translation decisions.
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # self._meta.get_field('user').limit_choices_to = Q(is_student=True)  # {'is_student': True}
 
     @property
     def highest_subject(self):
@@ -960,7 +966,7 @@ class Student(AbstractProfile):
         super().save(*args, **kwargs)
 
 
-@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+@receiver(post_save, sender=User)
 def create_or_update_user_profile(sender, instance, created, **kwargs):
     profile = None
     if instance.is_student:

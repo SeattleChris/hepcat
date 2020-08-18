@@ -1,11 +1,13 @@
 from django.contrib import admin
-from django.forms import ModelForm, Textarea, TextInput, ValidationError
+from django.forms import ModelForm, Textarea, ValidationError  # , TextInput,
 from django.utils.translation import gettext_lazy as _
 from django.db import models
 from django.conf import settings
 from .models import (SiteContent, Resource, Subject, Session, ClassOffer,
                      Staff, Student, Payment, Registration, Location)
 from datetime import timedelta, time, datetime as dt
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 
 def date_with_day(obj, field=None, short=False, year=False):
@@ -79,6 +81,12 @@ class StudentClassInline(admin.TabularInline):
     """ Admin can attach a class Registration while on the Student profile add/change form. """
     model = Registration
     extra = 2
+
+
+# class UserInline(admin.TabularInline):
+#     """ Admin can create a User while creating a profile. . """
+#     model = User
+#     # extra = 2
 
 # ##################################### ModelAdmin below ######################################
 
@@ -253,6 +261,7 @@ class StaffAdmin(admin.ModelAdmin):
     list_filter = ('user__is_staff', 'user__is_active', )
     ordering = ('date_modified', 'date_added', )
     fields = (('user', 'listing', 'tax_doc'), 'bio', )
+    # queryset = 
 
     def bio_done(self, obj): return True if len(obj.bio) > 0 else False
     def tax(self, obj): return True if len(obj.tax_doc) > 0 else False

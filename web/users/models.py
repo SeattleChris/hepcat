@@ -168,7 +168,7 @@ class UserManagerHC(UserManager):
 
 
 class UserHC(AbstractUser):
-    """ This will be the custom Users model for the site
+    """ This will be the custom Users model for the site.
         Inherits from: AbstractUser, AbstractBaseUser, models.Model, ModelBase, ...
     """
 
@@ -251,3 +251,7 @@ class StudentUser(UserHC):
 
     class Meta:
         proxy = True
+
+
+StaffUser._meta.get_field('is_student').default = False
+StaffUser._meta.get_field('is_teacher').default = True
