@@ -788,6 +788,9 @@ class Staff(AbstractProfile):
     tax_doc = models.CharField(max_length=9, blank=True, )
     # taught exists from ClassOffer.teachers related_name
 
+    class Meta(AbstractProfile.Meta):
+        verbose_name_plural = 'staff'
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._meta.get_field('bio').max_length = 1530  # Current for Chris is 1349 characters!
