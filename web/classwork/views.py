@@ -8,7 +8,7 @@ from payments import get_payment_model, RedirectNeeded  # used for Payments
 # from django.db.models import Q, F, Case, When, DateField, ExpressionWrapper as EW
 # from django.db.models import BooleanField, SmallIntegerField, DurationField
 # from django.db.models.functions import Trunc  # , Extract, ExtractYear, ExtractMonth, ExtractDay
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.contrib.auth import get_user_model
 from .forms import RegisterForm, PaymentForm
 from .models import (SiteContent, Resource, Location, ClassOffer, Subject,  # ? Session, Student
@@ -45,6 +45,18 @@ def decide_session(sess=None, display_date=None):
             result = None
         sess_data = [result] if result else Session.objects.none()
     return sess_data  # a list of Session records, even if only 0-1 session
+
+
+class GroupRequiredMixin:
+    group_required = None
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            raise PermissionDenied
+        user_groups = set([group for group in request.user.groups.values_list('name', flat=True)])
+        if len(user_groups.intersection(self.group_required)) < 1:
+            raise PermissionDenied
+        return super().dispatch(request, *args, **kwargs)
 
 
 class AboutUsListView(ListView):
@@ -129,8 +141,9 @@ class ClassOfferListView(ListView):
         return context
 
 
-class Checkin(ListView):
+class Checkin(GroupRequiredMixin, ListView):
     """ This is a report for which students are in which classes. """
+    group_required = ('teacher', 'admin', )
     model = Registration
     template_name = 'classwork/checkin.html'
     context_object_name = 'class_list'
