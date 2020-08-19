@@ -1,10 +1,13 @@
-from django.contrib.auth.models import AbstractUser, UserManager  # , Group
+from django.contrib.auth.models import AbstractUser, UserManager, Group
 from django.db import models
 from django.db.utils import IntegrityError
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
 # TODO: Move some of the student vs staff logic to Group
+teacher_group, created = Group.objects.get_or_create(name='teacher')
+
+
 # Create your models here.
 
 
@@ -228,6 +231,10 @@ class UserHC(AbstractUser):
             self.is_staff = True
         else:
             self.is_staff = False
+        if self.is_teacher:
+            self.groups.add(teacher_group)
+        else:
+            self.groups.remove(teacher_group)
         # TODO: Deal with username (email) being checked as existing even when we want a new user
         super().save(*args, **kwargs)
 

@@ -9,7 +9,7 @@ from .models import UserHC, StaffUser, StudentUser
 
 class CustomUserAdmin(UserAdmin):
     model = UserHC
-    list_display = ('first_name', 'last_name', 'username', 'is_student', 'is_teacher', 'is_admin', 'is_active', )
+    list_display = ('first_name', 'last_name', 'username', 'is_student', 'is_teacher', 'is_admin', 'is_active', 'grp', 'perm', )
     list_display_links = ('first_name', 'last_name', 'username', )
     list_filter = ('is_student', 'is_teacher', 'is_admin', 'is_staff', 'is_active', )  # , 'is_superuser',
     ordering = ('first_name', )
@@ -36,7 +36,7 @@ class CustomUserAdmin(UserAdmin):
                 ('password1', 'password2'), ),
         }),
         (_('Address Info'), {
-            'classes': ('collapse', ),
+            # 'classes': ('collapse', ),
             'fields': (
                 'billing_address_1', 'billing_address_2',
                 ('billing_city', 'billing_country_area', 'billing_postcode', ),
@@ -55,6 +55,9 @@ class CustomUserAdmin(UserAdmin):
         'billing_address_1': {'size': 20},
         'billing_address_2': {'size': 20},
     }
+
+    def grp(self, obj): return ', '.join(str(ea) for ea in obj.groups.all())
+    def perm(self, obj): return ', '.join(str(ea) for ea in obj.user_permissions.all())
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)

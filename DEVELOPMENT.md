@@ -48,8 +48,28 @@ For development and deployments notes.
 * Move to top repo directory (if in '/web', then `cd ..`).
   * Confirm the `.gitignore` file excludes the `.env` and `*hidden.json` files, and others as needed.
   * Confirm tests work with the command: `./web/manage.py test`
-* See [Tests] section below for further testing details and development.
-* See [Deployment] section below for deploying on Python Anywhere, AWS, etc.
+    * See [Tests] section below for further testing details and development.
+* Start application and continue setup via admin console:
+  * See [Deployment] section below for deploying on Python Anywhere, AWS, etc.
+  * Login as the superuser (in the '.env' settings if you did the 'createsu' command, or remember from manual input)
+  * Click the admin link to go to [admin site](https://yoursite.com/admin).
+  * Setup the permissions your organization wants for teachers:
+    * Under 'AUTHENTICATION AND AUTHORIZATION' click 'Groups', then click 'teacher' in the list.
+    * For each app and model, there are 'add', 'change', 'delete', 'view' permissions.
+    * Note: Any 'add' permission also requires 'change' permission to work as expected.
+    * Likely permissions for:
+      * `classwork | resource` content sent to students such as weekly emails, videos, etc.
+      * `classwork | subject` the general content and structure of a class (which may be offered various times).
+      * `classwork | class offer` The actual instance or time a class subject is run.
+    * Possible permissions for:
+      * `classwork | session` for when a group of subjects may be offered as classoffers.
+      * `classwork | student` for student info, including email/username.
+      * `users | student` for more student info, including address information given.
+    * Maybe give them more trust for site content:
+      * `classwork | location` where classoffers, dances, and other events may be held.
+      * `classwork | site content` for general site content.
+      * etc
+* Create some starter users, sessions, subjects, classoffers, etc. View the site to confirm all is working.
 * ... More to be added later ...
 
 <!-- **Alternative Setup Using Docker** -->
