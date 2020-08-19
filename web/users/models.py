@@ -5,8 +5,16 @@ from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
 # TODO: Move some of the student vs staff logic to Group
-teacher_group, created = Group.objects.get_or_create(name='teacher')
-
+teacher_group, created_teacher = Group.objects.get_or_create(name='teacher')
+admin_group, created_admin = Group.objects.get_or_create(name='admin')
+staff_group, created_staff = Group.objects.get_or_create(name='staff')
+groups_from_role = {'is_teacher': teacher_group, 'is_admin': admin_group, 'is_staff': staff_group}
+# print("=========== Loading users.models ========================")
+# if not created:
+#     print(dir(teacher_group))
+#     print('---------------------------------------------------------')
+#     print(teacher_group.permissions)
+#     # print('---------------------------------------------------------')
 
 # Create your models here.
 
@@ -227,14 +235,12 @@ class UserHC(AbstractUser):
     def save(self, *args, **kwargs):
         if not self.username:
             self.username = self.make_username()
-        if any([self.is_teacher, self.is_admin, self.is_superuser]):
-            self.is_staff = True
-        else:
-            self.is_staff = False
-        if self.is_teacher:
-            self.groups.add(teacher_group)
-        else:
-            self.groups.remove(teacher_group)
+        self.is_staff = True if any([self.is_teacher, self.is_admin, self.is_superuser]) else False
+        for role, group in groups_from_role.items():
+            if getattr(self, role):
+                self.groups.add(group)
+            else:
+                self.groups.remove(group)
         # TODO: Deal with username (email) being checked as existing even when we want a new user
         super().save(*args, **kwargs)
 
