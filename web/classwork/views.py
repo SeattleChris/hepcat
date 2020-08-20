@@ -154,7 +154,6 @@ class Checkin(GroupRequiredMixin, ListView):
         """ List all the students from all the classes sorted according to the class property query_order_by.
             Student list should be grouped in days, then in start_time order, and then alphabetical first name.
         """
-        # print("============ Checkin.get_queryset ================")
         display_session = self.kwargs.get('display_session', None)
         display_date = self.kwargs.get('display_date', None)
         sessions = decide_session(sess=display_session, display_date=display_date)
@@ -165,7 +164,6 @@ class Checkin(GroupRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         """ Determine Session filter parameters. Reference to previous and next Session if feasible. """
-        # print("============ Checkin.get_context_data ================")
         context = super().get_context_data(**kwargs)
         sessions = self.kwargs.pop('sessions', [])
         context['sessions'] = ', '.join([ea.name for ea in sessions])
@@ -228,7 +226,6 @@ class ProfileView(DetailView):
     def get_context_data(self, **kwargs):
         """ Modify the context """
         context = super().get_context_data(**kwargs)
-        # print('===== ProfileView get_context_data ======')
         co_connected = getattr(context['object'], 'taken' if self.profile_type == 'student' else 'taught', object)
         context['classoffers'] = co_connected.all()
         context['resources'] = self.make_resource_dict(co_connected)

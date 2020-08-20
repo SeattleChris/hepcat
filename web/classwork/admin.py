@@ -66,8 +66,6 @@ class AssociateSubjectResource(admin.StackedInline):
         'level',
     )
 
-    # end class AssociatedResourceInline
-
 
 class ResourceSubjectInline(ResourceInline):
     model = Resource.subjects.through
