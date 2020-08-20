@@ -9,12 +9,6 @@ teacher_group, created_teacher = Group.objects.get_or_create(name='teacher')
 admin_group, created_admin = Group.objects.get_or_create(name='admin')
 staff_group, created_staff = Group.objects.get_or_create(name='staff')
 groups_from_role = {'is_teacher': teacher_group, 'is_admin': admin_group, 'is_staff': staff_group}
-# print("=========== Loading users.models ========================")
-# if not created:
-#     print(dir(teacher_group))
-#     print('---------------------------------------------------------')
-#     print(teacher_group.permissions)
-#     # print('---------------------------------------------------------')
 
 # Create your models here.
 
@@ -225,12 +219,11 @@ class UserHC(AbstractUser):
         """ Instead of user selecting a username, we will generate it from their info, using casefold()
             instead of lower() since it is better for some international character sets.
         """
+        # TODO: Confirm our final username is not in use.
         if self.uses_email_username is True:
-            # TODO: How to check if their email is already taken as a username?
             return self.email.casefold()
-        # temp = self.first_name + '_' + self.last_name
-        temp = '_'.join([getattr(self, key) for key in ('first_name', 'last_name') if getattr(self, key, None)] or '')
-        return temp.casefold()
+        user_name_list = [getattr(self, key) for key in ('first_name', 'last_name') if getattr(self, key, None)]
+        return ' '.join(user_name_list).casefold()
 
     def save(self, *args, **kwargs):
         if not self.username:
@@ -257,7 +250,6 @@ class StaffUser(UserHC):
 
     class Meta:
         proxy = True
-        # verbose_plural_name = 'Staff'
 
 
 class StudentUser(UserHC):

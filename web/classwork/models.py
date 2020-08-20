@@ -19,7 +19,6 @@ User = get_user_model()
 
 # Create your models here.
 # TODO: Implement calling resource_filepath for resource uploads.
-# TODO: Use ForeignKey.limit_choices_to where appropriate. Does not work?
 # TODO: Add @staff_member_required decorator to admin views?
 
 
