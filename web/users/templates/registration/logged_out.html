@@ -3,7 +3,9 @@
 
 {% block content %}
 <section>
-  <h2>You are logged out. Congrats.</h2>
+  <h2>Logged Out</h2>
+  <p>You are logged out. Congrats.</p>
+  <a href="{% url 'login'%}">Click here to login again.</a>
 </section>
 
 {% endblock content %}
