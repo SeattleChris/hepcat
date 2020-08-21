@@ -223,7 +223,8 @@ class UserHC(AbstractUser):
         if self.uses_email_username is True:
             return self.email.casefold()
         user_name_list = [getattr(self, key) for key in ('first_name', 'last_name') if getattr(self, key, None)]
-        return ' '.join(user_name_list).casefold()
+        username = ' '.join(user_name_list).casefold()
+        return self.normalize_username(username)
 
     def save(self, *args, **kwargs):
         if not self.username:
