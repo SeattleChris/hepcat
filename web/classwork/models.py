@@ -749,7 +749,8 @@ class AbstractProfile(models.Model):
     """ Extending user model to have profile fields as appropriate as either a student or a staff member. """
 
     # TODO: Allow users to modify their profile.
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True, limit_choices_to={}, )
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True,
+                                limit_choices_to={}, )
     bio = models.TextField(max_length=760, blank=True, )  # Staff will override max_length to be bigger.
     date_added = models.DateField(auto_now_add=True, )
     date_modified = models.DateField(auto_now=True, )
@@ -782,7 +783,8 @@ class AbstractProfile(models.Model):
 class Staff(AbstractProfile):
     """ A profile model appropriate for Staff users. """
 
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True, limit_choices_to={'is_staff': True}, )
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True,
+                                limit_choices_to={'is_staff': True}, )
     listing = models.SmallIntegerField(default=10, blank=True,
                                        help_text=_("Negative numbers will not be shown. "), )
     tax_doc = models.CharField(max_length=9, blank=True, )
@@ -804,7 +806,8 @@ class Staff(AbstractProfile):
 class Student(AbstractProfile):
     """ A profile model appropriate for Student users. """
 
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True, limit_choices_to={'is_student': True})
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True,
+                                limit_choices_to={'is_student': True})
     level = models.IntegerField(_('skill level'), default=0, blank=True, )
     taken = models.ManyToManyField(ClassOffer, related_name='students', through='Registration', )
     # interest = models.ManyToManyField(Subject, related_names='interests', through='Requests', )
