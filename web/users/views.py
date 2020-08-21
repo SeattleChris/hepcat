@@ -8,7 +8,7 @@ from .forms import CustomUserCreationForm, CustomUserChangeForm
 
 class SignUp(generic.CreateView):
     form_class = CustomUserCreationForm
-    success_url = reverse_lazy('login')
+    success_url = reverse_lazy('profile_page')
     template_name = 'signup.html'
 
 
