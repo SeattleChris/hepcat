@@ -14,8 +14,10 @@ from decimal import Decimal  # used for Payments
 from payments import PurchasedItem
 from payments.models import BasePayment
 from datetime import date, timedelta, datetime as dt
-from django.contrib.auth import get_user_model
-User = get_user_model()
+# from django.contrib.auth import get_user_model
+# User = get_user_model()
+# should use settings.AUTH_USER_MODEL for foreign key, many-to-many relations, or connecting to signals.
+# Docs: https://docs.djangoproject.com/en/3.1/topics/auth/customizing/#custom-users-and-the-built-in-auth-forms
 
 # Create your models here.
 # TODO: Implement calling resource_filepath for resource uploads.
@@ -747,7 +749,8 @@ class AbstractProfile(models.Model):
     """ Extending user model to have profile fields as appropriate as either a student or a staff member. """
 
     # TODO: Allow users to modify their profile.
-    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True, limit_choices_to={}, )
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True,
+                                limit_choices_to={}, )
     bio = models.TextField(max_length=760, blank=True, )  # Staff will override max_length to be bigger.
     date_added = models.DateField(auto_now_add=True, )
     date_modified = models.DateField(auto_now=True, )
@@ -780,7 +783,8 @@ class AbstractProfile(models.Model):
 class Staff(AbstractProfile):
     """ A profile model appropriate for Staff users. """
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True, limit_choices_to={'is_staff': True}, )
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True,
+                                limit_choices_to={'is_staff': True}, )
     listing = models.SmallIntegerField(default=10, blank=True,
                                        help_text=_("Negative numbers will not be shown. "), )
     tax_doc = models.CharField(max_length=9, blank=True, )
@@ -802,7 +806,8 @@ class Staff(AbstractProfile):
 class Student(AbstractProfile):
     """ A profile model appropriate for Student users. """
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True, limit_choices_to={'is_student': True})
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True,
+                                limit_choices_to={'is_student': True})
     level = models.IntegerField(_('skill level'), default=0, blank=True, )
     taken = models.ManyToManyField(ClassOffer, related_name='students', through='Registration', )
     # interest = models.ManyToManyField(Subject, related_names='interests', through='Requests', )
@@ -965,7 +970,7 @@ class Student(AbstractProfile):
         super().save(*args, **kwargs)
 
 
-@receiver(post_save, sender=User)
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_or_update_user_profile(sender, instance, created, **kwargs):
     profile = None
     if instance.is_student:

@@ -9,7 +9,8 @@ from .models import UserHC, StaffUser, StudentUser
 
 class CustomUserAdmin(UserAdmin):
     model = UserHC
-    list_display = ('first_name', 'last_name', 'username', 'is_student', 'is_teacher', 'is_admin', 'is_active', 'grp', 'perm', )
+    list_display = ('first_name', 'last_name', 'username', 'is_student', 'is_teacher', 'is_admin', 'is_active', 'grp',
+                    'perm', )
     list_display_links = ('first_name', 'last_name', 'username', )
     list_filter = ('is_student', 'is_teacher', 'is_admin', 'is_staff', 'is_active', )  # , 'is_superuser',
     ordering = ('first_name', )

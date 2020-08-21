@@ -7,12 +7,26 @@
   <article class="login-form container">
     <h2>Login</h2>
     <p>If you have have previously had classes with us, you can login with your email you used to sign up for classes. </p>
-    <form method="post">
+    {% if form.errors %}
+      <p>Your email and password didn't match. Please try again.</p>
+    {% endif %}
+    {% if next %}
+      {% if user.is_authenticated %}
+        <p>Your account doesn't have access to this page. To proceed,
+        please login with an account that has access.</p>
+      {% else %}
+        <p>Please login to see this page.</p>
+      {% endif %}
+    {% endif %}
+
+    <form method="post" action="{% url 'login' %}">
       {% csrf_token %}
       {{ form.as_p }}
-      {% comment %} <input type="submit" value="Submit" /> {% endcomment %}
+      <input type="hidden" name="next" value="{{ next }}" />
+      <!-- <input type="submit" value="login" /> -->
       <button type="submit">Login</button>
     </form>
+    <p><a href="{% url 'password_reset' %}">Lost password?</a></p>
   </article>
 </section>
 
