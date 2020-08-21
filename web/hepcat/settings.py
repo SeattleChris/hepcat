@@ -161,6 +161,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # CUSTOM Additional Settings for this Project
 
 # Django Registration and email
+LOGIN_URL = 'login'  # TODO: Confirm or Update.
 LOGIN_REDIRECT_URL = '/profile/'
 LOGOUT_REDIRECT_URL = 'home'
 ACCOUNT_ACTIVATION_DAYS = 1
@@ -227,6 +228,7 @@ PAYMENT_VARIANTS = {
         }),
     'default': ('payments.dummy.DummyProvider', {})
     }
+
 # CUSTOM Global variables
 BUSINESS_NAME = os.environ.get('BUSINESS_NAME', 'School Site')
 DEFAULT_CITY = os.environ.get('DEFAULT_CITY', '')

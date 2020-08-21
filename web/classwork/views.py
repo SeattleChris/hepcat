@@ -10,6 +10,7 @@ from payments import get_payment_model, RedirectNeeded  # used for Payments
 # from django.db.models.functions import Trunc  # , Extract, ExtractYear, ExtractMonth, ExtractDay
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.contrib.auth import get_user_model
+from django.contrib.auth.views import redirect_to_login
 from .forms import RegisterForm, PaymentForm
 from .models import (SiteContent, Resource, Location, ClassOffer, Subject,  # ? Session, Student
                      Staff, Payment, Registration, Session)
@@ -47,12 +48,13 @@ def decide_session(sess=None, display_date=None):
     return sess_data  # a list of Session records, even if only 0-1 session
 
 
-class GroupRequiredMixin:
+class GroupRequiredMixin:  # (AccessMixin)
     group_required = None
 
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
-            raise PermissionDenied
+            # TODO: pass login url instead of depending on settings.LOGIN_URL
+            return redirect_to_login(request.build_absolute_uri())
         user_groups = set([group for group in request.user.groups.values_list('name', flat=True)])
         if len(user_groups.intersection(self.group_required)) < 1:
             raise PermissionDenied
