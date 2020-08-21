@@ -23,6 +23,8 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('', home_view, name='home'),
     path('', include('classwork.urls')),
+    path('user/', include('django.contrib.auth.urls')),
+    path('user/', include('users.urls')),
     path('admin/', admin.site.urls),
     # TODO: Set a registration page from one of the following:
     # path('user/', include('django_registration.backends.activation.urls')),
@@ -30,8 +32,6 @@ urlpatterns = [
     # path('user/register/',
     #      RegistrationView.as_view(success_url='/profile/'),
     #      name='django_registration_register'),
-    path('user/', include('django.contrib.auth.urls')),
-    path('user/', include('users.urls')),
     path('payments/', include('payments.urls')),
     # path('newsletter/', include('newsletter.urls')),  # subscribe, unsubscribe, archive features
 ]
