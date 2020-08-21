@@ -322,6 +322,7 @@ Current Status:
 ## Sign Up & User Accounts
 
 - [ ] Update login pages to say 'email' where it currently asks for 'username'.
+- [ ] Catch IntegrityError for attempt to create an existing User.
 - [ ] Class sign up as anonymous process:
   - [x] Create the account, sign-up for class, allow payment.
   - [ ] User is logged in on account creation?
