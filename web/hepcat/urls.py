@@ -15,7 +15,6 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-# from django_registration.backends.one_step import RegistrationView
 from .views import home_view
 from django.conf import settings
 from django.conf.urls.static import static
@@ -26,12 +25,6 @@ urlpatterns = [
     path('user/', include('django.contrib.auth.urls')),
     path('user/', include('users.urls')),
     path('admin/', admin.site.urls),
-    # TODO: Set a registration page from one of the following:
-    # path('user/', include('django_registration.backends.activation.urls')),
-    # path('user/register/', include('django_registration.backends.one_step.urls')),
-    # path('user/register/',
-    #      RegistrationView.as_view(success_url='/profile/'),
-    #      name='django_registration_register'),
     path('payments/', include('payments.urls')),
     # path('newsletter/', include('newsletter.urls')),  # subscribe, unsubscribe, archive features
 ]
