@@ -36,7 +36,7 @@ class CustomRegistrationForm(RegistrationForm):
             validators.HTML5EmailValidator(),
             validators.validate_confusables_email
         ]
-        if self.unique_email:
+        if self.Meta.unique_email:
             email_validators.append(
                 validators.CaseInsensitiveUnique(
                     self.model, email_field, validators.DUPLICATE_EMAIL
@@ -54,7 +54,7 @@ class CustomRegistrationForm(RegistrationForm):
             validators.ReservedNameValidator(reserved_names),
             validators.validate_confusables,
         ]
-        if self.case_insensitive:
+        if self.Meta.case_insensitive:
             username_validators.append(
                 validators.CaseInsensitiveUnique(
                     self.model, username, validators.DUPLICATE_USERNAME
