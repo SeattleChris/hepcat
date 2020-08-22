@@ -40,34 +40,45 @@ class CustomUserChangeForm(UserChangeForm):
 
 class CustomRegistrationForm(RegistrationForm):
 
-    class Meta:
+    class Meta(RegistrationForm.Meta):
         model = UserHC
-        fields = ('first_name', 'last_name', )
-        computed_fields = ('username', 'uses_email_username', )
+        fields = ('first_name', 'last_name', model.USERNAME_FIELD, model.get_email_field_name(), 'uses_email_username',)
+        computed_fields = (model.USERNAME_FIELD, 'uses_email_username', )
         case_insensitive = True
         unique_email = False
 
+    # def __new__(cls, *args, **kwargs):
+    #     print("========================= CustomRegistrationForm.__new__ ===============================")
+    #     print(args)
+    #     print(kwargs)
+    #     instance = super(CustomRegistrationForm, cls).__new__(cls)
+    #     print(instance)
+    #     return instance
+
     def __init__(self, *args, **kwargs):
+        from pprint import pprint
         if not hasattr(self.Meta, 'model') or not issubclass(self.Meta.model, AbstractBaseUser):
             err = "The model attribute must be a subclass of Django's AbstractBaseUser, AbstractUser, or User. "
             raise ImproperlyConfigured(_(err))
         # TODO: Refactor - above is done in the view. Here we should confirm needed functionality via hasattr.
         # must have self.model, self.model,USERNAME_FIELD, and implimented self.model.get_email_field_name()
-        # essential_fields = [username] if username not in getattr(self, 'computed_fields', []) else []
-        # essential_fields += [email_field, 'password1', 'password2', ]
         essential_fields = self.base_fields.copy()
-        self.fields = list(getattr(self, 'fields', []))
-        self.computed_fields = list(getattr(self, 'computed_fields', []))
-        needed_fields = (ea for ea in essential_fields if ea not in self.computed_fields + self.fields)
-        self.fields.extend(needed_fields + self.computed_fields)  # also include self.computed_fields and then extract them later?
-
-        # super(BaseUserCreationForm, self).__init__(*args, **kwargs)
+        print("================================== CustomRegistrationForm.__init__ =====================")
+        # pprint(self)
+        pprint(args)
+        pprint(kwargs)
+        print("---------------------------------------------------------")
+        pprint(essential_fields)
+        pprint(self.Meta.computed_fields)
+        # # super(BaseUserCreationForm, self).__init__(*args, **kwargs)
         super().__init__(*args, **kwargs)
-        extracted_fields = {key: essential_fields.pop(key, None) for key in self.computed_fields}
-        # also extract any from self.computed_fields?
+        extracted_fields = {key: self.fields.pop(key, None) for key in self.Meta.computed_fields}
         self.computed_fields = extracted_fields
+        print("---------------------------------------------------------")
+        pprint(essential_fields)
+        pprint(extracted_fields)
 
-        email_field = self.model.get_email_field_name()
+        email_field = self.Meta.model.get_email_field_name()
         email_validators = [
             validators.HTML5EmailValidator(),
             validators.validate_confusables_email
@@ -75,13 +86,13 @@ class CustomRegistrationForm(RegistrationForm):
         if self.Meta.unique_email:
             email_validators.append(
                 validators.CaseInsensitiveUnique(
-                    self.model, email_field, validators.DUPLICATE_EMAIL
+                    self.Meta.model, email_field, validators.DUPLICATE_EMAIL
                 )
             )
         self.fields[email_field].validators.extend(email_validators)
         self.fields[email_field].required = True
 
-        username = self.model.USERNAME_FIELD
+        username = self.Meta.model.USERNAME_FIELD
         # reserved_names = getattr(self, 'reserved_names', validators.DEFAULT_RESERVED_NAMES)
         if hasattr(self, 'reserved_names'):
             reserved_names = self.reserved_names
@@ -94,13 +105,17 @@ class CustomRegistrationForm(RegistrationForm):
         if self.Meta.case_insensitive:
             username_validators.append(
                 validators.CaseInsensitiveUnique(
-                    self.model, username, validators.DUPLICATE_USERNAME
+                    self.Meta.model, username, validators.DUPLICATE_USERNAME
                 )
             )
         if username in self.computed_fields:
             self.computed_fields[username].validators.extend(username_validators)
         else:
             self.fields[username].validators.extend(username_validators)
+
+        print("---------------------------------------------------------")
+        pprint(self.fields)
+        pprint(self.computed_fields)
 
     # def clean_username(self):
 
