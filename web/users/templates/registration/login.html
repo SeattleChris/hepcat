@@ -12,8 +12,10 @@
     {% endif %}
     {% if next %}
       {% if user.is_authenticated %}
-        <p>Your account doesn't have access to this page. To proceed,
-        please login with an account that has access.</p>
+        <p>
+          You are logged in as {{ user }}, but you do not have access to this page or it does not exist.
+          Would you login with a different account?
+      </p>
       {% else %}
         <p>Please login to see this page.</p>
       {% endif %}

@@ -1,16 +1,16 @@
 from django.views.generic import ListView, CreateView, DetailView, UpdateView
-# from django.contrib.auth.mixins import LoginRequiredMixin
-# from django.urls import reverse_lazy
-from django.utils.translation import gettext_lazy as _
-from django.shortcuts import get_object_or_404, redirect  # used for Payments
 from django.template.response import TemplateResponse  # used for Payments
-from payments import get_payment_model, RedirectNeeded  # used for Payments
+from django.urls import reverse_lazy
+from django.shortcuts import get_object_or_404, redirect  # used for Payments
+from django.utils.translation import gettext_lazy as _
 # from django.db.models import Q, F, Case, When, DateField, ExpressionWrapper as EW
 # from django.db.models import BooleanField, SmallIntegerField, DurationField
 # from django.db.models.functions import Trunc  # , Extract, ExtractYear, ExtractMonth, ExtractDay
-from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
+from django.core.exceptions import ObjectDoesNotExist  # , PermissionDenied
 from django.contrib.auth import get_user_model
-from django.contrib.auth.views import redirect_to_login
+from django.contrib.auth.mixins import UserPassesTestMixin  # , LoginRequiredMixin
+# from django.contrib.auth.views import redirect_to_login
+from payments import get_payment_model, RedirectNeeded  # used for Payments
 from .forms import RegisterForm, PaymentForm
 from .models import (SiteContent, Resource, Location, ClassOffer, Subject,  # ? Session, Student
                      Staff, Payment, Registration, Session)
@@ -48,17 +48,26 @@ def decide_session(sess=None, display_date=None):
     return sess_data  # a list of Session records, even if only 0-1 session
 
 
-class GroupRequiredMixin:  # (AccessMixin)
-    group_required = None
+class ViewOnlyForTeacherOrAdminMixin(UserPassesTestMixin):
+    """ Raises PermissionDenied for a User not in a required_group.
+        raise_exception: As False (default) will login redirect AnonymousUser. As True, will raise PermissionDenied.
+        permission_denied_message: May display in the 403 error page, depending on the template & view. Can be updated.
+    """
+    required_group = ('teacher', 'admin', )
+    login_url = reverse_lazy('login')
+    raise_exception = False
+    permission_denied_message = 'You scoundrel! You do not have access to that page. That page may not even exist!'
 
-    def dispatch(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            # TODO: pass login url instead of depending on settings.LOGIN_URL
-            return redirect_to_login(request.build_absolute_uri())
-        user_groups = set([group for group in request.user.groups.values_list('name', flat=True)])
-        if len(user_groups.intersection(self.group_required)) < 1:
-            raise PermissionDenied
-        return super().dispatch(request, *args, **kwargs)
+    def test_func(self):
+        """ Expected to return a boolean representing if the user is allowed access to this view. """
+        if not self.request.user.is_authenticated:
+            return False
+        # user_groups = set([group for group in self.request.user.groups.values_list('name', flat=True)])
+        user_groups = set(group for group in self.request.user.groups.values_list('name', flat=True))
+        if len(user_groups.intersection(self.required_group)) < 1:
+            self.permission_denied_message = f"{self.request.user}, " + self.permission_denied_message
+            return False
+        return True
 
 
 class AboutUsListView(ListView):
@@ -143,7 +152,7 @@ class ClassOfferListView(ListView):
         return context
 
 
-class Checkin(GroupRequiredMixin, ListView):
+class Checkin(ViewOnlyForTeacherOrAdminMixin, ListView):
     """ This is a report for which students are in which classes. """
     group_required = ('teacher', 'admin', )
     model = Registration

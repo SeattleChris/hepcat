@@ -230,13 +230,13 @@ class UserHC(AbstractUser):
         if not self.username:
             self.username = self.make_username()
         self.is_staff = True if any([self.is_teacher, self.is_admin, self.is_superuser]) else False
+        # TODO: Deal with username (email) being checked as existing even when we want a new user
+        super().save(*args, **kwargs)
         for role, group in groups_from_role.items():
             if getattr(self, role):
                 self.groups.add(group)
             else:
                 self.groups.remove(group)
-        # TODO: Deal with username (email) being checked as existing even when we want a new user
-        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.full_name
@@ -259,5 +259,6 @@ class StudentUser(UserHC):
         proxy = True
 
 
-StaffUser._meta.get_field('is_student').default = False
-StaffUser._meta.get_field('is_teacher').default = True
+# The following causes the UserHC model to also use these default settings.
+# StaffUser._meta.get_field('is_student').default = False
+# StaffUser._meta.get_field('is_teacher').default = True
