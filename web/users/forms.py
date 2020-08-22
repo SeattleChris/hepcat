@@ -62,20 +62,16 @@ class CustomRegistrationForm(RegistrationForm):
             raise ImproperlyConfigured(_(err))
         # TODO: Refactor - above is done in the view. Here we should confirm needed functionality via hasattr.
         # must have self.model, self.model,USERNAME_FIELD, and implimented self.model.get_email_field_name()
-        essential_fields = self.base_fields.copy()
         print("================================== CustomRegistrationForm.__init__ =====================")
         # pprint(self)
         pprint(args)
         pprint(kwargs)
-        print("---------------------------------------------------------")
-        pprint(essential_fields)
-        pprint(self.Meta.computed_fields)
         # # super(BaseUserCreationForm, self).__init__(*args, **kwargs)
         super().__init__(*args, **kwargs)
         extracted_fields = {key: self.fields.pop(key, None) for key in self.Meta.computed_fields}
         self.computed_fields = extracted_fields
         print("---------------------------------------------------------")
-        pprint(essential_fields)
+        pprint(self.fields)
         pprint(extracted_fields)
 
         email_field = self.Meta.model.get_email_field_name()
@@ -93,11 +89,7 @@ class CustomRegistrationForm(RegistrationForm):
         self.fields[email_field].required = True
 
         username = self.Meta.model.USERNAME_FIELD
-        # reserved_names = getattr(self, 'reserved_names', validators.DEFAULT_RESERVED_NAMES)
-        if hasattr(self, 'reserved_names'):
-            reserved_names = self.reserved_names
-        else:
-            reserved_names = validators.DEFAULT_RESERVED_NAMES
+        reserved_names = getattr(self, 'reserved_names', validators.DEFAULT_RESERVED_NAMES)
         username_validators = [
             validators.ReservedNameValidator(reserved_names),
             validators.validate_confusables,
@@ -108,10 +100,10 @@ class CustomRegistrationForm(RegistrationForm):
                     self.Meta.model, username, validators.DUPLICATE_USERNAME
                 )
             )
-        if username in self.computed_fields:
-            self.computed_fields[username].validators.extend(username_validators)
-        else:
+        if username in self.fields:
             self.fields[username].validators.extend(username_validators)
+        else:
+            self.computed_fields[username].validators.extend(username_validators)
 
         print("---------------------------------------------------------")
         pprint(self.fields)
