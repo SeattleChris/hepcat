@@ -8,9 +8,8 @@ from .forms import CustomRegistrationForm, CustomUserCreationForm, CustomUserCha
 
 
 class CustomRegistrationView(RegistrationView):
-    class Meta:
-        form_class = CustomRegistrationForm
-        success_url = reverse_lazy('profile_page')
+    form_class = CustomRegistrationForm
+    success_url = reverse_lazy('profile_page')
 
 
 class SignUp(generic.CreateView):
