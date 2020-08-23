@@ -37,7 +37,7 @@
 | :heavy_check_mark: | Tests: UserHC model - create user; Profile create on UserHC; Basics for all models.         |
 | :heavy_check_mark: | User Views: Profile - resources filtered to currently allowed and no duplicates.            |
 |                    | User Views: Profile - resources display, layout, and navigation in a useful way.            |
-|                    | User Views: About Us - show profile info for only teachers and staff, plus general business |
+| :heavy_check_mark: | User Views: About Us - show profile info for only teachers and staff, plus general business |
 |                    | User Views: Contact Us (including contact form), Info - general site resources, sub-pages   |
 |                    | User Views: General site clean up before first launch                                       |
 |                    | User Views: Social Justice Call                                                             |
@@ -87,7 +87,7 @@
 - [s] Stretch Goal. Not for current feature plan.
 
 Current Status:
-2020-08-16 16:07:19
+2020-08-22 23:40:32
 <!-- Ctrl-Shift-I to generate timestamp -->
 
 ### Bug Fixes
@@ -223,6 +223,7 @@ Current Status:
 - [x] Collect static working.
 - [x] Upload ver 0.4.1.
 - [x] Upload ver 0.4.4.
+- [x] Upload ver 0.4.6.
 - [ ] Populate initial Class structure models.
 
 ### Deployment on AWS
@@ -321,6 +322,7 @@ Current Status:
 
 ## Sign Up & User Accounts
 
+- [ ] Django-registration integration, managing our computed username.
 - [ ] Update login pages to say 'email' where it currently asks for 'username'.
 - [ ] Catch IntegrityError for attempt to create an existing User.
 - [ ] Class sign up as anonymous process:
