@@ -1,6 +1,6 @@
 # Development Notes
 
-For development and deployments notes.
+For deployment and development notes.
 
 ## Getting Started
 
