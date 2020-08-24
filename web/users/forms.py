@@ -64,32 +64,28 @@ class CustomRegistrationForm(RegistrationForm):
         # TODO: Refactor - above is done in the view. Here we should confirm needed functionality via hasattr.
         # must have self.model, self.model,USERNAME_FIELD, and implimented self.model.get_email_field_name()
         print("================================== CustomRegistrationForm.__init__ =====================")
-        # pprint(self)
         pprint(args)
         pprint(kwargs)
         # # super(BaseUserCreationForm, self).__init__(*args, **kwargs)
         super().__init__(*args, **kwargs)
         extracted_fields = {key: self.fields.pop(key, None) for key in self.Meta.computed_fields}
         self.computed_fields = extracted_fields
-        print("---------------------------------------------------------")
-        pprint(self.fields)
-        pprint(extracted_fields)
-
         # Set field validators, which will automatically be run at the start of the Field clean method.
 
         email_field = self.Meta.model.get_email_field_name()
-        email_validators = [
-            validators.HTML5EmailValidator(),
-            validators.validate_confusables_email
-        ]
-        if self.Meta.unique_email:
-            email_validators.append(
-                validators.CaseInsensitiveUnique(
-                    self.Meta.model, email_field, validators.DUPLICATE_EMAIL
+        if email_field in self.fields:
+            email_validators = [
+                validators.HTML5EmailValidator(),
+                validators.validate_confusables_email
+            ]
+            if self.Meta.unique_email:
+                email_validators.append(
+                    validators.CaseInsensitiveUnique(
+                        self.Meta.model, email_field, validators.DUPLICATE_EMAIL
+                    )
                 )
-            )
-        self.fields[email_field].validators.extend(email_validators)
-        self.fields[email_field].required = True
+            self.fields[email_field].validators.extend(email_validators)
+            self.fields[email_field].required = True
 
         username = self.Meta.model.USERNAME_FIELD
         reserved_names = getattr(self, 'reserved_names', validators.DEFAULT_RESERVED_NAMES)
@@ -103,11 +99,10 @@ class CustomRegistrationForm(RegistrationForm):
                     self.Meta.model, username, validators.DUPLICATE_USERNAME
                 )
             )
-        # TODO: Create a username validator that first tries the email, then concatenated name value.
-        if username in self.fields:
-            self.fields[username].validators.extend(username_validators)
-        else:
+        if username in self.computed_fields:
             self.computed_fields[username].validators.extend(username_validators)
+        elif username in self.fields:
+            self.fields[username].validators.extend(username_validators)
 
         print("---------------------------------------------------------")
         pprint(self.fields)
@@ -122,21 +117,20 @@ class CustomRegistrationForm(RegistrationForm):
     def compute_username(self):
         """ Set Field.initial as a str value or callable returning one. Overridden by self.initial['username']. """
         print("=================== CustomRegistrationForm.compute_username ===========================")
+        field = self.computed_fields[self._meta.model.USERNAME_FIELD]
         email_value = self.cleaned_data[self._meta.model.get_email_field_name()]
-        field = self.computed_fields['username']
         field.initial = email_value
-        print(field)
+        print(field.initial)
         return field
 
     def _clean_computed_fields(self):
         """ Mimics _clean_fields for computed_fields. Calls compute_<fieldname> and clean_<fieldname> if present. """
-        result = {}
         compute_errors = ErrorDict()
         for name, field in self.computed_fields.items():
             # field.disabled = True  # field value will be self.get_initial_for_field(field, name)
             if hasattr(self, 'compute_%s' % name):
                 field = getattr(self, 'compute_%s' % name)()
-            result[name] = field
+            self.computed_fields[name] = field  # self.fields[name] = field
             value = self.get_initial_for_field(field, name)
             try:
                 value = field.clean(value)
@@ -146,24 +140,33 @@ class CustomRegistrationForm(RegistrationForm):
                     self.cleaned_data[name] = value
             except ValidationError as e:
                 compute_errors[name] = e
-        return result, compute_errors
+                self.add_error(None, e)
+        cleaned_compute_data = {name: self.cleaned_data.pop(name, None) for name in self.computed_fields}
+        return cleaned_compute_data, compute_errors
+        # return compute_errors
 
     def clean(self):
         print("============================ CustomRegistrationForm.clean =========================")
         # self.fields.update(self._clean_computed_fields())
-        cleaned_computed_fields, compute_errors = self._clean_computed_fields()
-        print("---------------- cleaned_computed_fields -----------------------------------------")
-        print(cleaned_computed_fields)
+        cleaned_compute_data, compute_errors = self._clean_computed_fields()
+        # compute_errors = self._clean_computed_fields()
+        print("---------------- cleaned_computed_data -----------------------------------------")
+        print(cleaned_compute_data)
         print("---------------- compute_errors -----------------------------------------")
         print(compute_errors)
-        print("---------------------------------------------------------")
         if compute_errors:
-            extracted_cleaned_fields = {key: self.cleaned_data.pop(key, None) for key in self.computed_fields}
-            print(extracted_cleaned_fields)
+            # cleaned_compute_data = {key: self.cleaned_data.pop(key, None) for key in self.computed_fields}
+            # extracted_fields = {key: self.fields.pop(key, None) for key in self.computed_fields}
+            # print("- - - - - - - - - - - - - - - - - - - - - - - -")
+            pass
+            # print(extracted_fields)
         else:
             print(" We had no errors! ")
-            self.fields.update(cleaned_computed_fields)
+            self.fields.update(self.computed_fields)
+            self.cleaned_data.update(cleaned_compute_data)
+        print("-----------------Cleaned Data After Cleaning Computed Fields -------------------------------------")
         print(self.cleaned_data)
+        print("---------------------------------------------------------")
         return super().clean()
 
     def _post_clean(self):
