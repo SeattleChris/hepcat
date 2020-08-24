@@ -1,0 +1,18 @@
+ModelForm Validation:
+
+Initially triggered by:
+    Typical: calling form.is_valid()
+    Possible: accessing attribute form.errors
+    Rare: calling form.full_clean()
+
+During validation, each clean_<field> method is called for non-excluded fields
+
+
+
+
+
+After form.clean() is called, Model.full_clean() is called
+    If overriding form.clean(): call super() to ensure unique checks are performed
+
+
+
