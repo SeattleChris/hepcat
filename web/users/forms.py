@@ -66,7 +66,6 @@ class CustomRegistrationForm(RegistrationForm):
         print("================================== CustomRegistrationForm.__init__ =====================")
         pprint(args)
         pprint(kwargs)
-        # # super(BaseUserCreationForm, self).__init__(*args, **kwargs)
         super().__init__(*args, **kwargs)
         extracted_fields = {key: self.fields.pop(key, None) for key in self.Meta.computed_fields}
         self.computed_fields = extracted_fields
@@ -117,9 +116,20 @@ class CustomRegistrationForm(RegistrationForm):
     def compute_username(self):
         """ Set Field.initial as a str value or callable returning one. Overridden by self.initial['username']. """
         print("=================== CustomRegistrationForm.compute_username ===========================")
-        field = self.computed_fields[self._meta.model.USERNAME_FIELD]
-        email_value = self.cleaned_data[self._meta.model.get_email_field_name()]
-        field.initial = email_value
+        model = self._meta.model
+        username = model.USERNAME_FIELD
+        field = self.computed_fields[username]
+        result_value = self.cleaned_data[model.get_email_field_name()]
+        lookup = {"{}__iexact".format(username): result_value}
+        try:
+            if model._default_manager.filter(**lookup).exists():
+                names = (self.cleaned_data[key] for key in ('first_name', 'last_name') if self.cleaned_data.get(key))
+                result_value = model.normalize_username('_'.join(names).casefold())
+                self.initial['uses_email_username'] = False
+        except Exception as e:
+            print("Unable to query to lookup if this username exists. ")
+            print(e)
+        field.initial = result_value
         print(field.initial)
         return field
 
@@ -141,29 +151,22 @@ class CustomRegistrationForm(RegistrationForm):
             except ValidationError as e:
                 compute_errors[name] = e
                 self.add_error(None, e)
-        cleaned_compute_data = {name: self.cleaned_data.pop(name, None) for name in self.computed_fields}
-        return cleaned_compute_data, compute_errors
-        # return compute_errors
+        return compute_errors
 
     def clean(self):
         print("============================ CustomRegistrationForm.clean =========================")
-        # self.fields.update(self._clean_computed_fields())
-        cleaned_compute_data, compute_errors = self._clean_computed_fields()
-        # compute_errors = self._clean_computed_fields()
-        print("---------------- cleaned_computed_data -----------------------------------------")
-        print(cleaned_compute_data)
+        # cleaned_compute_data, compute_errors = self._clean_computed_fields()
+        compute_errors = self._clean_computed_fields()
         print("---------------- compute_errors -----------------------------------------")
         print(compute_errors)
         if compute_errors:
-            # cleaned_compute_data = {key: self.cleaned_data.pop(key, None) for key in self.computed_fields}
-            # extracted_fields = {key: self.fields.pop(key, None) for key in self.computed_fields}
+            print("---------------- cleaned_computed_data -----------------------------------------")
+            cleaned_compute_data = {name: self.cleaned_data.pop(name, None) for name in self.computed_fields}
+            print(cleaned_compute_data)
             # print("- - - - - - - - - - - - - - - - - - - - - - - -")
-            pass
-            # print(extracted_fields)
         else:
             print(" We had no errors! ")
             self.fields.update(self.computed_fields)
-            self.cleaned_data.update(cleaned_compute_data)
         print("-----------------Cleaned Data After Cleaning Computed Fields -------------------------------------")
         print(self.cleaned_data)
         print("---------------------------------------------------------")
