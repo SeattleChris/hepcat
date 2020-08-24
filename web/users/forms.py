@@ -16,12 +16,12 @@ class BaseUserCreationForm(UserCreationForm):
 
 
 class CustomUserCreationForm(BaseUserCreationForm):
-    class Meta:
+    class Meta(BaseUserCreationForm.Meta):
         fields = ('first_name', 'last_name', 'email')  # 'uses_email_username',
 
 
 class CustomUserChangeForm(UserChangeForm):
-    class Meta:
+    class Meta(UserChangeForm.Meta):
         model = UserHC
         fields = (
             'first_name', 'last_name',
