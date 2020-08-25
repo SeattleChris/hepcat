@@ -69,13 +69,23 @@ class CustomRegistrationForm(RegistrationForm):
         pprint(args)
         pprint(kwargs)
         pprint(self.confirmation)
+        initial_from_kwargs = kwargs.get('initial', {})
+        initial_from_kwargs.update({self.Meta.model.USERNAME_FIELD: self.username_from_email_or_names})
+        pprint(initial_from_kwargs)
+        kwargs['initial'] = initial_from_kwargs
         super().__init__(*args, **kwargs)
         if self._meta.model.USERNAME_FIELD in self.fields:
             self.fields[self._meta.model.USERNAME_FIELD].widget.attrs['autofocus'] = False
         extracted_fields = {key: self.fields.pop(key, None) for key in self.Meta.computed_fields}
         self.computed_fields = extracted_fields
-        # Set field validators, which will automatically be run at the start of the Field clean method.
+        # TODO: Try - instead of extracting, set to hidden and disabled. Let self._clean_fields handle them.
+        self.attach_critical_validators()
+        print("---------------------------------------------------------")
+        pprint(self.fields)
+        pprint(self.computed_fields)
 
+    def attach_critical_validators(self):
+        """ The email and username fields have critical validators to be processed during field cleaning process. """
         email_field = self.Meta.model.get_email_field_name()
         if email_field in self.fields:
             email_validators = [
@@ -107,10 +117,6 @@ class CustomRegistrationForm(RegistrationForm):
             self.computed_fields[username].validators.extend(username_validators)
         elif username in self.fields:
             self.fields[username].validators.extend(username_validators)
-
-        print("---------------------------------------------------------")
-        pprint(self.fields)
-        pprint(self.computed_fields)
 
     def username_from_name(self):
         """ Must be evaluated after cleaned_data has 'first_name' and 'last_name' values populated. """
