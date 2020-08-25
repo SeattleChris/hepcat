@@ -45,7 +45,7 @@ class CustomRegistrationForm(RegistrationForm):
     class Meta(RegistrationForm.Meta):
         model = UserHC
         USERNAME_FLAG_FIELD = 'uses_email_username'
-        fields = ('first_name', 'last_name', model.USERNAME_FIELD, model.get_email_field_name(), USERNAME_FLAG_FIELD, )
+        fields = ('first_name', 'last_name', model.get_email_field_name(), USERNAME_FLAG_FIELD, model.USERNAME_FIELD, )
         computed_fields = (model.USERNAME_FIELD, USERNAME_FLAG_FIELD, )
         case_insensitive = True
         unique_email = False
@@ -71,7 +71,7 @@ class CustomRegistrationForm(RegistrationForm):
         pprint(self.confirmation)
         initial_from_kwargs = kwargs.get('initial', {})
         initial_from_kwargs.update({self.Meta.model.USERNAME_FIELD: self.username_from_email_or_names})
-        pprint(initial_from_kwargs)
+        # pprint(initial_from_kwargs)
         kwargs['initial'] = initial_from_kwargs
         super().__init__(*args, **kwargs)
         if self._meta.model.USERNAME_FIELD in self.fields:
@@ -120,13 +120,16 @@ class CustomRegistrationForm(RegistrationForm):
 
     def username_from_name(self):
         """ Must be evaluated after cleaned_data has 'first_name' and 'last_name' values populated. """
+        print("=================== CustomRegistrationForm.username_from_name ===========================")
         names = (self.cleaned_data[key] for key in ('first_name', 'last_name') if self.cleaned_data.get(key))
         result_value = self._meta.model.normalize_username('_'.join(names).casefold())
+        print(result_value)
         return result_value
 
     def username_from_email(self, username_field_name, email_field_name):
         """ Must be evaluated after cleaned_data has been populated with the the email field value. """
-        if 'cleaned_data' not in self or email_field_name not in self.cleaned_data:
+        print("=================== CustomRegistrationForm.username_from_email ===========================")
+        if not getattr(self, 'cleaned_data', None) or email_field_name not in self.cleaned_data:
             if email_field_name in self.errors:
                 result_value = None  # Or some technique to skip username validation without valid email?
             else:
@@ -135,9 +138,10 @@ class CustomRegistrationForm(RegistrationForm):
                 raise ImproperlyConfigured(_(err))
         else:
             result_value = self.cleaned_data.get(email_field_name, None)
+        print(result_value)
         return result_value
 
-    def username_from_email_or_names(self, username_field_name, email_field_name):
+    def username_from_email_or_names(self, username_field_name=None, email_field_name=None):
         """ Initial username field value. Must be evaluated after dependent fields populate cleaned_data. """
         email_field_name = email_field_name or self._meta.model.get_email_field_name()
         username_field_name = username_field_name or self._meta.model.USERNAME_FIELD
@@ -152,7 +156,7 @@ class CustomRegistrationForm(RegistrationForm):
             print(e)
         return result_value
 
-    def configure_username_confirmation(self, field, username_field_name, email_field_name):
+    def configure_username_confirmation(self, field=None, username_field_name=None, email_field_name=None):
         """ Since the username is using the alternative computation, prepare form for user confirmation. """
         email_field_name = email_field_name or self._meta.model.get_email_field_name()
         username_field_name = username_field_name or self._meta.model.USERNAME_FIELD
@@ -204,6 +208,9 @@ class CustomRegistrationForm(RegistrationForm):
     def _clean_computed_fields(self):
         """ Mimics _clean_fields for computed_fields. Calls compute_<fieldname> and clean_<fieldname> if present. """
         compute_errors = ErrorDict()
+        cleaned_data = getattr(self, 'cleaned_data', None)
+        print("=================== CustomRegistrationForm._clean_computed_fields ============================")
+        print(cleaned_data)
         for name, field in self.computed_fields.items():
             # field.disabled = True  # field value will be self.get_initial_for_field(field, name)
             if hasattr(self, 'compute_%s' % name):
