@@ -336,6 +336,7 @@ Current Status:
 - [ ] Django-registration: Catch username IntegrityError:
   - [ ] ? Confirm with user they are not the existing user?
   - [ ] Recompute username.
+- [ ] ? Create a username validator that first tries the email, then concatenated name value.
 - [x] Update login pages to say 'email' where it currently asks for 'username'.
 - [ ] ? Class sign up integrated with django-registration?
 - [ ] Class sign up as anonymous process:
