@@ -12,7 +12,7 @@ class CustomUserAdmin(UserAdmin):
     list_display = ('first_name', 'last_name', 'username', 'is_student', 'is_teacher', 'is_admin', 'is_active', 'grp',
                     'perm', )
     list_display_links = ('first_name', 'last_name', 'username', )
-    list_filter = ('is_student', 'is_teacher', 'is_admin', 'is_staff', 'is_active', )  # , 'is_superuser',
+    list_filter = ('is_student', 'is_teacher', 'is_admin', 'is_staff', 'is_active', 'groups', )  # , 'is_superuser',
     ordering = ('first_name', )
     fieldsets = (
         (None, {'fields': (('email', 'uses_email_username'), 'password', ('is_student', 'is_teacher', 'is_admin'),), }),
