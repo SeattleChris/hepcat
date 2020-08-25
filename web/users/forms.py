@@ -166,7 +166,7 @@ class CustomRegistrationForm(RegistrationForm):
         field.widget.attrs['autofocus'] = False
         email_field = self.fields.pop(email_field_name, None) or self.computed_fields.pop(email_field_name, None)
         email_field.widget.attrs['autofocus'] = True
-        flag_name = self._meta.USERNAME_FLAG_FIELD
+        flag_name = self.Meta.USERNAME_FLAG_FIELD
         flag_field = self.computed_fields.pop(flag_name, None) or self.fields.pop(flag_name, None)
         self.initial[flag_name] = False
 
