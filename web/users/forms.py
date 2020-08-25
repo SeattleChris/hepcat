@@ -69,37 +69,53 @@ class CustomRegistrationForm(RegistrationForm):
         pprint(args)
         pprint(kwargs)
         pprint(self.confirmation)
+        username_field_name = self.Meta.model.USERNAME_FIELD
+        email_field_name = self.Meta.model.get_email_field_name()
         initial_from_kwargs = kwargs.get('initial', {})
-        initial_from_kwargs.update({self.Meta.model.USERNAME_FIELD: self.username_from_email_or_names})
-        # pprint(initial_from_kwargs)
+        initial_from_kwargs.update({username_field_name: self.username_from_email_or_names})
         kwargs['initial'] = initial_from_kwargs
         super().__init__(*args, **kwargs)
-        if self._meta.model.USERNAME_FIELD in self.fields:
-            self.fields[self._meta.model.USERNAME_FIELD].widget.attrs['autofocus'] = False
+        self.attach_critical_validators()
+        if username_field_name in self.fields:
+            self.fields[username_field_name].widget.attrs['autofocus'] = False
         extracted_fields = {key: self.fields.pop(key, None) for key in self.Meta.computed_fields}
         self.computed_fields = extracted_fields
         # TODO: Try - instead of extracting, set to hidden and disabled. Let self._clean_fields handle them.
-        self.attach_critical_validators()
+        if self.confirmation['required'] and email_field_name in self.fields:
+            self.fields[email_field_name].widget.attrs['autofocus'] = True
+        else:
+            self.focus_first_usable_field(self.fields.values())
         print("---------------------------------------------------------")
         pprint(self.fields)
         pprint(self.computed_fields)
 
+    def focus_first_usable_field(self, fields):
+        """ Gives autofocus to the first non-hidden, non-disabled form field from the given iterable of form fields. """
+        if not isinstance(fields, (list, tuple)):
+            raise TypeError(_("Expected an iterable of form fields. "))
+        field_gen = (ea for ea in fields)
+        first_field = next(field_gen)
+        while first_field.disabled or first_field.is_hidden:
+            first_field = next(field_gen)
+        first_field.widget.attrs['autofocus'] = True
+        return first_field
+
     def attach_critical_validators(self):
         """ The email and username fields have critical validators to be processed during field cleaning process. """
-        email_field = self.Meta.model.get_email_field_name()
-        if email_field in self.fields:
-            email_validators = [
-                validators.HTML5EmailValidator(),
-                validators.validate_confusables_email
-            ]
-            if self.Meta.unique_email:
-                email_validators.append(
-                    validators.CaseInsensitiveUnique(
-                        self.Meta.model, email_field, validators.DUPLICATE_EMAIL
-                    )
+        email_name = self.Meta.model.get_email_field_name()
+        email_validators = [
+            validators.HTML5EmailValidator(),
+            validators.validate_confusables_email
+        ]
+        if self.Meta.unique_email:
+            email_validators.append(
+                validators.CaseInsensitiveUnique(
+                    self.Meta.model, email_name, validators.DUPLICATE_EMAIL
                 )
-            self.fields[email_field].validators.extend(email_validators)
-            self.fields[email_field].required = True
+            )
+        email_field = self.fields.get(email_name, None) or self.computed_fields.get(email_name, None)
+        email_field.validators.extend(email_validators)
+        email_field.required = True
 
         username = self.Meta.model.USERNAME_FIELD
         reserved_names = getattr(self, 'reserved_names', validators.DEFAULT_RESERVED_NAMES)
@@ -113,10 +129,8 @@ class CustomRegistrationForm(RegistrationForm):
                     self.Meta.model, username, validators.DUPLICATE_USERNAME
                 )
             )
-        if username in self.computed_fields:
-            self.computed_fields[username].validators.extend(username_validators)
-        elif username in self.fields:
-            self.fields[username].validators.extend(username_validators)
+        username_field = self.computed_fields.get(username, None) or self.fields.get(username, None)
+        username_field.validators.extend(username_validators)
 
     def username_from_name(self):
         """ Must be evaluated after cleaned_data has 'first_name' and 'last_name' values populated. """
@@ -163,9 +177,7 @@ class CustomRegistrationForm(RegistrationForm):
         field = field or self.fields.get(username_field_name, None) or self.computed_fields.get(username_field_name)
         username_message = "You can use the suggested username or create your own. "
         field.help_text = _(username_message)
-        field.widget.attrs['autofocus'] = False
         email_field = self.fields.pop(email_field_name, None) or self.computed_fields.pop(email_field_name, None)
-        email_field.widget.attrs['autofocus'] = True
         flag_name = self.Meta.USERNAME_FLAG_FIELD
         flag_field = self.computed_fields.pop(flag_name, None) or self.fields.pop(flag_name, None)
         self.initial[flag_name] = False
