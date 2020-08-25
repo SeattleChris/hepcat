@@ -6,6 +6,7 @@ from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.contrib.auth.models import AbstractBaseUser
 from django_registration.forms import RegistrationForm
 from django_registration import validators
+from collections import abc
 from .models import UserHC
 
 
@@ -31,6 +32,23 @@ class CustomUserChangeForm(UserChangeForm):
             'billing_city', 'billing_country_area', 'billing_postcode',
             'billing_country_code',
             )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.focus_first_usable_field(self, self.fields.values())
+
+    def focus_first_usable_field(self, fields):
+        """ Gives autofocus to the first non-hidden, non-disabled form field from the given iterable of form fields. """
+        if not isinstance(fields, (list, tuple, abc.ValuesView)):
+            raise TypeError(_("Expected an iterable of form fields. "))
+        field_gen = (ea for ea in fields)
+        first_field = next(field_gen)
+        while first_field.disabled or (hasattr(first_field, 'is_hidden') and first_field.is_hidden):
+            if 'autofocus' in first_field.widget.attrs:
+                first_field.widget.attrs['autofocus'] = False
+            first_field = next(field_gen)
+        first_field.widget.attrs['autofocus'] = True
+        return first_field
 
     def as_person_details(self):
 
@@ -75,12 +93,12 @@ class CustomRegistrationForm(RegistrationForm):
         initial_from_kwargs.update({username_field_name: self.username_from_email_or_names})
         kwargs['initial'] = initial_from_kwargs
         super().__init__(*args, **kwargs)
-        self.attach_critical_validators()
         if username_field_name in self.fields:
             self.fields[username_field_name].widget.attrs['autofocus'] = False
         extracted_fields = {key: self.fields.pop(key, None) for key in self.Meta.computed_fields}
         self.computed_fields = extracted_fields
         # TODO: Try - instead of extracting, set to hidden and disabled. Let self._clean_fields handle them.
+        self.attach_critical_validators()
         if self.confirmation['required'] and email_field_name in self.fields:
             self.fields[email_field_name].widget.attrs['autofocus'] = True
         else:
@@ -91,11 +109,13 @@ class CustomRegistrationForm(RegistrationForm):
 
     def focus_first_usable_field(self, fields):
         """ Gives autofocus to the first non-hidden, non-disabled form field from the given iterable of form fields. """
-        if not isinstance(fields, (list, tuple)):
+        if not isinstance(fields, (list, tuple, abc.ValuesView)):
             raise TypeError(_("Expected an iterable of form fields. "))
         field_gen = (ea for ea in fields)
         first_field = next(field_gen)
-        while first_field.disabled or first_field.is_hidden:
+        while first_field.disabled or (hasattr(first_field, 'is_hidden') and first_field.is_hidden):
+            if 'autofocus' in first_field.widget.attrs:
+                first_field.widget.attrs['autofocus'] = False
             first_field = next(field_gen)
         first_field.widget.attrs['autofocus'] = True
         return first_field
