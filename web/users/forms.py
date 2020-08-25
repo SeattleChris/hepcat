@@ -40,11 +40,13 @@ class CustomUserChangeForm(UserChangeForm):
 
 
 class CustomRegistrationForm(RegistrationForm):
+    confirmation = {'required': False, 'completed': False}
 
     class Meta(RegistrationForm.Meta):
         model = UserHC
-        fields = ('first_name', 'last_name', model.USERNAME_FIELD, model.get_email_field_name(), 'uses_email_username',)
-        computed_fields = (model.USERNAME_FIELD, 'uses_email_username', )
+        USERNAME_FLAG_FIELD = 'uses_email_username'
+        fields = ('first_name', 'last_name', model.USERNAME_FIELD, model.get_email_field_name(), USERNAME_FLAG_FIELD, )
+        computed_fields = (model.USERNAME_FIELD, USERNAME_FLAG_FIELD, )
         case_insensitive = True
         unique_email = False
 
@@ -66,7 +68,10 @@ class CustomRegistrationForm(RegistrationForm):
         print("================================== CustomRegistrationForm.__init__ =====================")
         pprint(args)
         pprint(kwargs)
+        pprint(self.confirmation)
         super().__init__(*args, **kwargs)
+        if self._meta.model.USERNAME_FIELD in self.fields:
+            self.fields[self._meta.model.USERNAME_FIELD].widget.attrs['autofocus'] = False
         extracted_fields = {key: self.fields.pop(key, None) for key in self.Meta.computed_fields}
         self.computed_fields = extracted_fields
         # Set field validators, which will automatically be run at the start of the Field clean method.
@@ -107,6 +112,71 @@ class CustomRegistrationForm(RegistrationForm):
         pprint(self.fields)
         pprint(self.computed_fields)
 
+    def username_from_name(self):
+        """ Must be evaluated after cleaned_data has 'first_name' and 'last_name' values populated. """
+        names = (self.cleaned_data[key] for key in ('first_name', 'last_name') if self.cleaned_data.get(key))
+        result_value = self._meta.model.normalize_username('_'.join(names).casefold())
+        return result_value
+
+    def username_from_email(self, username_field_name, email_field_name):
+        """ Must be evaluated after cleaned_data has been populated with the the email field value. """
+        if 'cleaned_data' not in self or email_field_name not in self.cleaned_data:
+            if email_field_name in self.errors:
+                result_value = None  # Or some technique to skip username validation without valid email?
+            else:
+                err = "This initial value can only be evaluated after fields it depends on have been cleaned. "
+                err += "The field order must have {} after fields used for its value. ".format(username_field_name)
+                raise ImproperlyConfigured(_(err))
+        else:
+            result_value = self.cleaned_data.get(email_field_name, None)
+        return result_value
+
+    def username_from_email_or_names(self, username_field_name, email_field_name):
+        """ Initial username field value. Must be evaluated after dependent fields populate cleaned_data. """
+        email_field_name = email_field_name or self._meta.model.get_email_field_name()
+        username_field_name = username_field_name or self._meta.model.USERNAME_FIELD
+        result_value = self.username_from_email(username_field_name, email_field_name)
+        lookup = {"{}__iexact".format(username_field_name): result_value}
+        try:
+            if not result_value or self._meta.model._default_manager.filter(**lookup).exists():
+                result_value = self.username_from_name()
+                self.confirmation['required'] = True
+        except Exception as e:
+            print("Unable to query to lookup if this username exists. ")
+            print(e)
+        return result_value
+
+    def configure_username_confirmation(self, field, username_field_name, email_field_name):
+        """ Since the username is using the alternative computation, prepare form for user confirmation. """
+        email_field_name = email_field_name or self._meta.model.get_email_field_name()
+        username_field_name = username_field_name or self._meta.model.USERNAME_FIELD
+        field = field or self.fields.get(username_field_name, None) or self.computed_fields.get(username_field_name)
+        username_message = "You can use the suggested username or create your own. "
+        field.help_text = _(username_message)
+        field.widget.attrs['autofocus'] = False
+        email_field = self.fields.pop(email_field_name, None) or self.computed_fields.pop(email_field_name, None)
+        email_field.widget.attrs['autofocus'] = True
+        flag_name = self._meta.USERNAME_FLAG_FIELD
+        flag_field = self.computed_fields.pop(flag_name, None) or self.fields.pop(flag_name, None)
+        self.initial[flag_name] = False
+
+        self.fields[email_field_name] = email_field
+        self.fields[flag_name] = flag_field
+        self.fields[username_field_name] = field
+        self.fields['password1'] = self.fields.pop('password1', None)
+        self.fields['password2'] = self.fields.pop('password2', None)
+
+        login_element = 'login'
+        # TODO: Update 'login_element' as an HTML a element to link to login route.
+        message = "Have you had classes or created an account using that email address? "
+        message += "Go to {} to sign in with that account or reset the password if needed. ".format(login_element)
+        message += "If you share an email with another student, then you will login with a username instead. "
+        message += username_message
+        self.add_error(None, _(message))  # Will be an error message at the top of the form.
+        self.add_error(email_field_name, _("Username only needed if you do not have a unique email. "))
+        self.add_error(flag_name, _("Use a unique email, or set a username for login use. "))
+        return
+
     def clean_username(self):
         # This is called if no ValidationError was raised by to_python(), validate(), or run_validators().
         print("=================== CustomRegistrationForm.clean_username ===========================")
@@ -114,21 +184,13 @@ class CustomRegistrationForm(RegistrationForm):
         return value  # Likely will not need this method.
 
     def compute_username(self):
-        """ Set Field.initial as a str value or callable returning one. Overridden by self.initial['username']. """
+        """ Set Field.initial as a str value or callable returning one. Overridden by value in self.initial. """
         print("=================== CustomRegistrationForm.compute_username ===========================")
         model = self._meta.model
-        username = model.USERNAME_FIELD
-        field = self.computed_fields[username]
-        result_value = self.cleaned_data[model.get_email_field_name()]
-        lookup = {"{}__iexact".format(username): result_value}
-        try:
-            if model._default_manager.filter(**lookup).exists():
-                names = (self.cleaned_data[key] for key in ('first_name', 'last_name') if self.cleaned_data.get(key))
-                result_value = model.normalize_username('_'.join(names).casefold())
-                self.initial['uses_email_username'] = False
-        except Exception as e:
-            print("Unable to query to lookup if this username exists. ")
-            print(e)
+        username_field_name = model.USERNAME_FIELD
+        field = self.computed_fields[username_field_name]
+        email_field_name = model.get_email_field_name()
+        result_value = self.username_from_email_or_names(username_field_name, email_field_name)
         field.initial = result_value
         print(field.initial)
         return field
@@ -155,7 +217,6 @@ class CustomRegistrationForm(RegistrationForm):
 
     def clean(self):
         print("============================ CustomRegistrationForm.clean =========================")
-        # cleaned_compute_data, compute_errors = self._clean_computed_fields()
         compute_errors = self._clean_computed_fields()
         print("---------------- compute_errors -----------------------------------------")
         print(compute_errors)
@@ -163,14 +224,24 @@ class CustomRegistrationForm(RegistrationForm):
             print("---------------- cleaned_computed_data -----------------------------------------")
             cleaned_compute_data = {name: self.cleaned_data.pop(name, None) for name in self.computed_fields}
             print(cleaned_compute_data)
-            # print("- - - - - - - - - - - - - - - - - - - - - - - -")
+            raise ValidationError(_("Error occurred with the computed fields. "))
+        elif self.confirmation['required']:
+            print("- - - - - - - - - Confirmation Required - - - - - - - - - - - - - - -")
+            self.configure_username_confirmation()
+            message = "Login with existing account, change to a non-shared email, or create a username. "
+            raise ValidationError(_(message))
         else:
-            print(" We had no errors! ")
+            print(" Computed Fields had no problems! ")
             self.fields.update(self.computed_fields)
-        print("-----------------Cleaned Data After Cleaning Computed Fields -------------------------------------")
-        print(self.cleaned_data)
+        print("--------------------- Cleaned Data After Cleaning Computed Fields ---------------------------------")
+        cleaned_data = super().clean()  # return self.cleaned_data
+        print(cleaned_data)
+        print("---------------------- Initial data -------------------------------------------------")
+        print(self.initial)
+        if 'username' in self.fields:
+            print(self.fields['username'].initial)
         print("---------------------------------------------------------")
-        return super().clean()
+        return cleaned_data
 
     def _post_clean(self):
         # This is after all form cleaning on self.fields. Now we do similar for self.computed_fields
