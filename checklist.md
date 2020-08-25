@@ -87,7 +87,7 @@
 - [s] Stretch Goal. Not for current feature plan.
 
 Current Status:
-2020-08-22 23:40:32
+2020-08-23 17:40:13
 <!-- Ctrl-Shift-I to generate timestamp -->
 
 ### Bug Fixes
@@ -213,6 +213,13 @@ Current Status:
 - [x] ClassOffer Admin list: show start and end dates.
 - [x] ClassOffer Admin list: show start and end times in nice-display (not military time)
 
+### General Admin Features
+
+- [ ] Groups: Allow for some hierarchial and cross-group organizational structures (see Sign Up & User Accounts)
+  - [ ] Hierarchial: If they are in a child group, they are automatically added to a parent group
+  - [ ] Cross-Group: A group is a role modifier. So similarities of Teacher: Group-X vs Admin: Group-X.
+- [ ] ? Optional fixtures for example class structure?
+
 ### Deployment on PythonAnywhere
 
 - [?] Stop the AWS servers.
@@ -223,7 +230,8 @@ Current Status:
 - [x] Collect static working.
 - [x] Upload ver 0.4.1.
 - [x] Upload ver 0.4.4.
-- [x] Upload ver 0.4.6.
+- [x] Update Docs for deployment instructions.
+- [ ] Upload ver 0.4.6.
 - [ ] Populate initial Class structure models.
 
 ### Deployment on AWS
@@ -304,7 +312,7 @@ Current Status:
 - [x] Update verbose_name and help_text in users/models.py
 - [x] Update verbose_name and help_text for payments
 
-## Email Features
+### Email Features
 
 - [ ] Setup email handling for the site/app
 - [x] Setup 6swing1.com email
@@ -320,11 +328,17 @@ Current Status:
 - [s] Manage "Contact Us" messaging history
 - [s] Manage general student email subscriptions
 
-## Sign Up & User Accounts
+### Sign Up & User Accounts
 
-- [ ] Django-registration integration, managing our computed username.
-- [ ] Update login pages to say 'email' where it currently asks for 'username'.
-- [ ] Catch IntegrityError for attempt to create an existing User.
+- [x] Django-registration: basic user creation method
+- [x] Django-registration: can create a user without asking for a username input
+- [ ] Django-registration: integration, managing our computed username.
+- [ ] Django-registration: Catch username IntegrityError:
+  - [ ] ? Confirm with user they are not the existing user?
+  - [ ] Recompute username.
+- [ ] ? Create a username validator that first tries the email, then concatenated name value.
+- [x] Update login pages to say 'email' where it currently asks for 'username'.
+- [ ] ? Class sign up integrated with django-registration?
 - [ ] Class sign up as anonymous process:
   - [x] Create the account, sign-up for class, allow payment.
   - [ ] User is logged in on account creation?
@@ -333,15 +347,38 @@ Current Status:
   - [ ] If user never confirms, it does not stop them from joining future class.
 - [x] Admin for Users has proxy models to view Staff or Student users. Users can still be both.
   - [x] These proxy models are not linked to from external apps. They only affect views in Admin.
-- [ ] Separate Profile models for Students and Staff
-  - [ ] Staff have bio, field to assist ordering in "about us" view, and employee/volunteer management data fields.
-  - [ ] Student have fields and methods for connecting to ClassOffers, Resources, and inspecting customer data.
+- [x] Separate Profile models for Students and Staff
+  - [x] A user can have both, one of each.
+  - [x] If a user has both, can navigate to either one.
+  - [x] If a user has both, displays a default of staff profile.
+- [ ] Staff Profiles:
+  - [x] have bio
+  - [x] an ordering field for desired placement in "about us" view, and
+  - [x] Distinction between teacher and other admin
+  - [x] More refined staff roles managed by groups, allowing them to be dynamic for future admin.
+- [ ] Student Profiles:
+  - [x] Student have fields and methods for connecting to ClassOffers, Resources, and inspecting customer data.
+  - [ ] List of attended classes.
+  - [ ] List of resources by type.
+  - [ ]
+- [ ] Features for all profiles:
+  - [ ] See Admin Feature: Allow for some hierarchial and cross-group organizational structures.
+    - [ ] Display of what groups they are a part of.
+      - [ ] ? Only if more than teacher and admin?
 - [ ] Listener to always create Profile on new User, as well as always update. Connected one-to-one, cascade deletes.
   - [x] Working when only one Profile model (not both Staff and Student profile models).
-  - [ ] Working with both Staff and Student profile models.
+  - [x] Working with both Staff and Student profile models.
+  - [ ] Working with Proxy User models for Staff and Student
 
-## Style & Layout
+### Style & Layout
 
+- [ ] Form Layout:
+  - [ ] Name input: First and Last default to same line if screen size allows.
+  - [ ] Address input: City, State, Zip default to same line if screen size allows.
+  - [x] Address input: Address1 and Address2 on separate lines with explanation of continued input.
+  - [ ] Label and Input box line up across different rows
+    - [ ] ? Using table layout?
+    - [ ] ? Using non-table layout?
 - [ ] Layout student Profile Resources & class history
 - [ ] Improve Class Sign Up - Registration form.
 - [ ] Update instructions and method for "If you want to register a different person then ..."
@@ -356,17 +393,20 @@ Current Status:
       - [ ] less prominent text (smaller? lighter font?)
       - [ ] placed under the input box?
 
-## General Site
+### General Site
 
 - [x] 'About Us' page should only show staff members.
 - [x] More consistent Model str and repr methods.
 - [x] Fix max_length to 191 for utf8mb4.
-- [ ] About Us page shows only teacher & staff profile info, plus business info. Links to Contact Us.
+- [x] About Us page shows only teacher & staff profile info, plus business info.
+- [ ] About Us Links to Contact Us.
+  - [ ] General site contact us.
+  - [ ] Individual contacts for each staff member?
 - [ ] Contact Us page w/ contact form (send to email)
 - [x] Deal with when admin has no name (such as a superuser), it may break the 'About Us' page.
-- [ ] Login Page should say email instead of username
+- [x] Login Page should say email instead of username
 - [x] Hi message should use name instead of username (email)
-- [ ] On Profile, add link to update profile/user details (billing, email, etc)
+- [x] On Profile, add link to update profile/user details (billing, email, etc)
 - [ ] Add content and connect to "Info" link button.
 - [ ] Profile model: update highest_level to not include "current" classoffer.
 - [ ] Auto-Login new user if created on their first ClassOffer sign up.

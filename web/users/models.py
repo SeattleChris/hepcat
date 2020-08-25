@@ -199,8 +199,8 @@ class UserHC(AbstractUser):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._meta.get_field('username').verbose_name = _("email")
-        # self._meta.get_field('username').help_text = _("Or alternative username")
+        self._meta.get_field('username').verbose_name = _("email or login")
+        self._meta.get_field('username').help_text = _("or login name")  # TODO Fix: does not show up in login.
 
     @property
     def full_name(self):
@@ -223,7 +223,7 @@ class UserHC(AbstractUser):
         if self.uses_email_username is True:
             return self.email.casefold()
         user_name_list = [getattr(self, key) for key in ('first_name', 'last_name') if getattr(self, key, None)]
-        username = ' '.join(user_name_list).casefold()
+        username = '_'.join(user_name_list).casefold()
         return self.normalize_username(username)
 
     def save(self, *args, **kwargs):

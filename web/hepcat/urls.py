@@ -34,15 +34,9 @@ if settings.DEBUG is True:  # pragma: no cover
 
 # Thanks to django-newsletter, the following paths are set:
 # newsletter/ ???
+
 # Thanks to django-payments, the following paths are set:
 # payments/process/<token-regex>/ [name=process_data]
 # payments/process/<variant-regex>/ [static_process_payment]
-# Thanks to django.contrib.auth.urls The following paths are set:
-# user/login/ [name='login']
-# user/logout/ [name='logout']
-# user/password_change/ [name='password_change']
-# user/password_change/done/ [name='password_change_done']
-# user/password_reset/ [name='password_reset']
-# user/password_reset/done/ [name='password_reset_done']
-# user/reset/<uidb64>/<token>/ [name='password_reset_confirm']
-# user/reset/done/ [name='password_reset_complete']
+
+# See users.urls for notes on URLs for auth and django-registration.
