@@ -149,13 +149,19 @@ class CustomRegistrationForm(RegistrationForm):
         flag_name = self.Meta.USERNAME_FLAG_FIELD
         flag_field = self.computed_fields.pop(flag_name, None) or self.fields.pop(flag_name, None)
         flag_field.help_text = _("Select if you're using a non-shared email. ")
-        self.initial[flag_name] = False
+        flag_field.initial = False
 
         self.fields[email_field_name] = email_field
         self.fields[flag_name] = flag_field
         self.fields[username_field_name] = field
         self.fields['password1'] = self.fields.pop('password1', None)
         self.fields['password2'] = self.fields.pop('password2', None)
+
+        data = self.data.copy()  # QueryDict datastructure, the copy is mutable.
+        data[flag_name] = flag_field.initial
+        data[username_field_name] = field.initial
+        data._mutable = False
+        self.data = data
 
         login_element = 'login'
         # TODO: Update 'login_element' as an HTML a element to link to login route.
@@ -212,6 +218,7 @@ class CustomRegistrationForm(RegistrationForm):
 
     def clean(self):
         print("============================ CustomRegistrationForm.clean =========================")
+        pprint(self.data)
         compute_errors = self._clean_computed_fields()
         print("---------------- compute_errors -----------------------------------------")
         print(compute_errors)
