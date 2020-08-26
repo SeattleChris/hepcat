@@ -110,6 +110,9 @@ Current Status:
     - [x] Afternoon: CURDATE or UTC_DATE
     - [x] Evening: UTC_DATE misses when avail_week + expire == 3, but CURDATE does not!
 - [ ] Profile not created if Admin page creates a new Staff User or Student User.
+- [ ] User not deleted when deleting their student profile (but what if they have a staff profile?).
+- [ ] Possibly profile not deleted when user deleted.
+- [ ] Django-Registration creation form not correctly assigning 'uses_email_username' value.
 
 ### Optimization and Structure improvements
 
