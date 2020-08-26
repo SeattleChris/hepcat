@@ -4,7 +4,6 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django_registration.forms import RegistrationForm
 from django_registration import validators
-from collections import abc
 from pprint import pprint  # Temporary for debug.
 from .models import UserHC
 
@@ -29,81 +28,67 @@ class CustomRegistrationForm(RegistrationForm):
         pprint(args)
         pprint(kwargs)
         print("*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*")
-        username_field_name = self._meta.model.USERNAME_FIELD
-        # email_field_name = self._meta.model.get_email_field_name()
-        # TODO: Try - instead of extracting, set to hidden and disabled. Let self._clean_fields handle them.
-        # initial_from_kwargs = kwargs.get('initial', {})
-        # initial_from_kwargs.update({username_field_name: self.username_from_email_or_names})
-        # kwargs['initial'] = initial_from_kwargs
         super().__init__(*args, **kwargs)
         # TODO: If using RegistrationForm init, then much, but not all, of attach_critical_validators is duplicate code.
-        if username_field_name in self.fields:
-            # field = self.fields[username_field_name]
-            self.fields[username_field_name].widget.attrs['autofocus'] = False
-            if username_field_name not in self.data:
-                # field.show_hidden_initial = True
-                # field.disabled = True
-                pass
-        if username_field_name in self.data:
-            self.fields[self._meta.model.get_email_field_name()].widget.attrs['autofocus'] = True
-            self.computed_fields = {}
-        else:
-            extracted_fields = {key: self.fields.pop(key, None) for key in self.Meta.computed_fields}
-            self.computed_fields = extracted_fields
-            self.focus_first_usable_field(self.fields.values())
         self.attach_critical_validators()
+        extracted_fields = {key: self.fields.pop(key, None) for key in self.Meta.computed_fields - self.data.keys()}
+        self.computed_fields = extracted_fields
+        username_field_name = self._meta.model.USERNAME_FIELD
+        email_field_name = self._meta.model.get_email_field_name()
+        named_focus = email_field_name if username_field_name in self.data else None
+        self.focus_correct_field(name=named_focus)
         print("---------------------------------------------------------")
-        # pprint(self.fields)
+        print(named_focus)
         pprint(self.computed_fields)
 
-    def focus_first_usable_field(self, fields):
-        """ Gives autofocus to the first non-hidden, non-disabled form field from the given iterable of form fields. """
-        if not isinstance(fields, (list, tuple, abc.ValuesView)):
-            raise TypeError(_("Expected an iterable of form fields. "))
-        field_gen = (ea for ea in fields)
-        first_field = next(field_gen)
-        while first_field.disabled or (hasattr(first_field, 'is_hidden') and first_field.is_hidden):
-            if 'autofocus' in first_field.widget.attrs:
-                first_field.widget.attrs['autofocus'] = False
-            first_field = next(field_gen)
-        first_field.widget.attrs['autofocus'] = True
-        return first_field
+    def focus_correct_field(self, name=None):
+        """ The named or first non-hidden, non-disabled field gets 'autofocus'. Removes 'autofocus' from others. """
+        found = self.fields.get(name, None) if name else None
+        for name, field in self.fields.items():
+            if not found and not field.disabled and not getattr(field, 'is_hidden', False):
+                found = field
+            else:
+                field.widget.attrs.pop('autofocus', None)
+        found.widget.attrs['autofocus'] = True
+        return found
 
     def attach_critical_validators(self):
-        """ The email and username fields have critical validators to be processed during field cleaning process. """
+        """Before setting computed_fields, assign validators to the email and username fields. """
         email_name = self._meta.model.get_email_field_name()
-        email_validators = [
-            validators.HTML5EmailValidator(),
-            validators.validate_confusables_email
-        ]
-        if self.Meta.unique_email:
-            email_validators.append(
-                validators.CaseInsensitiveUnique(
-                    self._meta.model, email_name, validators.DUPLICATE_EMAIL
+        if email_name in self.fields:
+            email_validators = [
+                validators.HTML5EmailValidator(),
+                validators.validate_confusables_email
+            ]
+            if self.Meta.unique_email:
+                email_validators.append(
+                    validators.CaseInsensitiveUnique(
+                        self._meta.model, email_name, validators.DUPLICATE_EMAIL
+                    )
                 )
-            )
-        email_field = self.fields.get(email_name, None) or self.computed_fields.get(email_name, None)
-        email_field.validators.extend(email_validators)
-        email_field.required = True
+            email_field = self.fields[email_name]
+            email_field.validators.extend(email_validators)
+            email_field.required = True
 
         username = self._meta.model.USERNAME_FIELD
-        reserved_names = getattr(self, 'reserved_names', validators.DEFAULT_RESERVED_NAMES)
-        username_validators = [
-            validators.ReservedNameValidator(reserved_names),
-            validators.validate_confusables,
-        ]
-        if self.Meta.case_insensitive:
-            username_validators.append(
-                validators.CaseInsensitiveUnique(
-                    self._meta.model, username, validators.DUPLICATE_USERNAME
+        if username in self.fields:
+            reserved_names = getattr(self, 'reserved_names', validators.DEFAULT_RESERVED_NAMES)
+            username_validators = [
+                validators.ReservedNameValidator(reserved_names),
+                validators.validate_confusables,
+            ]
+            if self.Meta.case_insensitive:
+                username_validators.append(
+                    validators.CaseInsensitiveUnique(
+                        self._meta.model, username, validators.DUPLICATE_USERNAME
+                    )
                 )
-            )
-        username_field = self.computed_fields.get(username, None) or self.fields.get(username, None)
-        username_field.validators.extend(username_validators)
+            username_field = self.fields[username]
+            username_field.validators.extend(username_validators)
 
     def username_from_name(self):
         """ Must be evaluated after cleaned_data has 'first_name' and 'last_name' values populated. """
-        print("=================== CustomRegistrationForm.username_from_name ===========================")
+        # print("=================== CustomRegistrationForm.username_from_name ===========================")
         if not hasattr(self, 'cleaned_data'):
             raise ImproperlyConfigured(_("This method can only be evaluated after 'cleaned_data' has been populated. "))
         names = (self.cleaned_data[key].strip() for key in ('first_name', 'last_name') if self.cleaned_data.get(key))
@@ -113,7 +98,7 @@ class CustomRegistrationForm(RegistrationForm):
 
     def username_from_email(self, username_field_name, email_field_name):
         """ Must be evaluated after cleaned_data has been populated with the the email field value. """
-        print("=================== CustomRegistrationForm.username_from_email ===========================")
+        # print("=================== CustomRegistrationForm.username_from_email ===========================")
         if not hasattr(self, 'cleaned_data') or email_field_name not in self.cleaned_data:
             if email_field_name in self.errors:
                 result_value = None  # TODO: ? Need some technique to skip username validation without valid email?
@@ -149,7 +134,7 @@ class CustomRegistrationForm(RegistrationForm):
         field.help_text = _(username_message)
         # field.disabled = False
         email_field = self.fields.pop(email_field_name, None) or self.computed_fields.pop(email_field_name, None)
-        email_field.widget.attrs['autofocus'] = True
+        email_field.widget.attrs['autofocus'] = True  # TODO: ? Determine if this works as expected.
         flag_name = self.Meta.USERNAME_FLAG_FIELD
         flag_field = self.computed_fields.pop(flag_name, None) or self.fields.pop(flag_name, None)
         flag_field.help_text = _("Select if you're using a non-shared email. ")
@@ -167,16 +152,22 @@ class CustomRegistrationForm(RegistrationForm):
         data._mutable = False
         self.data = data
 
+        named_focus = email_field_name if username_field_name in self.data else None
+        self.focus_correct_field(name=named_focus)
+        print("---------------------------------------------------------")
+        print(named_focus)
+        pprint(self.computed_fields)
+
+        self.add_error(email_field_name, _("Use a non-shared email, or set a username below. "))
+        # self.add_error(flag_name, _("Username only needed if you share an email with another user. "))
+        # TODO: Check if true: Do not add_error for username_field, that way it still auto-populates the value.
         login_element = 'login'
         # TODO: Update 'login_element' as an HTML a element to link to login route.
         message = "Have you had classes or created an account using that email address? "
         message += "Go to {} to sign in with that account or reset the password if needed. ".format(login_element)
         message += "If you share an email with another user, then you will login with a username instead. "
-        self.add_error(None, _(message))  # Will be an error message at the top of the form.
-        self.add_error(email_field_name, _("Use a non-shared email, or set a username below. "))
-        # self.add_error(flag_name, _("Username only needed if you share an email with another user. "))
-        # TODO: Check if true: Do not add_error for username_field, that way it still auto-populates the value.
-        return
+        # self.add_error(None, _(message))  # Will be an error message at the top of the form.
+        return message
 
     def clean_username(self):
         # This is called if no ValidationError was raised by to_python(), validate(), or run_validators().
@@ -200,7 +191,6 @@ class CustomRegistrationForm(RegistrationForm):
         compute_errors = ErrorDict()
         print("=================== CustomRegistrationForm._clean_computed_fields ============================")
         for name, field in self.computed_fields.items():
-            # field.disabled = True  # field value will be self.get_initial_for_field(field, name)
             if hasattr(self, 'compute_%s' % name):
                 field = getattr(self, 'compute_%s' % name)()
             self.computed_fields[name] = field  # self.fields[name] = field
@@ -230,13 +220,12 @@ class CustomRegistrationForm(RegistrationForm):
             cleaned_compute_data = {name: self.cleaned_data.pop(name, None) for name in self.computed_fields}
             print(cleaned_compute_data)
             raise ValidationError(_("Error occurred with the computed fields. "))
-        # elif self.confirmation['required'] and not self.confirmation['given']:
         elif username_field_name not in self.data and username_value != email_value:
             print("- - - - - - - - - Confirmation Required - - - - - - - - - - - - - - -")
-            self.configure_username_confirmation()
+            message = "Login with existing account, change to a non-shared email, or create a username. "
+            message += self.configure_username_confirmation()
             print("---------------------- Form Data --------------------------------------")
             pprint(self.data)
-            message = "Login with existing account, change to a non-shared email, or create a username. "
             raise ValidationError(_(message))
         else:
             print(" Computed Fields had no problems! ")
