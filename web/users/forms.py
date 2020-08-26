@@ -3,21 +3,16 @@ from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.forms.utils import ErrorDict  # , ErrorList
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
-from django.contrib.auth.models import AbstractBaseUser
 from django_registration.forms import RegistrationForm
 from django_registration import validators
 from collections import abc
 from .models import UserHC
 
 
-class BaseUserCreationForm(UserCreationForm):
-    class Meta:
+class CustomUserCreationForm(UserCreationForm):
+    """ Deprecated, prefer CustomRegistrationForm. This will be removed after feature and integration are confirmed. """
+    class Meta(UserCreationForm.Meta):
         model = UserHC
-        fields = ['first_name', 'last_name', ]
-
-
-class CustomUserCreationForm(BaseUserCreationForm):
-    class Meta(BaseUserCreationForm.Meta):
         fields = ('first_name', 'last_name', 'email')  # 'uses_email_username',
 
 
