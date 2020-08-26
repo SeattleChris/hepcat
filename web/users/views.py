@@ -11,6 +11,14 @@ class CustomRegistrationView(RegistrationView):
     form_class = CustomRegistrationForm
     success_url = reverse_lazy('profile_page')
 
+    def register(self, form):
+        from pprint import pprint
+        print("===================== CustomRegistrationView.register ============================")
+        pprint(form)
+        print("----------------------------------------------------------------------------------")
+        pprint(self)
+        return super().register(form)
+
 
 class SignUp(generic.CreateView):
     form_class = CustomUserCreationForm
