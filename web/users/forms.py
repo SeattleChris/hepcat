@@ -31,22 +31,27 @@ class CustomRegistrationForm(RegistrationForm):
         print("*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*")
         username_field_name = self._meta.model.USERNAME_FIELD
         # email_field_name = self._meta.model.get_email_field_name()
+        # TODO: Try - instead of extracting, set to hidden and disabled. Let self._clean_fields handle them.
         # initial_from_kwargs = kwargs.get('initial', {})
         # initial_from_kwargs.update({username_field_name: self.username_from_email_or_names})
         # kwargs['initial'] = initial_from_kwargs
         super().__init__(*args, **kwargs)
         # TODO: If using RegistrationForm init, then much, but not all, of attach_critical_validators is duplicate code.
         if username_field_name in self.fields:
+            # field = self.fields[username_field_name]
             self.fields[username_field_name].widget.attrs['autofocus'] = False
-        extracted_fields = {key: self.fields.pop(key, None) for key in self.Meta.computed_fields}
-        self.computed_fields = extracted_fields
-        # TODO: Try - instead of extracting, set to hidden and disabled. Let self._clean_fields handle them.
+            if username_field_name not in self.data:
+                # field.show_hidden_initial = True
+                # field.disabled = True
+                pass
+        if username_field_name in self.data:
+            self.fields[self._meta.model.get_email_field_name()].widget.attrs['autofocus'] = True
+            self.computed_fields = {}
+        else:
+            extracted_fields = {key: self.fields.pop(key, None) for key in self.Meta.computed_fields}
+            self.computed_fields = extracted_fields
+            self.focus_first_usable_field(self.fields.values())
         self.attach_critical_validators()
-        # if self.confirmation['required'] and email_field_name in self.fields:
-        #     self.fields[email_field_name].widget.attrs['autofocus'] = True
-        #     self.confirmation['given'] = True
-        # else:
-        self.focus_first_usable_field(self.fields.values())
         print("---------------------------------------------------------")
         # pprint(self.fields)
         pprint(self.computed_fields)
@@ -142,12 +147,13 @@ class CustomRegistrationForm(RegistrationForm):
         field = self.fields.pop(username_field_name, None) or self.computed_fields.pop(username_field_name)
         username_message = "Use the suggested username or create your own. Only needed if using a shared email. "
         field.help_text = _(username_message)
+        # field.disabled = False
         email_field = self.fields.pop(email_field_name, None) or self.computed_fields.pop(email_field_name, None)
         email_field.widget.attrs['autofocus'] = True
         flag_name = self.Meta.USERNAME_FLAG_FIELD
         flag_field = self.computed_fields.pop(flag_name, None) or self.fields.pop(flag_name, None)
         flag_field.help_text = _("Select if you're using a non-shared email. ")
-        flag_field.initial = False
+        flag_field.initial = 'false'
 
         self.fields[email_field_name] = email_field
         self.fields[flag_name] = flag_field
