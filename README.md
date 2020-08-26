@@ -1,7 +1,7 @@
 # hepcat
 
 **Author**: Chris L Chapman
-**Version**: 0.4.4
+**Version**: 0.4.5
 
 ## Overview
 

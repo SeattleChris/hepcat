@@ -87,7 +87,7 @@
 - [s] Stretch Goal. Not for current feature plan.
 
 Current Status:
-2020-08-23 17:40:13
+2020-08-25 18:11:14
 <!-- Ctrl-Shift-I to generate timestamp -->
 
 ### Bug Fixes
@@ -117,6 +117,9 @@ Current Status:
   - [x] instance methods .get_next_by_FOO and .get_previous_by_FOO for Session model next and previous
     - [x] Does not work on unsaved models, which may be our main use case for these properties.
   - [x] QuerySet methods latest(<field_name>) and earliest(<field_name>)
+- [ ] Check for any model properties that should use `key_lazy` or `key_lazy_text` or `cached_property`?
+  - [ ] [key_lazy utils](https://docs.djangoproject.com/en/3.0/ref/utils/#django.utils.functional.cached_property)
+  - [ ] [cached_property](https://docs.djangoproject.com/en/3.0/ref/utils/#django.utils.functional.cached_property)
 - [ ] Revisit `success_url` for RegisterView, PaymentProcessView
   - [ ] `success_url = reverse_lazy('author-list')` in the View class is an option, but ...
     - [ ] You don’t even need to provide a success_url for CreateView or UpdateView
@@ -140,29 +143,11 @@ Current Status:
   - [ ] Use `QuerySet.defer()` and `QuerySet.only()`
   - [ ] Use QuerySet `update()` and `delete()` instead of loading and saving individually.
 
-### Views
+### Tests
 
-- [x] Student Profile: Resources filtered to currently available.
-- [x] Student Profile: Resources no duplicates.
-- [x] Student Profile: Resources displayed and can be navigated in a useful way.
-- [x] Staff Profile: How to manage if they are also a Student?
-  - [x] There is a unique link to their Staff profile view and their Student profile view.
-  - [x] On their default profile view, there is a link to the other profile.
-- [x] Staff Profile: What info do they want as a staff view? Or just handle that in the admin views?
-- [x] About Us - Shows only Teachers and Staff.
-- [x] About US - order of teacher & staff info can be controlled by an admin.
-- [x] Utilize get_absolute_url for all detail views.
-- [ ] Check for any model properties that should use `key_lazy` or `key_lazy_text` or `cached_property`?
-  - [ ] [key_lazy utils](https://docs.djangoproject.com/en/3.0/ref/utils/#django.utils.functional.cached_property)
-  - [ ] [cached_property](https://docs.djangoproject.com/en/3.0/ref/utils/#django.utils.functional.cached_property)
-- [ ] Check if display_session values need `escape_uri_path` because of possible spaces or other user input oddities.
-  - [ ] [escape_uri_path](https://docs.djangoproject.com/en/3.0/ref/utils/#django.utils.functional.cached_property)
 - [x] Tests: use [django.utils.module_loading](https://docs.djangoproject.com/en/3.0/ref/utils/)
   - [x] `tests/views/test_views.py` file
   - [x] other files
-
-### Tests
-
 - [x] Unit tests setup using django test
 - [x] Coverage tests setup with coverage
 - [ ] Models full or near full coverage
@@ -192,33 +177,6 @@ Current Status:
 - [ ] Identify customers "dropping off" to focus to re-gain them
 - [ ] Identify influencer customers - who improves likelihood of others also joining
 - [ ] Exploration: Are there other statistical groupings?
-
-### Admin class scheduling
-
-- [x] Session model has awareness of the next_session and prev_session
-- [x] Session model has callable to compute some default date values
-- [x] Session model has clean methods that can be optionally called to correct dates
-- [x] Session model is aware of its potential start_date and end_date, which is not simply just the key_day_date
-- [x] Session model end_date accounts for skipped weeks that only affect some class days and not others
-- [x] Session save method can call optionally call full_clean, but will auto-correct some date fields
-- [x] Admin form for Session will raise ValidationError if session dates overlap
-- [x] Admin form, after ValidationError, will repopulate the fields with values suggested from Session model clean
-- [x] Resources for Subjects, ClassOffers or Other auto-determine Resource.related_type
-- [x] Raise ValidateError if Session classes overlap.
-- [x] Raise ValidateError if other issues with Session.
-- [x] Session.clean modifies values to ensure the new Session does not overlap with existing Sessions.
-- [x] On Admin Session ValidateError, repopulate the fields with new values from Session.clean method.
-- [x] ClassOffer will be assigned dates according to their Session.
-- [x] ClassOffer will handle invalid day of the week inputs.
-- [x] ClassOffer Admin list: show start and end dates.
-- [x] ClassOffer Admin list: show start and end times in nice-display (not military time)
-
-### General Admin Features
-
-- [ ] Groups: Allow for some hierarchial and cross-group organizational structures (see Sign Up & User Accounts)
-  - [ ] Hierarchial: If they are in a child group, they are automatically added to a parent group
-  - [ ] Cross-Group: A group is a role modifier. So similarities of Teacher: Group-X vs Admin: Group-X.
-- [ ] ? Optional fixtures for example class structure?
 
 ### Deployment on PythonAnywhere
 
@@ -328,7 +286,34 @@ Current Status:
 - [s] Manage "Contact Us" messaging history
 - [s] Manage general student email subscriptions
 
-### Sign Up & User Accounts
+### Admin class scheduling
+
+- [x] Session model has awareness of the next_session and prev_session
+- [x] Session model has callable to compute some default date values
+- [x] Session model has clean methods that can be optionally called to correct dates
+- [x] Session model is aware of its potential start_date and end_date, which is not simply just the key_day_date
+- [x] Session model end_date accounts for skipped weeks that only affect some class days and not others
+- [x] Session save method can call optionally call full_clean, but will auto-correct some date fields
+- [x] Admin form for Session will raise ValidationError if session dates overlap
+- [x] Admin form, after ValidationError, will repopulate the fields with values suggested from Session model clean
+- [x] Resources for Subjects, ClassOffers or Other auto-determine Resource.related_type
+- [x] Raise ValidateError if Session classes overlap.
+- [x] Raise ValidateError if other issues with Session.
+- [x] Session.clean modifies values to ensure the new Session does not overlap with existing Sessions.
+- [x] On Admin Session ValidateError, repopulate the fields with new values from Session.clean method.
+- [x] ClassOffer will be assigned dates according to their Session.
+- [x] ClassOffer will handle invalid day of the week inputs.
+- [x] ClassOffer Admin list: show start and end dates.
+- [x] ClassOffer Admin list: show start and end times in nice-display (not military time)
+
+### General Admin Features
+
+- [ ] Groups: Allow for some hierarchial and cross-group organizational structures (see Sign Up & User Accounts)
+  - [ ] Hierarchial: If they are in a child group, they are automatically added to a parent group
+  - [ ] Cross-Group: A group is a role modifier. So similarities of Teacher: Group-X vs Admin: Group-X.
+- [ ] ? Optional fixtures for example class structure?
+
+### Sign Up & User Account Creation Features
 
 - [x] Django-registration: basic user creation method
 - [x] Django-registration: can create a user without asking for a username input
@@ -342,8 +327,11 @@ Current Status:
 - [ ] Class sign up as anonymous process:
   - [x] Create the account, sign-up for class, allow payment.
   - [ ] User is logged in on account creation?
-  - [ ] User has a randomly generated password, prompted to change on next login.
-  - [ ] User confirms with email link. Prompted for password from the link.
+  - [ ] Auto-Login new user if created on their first ClassOffer sign up.
+  - [ ] Password for Users created by class sign-up:
+    - [ ] ? User has a randomly generated password, prompted to change on next login.
+    - [ ] ? User confirms with email link. Prompted for password from the link.
+    - [ ] ? No mention of password until user attempts to login.
   - [ ] If user never confirms, it does not stop them from joining future class.
 - [x] Admin for Users has proxy models to view Staff or Student users. Users can still be both.
   - [x] These proxy models are not linked to from external apps. They only affect views in Admin.
@@ -351,68 +339,67 @@ Current Status:
   - [x] A user can have both, one of each.
   - [x] If a user has both, can navigate to either one.
   - [x] If a user has both, displays a default of staff profile.
-- [ ] Staff Profiles:
-  - [x] have bio
-  - [x] an ordering field for desired placement in "about us" view, and
-  - [x] Distinction between teacher and other admin
-  - [x] More refined staff roles managed by groups, allowing them to be dynamic for future admin.
-- [ ] Student Profiles:
-  - [x] Student have fields and methods for connecting to ClassOffers, Resources, and inspecting customer data.
-  - [ ] List of attended classes.
-  - [ ] List of resources by type.
-  - [ ]
-- [ ] Features for all profiles:
-  - [ ] See Admin Feature: Allow for some hierarchial and cross-group organizational structures.
-    - [ ] Display of what groups they are a part of.
-      - [ ] ? Only if more than teacher and admin?
 - [ ] Listener to always create Profile on new User, as well as always update. Connected one-to-one, cascade deletes.
   - [x] Working when only one Profile model (not both Staff and Student profile models).
   - [x] Working with both Staff and Student profile models.
   - [ ] Working with Proxy User models for Staff and Student
 
-### Style & Layout
+### Form Views - Style & Layout
 
-- [ ] Form Layout:
-  - [ ] Name input: First and Last default to same line if screen size allows.
-  - [ ] Address input: City, State, Zip default to same line if screen size allows.
-  - [x] Address input: Address1 and Address2 on separate lines with explanation of continued input.
-  - [ ] Label and Input box line up across different rows
-    - [ ] ? Using table layout?
-    - [ ] ? Using non-table layout?
-- [ ] Layout student Profile Resources & class history
+- [x] Auto-focus first (or critical) field.
+- [ ] Name input: First and Last default to same line if screen size allows.
+- [ ] Address input: City, State, Zip default to same line if screen size allows.
+- [x] Address input: Address1 and Address2 on separate lines with explanation of continued input.
+- [ ] Label and Input box line up across different rows
+  - [ ] ? Using table layout?
+  - [ ] ? Using non-table layout?
+- [ ] CSS Style of save/submit button
+- [ ] Field boxes all line up, field names on left with align right
+- [ ] Field 'help_text' adjusted in CSS
+  - [ ] less prominent text (smaller? lighter font?)
+  - [ ] placed under the input box?
 - [ ] Improve Class Sign Up - Registration form.
-- [ ] Update instructions and method for "If you want to register a different person then ..."
+  - [ ] Update instructions and method for "If you want to register a different person then ..."
+  - [ ] Move returning student question lower in form
   - [x] Registration Form should have initial values for user that is logged in.
-  - [ ] Registration Form should have initial value for state based on the User model default.
-  - [ ] CSS Style of save/submit button
-  - [ ] Alignment of input fields
-    - [ ] Field boxes all line up, field names on left with align right
-    - [ ] ? Address formatted like normal address lines?
-    - [ ] Move returning student question lower in form
-    - [ ] Field 'help_text' adjusted in CSS
-      - [ ] less prominent text (smaller? lighter font?)
-      - [ ] placed under the input box?
+  - [x] Registration Form should have initial value for state based on the User model default.
 
-### General Site
+### Profile and Resource Views
 
-- [x] 'About Us' page should only show staff members.
-- [x] More consistent Model str and repr methods.
-- [x] Fix max_length to 191 for utf8mb4.
-- [x] About Us page shows only teacher & staff profile info, plus business info.
-- [ ] About Us Links to Contact Us.
-  - [ ] General site contact us.
-  - [ ] Individual contacts for each staff member?
-- [ ] Contact Us page w/ contact form (send to email)
-- [x] Deal with when admin has no name (such as a superuser), it may break the 'About Us' page.
-- [x] Login Page should say email instead of username
-- [x] Hi message should use name instead of username (email)
-- [x] On Profile, add link to update profile/user details (billing, email, etc)
+- [x] Profile: Resources filtered to currently available.
+- [x] Profile: Resources no duplicates.
+- [x] Profile: Resources displayed and can be navigated in a useful way.
+- [x] List of associated classes.
+- [x] List of resources by type.
+- [ ] ? Profile details view: add note for completed Beg and/or L2
+- [ ] Resources can be listed by classoffer.
+- [ ] Advertise next appropriate classoffer for this student.
+- [ ] Resource section of Recent or New resources.
+- [ ] Another page/view for older resources.
+- [x] How to manage if they are both Staff and a Student?
+  - [x] There is a unique link to their Staff profile view and their Student profile view.
+  - [x] On their default profile view, there is a link to the other profile.
+- [ ] Staff Profiles:
+  - [x] Staff Profile: What info do they want as a staff view? Or just handle that in the admin views?
+  - [x] have bio
+  - [x] an ordering field for desired placement in "about us" view
+  - [x] Can be removed from "about us" page by admin.
+  - [x] Distinction between teacher and other admin
+  - [x] More refined staff roles managed by groups, allowing them to be dynamic for future admin.
+- [ ] Student Profiles:
+  - [x] Student have fields and methods for connecting to ClassOffers, Resources, and inspecting customer data.
+- [ ] See Admin Feature: Allow for some hierarchial and cross-group organizational structures.
+  - [ ] Display of what groups they are a part of.
+    - [ ] ? Only if more than teacher and admin (or student)?
+
+### Other Views - Style & Layout
+
+- [x] About Us - Shows only Teachers and Staff.
+- [x] About US - order of teacher & staff info can be controlled by an admin.
+- [x] Utilize get_absolute_url for all detail views.
+- [ ] Check if display_session values need `escape_uri_path` because of possible spaces or other user input oddities.
+  - [ ] [escape_uri_path](https://docs.djangoproject.com/en/3.0/ref/utils/#django.utils.functional.cached_property)
 - [ ] Add content and connect to "Info" link button.
-- [ ] Profile model: update highest_level to not include "current" classoffer.
-- [ ] Auto-Login new user if created on their first ClassOffer sign up.
-- [ ] User: create update view and method
-- [ ] Profile details view: add note for completed Beg and/or L2
-- [ ] Add interesting dance images to ClassOffer list view, maybe detail view also
 - [ ] Decide if we host a weekly current class page (as old site), or refactor to student's Profile view?
 - [ ] Create space for "Info" page: general site resources and sub-pages
   - [ ] Music
@@ -420,6 +407,24 @@ Current Status:
   - [s] At your Party?
   - [s] Private lessons?
   - [s] ??
+- [ ] General Site Contact Us View/Page
+  - [ ] On-site contact form (send to email)
+- [ ] About Us Links to Contact Us.
+  - [ ] Individual contacts for each staff member?
+
+### General Site
+
+- [x] 'About Us' page should only show staff members.
+- [x] More consistent Model str and repr methods.
+- [x] Fix max_length to 191 for utf8mb4.
+- [x] About Us page shows only teacher & staff profile info, plus business info.
+- [x] Deal with when admin has no name (such as a superuser), it may break the 'About Us' page.
+- [x] Login Page should say email instead of username
+- [x] Hi message should use name instead of username (email)
+- [x] On Profile, add link to update profile/user details (billing, email, etc)
+- [ ] Profile model: update highest_level to not include "current" classoffer.
+- [x] User: create update view and method
+- [ ] Add interesting dance images to ClassOffer list view, maybe detail view also
 - [ ] Review all completed site pages for consistency, including different view sizes.
 - [ ] Deploy development site
 - [ ] Deploy production site

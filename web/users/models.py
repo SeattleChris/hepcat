@@ -72,7 +72,7 @@ class UserManagerHC(UserManager):
                 extra_fields['uses_email_username'] = False
         if extra_fields.get('uses_email_username') is False:
             name_fields = ('first_name', 'last_name')
-            username = username or '_'.join([extra_fields[key] for key in name_fields if key in extra_fields] or '')
+            username = username or '_'.join(extra_fields[key].strip() for key in name_fields if key in extra_fields)
             if not username:
                 message += "If you are not using your email as your username/login, "
                 message += "then you must either set a username or provide a first and/or last name. "
@@ -182,7 +182,7 @@ class UserHC(AbstractUser):
     is_teacher = models.BooleanField(_('teacher'), default=False, )
     is_admin = models.BooleanField(_('admin'), default=False, )
     # is_superuser, is_staff, is_active exist from inherited models.
-    uses_email_username = models.BooleanField(_('using email as username'), help_text='Typical default', default=True, )
+    uses_email_username = models.BooleanField(_('using email as login'), help_text='Typical default', default=True, )
     billing_address_1 = models.CharField(_('street address (line 1)'), max_length=191, blank=True, )
     billing_address_2 = models.CharField(_('street address (continued)'), max_length=191, blank=True, )
     billing_city = models.CharField(_('city'), max_length=191, default=settings.DEFAULT_CITY, blank=True, )
@@ -222,8 +222,8 @@ class UserHC(AbstractUser):
         # TODO: Confirm our final username is not in use.
         if self.uses_email_username is True:
             return self.email.casefold()
-        user_name_list = [getattr(self, key) for key in ('first_name', 'last_name') if getattr(self, key, None)]
-        username = '_'.join(user_name_list).casefold()
+        user_name_gen = (getattr(self, key).strip() for key in ('first_name', 'last_name') if hasattr(self, key))
+        username = '_'.join(user_name_gen).casefold()
         return self.normalize_username(username)
 
     def save(self, *args, **kwargs):

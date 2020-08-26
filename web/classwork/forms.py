@@ -5,6 +5,7 @@ from django.utils.translation import gettext_lazy as _
 # from django.shortcuts import render
 # TODO: should we be using datetime.datetime or datetime.today ?
 from django.contrib.auth import get_user_model
+from collections import abc
 User = get_user_model()
 
 
@@ -57,6 +58,20 @@ class RegisterForm(forms.ModelForm):
         # print(class_choices)
         super(RegisterForm, self).__init__(*args, **kwargs)
         self.fields['class_selected'].queryset = class_choices
+        self.focus_first_usable_field(self.fields.values())
+
+    def focus_first_usable_field(self, fields):
+        """ Gives autofocus to the first non-hidden, non-disabled form field from the given iterable of form fields. """
+        if not isinstance(fields, (list, tuple, abc.ValuesView)):
+            raise TypeError(_("Expected an iterable of form fields. "))
+        field_gen = (ea for ea in fields)
+        first_field = next(field_gen)
+        while first_field.disabled or (hasattr(first_field, 'is_hidden') and first_field.is_hidden):
+            if 'autofocus' in first_field.widget.attrs:
+                first_field.widget.attrs['autofocus'] = False
+            first_field = next(field_gen)
+        first_field.widget.attrs['autofocus'] = True
+        return first_field
 
     # Cleaning data is done by:
     # 1) Field.clean() which will populate cleaned_data, and has 3 parts:
@@ -257,3 +272,20 @@ class PaymentForm(forms.ModelForm):
             'billing_country_area',
             'billing_postcode',
             ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.focus_first_usable_field(self.fields.values())
+
+    def focus_first_usable_field(self, fields):
+        """ Gives autofocus to the first non-hidden, non-disabled form field from the given iterable of form fields. """
+        if not isinstance(fields, (list, tuple, abc.ValuesView)):
+            raise TypeError(_("Expected an iterable of form fields. "))
+        field_gen = (ea for ea in fields)
+        first_field = next(field_gen)
+        while first_field.disabled or (hasattr(first_field, 'is_hidden') and first_field.is_hidden):
+            if 'autofocus' in first_field.widget.attrs:
+                first_field.widget.attrs['autofocus'] = False
+            first_field = next(field_gen)
+        first_field.widget.attrs['autofocus'] = True
+        return first_field
