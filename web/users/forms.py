@@ -21,7 +21,7 @@ class CustomRegistrationForm(RegistrationForm):
         unique_email = False
 
     def __init__(self, *args, **kwargs):
-        model = self.Meta.get('model', None)
+        model = getattr(self._meta, 'model', None)
         required_attributes = ('USERNAME_FIELD', 'get_email_field_name', 'is_active')
         if not model or not all(hasattr(model, ea) for ea in required_attributes):
             err = "Missing features for user model. Try subclassing Django's AbstractBaseUser, AbstractUser, or User. "
@@ -30,8 +30,9 @@ class CustomRegistrationForm(RegistrationForm):
         pprint(args)
         pprint(kwargs)
         pprint(self.confirmation)
-        username_field_name = self.Meta.model.USERNAME_FIELD
-        email_field_name = self.Meta.model.get_email_field_name()
+        # pprint(self.base_fields)
+        username_field_name = self._meta.model.USERNAME_FIELD
+        email_field_name = self._meta.model.get_email_field_name()
         initial_from_kwargs = kwargs.get('initial', {})
         initial_from_kwargs.update({username_field_name: self.username_from_email_or_names})
         kwargs['initial'] = initial_from_kwargs
@@ -65,7 +66,7 @@ class CustomRegistrationForm(RegistrationForm):
 
     def attach_critical_validators(self):
         """ The email and username fields have critical validators to be processed during field cleaning process. """
-        email_name = self.Meta.model.get_email_field_name()
+        email_name = self._meta.model.get_email_field_name()
         email_validators = [
             validators.HTML5EmailValidator(),
             validators.validate_confusables_email
@@ -73,14 +74,14 @@ class CustomRegistrationForm(RegistrationForm):
         if self.Meta.unique_email:
             email_validators.append(
                 validators.CaseInsensitiveUnique(
-                    self.Meta.model, email_name, validators.DUPLICATE_EMAIL
+                    self._meta.model, email_name, validators.DUPLICATE_EMAIL
                 )
             )
         email_field = self.fields.get(email_name, None) or self.computed_fields.get(email_name, None)
         email_field.validators.extend(email_validators)
         email_field.required = True
 
-        username = self.Meta.model.USERNAME_FIELD
+        username = self._meta.model.USERNAME_FIELD
         reserved_names = getattr(self, 'reserved_names', validators.DEFAULT_RESERVED_NAMES)
         username_validators = [
             validators.ReservedNameValidator(reserved_names),
@@ -89,7 +90,7 @@ class CustomRegistrationForm(RegistrationForm):
         if self.Meta.case_insensitive:
             username_validators.append(
                 validators.CaseInsensitiveUnique(
-                    self.Meta.model, username, validators.DUPLICATE_USERNAME
+                    self._meta.model, username, validators.DUPLICATE_USERNAME
                 )
             )
         username_field = self.computed_fields.get(username, None) or self.fields.get(username, None)
