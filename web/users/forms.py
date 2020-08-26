@@ -10,7 +10,6 @@ from .models import UserHC
 
 
 class CustomRegistrationForm(RegistrationForm):
-    confirmation = {'required': False, 'completed': False}
 
     class Meta(RegistrationForm.Meta):
         model = UserHC
@@ -29,13 +28,12 @@ class CustomRegistrationForm(RegistrationForm):
         print("================================== CustomRegistrationForm.__init__ =====================")
         pprint(args)
         pprint(kwargs)
-        pprint(self.confirmation)
-        # pprint(self.base_fields)
+        print("*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*")
         username_field_name = self._meta.model.USERNAME_FIELD
-        email_field_name = self._meta.model.get_email_field_name()
-        initial_from_kwargs = kwargs.get('initial', {})
-        initial_from_kwargs.update({username_field_name: self.username_from_email_or_names})
-        kwargs['initial'] = initial_from_kwargs
+        # email_field_name = self._meta.model.get_email_field_name()
+        # initial_from_kwargs = kwargs.get('initial', {})
+        # initial_from_kwargs.update({username_field_name: self.username_from_email_or_names})
+        # kwargs['initial'] = initial_from_kwargs
         super().__init__(*args, **kwargs)
         # TODO: If using RegistrationForm init, then much, but not all, of attach_critical_validators is duplicate code.
         if username_field_name in self.fields:
@@ -44,12 +42,13 @@ class CustomRegistrationForm(RegistrationForm):
         self.computed_fields = extracted_fields
         # TODO: Try - instead of extracting, set to hidden and disabled. Let self._clean_fields handle them.
         self.attach_critical_validators()
-        if self.confirmation['required'] and email_field_name in self.fields:
-            self.fields[email_field_name].widget.attrs['autofocus'] = True
-        else:
-            self.focus_first_usable_field(self.fields.values())
+        # if self.confirmation['required'] and email_field_name in self.fields:
+        #     self.fields[email_field_name].widget.attrs['autofocus'] = True
+        #     self.confirmation['given'] = True
+        # else:
+        self.focus_first_usable_field(self.fields.values())
         print("---------------------------------------------------------")
-        pprint(self.fields)
+        # pprint(self.fields)
         pprint(self.computed_fields)
 
     def focus_first_usable_field(self, fields):
@@ -131,17 +130,16 @@ class CustomRegistrationForm(RegistrationForm):
         try:
             if not result_value or self._meta.model._default_manager.filter(**lookup).exists():
                 result_value = self.username_from_name()
-                self.confirmation['required'] = True
         except Exception as e:
             print("Unable to query to lookup if this username exists. ")
             print(e)
         return result_value
 
-    def configure_username_confirmation(self, field=None, username_field_name=None, email_field_name=None):
+    def configure_username_confirmation(self, username_field_name=None, email_field_name=None):
         """ Since the username is using the alternative computation, prepare form for user confirmation. """
         email_field_name = email_field_name or self._meta.model.get_email_field_name()
         username_field_name = username_field_name or self._meta.model.USERNAME_FIELD
-        field = field or self.fields.pop(username_field_name, None) or self.computed_fields.pop(username_field_name)
+        field = self.fields.pop(username_field_name, None) or self.computed_fields.pop(username_field_name)
         username_message = "Use the suggested username or create your own. Only needed if using a shared email. "
         field.help_text = _(username_message)
         email_field = self.fields.pop(email_field_name, None) or self.computed_fields.pop(email_field_name, None)
@@ -189,16 +187,12 @@ class CustomRegistrationForm(RegistrationForm):
         email_field_name = model.get_email_field_name()
         result_value = self.username_from_email_or_names(username_field_name, email_field_name)
         field.initial = result_value
-        print("---------------------- value for username field.initial --------------------------- ")
-        print(field.initial)
         return field
 
     def _clean_computed_fields(self):
         """ Mimics _clean_fields for computed_fields. Calls compute_<fieldname> and clean_<fieldname> if present. """
         compute_errors = ErrorDict()
-        cleaned_data = getattr(self, 'cleaned_data', None)
         print("=================== CustomRegistrationForm._clean_computed_fields ============================")
-        print(cleaned_data)
         for name, field in self.computed_fields.items():
             # field.disabled = True  # field value will be self.get_initial_for_field(field, name)
             if hasattr(self, 'compute_%s' % name):
@@ -217,8 +211,11 @@ class CustomRegistrationForm(RegistrationForm):
         return compute_errors
 
     def clean(self):
+        username_field_name = self._meta.model.USERNAME_FIELD
+        username_value = self.cleaned_data.get(username_field_name, '')
+        email_value = self.cleaned_data.get(self._meta.model.get_email_field_name(), None)
+
         print("============================ CustomRegistrationForm.clean =========================")
-        pprint(self.data)
         compute_errors = self._clean_computed_fields()
         print("---------------- compute_errors -----------------------------------------")
         print(compute_errors)
@@ -227,9 +224,12 @@ class CustomRegistrationForm(RegistrationForm):
             cleaned_compute_data = {name: self.cleaned_data.pop(name, None) for name in self.computed_fields}
             print(cleaned_compute_data)
             raise ValidationError(_("Error occurred with the computed fields. "))
-        elif self.confirmation['required']:
+        # elif self.confirmation['required'] and not self.confirmation['given']:
+        elif username_field_name not in self.data and username_value != email_value:
             print("- - - - - - - - - Confirmation Required - - - - - - - - - - - - - - -")
             self.configure_username_confirmation()
+            print("---------------------- Form Data --------------------------------------")
+            pprint(self.data)
             message = "Login with existing account, change to a non-shared email, or create a username. "
             raise ValidationError(_(message))
         else:
@@ -238,22 +238,8 @@ class CustomRegistrationForm(RegistrationForm):
         print("--------------------- Cleaned Data After Cleaning Computed Fields ---------------------------------")
         cleaned_data = super().clean()  # return self.cleaned_data, also sets boolean for unique validation.
         print(cleaned_data)
-        print("---------------------- Initial data -------------------------------------------------")
-        print(self.initial)
-        if 'username' in self.fields:
-            print(self.fields['username'].initial)
         print("---------------------------------------------------------")
         return cleaned_data
-
-    def _post_clean(self):
-        # This is after all form cleaning on self.fields. Now we do similar for self.computed_fields
-        # Adding a field to self.fields will try to create an instance and use the Models validation methods.
-        print("============================ CustomRegistrationForm._post_clean =========================")
-        return super()._post_clean()
-
-    def full_clean(self):
-        print("============================ CustomRegistrationForm.full_clean =========================")
-        return super().full_clean()
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -277,20 +263,20 @@ class CustomUserChangeForm(UserChangeForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.focus_first_usable_field(self, self.fields.values())
+        self.fields['billing_address_1'].widget.attrs['autofocus'] = True
 
-    def focus_first_usable_field(self, fields):
-        """ Gives autofocus to the first non-hidden, non-disabled form field from the given iterable of form fields. """
-        if not isinstance(fields, (list, tuple, abc.ValuesView)):
-            raise TypeError(_("Expected an iterable of form fields. "))
-        field_gen = (ea for ea in fields)
-        first_field = next(field_gen)
-        while first_field.disabled or (hasattr(first_field, 'is_hidden') and first_field.is_hidden):
-            if 'autofocus' in first_field.widget.attrs:
-                first_field.widget.attrs['autofocus'] = False
-            first_field = next(field_gen)
-        first_field.widget.attrs['autofocus'] = True
-        return first_field
+    # def focus_first_usable_field(self, fields):
+    #     """ Gives autofocus to the first non-hidden, non-disabled form field from the given iterable of form fields. """
+    #     if not isinstance(fields, (list, tuple, abc.ValuesView)):
+    #         raise TypeError(_("Expected an iterable of form fields. "))
+    #     field_gen = (ea for ea in fields)
+    #     first_field = next(field_gen)
+    #     while first_field.disabled or (hasattr(first_field, 'is_hidden') and first_field.is_hidden):
+    #         if 'autofocus' in first_field.widget.attrs:
+    #             first_field.widget.attrs['autofocus'] = False
+    #         first_field = next(field_gen)
+    #     first_field.widget.attrs['autofocus'] = True
+    #     return first_field
 
     def as_person_details(self):
 
