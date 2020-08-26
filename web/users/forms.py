@@ -37,6 +37,7 @@ class CustomRegistrationForm(RegistrationForm):
         initial_from_kwargs.update({username_field_name: self.username_from_email_or_names})
         kwargs['initial'] = initial_from_kwargs
         super().__init__(*args, **kwargs)
+        # TODO: If using RegistrationForm init, then much, but not all, of attach_critical_validators is duplicate code.
         if username_field_name in self.fields:
             self.fields[username_field_name].widget.attrs['autofocus'] = False
         extracted_fields = {key: self.fields.pop(key, None) for key in self.Meta.computed_fields}
@@ -101,7 +102,7 @@ class CustomRegistrationForm(RegistrationForm):
         print("=================== CustomRegistrationForm.username_from_name ===========================")
         if not hasattr(self, 'cleaned_data'):
             raise ImproperlyConfigured(_("This method can only be evaluated after 'cleaned_data' has been populated. "))
-        names = (self.cleaned_data[key] for key in ('first_name', 'last_name') if self.cleaned_data.get(key))
+        names = (self.cleaned_data[key].strip() for key in ('first_name', 'last_name') if self.cleaned_data.get(key))
         result_value = self._meta.model.normalize_username('_'.join(names).casefold())
         print(result_value)
         return result_value
