@@ -1,4 +1,3 @@
-# from django import forms
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.forms.utils import ErrorDict  # , ErrorList
 from django.utils.translation import gettext_lazy as _
@@ -6,50 +5,8 @@ from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django_registration.forms import RegistrationForm
 from django_registration import validators
 from collections import abc
+from pprint import pprint  # Temporary for debug.
 from .models import UserHC
-
-
-class CustomUserCreationForm(UserCreationForm):
-    """ Deprecated, prefer CustomRegistrationForm. This will be removed after feature and integration are confirmed. """
-    class Meta(UserCreationForm.Meta):
-        model = UserHC
-        fields = ('first_name', 'last_name', 'email')  # 'uses_email_username',
-
-
-class CustomUserChangeForm(UserChangeForm):
-    class Meta(UserChangeForm.Meta):
-        model = UserHC
-        fields = (
-            'first_name', 'last_name',
-            'email',
-            'billing_address_1',
-            'billing_address_2',
-            'billing_city', 'billing_country_area', 'billing_postcode',
-            'billing_country_code',
-            )
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.focus_first_usable_field(self, self.fields.values())
-
-    def focus_first_usable_field(self, fields):
-        """ Gives autofocus to the first non-hidden, non-disabled form field from the given iterable of form fields. """
-        if not isinstance(fields, (list, tuple, abc.ValuesView)):
-            raise TypeError(_("Expected an iterable of form fields. "))
-        field_gen = (ea for ea in fields)
-        first_field = next(field_gen)
-        while first_field.disabled or (hasattr(first_field, 'is_hidden') and first_field.is_hidden):
-            if 'autofocus' in first_field.widget.attrs:
-                first_field.widget.attrs['autofocus'] = False
-            first_field = next(field_gen)
-        first_field.widget.attrs['autofocus'] = True
-        return first_field
-
-    def as_person_details(self):
-
-        pass
-
-        # end as_person_details
 
 
 class CustomRegistrationForm(RegistrationForm):
@@ -64,7 +21,6 @@ class CustomRegistrationForm(RegistrationForm):
         unique_email = False
 
     def __init__(self, *args, **kwargs):
-        from pprint import pprint
         model = self.Meta.get('model', None)
         required_attributes = ('USERNAME_FIELD', 'get_email_field_name', 'is_active')
         if not model or not all(hasattr(model, ea) for ea in required_attributes):
@@ -289,3 +245,46 @@ class CustomRegistrationForm(RegistrationForm):
     def full_clean(self):
         print("============================ CustomRegistrationForm.full_clean =========================")
         return super().full_clean()
+
+
+class CustomUserCreationForm(UserCreationForm):
+    """ Deprecated, prefer CustomRegistrationForm. This will be removed after feature and integration are confirmed. """
+    class Meta(UserCreationForm.Meta):
+        model = UserHC
+        fields = ('first_name', 'last_name', 'email')  # 'uses_email_username',
+
+
+class CustomUserChangeForm(UserChangeForm):
+    class Meta(UserChangeForm.Meta):
+        model = UserHC
+        fields = (
+            'first_name', 'last_name',
+            'email',
+            'billing_address_1',
+            'billing_address_2',
+            'billing_city', 'billing_country_area', 'billing_postcode',
+            'billing_country_code',
+            )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.focus_first_usable_field(self, self.fields.values())
+
+    def focus_first_usable_field(self, fields):
+        """ Gives autofocus to the first non-hidden, non-disabled form field from the given iterable of form fields. """
+        if not isinstance(fields, (list, tuple, abc.ValuesView)):
+            raise TypeError(_("Expected an iterable of form fields. "))
+        field_gen = (ea for ea in fields)
+        first_field = next(field_gen)
+        while first_field.disabled or (hasattr(first_field, 'is_hidden') and first_field.is_hidden):
+            if 'autofocus' in first_field.widget.attrs:
+                first_field.widget.attrs['autofocus'] = False
+            first_field = next(field_gen)
+        first_field.widget.attrs['autofocus'] = True
+        return first_field
+
+    def as_person_details(self):
+
+        pass
+
+        # end as_person_details
