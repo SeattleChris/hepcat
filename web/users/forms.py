@@ -29,14 +29,13 @@ class CustomRegistrationForm(RegistrationForm):
         pprint(kwargs)
         print("*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*")
         super().__init__(*args, **kwargs)
-        # TODO: If using RegistrationForm init, then much, but not all, of attach_critical_validators is duplicate code.
-        self.attach_critical_validators()
-        # TODO: Write validator for 'uses_email_username'
-        extracted_fields = {key: self.fields.pop(key, None) for key in self.Meta.computed_fields - self.data.keys()}
-        self.computed_fields = extracted_fields
         username_field_name = self._meta.model.USERNAME_FIELD
         email_field_name = self._meta.model.get_email_field_name()
         named_focus = email_field_name if username_field_name in self.data else None
+        # TODO: If using RegistrationForm init, then much, but not all, of attach_critical_validators is duplicate code.
+        self.attach_critical_validators(strict_email=bool(named_focus))
+        extracted_fields = {key: self.fields.pop(key, None) for key in self.Meta.computed_fields - self.data.keys()}
+        self.computed_fields = extracted_fields
         self.focus_correct_field(name=named_focus)
         print("---------------------------------------------------------")
         print(named_focus)
@@ -154,6 +153,7 @@ class CustomRegistrationForm(RegistrationForm):
         self.fields['password1'] = self.fields.pop('password1', None)
         self.fields['password2'] = self.fields.pop('password2', None)
         self.focus_correct_field(name=email_field_name)
+        self.attach_critical_validators(strict_email=True)
 
         self.add_error(email_field_name, _("Use a non-shared email, or set a username below. "))
         # self.add_error(flag_name, _("Username only needed if you share an email with another user. "))
