@@ -86,24 +86,24 @@ class AdminResourceTests(TestCase):
         publish = key_day - timedelta(days=7*3+1)
         sess1 = Session.objects.create(name=name, key_day_date=key_day, num_weeks=5, publish_date=publish)
         sess2 = Session.objects.create(name='second')
-        subj = Subject.objects.create(version=Subject.VERSION_CHOICES[0][0], title="test_subj")
-        subj2 = Subject.objects.create(version=Subject.VERSION_CHOICES[0][0], title="subj2")
+        subj = Subject.objects.create(version=Subject.VERSION_CHOICES[0][0], name="test_subj")
+        subj2 = Subject.objects.create(version=Subject.VERSION_CHOICES[0][0], name="subj2")
         first = ClassOffer.objects.create(subject=subj, session=sess1, start_time=time(19, 0))
         second = ClassOffer.objects.create(subject=subj, session=sess2, start_time=time(19, 0))
         third = ClassOffer.objects.create(subject=subj2, session=sess2, start_time=time(19, 0))
-        res_subj_1 = Resource.objects.create(content_type='text', title="Res for test_subj")
+        res_subj_1 = Resource.objects.create(content_type='text', name="Res for test_subj")
         subj.resources.add(res_subj_1)
         expected_res_subj_1 = [str(subj)]
-        res_is_two = Resource.objects.create(content_type='text', title="Res in subj2 and second classoffer")
-        res_subj_2 = Resource.objects.create(content_type='text', title="Res for subj2")
+        res_is_two = Resource.objects.create(content_type='text', name="Res in subj2 and second classoffer")
+        res_subj_2 = Resource.objects.create(content_type='text', name="Res for subj2")
         subj2.resources.add(res_subj_2, res_is_two)
         second.resources.add(res_is_two)
         expected_res_subj_2 = [str(subj2)]
         expected_res_is_two = [str(subj2), str(second)]
-        res_first = Resource.objects.create(content_type='text', title="Res for First ClassOffer")
+        res_first = Resource.objects.create(content_type='text', name="Res for First ClassOffer")
         first.resources.add(res_first)
         expected_res_first = [str(first)]
-        res_co_in_sess2 = Resource.objects.create(content_type='text', title="Res for Second ClassOffer")
+        res_co_in_sess2 = Resource.objects.create(content_type='text', name="Res for Second ClassOffer")
         res_co_in_sess2.classoffers.add(second, third)
         expected_res_co_in_sess2 = [str(second), str(third)]
         current_admin = ResourceAdmin(model=Resource, admin_site=AdminSite())
@@ -272,8 +272,8 @@ class AdminClassOfferTests(TestCase):
         publish = key_day - timedelta(days=7*3+1)
         sess1 = Session.objects.create(name=name, key_day_date=key_day, num_weeks=5, publish_date=publish)
         sess2 = Session.objects.create(name='second')
-        subj = Subject.objects.create(version=Subject.VERSION_CHOICES[0][0], num_minutes=60, title="test_subj")
-        subj2 = Subject.objects.create(version=Subject.VERSION_CHOICES[0][0], num_minutes=90, title="subj2")
+        subj = Subject.objects.create(version=Subject.VERSION_CHOICES[0][0], num_minutes=60, name="test_subj")
+        subj2 = Subject.objects.create(version=Subject.VERSION_CHOICES[0][0], num_minutes=90, name="subj2")
         first = ClassOffer.objects.create(subject=subj, session=sess1, start_time=time(19, 0))
         second = ClassOffer.objects.create(subject=subj, session=sess2, start_time=time(19, 30))
         third = ClassOffer.objects.create(subject=subj2, session=sess2, start_time=time(19, 0))
@@ -294,7 +294,7 @@ class AdminClassOfferTests(TestCase):
         key_day, name = date.today(), 'first'
         publish = key_day - timedelta(days=7*3+1)
         sess1 = Session.objects.create(name=name, key_day_date=key_day, num_weeks=5, publish_date=publish)
-        subj = Subject.objects.create(version=Subject.VERSION_CHOICES[0][0], num_minutes=0, title="test_subj")
+        subj = Subject.objects.create(version=Subject.VERSION_CHOICES[0][0], num_minutes=0, name="test_subj")
         first = ClassOffer.objects.create(subject=subj, session=sess1, start_time=time(19, 0))
         current_admin = ClassOfferAdmin(model=ClassOffer, admin_site=AdminSite())
 
@@ -312,7 +312,7 @@ class AdminClassDayListFilterTests(TestCase):
         key_day, name = date.today(), 'sess1'
         publish = key_day - timedelta(days=7*3+1)
         sess1 = Session.objects.create(name=name, key_day_date=key_day, max_day_shift=6, publish_date=publish)
-        subj = Subject.objects.create(version=Subject.VERSION_CHOICES[0][0], title="test_subj")
+        subj = Subject.objects.create(version=Subject.VERSION_CHOICES[0][0], name="test_subj")
         kwargs = {'subject': subj, 'session': sess1, 'start_time': time(19, 0)}
         classoffers = [ClassOffer.objects.create(class_day=k, **kwargs) for k, v in ClassOffer.DOW_CHOICES if k % 2]
         expected_lookup = ((k, v) for k, v in ClassOffer.DOW_CHOICES if k % 2)
@@ -330,7 +330,7 @@ class AdminClassDayListFilterTests(TestCase):
         key_day, name = date.today(), 'sess1'
         publish = key_day - timedelta(days=7*3+1)
         sess1 = Session.objects.create(name=name, key_day_date=key_day, max_day_shift=6, publish_date=publish)
-        subj = Subject.objects.create(version=Subject.VERSION_CHOICES[0][0], title="test_subj")
+        subj = Subject.objects.create(version=Subject.VERSION_CHOICES[0][0], name="test_subj")
         kwargs = {'subject': subj, 'session': sess1, 'start_time': time(19, 0)}
         classoffers = [ClassOffer.objects.create(class_day=k, **kwargs) for k, v in ClassOffer.DOW_CHOICES if k % 2]
         expected_lookup_list = [(k, v) for k, v in ClassOffer.DOW_CHOICES if k % 2]
@@ -348,7 +348,7 @@ class AdminClassDayListFilterTests(TestCase):
         key_day, name = date.today(), 'sess1'
         publish = key_day - timedelta(days=7*3+1)
         sess1 = Session.objects.create(name=name, key_day_date=key_day, max_day_shift=6, publish_date=publish)
-        subj = Subject.objects.create(version=Subject.VERSION_CHOICES[0][0], title="test_subj")
+        subj = Subject.objects.create(version=Subject.VERSION_CHOICES[0][0], name="test_subj")
         kwargs = {'subject': subj, 'session': sess1, 'start_time': time(19, 0)}
         classoffers = [ClassOffer.objects.create(class_day=k, **kwargs) for k, v in ClassOffer.DOW_CHOICES if k % 2]
         expected_lookup = ((k, v) for k, v in ClassOffer.DOW_CHOICES if k % 2)
@@ -375,7 +375,7 @@ class AdminClassDayListFilterTests(TestCase):
         key_day, name = date.today(), 'sess1'
         publish = key_day - timedelta(days=7*3+1)
         sess1 = Session.objects.create(name=name, key_day_date=key_day, max_day_shift=6, publish_date=publish)
-        subj = Subject.objects.create(version=Subject.VERSION_CHOICES[0][0], title="test_subj")
+        subj = Subject.objects.create(version=Subject.VERSION_CHOICES[0][0], name="test_subj")
         kwargs = {'subject': subj, 'session': sess1, 'start_time': time(19, 0)}
         classoffers = [ClassOffer.objects.create(class_day=k, **kwargs) for k, v in ClassOffer.DOW_CHOICES if k % 2]
         expected_lookup = ((k, v) for k, v in ClassOffer.DOW_CHOICES if k % 2)

@@ -694,7 +694,7 @@
         "filepath": "",
         "link": "",
         "text": "",
-        "title": "Your Beginning Class!",
+        "name": "Your Beginning Class!",
         "description": "You have signed up for the Beginning Swing Dance - Lindy Hop class!",
         "date_added": "2020-07-25",
         "date_modified": "2020-07-25"
@@ -707,7 +707,7 @@
         "level": "Beg",
         "level_num": "1.0",
         "version": "A",
-        "title": "Beginning Swing Dance - Lindy Hop",
+        "name": "Beginning Swing Dance - Lindy Hop",
         "tagline_1": "Partner Not Required!",
         "tagline_2": "No experience needed!",
         "tagline_3": "",

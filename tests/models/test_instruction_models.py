@@ -9,9 +9,9 @@ from datetime import date, time, timedelta, datetime as dt
 class SubjectModelTests(SimpleModelTests, TestCase):
     Model = Subject
     # detail_url_name = 'subject_detail'  # Does Not Exist
-    repr_dict = {'Subject': 'title', 'Level': 'level', 'Version': 'version'}
+    repr_dict = {'Subject': 'name', 'Level': 'level', 'Version': 'version'}
     str_list = ['_str_slug']
-    defaults = {'title': 'test model'}
+    defaults = {'name': 'test model'}
 
 
 class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
@@ -31,7 +31,7 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         for lvl, display in Subject.LEVEL_CHOICES[:2]:
             res_lvl = Resource.objects.create(
                 content_type='text',
-                title='_'.join((lvl, 'all', str(avail), '0')),
+                name='_'.join((lvl, 'all', str(avail), '0')),
                 user_type=1,
                 avail=avail,
                 expire=0)
@@ -39,11 +39,11 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
             res_count += 1
             expected_resources.append(res_lvl)
             for ver, _ in Subject.VERSION_CHOICES[:3]:
-                subj = Subject.objects.create(title='_'.join((lvl, ver)), level=lvl, version=ver)
+                subj = Subject.objects.create(name='_'.join((lvl, ver)), level=lvl, version=ver)
                 subj.save()
                 res = Resource.objects.create(
                     content_type='text',
-                    title='_'.join((lvl, ver, str(avail), '0')),
+                    name='_'.join((lvl, ver, str(avail), '0')),
                     user_type=1,
                     avail=avail,
                     expire=0)
@@ -54,15 +54,15 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
                 co = ClassOffer.objects.create(subject=subj, session=sess, start_time=(time(17, 0)))
                 co.save()
                 avail = 0 if avail + 1 > sess.num_weeks else avail + 1
-        expected_titles = [getattr(ea, 'title', '') for ea in expected_resources]
+        expected_names = [getattr(ea, 'name', '') for ea in expected_resources]
         actual_resources = ClassOffer.objects.resources()
-        actual_titles = [ea.get('title', '') for ea in actual_resources]
+        actual_names = [ea.get('name', '') for ea in actual_resources]
 
         self.assertTrue(len(no_res_results) == 0)
         self.assertLessEqual(sess.end_date, date.today())
         self.assertLessEqual(sess.end_date, dt.utcnow().date())
         self.assertEqual(res_count, Resource.objects.count())
-        self.assertSetEqual(set(expected_titles), set(actual_titles))
+        self.assertSetEqual(set(expected_names), set(actual_names))
 
     def test_manager_queryset_resources_various_expire(self):
         """ Making many ClassOffers that today is the week 3 class with resources on all weeks with 0 <= expire < 3. """
@@ -85,21 +85,21 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
             student_has_level = False
             res_lvl = Resource.objects.create(
                 content_type='text',
-                title='_'.join((lvl, 'all', str(avail % 3), '0')),
+                name='_'.join((lvl, 'all', str(avail % 3), '0')),
                 user_type=1,
                 avail=(avail % 3),
                 expire=0)
             res_lvl.save()
             res_total_count += 1
             for ver, _ in Subject.VERSION_CHOICES:
-                subj = Subject.objects.create(title='_'.join((lvl, ver)), level=lvl, version=ver)
+                subj = Subject.objects.create(name='_'.join((lvl, ver)), level=lvl, version=ver)
                 subj.save()
                 co = ClassOffer.objects.create(subject=subj, session=sess_cur, start_time=(time(17, 0)), class_day=day)
                 co.save()
                 student.taken.add(co)
                 res = Resource.objects.create(
                     content_type='text',
-                    title='_'.join((lvl, ver, str(avail), str(expire))),
+                    name='_'.join((lvl, ver, str(avail), str(expire))),
                     user_type=1,
                     avail=avail,
                     expire=expire)
@@ -119,14 +119,14 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
                 else:
                     avail += 1
         student.save()
-        expected_titles = [getattr(ea, 'title', '') for ea in res_expected]
-        actual_titles = [ea.get('title', '') for ea in student.taken.resources()]
+        expected_names = [getattr(ea, 'name', '') for ea in res_expected]
+        actual_names = [ea.get('name', '') for ea in student.taken.resources()]
         classoffers_created_count = len(Subject.LEVEL_CHOICES) * len(Subject.VERSION_CHOICES)  # 80
 
         self.assertEqual(classoffers_created_count, student.taken.count())
         self.assertEqual(res_total_count, Resource.objects.count())
         self.assertNotEqual(res_total_count, res_goal_count)
-        self.assertSetEqual(set(actual_titles), set(expected_titles))
+        self.assertSetEqual(set(actual_names), set(expected_names))
         self.assertEqual(res_goal_count, len(student.taken.resources()))
 
     def test_manager_queryset_resources_with_user_kwarg(self):
@@ -150,18 +150,18 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
             student_has_level = False
             res_lvl = Resource.objects.create(
                 content_type='text',
-                title='_'.join((lvl, 'all', str(avail), str(expire))),
+                name='_'.join((lvl, 'all', str(avail), str(expire))),
                 user_type=1,
                 avail=avail,
                 expire=expire)
             res_lvl.save()
             res_count += 1
             for ver, _ in Subject.VERSION_CHOICES[subset_subj_version:]:
-                subj = Subject.objects.create(title='_'.join((lvl, ver)), level=lvl, version=ver)
+                subj = Subject.objects.create(name='_'.join((lvl, ver)), level=lvl, version=ver)
                 subj.save()
                 res = Resource.objects.create(
                     content_type='text',
-                    title='_'.join((lvl, ver, str(avail), str(expire))),
+                    name='_'.join((lvl, ver, str(avail), str(expire))),
                     user_type=1,
                     avail=avail,
                     expire=expire)
@@ -179,15 +179,15 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
                         student_has_level = True
                 avail = 0 if avail + 1 > sess.num_weeks else avail + 1
         actual_res = student.taken.resources(user=student.user)
-        actual_res_titles = set([ea.get('title', '') for ea in actual_res])
-        expected_res_titles = set([getattr(ea, 'title', '') for ea in expected_res])
+        actual_res_names = set([ea.get('name', '') for ea in actual_res])
+        expected_res_names = set([getattr(ea, 'name', '') for ea in expected_res])
 
         self.assertTrue(len(no_res_results) == 0)
         self.assertLessEqual(sess.end_date, date.today())
         self.assertLessEqual(sess.end_date, dt.utcnow().date())
         self.assertEqual(res_count, Resource.objects.count())
         self.assertEqual(classoffer_count, ClassOffer.objects.count())
-        self.assertSetEqual(expected_res_titles, actual_res_titles)
+        self.assertSetEqual(expected_res_names, actual_res_names)
         self.assertEqual(len(expected_res), len(actual_res))
 
     def test_manager_get_resources_as_subquery(self):
@@ -198,13 +198,13 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         for res in expected_res:
             res.expire = 0
             res.save()
-        expected_titles = [getattr(ea, 'title', '') for ea in expected_res]
-        res = ClassOffer.objects.get_resources().order_by().values('title')[:1]
+        expected_names = [getattr(ea, 'name', '') for ea in expected_res]
+        res = ClassOffer.objects.get_resources().order_by().values('name')[:1]
         result = ClassOffer.objects.annotate(recent_resource=Subquery(res))
-        actual_titles = [ea.recent_resource for ea in result]
+        actual_names = [ea.recent_resource for ea in result]
 
         self.assertEqual(len(expected_res), len(result))
-        self.assertSetEqual(set(expected_titles), set(actual_titles))
+        self.assertSetEqual(set(expected_names), set(actual_names))
 
     def test_manager_resources_params_student_user(self):
         student = Student.objects.first()
@@ -245,9 +245,9 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
     def test_manager_resources_params_live_by_date(self):
         start = date.today() - timedelta(days=21)
         sess = Session.objects.create(name="test manager", key_day_date=start, publish_date=start)
-        subj = Subject.objects.create(version=Subject.VERSION_CHOICES[0][0], title='clean subj')
-        new_res_expired = Resource.objects.create(content_type='text', user_type=0, avail=1, expire=1, title="Missed")
-        new_res_live = Resource.objects.create(content_type='text', user_type=0, avail=1, expire=0, title="Live")
+        subj = Subject.objects.create(version=Subject.VERSION_CHOICES[0][0], name='clean subj')
+        new_res_expired = Resource.objects.create(content_type='text', user_type=0, avail=1, expire=1, name="Missed")
+        new_res_live = Resource.objects.create(content_type='text', user_type=0, avail=1, expire=0, name="Live")
         new_co = ClassOffer.objects.create(subject=subj, session=sess, start_time=time(19, 0))
         new_res_expired.save()
         new_res_live.save()
@@ -277,11 +277,11 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         for lvl, display in Subject.LEVEL_CHOICES[:2]:
             for ver, _ in Subject.VERSION_CHOICES[:3]:
                 avail = 0
-                subj = Subject.objects.create(title='_'.join((lvl, ver)), level=lvl, version=ver)
+                subj = Subject.objects.create(name='_'.join((lvl, ver)), level=lvl, version=ver)
                 subj.save()
                 res = Resource.objects.create(
                     content_type='text',
-                    title='_'.join((lvl, ver, str(avail), str(expire))),
+                    name='_'.join((lvl, ver, str(avail), str(expire))),
                     user_type=1,
                     avail=avail,
                     expire=expire,
@@ -295,7 +295,7 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
                     avail += 1
                     res = Resource.objects.create(
                         content_type='text',
-                        title='_'.join((lvl, ver, str(avail), str(expire))),
+                        name='_'.join((lvl, ver, str(avail), str(expire))),
                         user_type=1,
                         avail=avail,
                         expire=expire,
@@ -307,18 +307,18 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         resource_count = Resource.objects.all().count()
         actual_res = ClassOffer.objects.most_recent_resource_per_classoffer().values('recent_resource')
         print("===================== most recent resource per classoffer ===============================")
-        expected_titles = [getattr(ea, 'title', '') for ea in expected_res]
-        pprint(expected_titles)
+        expected_names = [getattr(ea, 'name', '') for ea in expected_res]
+        pprint(expected_names)
         print("------------------------------------------------------------------------")
-        actual_titles = [ea.get('recent_resource', '') for ea in actual_res]
-        pprint(actual_titles)
+        actual_names = [ea.get('recent_resource', '') for ea in actual_res]
+        pprint(actual_names)
         # pprint([getattr(ea, 'recent_resource', '') for ea in actual_res.all()])
         self.assertLessEqual(sess.end_date, date.today())
         self.assertLessEqual(sess.end_date, dt.utcnow().date())
         self.assertEqual(res_count, resource_count)
         self.assertEquals(len(expected_res), len(actual_res))
         self.assertTrue(all(ea in expected_res for ea in actual_res))
-        # self.assertSetEqual(set(expected_titles), set(actual_titles))
+        # self.assertSetEqual(set(expected_names), set(actual_names))
 
     def test_not_implemented_model_resources(self):
         first = ClassOffer.objects.first()
@@ -337,17 +337,17 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         level_choice = Subject.LEVEL_CHOICES[1][0]
         level_choice = Subject.LEVEL_CHOICES[0][0] if level_choice == subject.level else level_choice
         version_choice = Subject.VERSION_CHOICES[0][0]
-        other_subj = Subject.objects.create(level=level_choice, version=version_choice, title="other subject")
+        other_subj = Subject.objects.create(level=level_choice, version=version_choice, name="other subject")
         other_model = ClassOffer.objects.create(subject=other_subj, session=model.session, start_time=time(17, 0))
-        other_subj_res = Resource.objects.create(content_type='text', avail=0, expire=0, title="Other Subject Res")
-        other_co_res = Resource.objects.create(content_type='text', avail=0, expire=0, title="Other ClassOffer Res")
+        other_subj_res = Resource.objects.create(content_type='text', avail=0, expire=0, name="Other Subject Res")
+        other_co_res = Resource.objects.create(content_type='text', avail=0, expire=0, name="Other ClassOffer Res")
         other_subj.resources.add(other_subj_res)
         other_model.resources.add(other_co_res)
         other_joined = list(other_subj.resources.all()) + list(other_model.resources.all())
         resources_count += 2
 
-        subj_res = Resource.objects.create(content_type='text', avail=0, expire=0, title="Subject Res")
-        co_res = Resource.objects.create(content_type='text', avail=0, expire=0, title="ClassOffer Res")
+        subj_res = Resource.objects.create(content_type='text', avail=0, expire=0, name="Subject Res")
+        co_res = Resource.objects.create(content_type='text', avail=0, expire=0, name="ClassOffer Res")
         subject.resources.add(subj_res)
         model.resources.add(co_res)
         expected_resources.extend([subj_res, co_res])

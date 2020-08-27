@@ -313,18 +313,18 @@ class ProfileViewTests(MimicAsView, TestCase):
         self.view.object = self.view.get_object()  # This step normally done in self.view.get()
         classoffer_list = [arr[0] for sess, arr in classoffers.items()]
         first_subj = classoffer_list[0].subject
-        first_res = Resource.objects.create(content_type='text', title="First Subject Resource")
+        first_res = Resource.objects.create(content_type='text', name="First Subject Resource")
         first_res.save()
         first_subj.resources.add(first_res)
         resources = [first_res]
         for ea in classoffer_list:
-            res = Resource.objects.create(content_type='text', title=str(ea) + 'Res')
+            res = Resource.objects.create(content_type='text', name=str(ea) + 'Res')
             res.save()
             ea.resources.add(res)
             resources.append(res)
         connected_classoffers.add(*classoffer_list)
         expected_classoffers = [repr(ea) for ea in classoffer_list]
-        resource_fields = ('title', 'id', 'content_type', )  # , 'imagepath',
+        resource_fields = ('name', 'id', 'content_type', )  # , 'imagepath',
         expected_resources = [{key: getattr(ea, key, None) for key in resource_fields} for ea in resources]
         actual_context = self.view.get_context_data(object=self.view.object)  # matches the typical call in get()
         actual_classoffers = actual_context.get('classoffers', None)
