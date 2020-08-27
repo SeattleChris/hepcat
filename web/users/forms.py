@@ -15,8 +15,8 @@ class CustomRegistrationForm(RegistrationForm):
         USERNAME_FLAG_FIELD = 'uses_email_username'
         fields = ('first_name', 'last_name', model.get_email_field_name(), USERNAME_FLAG_FIELD, model.USERNAME_FIELD, )
         computed_fields = (model.USERNAME_FIELD, USERNAME_FLAG_FIELD, )
-        case_insensitive = True
-        unique_email = False
+        strict_username = True  # case_insensitive
+        strict_email = False  # unique_email and case_insensitive
 
     def __init__(self, *args, **kwargs):
         model = getattr(self._meta, 'model', None)
@@ -31,6 +31,7 @@ class CustomRegistrationForm(RegistrationForm):
         super().__init__(*args, **kwargs)
         # TODO: If using RegistrationForm init, then much, but not all, of attach_critical_validators is duplicate code.
         self.attach_critical_validators()
+        # TODO: Write validator for 'uses_email_username'
         extracted_fields = {key: self.fields.pop(key, None) for key in self.Meta.computed_fields - self.data.keys()}
         self.computed_fields = extracted_fields
         username_field_name = self._meta.model.USERNAME_FIELD
@@ -52,15 +53,18 @@ class CustomRegistrationForm(RegistrationForm):
         found.widget.attrs['autofocus'] = True
         return found
 
-    def attach_critical_validators(self):
+    def attach_critical_validators(self, strict_email=None, strict_username=None):
         """Before setting computed_fields, assign validators to the email and username fields. """
+        strict_email = strict_email or self.Meta.strict_email
+        strict_username = strict_username or self.Meta.strict_username
+
         email_name = self._meta.model.get_email_field_name()
         if email_name in self.fields:
             email_validators = [
                 validators.HTML5EmailValidator(),
                 validators.validate_confusables_email
             ]
-            if self.Meta.unique_email:
+            if strict_email:
                 email_validators.append(
                     validators.CaseInsensitiveUnique(
                         self._meta.model, email_name, validators.DUPLICATE_EMAIL
@@ -77,7 +81,7 @@ class CustomRegistrationForm(RegistrationForm):
                 validators.ReservedNameValidator(reserved_names),
                 validators.validate_confusables,
             ]
-            if self.Meta.case_insensitive:
+            if strict_username:
                 username_validators.append(
                     validators.CaseInsensitiveUnique(
                         self._meta.model, username, validators.DUPLICATE_USERNAME
