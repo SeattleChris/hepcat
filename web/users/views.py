@@ -5,6 +5,7 @@ from .models import UserHC
 from django_registration.backends.one_step.views import RegistrationView
 from .forms import CustomRegistrationForm, CustomUserCreationForm, CustomUserChangeForm
 # Create your views here.
+from pprint import pprint  # TODO: Remove after debug
 
 
 class CustomRegistrationView(RegistrationView):
@@ -12,7 +13,6 @@ class CustomRegistrationView(RegistrationView):
     success_url = reverse_lazy('profile_page')
 
     def register(self, form):
-        from pprint import pprint
         print("===================== CustomRegistrationView.register ============================")
         pprint(form)
         print("----------------------------------------------------------------------------------")

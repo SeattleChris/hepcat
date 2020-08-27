@@ -244,17 +244,20 @@ class SessiontAdmin(admin.ModelAdmin):
     def expire_day(self, obj): return date_with_day(obj, field='expire_date')
     def skips(self, obj): return getattr(obj, 'skip_weeks', None)
     def breaks(self, obj): return getattr(obj, 'break_weeks', None)
+    start_day.admin_order_field = 'key_day_date'
     publish_day.admin_order_field = 'publish_date'
     expire_day.admin_order_field = 'expire_date'
     skips.short_description = 'skips'
+    skips.admin_order_field = 'skip_weeks'
     breaks.short_description = 'breaks'
+    breaks.admin_order_field = 'break_weeks'
 
 
 class StaffAdmin(admin.ModelAdmin):
     """ Admin can modify and view Staff user profiles. """
     model = Staff
-    list_display = ('__str__', 'username', 'listing', 'bio_done', 'tax', )
-    list_display_links = ('__str__', 'username', )
+    list_display = ('username', '__str__', 'listing', 'bio_done', 'tax', )
+    list_display_links = ('__str__', )
     list_editable = ('listing', )
     list_filter = ('user__is_staff', 'user__is_active', )
     ordering = ('date_modified', 'date_added', )
@@ -269,8 +272,8 @@ class StaffAdmin(admin.ModelAdmin):
 class StudentAdmin(admin.ModelAdmin):
     """ Admin can modify and view Student user profiles. """
     model = Student
-    list_display = ('__str__', 'username', 'max_subject', 'max_level', 'level', 'beg_done', 'l2_done', 'l3_done', )
-    list_display_links = ('__str__', 'username', )
+    list_display = ('username', '__str__', 'max_subject', 'max_level', 'level', 'beg_done', 'l2_done', 'l3_done', )
+    list_display_links = ('__str__', )
     list_filter = ('user__is_staff', 'taken__session', 'taken__subject__level', 'level', )    # , 'taken__subject',
     list_select_related = True
     ordering = ('date_modified', 'date_added', )

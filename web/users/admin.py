@@ -9,9 +9,9 @@ from .models import UserHC, StaffUser, StudentUser
 
 class CustomUserAdmin(UserAdmin):
     model = UserHC
-    list_display = ('first_name', 'last_name', 'username', 'is_student', 'is_teacher', 'is_admin', 'is_active', 'grp',
-                    'perm', )
-    list_display_links = ('first_name', 'last_name', 'username', )
+    list_display = ('username', 'as_email', 'first_name', 'last_name', 'is_student', 'is_teacher', 'is_admin',
+                    'is_active', 'grp', 'perm', 'date_joined', )
+    list_display_links = ('first_name', 'last_name', )
     list_filter = ('is_student', 'is_teacher', 'is_admin', 'is_staff', 'is_active', 'groups', )  # , 'is_superuser',
     ordering = ('first_name', )
     fieldsets = (
@@ -57,8 +57,11 @@ class CustomUserAdmin(UserAdmin):
         'billing_address_2': {'size': 20},
     }
 
+    def as_email(self, obj): return getattr(obj, 'uses_email_username', None)
     def grp(self, obj): return ', '.join(str(ea) for ea in obj.groups.all())
     def perm(self, obj): return ', '.join(str(ea) for ea in obj.user_permissions.all())
+    as_email.boolean = True
+    as_email.short_name = 'as email'
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
