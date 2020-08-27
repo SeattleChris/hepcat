@@ -10,7 +10,7 @@ admin_group, created_admin = Group.objects.get_or_create(name='admin')
 staff_group, created_staff = Group.objects.get_or_create(name='staff')
 groups_from_role = {'is_teacher': teacher_group, 'is_admin': admin_group, 'is_staff': staff_group}
 
-# Create your models here.
+# Create your models (and managers) here.
 
 
 class UserManagerHC(UserManager):
@@ -46,8 +46,8 @@ class UserManagerHC(UserManager):
         """ Called for all user creation methods (create_user, create_superuser, etc).
             Email addresses and login usernames are normalized, allowing no uppercase characters.
             A user must have a unique login username (usually their email address).
-            Unless the 'uses_email_username' was explicitly set to False, we will use the email as username.
-            If a user with that email already exists (or 'uses_email_username' is False), and no username was provided,
+            Unless the 'username_not_email' was explicitly set to True, we will use the email as username.
+            If a user with that email already exists (or 'username_not_email' is True), and no username was provided,
             then it will create one based on their 'first_name' and 'last_name'.
             Raises Error if a unique username cannot be formed, or otherwise cannot create the user.
             Returns a user instance created with the inherited self._create_user method if successful.
@@ -57,20 +57,19 @@ class UserManagerHC(UserManager):
         if not email:
             message += "An email address is preferred to ensure confirmation, "
             message += "but we can create an account without one. "
-            if extra_fields.setdefault('uses_email_username', False):
+            if not extra_fields.setdefault('username_not_email', True):
                 message += "You requested to use email as your login username, but did not provide an email address. "
                 raise ValueError(_(message))
         else:
             email = self.normalize_email(email)
 
-        if extra_fields.setdefault('uses_email_username', True):
-            # attempt_username = email
+        if not extra_fields.setdefault('username_not_email', False):
             try:
                 user = self._create_user(email, email, password, **extra_fields)
             except IntegrityError:
                 message += "A unique email address is preferred, but a user already exists with that email address. "
-                extra_fields['uses_email_username'] = False
-        if extra_fields.get('uses_email_username') is False:
+                extra_fields['username_not_email'] = True
+        if extra_fields.get('username_not_email') is True:
             name_fields = ('first_name', 'last_name')
             username = username or '_'.join(extra_fields[key].strip() for key in name_fields if key in extra_fields)
             if not username:
@@ -89,7 +88,7 @@ class UserManagerHC(UserManager):
     def create_user(self, username=None, email=None, password=None, **extra_fields):
         """ Create a non-superuser account. Defaults to student, but can be any combination of admin, teacher, student.
             Required inputs: must have either email (preferred), username, or have first_name and/or last_name.
-            If given an email, the other username techniques are ignored unless 'uses_email_username' is set to False.
+            If given an email, the other username techniques are ignored unless 'username_not_email' is set to True.
             If not using email, will try with username (if given), or create username from 'first_name' and 'last_name'.
         """
         # print('================== UserManagerHC.create_user ========================')
@@ -182,7 +181,8 @@ class UserHC(AbstractUser):
     is_teacher = models.BooleanField(_('teacher'), default=False, )
     is_admin = models.BooleanField(_('admin'), default=False, )
     # is_superuser, is_staff, is_active exist from inherited models.
-    uses_email_username = models.BooleanField(_('using email as login'), help_text='Typical default', default=True, )
+    username_not_email = models.BooleanField(_('login with username, not with email'), default=False,
+                                             help_text=_('Leave empty to login with email (Typical use)'), )
     billing_address_1 = models.CharField(_('street address (line 1)'), max_length=191, blank=True, )
     billing_address_2 = models.CharField(_('street address (continued)'), max_length=191, blank=True, )
     billing_city = models.CharField(_('city'), max_length=191, default=settings.DEFAULT_CITY, blank=True, )
@@ -199,8 +199,11 @@ class UserHC(AbstractUser):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._meta.get_field('username').verbose_name = _("email or login")
-        self._meta.get_field('username').help_text = _("or login name")  # TODO Fix: does not show up in login.
+        username = self.USERNAME_FIELD
+        email = self.get_email_field_name()
+        self._meta.get_field(username).help_text = _("or login name")
+        self._meta.get_field(username).verbose_name = _("email or login")
+        self._meta.get_field(email).help_text = _("used for confirmation and typically for login")
 
     @property
     def full_name(self):
@@ -220,7 +223,7 @@ class UserHC(AbstractUser):
             instead of lower() since it is better for some international character sets.
         """
         # TODO: Confirm our final username is not in use.
-        if self.uses_email_username is True:
+        if self.username_not_email is False:
             return self.email.casefold()
         user_name_gen = (getattr(self, key).strip() for key in ('first_name', 'last_name') if hasattr(self, key))
         username = '_'.join(user_name_gen).casefold()
@@ -249,14 +252,18 @@ class UserHC(AbstractUser):
 
 class StaffUser(UserHC):
 
-    class Meta:
+    class Meta(UserHC.Meta):
         proxy = True
+        verbose_name = 'Staff User'
+        verbose_name_plural = 'Staff Users'
 
 
 class StudentUser(UserHC):
 
-    class Meta:
+    class Meta(UserHC.Meta):
         proxy = True
+        verbose_name = 'Student User'
+        verbose_name_plural = 'Student Users'
 
 
 # The following causes the UserHC model to also use these default settings.

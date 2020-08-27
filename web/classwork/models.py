@@ -28,7 +28,7 @@ class SiteContent(models.Model):
     """ Public content for different sections of the site. """
     # id = auto-created
     name = models.CharField(max_length=120, help_text=_('Descriptive name used to find this content'))
-    text = models.TextField(blank=True, help_text=_('Text chunk used in page or email publication'))
+    text = models.TextField(blank=True, help_text=_('Text content used in page or email publication'))
 
     date_added = models.DateField(auto_now_add=True, )
     date_modified = models.DateField(auto_now=True, )
@@ -114,7 +114,7 @@ class Resource(models.Model):
     filepath = models.FileField(upload_to='resource/', help_text=_('If a file, upload here'), blank=True, )
     link = models.URLField(max_length=191, help_text=_('External or Internal links go here'), blank=True, )
     text = models.TextField(_("Text Content"), help_text=_('Content used in page or email publication'), blank=True, )
-    title = models.CharField(max_length=60, )
+    name = models.CharField(max_length=60, )
     description = models.TextField(_("Staff Notes Description"), help_text=_("Only used as staff notes"), blank=True, )
     date_added = models.DateField(auto_now_add=True, )
     date_modified = models.DateField(auto_now=True, )
@@ -137,10 +137,10 @@ class Resource(models.Model):
         return reverse('resource_detail', args=[str(self.id)])
 
     def __str__(self):
-        return self.title
+        return self.name
 
     def __repr__(self):
-        return '<Resource: {} | Type: {} >'.format(self.title, self.content_type)
+        return '<Resource: {} | Type: {} >'.format(self.name, self.content_type)
 
 
 class Subject(models.Model):
@@ -177,7 +177,7 @@ class Subject(models.Model):
     level_num = models.DecimalField(max_digits=3, decimal_places=1, default=0,  # LEVEL_ORDER.get(level.default, 0)
                                     help_text=_("Will be computed if left blank. "), blank=True, )
     version = models.CharField(max_length=1, choices=VERSION_CHOICES, )
-    title = models.CharField(max_length=125, default=_('Untitled'), )
+    name = models.CharField(max_length=125, default=_('Untitled'), )
     tagline_1 = models.CharField(max_length=23, blank=True, )
     tagline_2 = models.CharField(max_length=23, blank=True, )
     tagline_3 = models.CharField(max_length=23, blank=True, )
@@ -210,7 +210,7 @@ class Subject(models.Model):
         slug = str(self.level) + str(self.version)
         common_levels = [code for code, display in self.LEVEL_CHOICES[:int(settings.COMMON_LEVELS_COUNT)]]
         if self.level not in common_levels:
-            slug += ': {}'.format(self.title)
+            slug += ': {}'.format(self.name)
         return slug
 
     def save(self, *args, **kwargs):
@@ -222,7 +222,7 @@ class Subject(models.Model):
         return self._str_slug
 
     def __repr__(self):
-        return '<Subject: {} | Level: {} | Version: {} >'.format(self.title, self.level, self.version)
+        return '<Subject: {} | Level: {} | Version: {} >'.format(self.name, self.level, self.version)
 
 
 # class LevelGroup(models.Model):
@@ -231,7 +231,7 @@ class Subject(models.Model):
 #         a student has completed that Subject.
 #     """
 #     # id = auto-created
-#     title = models.CharField(max_length=8, choices=Subject.LEVEL_CHOICES, default='Spec')
+#     name = models.CharField(max_length=8, choices=Subject.LEVEL_CHOICES, default='Spec')
 #     # collection = models.ManyToManyField('Subject', symmetrical=True)
 #     collection = models.ForeignKey('Subject', on_delete=models.CASCADE)
 
@@ -579,7 +579,7 @@ class CustomQuerySet(models.QuerySet):
 
     def resources(self, **kwargs):
         """ Return a queryset.values() of Resource objects that are alive and connected to the current queryset. """
-        resource_fields = ('title', 'id', 'content_type', )  # , 'imagepath',
+        resource_fields = ('name', 'id', 'content_type', )  # , 'imagepath',
         kwargs['live'] = True  # Calling resources will always only return currently available resources.
         # kwargs.setdefault('live', True)  # unless set False in kwargs, will only return currently available resources.
         arr = [self.get_resources(model=ea, **kwargs).order_by().values(*resource_fields) for ea in self.all()]
@@ -599,7 +599,7 @@ class CustomQuerySet(models.QuerySet):
         #     )
         # try:
         #     result = self.annotate(
-        #             recent_resource=Subquery(res.values('title')[:1]),
+        #             recent_resource=Subquery(res.values('name')[:1]),
         #         )
         #     print(result)
         # except Exception as e:
