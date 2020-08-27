@@ -188,14 +188,14 @@ class RegisterForm(forms.ModelForm):
             # if email does not match paid_by.email then we know the other user
             possible_friends = User.objects.filter(email__iexact=input_email).exclude(id=user.id)
             num_friends = possible_friends.count()
-            uses_email_username = False if user.email == input_email or num_friends > 1 else True
+            username_not_email = True if user.email == input_email or num_friends > 1 else False
             friend = possible_friends.first() if num_friends == 1 else None
             if not friend:  # could be none in list, could have matching emails, could be many to choose from
                 friend = User.objects.find_or_create_by_name(
                     first_name=first_name,
                     last_name=last_name,
                     email=input_email,
-                    uses_email_username=uses_email_username,
+                    username_not_email=username_not_email,
                     is_student=True,
                     possible_users=possible_friends
                     )

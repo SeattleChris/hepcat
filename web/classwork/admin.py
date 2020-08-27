@@ -48,7 +48,7 @@ class ResourceInline(admin.StackedInline):
     extra = 1
     fieldsets = (
         (None, {
-            'fields': (('user_type', 'content_type',), ('avail', 'expire'), ('title', 'description')),
+            'fields': (('user_type', 'content_type',), ('avail', 'expire'), ('name', 'description')),
         }),
         ('Data: Files, Links, & Text', {
             'classes': ('collapse',),
@@ -97,7 +97,7 @@ class ResourceAdmin(admin.ModelAdmin):
     list_filter = ('content_type', 'user_type', 'avail', )
     fields = (
         ('subjects', 'classoffers', ),
-        ('title', 'content_type', 'user_type', ),
+        ('name', 'content_type', 'user_type', ),
         ('avail', 'expire', ),
         ('imagepath', 'filepath', 'link', ),
         'text', 'description',
@@ -127,14 +127,14 @@ class ResourceAdmin(admin.ModelAdmin):
 class SubjectAdmin(admin.ModelAdmin):
     """ Admin change/add for Subjects. Has an inline for Resources. """
     model = Subject
-    list_display = ('__str__', 'title', 'level_num', 'level', 'version', )
-    list_display_links = ('__str__', 'title', )
+    list_display = ('__str__', 'name', 'level_num', 'level', 'version', )
+    list_display_links = ('__str__', 'name', )
     list_filter = ('level_num', 'level', )
     # inlines = (ResourceSubjectInline, )
     # TODO: What if we want to attach an already existing Resource?
     fields = (
         ('level', 'version', 'level_num'),
-        'title', 'tagline_1', 'tagline_2', 'tagline_3',
+        'name', 'tagline_1', 'tagline_2', 'tagline_3',
         ('num_weeks', 'num_minutes'),
         'description', 'image',
         ('full_price', 'pre_pay_discount'),
