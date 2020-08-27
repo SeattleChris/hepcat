@@ -9,13 +9,13 @@ from .models import UserHC, StaffUser, StudentUser
 
 class CustomUserAdmin(UserAdmin):
     model = UserHC
-    list_display = ('username', 'as_email', 'first_name', 'last_name', 'is_student', 'is_teacher', 'is_admin',
+    list_display = ('username', 'not_email', 'first_name', 'last_name', 'is_student', 'is_teacher', 'is_admin',
                     'is_active', 'grp', 'perm', 'date_joined', )
     list_display_links = ('first_name', 'last_name', )
     list_filter = ('is_student', 'is_teacher', 'is_admin', 'is_staff', 'is_active', 'groups', )  # , 'is_superuser',
     ordering = ('first_name', )
     fieldsets = (
-        (None, {'fields': (('email', 'uses_email_username'), 'password', ('is_student', 'is_teacher', 'is_admin'),), }),
+        (None, {'fields': (('email', 'username_not_email'), 'password', ('is_student', 'is_teacher', 'is_admin'),), }),
         (_('Name info'), {'fields': (('first_name', 'last_name'), ), }),
         (_('Address Info'), {
             'classes': ('collapse', ),
@@ -32,7 +32,7 @@ class CustomUserAdmin(UserAdmin):
             'classes': ('wide',),
             'fields': (
                 ('first_name', 'last_name'),
-                ('email', 'uses_email_username'),
+                ('email', 'username_not_email'),
                 ('is_student', 'is_teacher', 'is_admin'),
                 ('password1', 'password2'), ),
         }),
@@ -57,11 +57,11 @@ class CustomUserAdmin(UserAdmin):
         'billing_address_2': {'size': 20},
     }
 
-    def as_email(self, obj): return getattr(obj, 'uses_email_username', None)
+    def not_email(self, obj): return getattr(obj, 'username_not_email', None)
     def grp(self, obj): return ', '.join(str(ea) for ea in obj.groups.all())
     def perm(self, obj): return ', '.join(str(ea) for ea in obj.user_permissions.all())
-    as_email.boolean = True
-    as_email.short_name = 'as email'
+    not_email.boolean = True
+    not_email.short_name = 'not email'
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)

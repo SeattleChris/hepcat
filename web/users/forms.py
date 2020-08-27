@@ -12,7 +12,7 @@ class CustomRegistrationForm(RegistrationForm):
 
     class Meta(RegistrationForm.Meta):
         model = UserHC
-        USERNAME_FLAG_FIELD = 'uses_email_username'
+        USERNAME_FLAG_FIELD = 'username_not_email'
         fields = ('first_name', 'last_name', model.get_email_field_name(), USERNAME_FLAG_FIELD, model.USERNAME_FIELD, )
         computed_fields = (model.USERNAME_FIELD, USERNAME_FLAG_FIELD, )
         strict_username = True  # case_insensitive
@@ -137,8 +137,8 @@ class CustomRegistrationForm(RegistrationForm):
         flag_name = self.Meta.USERNAME_FLAG_FIELD
         flag_field = self.computed_fields.pop(flag_name, None) or self.fields.pop(flag_name, None)
         if flag_field:
-            flag_field.help_text = _("Select if you are using a non-shared email. ")
-            flag_field.initial = 'false'
+            flag_field.initial = 'True'
+            # flag_field.help_text = _("Select if you are using a shared email. ")
 
         data = self.data.copy()  # QueryDict datastructure, the copy is mutable. Has getlist and appendlist methods.
         data.appendlist(email_field_name, email_field.initial)
@@ -201,7 +201,7 @@ class CustomRegistrationForm(RegistrationForm):
         return compute_errors
 
     def handle_flag_field(self, email_field_name, user_field_name):
-        """ If the user gave a non-shared email, we expect flag is True, and no username value. """
+        """ If the user gave a non-shared email, we expect flag is False, and no username value. """
         flag_name = self.Meta.USERNAME_FLAG_FIELD
         flag_field = self.fields.get(flag_name, None) or self.computed_fields.get(flag_name, None)
         print("==================== handle_flag_field =====================================")
@@ -226,18 +226,18 @@ class CustomRegistrationForm(RegistrationForm):
         pprint(email_data)
         pprint(user_data)
         error_collected = {}
-        if flag_value:
+        if not flag_value:
             lookup = {"{}__iexact".format(user_field_name): email_value}
             try:
                 if not email_changed or self._meta.model._default_manager.filter(**lookup).exists():
-                    message = "You must give a unique email not shared with other users. "
+                    message = "You must give a unique email not shared with other users (or create a login name). "
                     error_collected[email_field_name] = _(message)
             except Exception as e:
                 print("Could not lookup if the new email is already used as a username. ")
                 print(e)
             self.cleaned_data[user_field_name] = email_value
         elif email_changed:
-            message = "Check the box if you want to use this email address. "
+            message = "Un-check the box, or leave empty, if you want to use this email address. "
             error_collected[flag_name] = _(message)
         return error_collected
 
@@ -248,9 +248,12 @@ class CustomRegistrationForm(RegistrationForm):
         email_value = self.cleaned_data.get(email_field_name, None)
 
         print("============================ CustomRegistrationForm.clean =========================")
+        print("***********************************************************************************")
         pprint(self.initial)
         pprint(self.data)
+        print("-----------------------------------------------------------------------------------")
         pprint(self.cleaned_data)
+        print("***********************************************************************************")
         compute_errors = self._clean_computed_fields()
         print("---------------- compute_errors -----------------------------------------")
         print(compute_errors)
@@ -284,7 +287,7 @@ class CustomUserCreationForm(UserCreationForm):
     """ Deprecated, prefer CustomRegistrationForm. This will be removed after feature and integration are confirmed. """
     class Meta(UserCreationForm.Meta):
         model = UserHC
-        fields = ('first_name', 'last_name', 'email')  # 'uses_email_username',
+        fields = ('first_name', 'last_name', 'email')  # 'username_not_email',
 
 
 class CustomUserChangeForm(UserChangeForm):
