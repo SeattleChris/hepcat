@@ -1,7 +1,7 @@
 {% extends "generic/base.html" %}
 
 {% block head %}
-<title>{{ classoffer.subject.title }}</title>
+<title>{{ classoffer.subject.name }}</title>
 {% endblock head %}
 
 
@@ -9,7 +9,7 @@
 
 <section>
   <article>
-    <h1>{{ classoffer.subject.title }}</h1>
+    <h1>{{ classoffer.subject.name }}</h1>
     <ul>
       <li>{{ classoffer.subject.tagline_1 }}</li>
       <li>{{ classoffer.subject.tagline_2 }}</li>
