@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django_registration.forms import RegistrationForm
 from django_registration import validators
-from pprint import pprint  # Temporary for debug.
+from pprint import pprint  # TODO: Remove after debug.
 from .models import UserHC
 
 
@@ -92,17 +92,14 @@ class CustomRegistrationForm(RegistrationForm):
 
     def username_from_name(self):
         """ Must be evaluated after cleaned_data has 'first_name' and 'last_name' values populated. """
-        # print("=================== CustomRegistrationForm.username_from_name ===========================")
         if not hasattr(self, 'cleaned_data'):
             raise ImproperlyConfigured(_("This method can only be evaluated after 'cleaned_data' has been populated. "))
         names = (self.cleaned_data[key].strip() for key in ('first_name', 'last_name') if self.cleaned_data.get(key))
         result_value = self._meta.model.normalize_username('_'.join(names).casefold())
-        print(result_value)
         return result_value
 
     def username_from_email(self, username_field_name, email_field_name):
         """ Must be evaluated after cleaned_data has been populated with the the email field value. """
-        # print("=================== CustomRegistrationForm.username_from_email ===========================")
         if not hasattr(self, 'cleaned_data') or email_field_name not in self.cleaned_data:
             if email_field_name in self.errors:
                 result_value = None  # TODO: ? Need some technique to skip username validation without valid email?
@@ -112,7 +109,6 @@ class CustomRegistrationForm(RegistrationForm):
                 raise ImproperlyConfigured(_(err))
         else:
             result_value = self.cleaned_data.get(email_field_name, None)
-        print(result_value)
         return result_value
 
     def username_from_email_or_names(self, username_field_name=None, email_field_name=None):
@@ -131,46 +127,40 @@ class CustomRegistrationForm(RegistrationForm):
 
     def configure_username_confirmation(self, username_field_name=None, email_field_name=None):
         """ Since the username is using the alternative computation, prepare form for user confirmation. """
-        email_field_name = email_field_name or self._meta.model.get_email_field_name()
         username_field_name = username_field_name or self._meta.model.USERNAME_FIELD
-        field = self.fields.pop(username_field_name, None) or self.computed_fields.pop(username_field_name)
+        field = self.computed_fields.pop(username_field_name, None) or self.fields.pop(username_field_name, None)
+        field.initial = self.cleaned_data.get(username_field_name, field.initial)
         username_message = "Use the suggested username or create your own. Only needed if using a shared email. "
         field.help_text = _(username_message)
-        # field.disabled = False
+        email_field_name = email_field_name or self._meta.model.get_email_field_name()
         email_field = self.fields.pop(email_field_name, None) or self.computed_fields.pop(email_field_name, None)
-        email_field.widget.attrs['autofocus'] = True  # TODO: ? Determine if this works as expected.
+        email_field.initial = self.cleaned_data.get(email_field_name, email_field.initial)
         flag_name = self.Meta.USERNAME_FLAG_FIELD
         flag_field = self.computed_fields.pop(flag_name, None) or self.fields.pop(flag_name, None)
-        flag_field.help_text = _("Select if you're using a non-shared email. ")
-        flag_field.initial = 'false'
+        if flag_field:
+            flag_field.help_text = _("Select if you are using a non-shared email. ")
+            flag_field.initial = 'false'
+
+        data = self.data.copy()  # QueryDict datastructure, the copy is mutable. Has getlist and appendlist methods.
+        data.appendlist(email_field_name, email_field.initial)
+        data.appendlist(flag_name, flag_field.initial)
+        data.appendlist(username_field_name, field.initial)
+        data._mutable = False
+        self.data = data
 
         self.fields[email_field_name] = email_field
         self.fields[flag_name] = flag_field
         self.fields[username_field_name] = field
         self.fields['password1'] = self.fields.pop('password1', None)
         self.fields['password2'] = self.fields.pop('password2', None)
-
-        data = self.data.copy()  # QueryDict datastructure, the copy is mutable.
-        data[flag_name] = flag_field.initial
-        data[username_field_name] = field.initial
-        data._mutable = False
-        self.data = data
-
-        named_focus = email_field_name if username_field_name in self.data else None
-        self.focus_correct_field(name=named_focus)
-        print("---------------------------------------------------------")
-        print(named_focus)
-        pprint(self.computed_fields)
+        self.focus_correct_field(name=email_field_name)
 
         self.add_error(email_field_name, _("Use a non-shared email, or set a username below. "))
         # self.add_error(flag_name, _("Username only needed if you share an email with another user. "))
-        # TODO: Check if true: Do not add_error for username_field, that way it still auto-populates the value.
-        login_element = 'login'
-        # TODO: Update 'login_element' as an HTML a element to link to login route.
+        login_element = 'login'  # TODO: Update 'login_element' as an HTML a element to link to login route.
         message = "Have you had classes or created an account using that email address? "
         message += "Go to {} to sign in with that account or reset the password if needed. ".format(login_element)
         message += "If you share an email with another user, then you will login with a username instead. "
-        # self.add_error(None, _(message))  # Will be an error message at the top of the form.
         return message
 
     def clean_username(self):
@@ -180,14 +170,14 @@ class CustomRegistrationForm(RegistrationForm):
         return value  # Likely will not need this method.
 
     def compute_username(self):
-        """ Set Field.initial as a str value or callable returning one. Overridden by value in self.initial. """
+        """ Determine a str value or callable returning one and set this in self.initial dict. """
         print("=================== CustomRegistrationForm.compute_username ===========================")
         model = self._meta.model
         username_field_name = model.USERNAME_FIELD
         field = self.computed_fields[username_field_name]
         email_field_name = model.get_email_field_name()
         result_value = self.username_from_email_or_names(username_field_name, email_field_name)
-        field.initial = result_value
+        self.initial[username_field_name] = field.initial = result_value
         return field
 
     def _clean_computed_fields(self):
@@ -210,12 +200,57 @@ class CustomRegistrationForm(RegistrationForm):
                 self.add_error(None, e)
         return compute_errors
 
+    def handle_flag_field(self, email_field_name, user_field_name):
+        """ If the user gave a non-shared email, we expect flag is True, and no username value. """
+        flag_name = self.Meta.USERNAME_FLAG_FIELD
+        flag_field = self.fields.get(flag_name, None) or self.computed_fields.get(flag_name, None)
+        print("==================== handle_flag_field =====================================")
+        if not flag_field:
+            print("No flag field")
+            return
+        flag_value = self.cleaned_data[flag_name]
+        flag_prev = self.data.getlist(flag_name, [flag_field.initial])
+        flag_changed = flag_field.has_changed(flag_prev[-1], flag_value)
+        email_field = self.fields[email_field_name]
+        email_value = self.cleaned_data[email_field_name]
+        email_prev = self.data.getlist(email_field_name, [email_field.initial])
+        email_changed = email_field.has_changed(email_prev[-1], email_value)
+        user_field = self.fields[user_field_name]
+        user_value = self.cleaned_data[user_field_name]
+        user_prev = self.data.getlist(user_field_name, [user_field.initial])
+        user_changed = user_field.has_changed(user_prev[-1], user_value)
+        flag_data = f"Init: {flag_field.initial} | Prev: {flag_prev} | Clean: {flag_value} | New: {flag_changed} "
+        email_data = f"Init: {email_field.initial} | Prev: {email_prev} | Clean: {email_value} | New: {email_changed} "
+        user_data = f"Init: {user_field.initial} | Prev: {user_prev} | Clean: {user_value} | New: {user_changed} "
+        pprint(flag_data)
+        pprint(email_data)
+        pprint(user_data)
+        error_collected = {}
+        if flag_value:
+            lookup = {"{}__iexact".format(user_field_name): email_value}
+            try:
+                if not email_changed or self._meta.model._default_manager.filter(**lookup).exists():
+                    message = "You must give a unique email not shared with other users. "
+                    error_collected[email_field_name] = _(message)
+            except Exception as e:
+                print("Could not lookup if the new email is already used as a username. ")
+                print(e)
+            self.cleaned_data[user_field_name] = email_value
+        elif email_changed:
+            message = "Check the box if you want to use this email address. "
+            error_collected[flag_name] = _(message)
+        return error_collected
+
     def clean(self):
         username_field_name = self._meta.model.USERNAME_FIELD
         username_value = self.cleaned_data.get(username_field_name, '')
-        email_value = self.cleaned_data.get(self._meta.model.get_email_field_name(), None)
+        email_field_name = self._meta.model.get_email_field_name()
+        email_value = self.cleaned_data.get(email_field_name, None)
 
         print("============================ CustomRegistrationForm.clean =========================")
+        pprint(self.initial)
+        pprint(self.data)
+        pprint(self.cleaned_data)
         compute_errors = self._clean_computed_fields()
         print("---------------- compute_errors -----------------------------------------")
         print(compute_errors)
@@ -234,6 +269,10 @@ class CustomRegistrationForm(RegistrationForm):
         else:
             print(" Computed Fields had no problems! ")
             self.fields.update(self.computed_fields)
+
+        error_dict = self.handle_flag_field(email_field_name, username_field_name)
+        if error_dict:
+            raise ValidationError(error_dict)
         print("--------------------- Cleaned Data After Cleaning Computed Fields ---------------------------------")
         cleaned_data = super().clean()  # return self.cleaned_data, also sets boolean for unique validation.
         print(cleaned_data)
