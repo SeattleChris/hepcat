@@ -197,13 +197,13 @@ class UserHC(AbstractUser):
     class Meta(AbstractUser.Meta):
         swappable = 'AUTH_USER_MODEL'
 
-    # def __init__(self, *args, **kwargs):
-    #     super().__init__(*args, **kwargs)
-    #     username = self.USERNAME_FIELD
-    #     email = self.get_email_field_name()
-    #     self._meta.get_field(username).help_text = _("or login name")
-    #     self._meta.get_field(username).verbose_name = _("email or login")
-    #     self._meta.get_field(email).help_text = _("used for confirmation and typically for login")
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        username = self.USERNAME_FIELD
+        email = self.get_email_field_name()
+        self._meta.get_field(email).max_length = 191
+        self._meta.get_field(email).help_text = _("Used for confirmation and typically for login. ")
+        self._meta.get_field(username).help_text = _("Only needed if user does not have a unique email. ")
 
     @property
     def full_name(self):
