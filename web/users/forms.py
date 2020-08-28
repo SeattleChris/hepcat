@@ -34,7 +34,9 @@ class CustomRegistrationForm(RegistrationForm):
         named_focus = email_field_name if username_field_name in self.data else None
         # TODO: If using RegistrationForm init, then much, but not all, of attach_critical_validators is duplicate code.
         self.attach_critical_validators()  # strict_email=not bool(named_focus)
-        extracted_fields = {key: self.fields.pop(key, None) for key in self.Meta.computed_fields - self.data.keys()}
+        keep_keys = self.data.keys()
+        keep_keys -= [self.Meta.USERNAME_FLAG_FIELD] if username_field_name in self.data else []
+        extracted_fields = {key: self.fields.pop(key, None) for key in set(self.Meta.computed_fields) - keep_keys}
         self.computed_fields = extracted_fields
         self.focus_correct_field(name=named_focus)
         print("---------------------------------------------------------")
@@ -137,7 +139,7 @@ class CustomRegistrationForm(RegistrationForm):
         flag_name = self.Meta.USERNAME_FLAG_FIELD
         flag_field = self.computed_fields.pop(flag_name, None) or self.fields.pop(flag_name, None)
         if flag_field:
-            flag_field.initial = 'True'
+            flag_field.initial = 'False'
             # flag_field.help_text = _("Select if you are using a shared email. ")
 
         data = self.data.copy()  # QueryDict datastructure, the copy is mutable. Has getlist and appendlist methods.
