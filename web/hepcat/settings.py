@@ -28,26 +28,25 @@ ALLOWED_HOSTS = os.environ.get('LOCAL_ALLOWED_HOSTS' if LOCAL else 'LIVE_ALLOWED
                                os.environ.get('ALLOWED_HOSTS', '')).split(',')
 # Application definition
 INSTALLED_APPS = [
+    'hepcat',  # CUSTOM: Project name
+    'classwork',  # CUSTOM: App name
+    'users',  # CUSTOM: App name
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
-    'coverage',
-    # 'django.contrib.sites',  # CUSTOM added for django-newsletter
     'django.contrib.messages',
-    'storages',  # CUSTOM django-storages for using AWS S3 for static files
     'django.contrib.staticfiles',
-    # 'rest_framework',
-    # 'rest_framework.authtoken',
-    'django_registration',  # CUSTOM
+    'django_registration',  # CUSTOM for User creation
     'payments',  # CUSTOM for payment processing
-    # Imperavi (or tinymce) rich text editor is optional
-    # 'imperavi',
+    # 'django.contrib.sites',  # CUSTOM added for django-newsletter
+    # 'imperavi',  # Imperavi (or tinymce) rich text editor is optional for newsletter
     # 'sorl.thumbnail',  # CUSTOM required for newsletter
     # 'newsletter',  # CUSTOM for email newsletters.
-    'hepcat',  # CUSTOM: Project name
-    'classwork',  # CUSTOM: App name
-    'users',  # CUSTOM: App name
+    # 'rest_framework',
+    # 'rest_framework.authtoken',
+    # 'storages',  # CUSTOM django-storages - static files on AWS S3, or Google Cloud Storage, etc.
+    'coverage',  # CUSTOM: For tests
 ]
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
