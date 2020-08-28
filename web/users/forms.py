@@ -108,7 +108,7 @@ class CustomRegistrationForm(RegistrationForm):
     def username_from_email(self, username_field_name, email_field_name):
         """ Must be evaluated after cleaned_data has been populated with the the email field value. """
         if not hasattr(self, 'cleaned_data') or email_field_name not in self.cleaned_data:
-            if email_field_name in self.errors:
+            if hasattr(self, '_errors') and email_field_name in self._errors:
                 result_value = None  # TODO: ? Need some technique to skip username validation without valid email?
             else:
                 err = "This initial value can only be evaluated after fields it depends on have been cleaned. "
@@ -144,11 +144,11 @@ class CustomRegistrationForm(RegistrationForm):
         flag_field = self.computed_fields.pop(flag_name, None) or self.fields.pop(flag_name, None)
         if flag_field:
             flag_field.initial = 'False'
-            # flag_field.help_text = _("Select if you are using a shared email. ")
 
         data = self.data.copy()  # QueryDict datastructure, the copy is mutable. Has getlist and appendlist methods.
         data.appendlist(email_field_name, email_field.initial)
-        data.appendlist(flag_name, flag_field.initial)
+        if flag_field:
+            data.appendlist(flag_name, flag_field.initial)
         data.appendlist(username_field_name, field.initial)
         data._mutable = False
         self.data = data
@@ -236,7 +236,7 @@ class CustomRegistrationForm(RegistrationForm):
             lookup = {"{}__iexact".format(user_field_name): email_value}
             try:
                 if not email_changed or self._meta.model._default_manager.filter(**lookup).exists():
-                    message = "You must give a unique email not shared with other users (or create a login name). "
+                    message = "You must give a unique email not shared with other users (or create a username). "
                     error_collected[email_field_name] = _(message)
             except Exception as e:
                 print("Could not lookup if the new email is already used as a username. ")
@@ -255,8 +255,8 @@ class CustomRegistrationForm(RegistrationForm):
 
         print("============================ CustomRegistrationForm.clean =========================")
         print("***********************************************************************************")
-        pprint(self.initial)
-        pprint(self.data)
+        for key, items in self.data.lists():
+            print(f"{key}: {items} ")
         print("-----------------------------------------------------------------------------------")
         pprint(self.cleaned_data)
         print("***********************************************************************************")
@@ -273,7 +273,8 @@ class CustomRegistrationForm(RegistrationForm):
             message = "Login with existing account, change to a non-shared email, or create a username. "
             message += self.configure_username_confirmation()
             print("---------------------- Form Data --------------------------------------")
-            pprint(self.data)
+            for key, items in self.data.lists():
+                print(f"{key}: {items} ")
             raise ValidationError(_(message))
         else:
             print(" Computed Fields had no problems! ")
@@ -281,6 +282,7 @@ class CustomRegistrationForm(RegistrationForm):
 
         error_dict = self.handle_flag_field(email_field_name, username_field_name)
         if error_dict:
+            print("We had an error processing the flag. ")
             raise ValidationError(error_dict)
         print("--------------------- Cleaned Data After Cleaning Computed Fields ---------------------------------")
         cleaned_data = super().clean()  # return self.cleaned_data, also sets boolean for unique validation.
