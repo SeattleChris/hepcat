@@ -412,7 +412,7 @@ class StudentModelTests(AbstractProfileModelTests, TestCase):
         pass
 
 
-USER_DEFAULTS = {'email': 'user_fake@fakesite.com', 'password': '1234', 'first_name': 'f_user', 'last_name': 'fake_y'}
+USER_DEFAULTS = {'email': 'user_fake@fakesite.com', 'password': 'test12', 'first_name': 'f_user', 'last_name': 'fake_y'}
 
 
 class UserModelTests(SimpleModelTests, TestCase):
@@ -451,20 +451,20 @@ class UserManagerTests(TestCase):
     def test_set_user_no_email(self):
         first_name = "emailess"
         last_name = "troglodyte"
-        kwargs = {'username': None, 'email': None, 'password': '1234', 'first_name': first_name, 'last_name': last_name}
+        kwargs = {'username': None, 'email': None, 'password': 'test12', 'first_name': first_name, 'last_name': last_name}
         user = UserHC.objects.set_user(**kwargs)
         expected_username = first_name + '_' + last_name
         self.assertEqual(expected_username, user.username)
 
     def test_set_user_bad_email_is_username(self):
-        kwargs = {'username_not_email': False, 'email': None, 'username': None, 'password': 1234}
+        kwargs = {'username_not_email': False, 'email': None, 'username': None, 'password': 'test12'}
         kwargs['first_name'] = "email_less"
         kwargs['last_name'] = "try_email_username_foolishly"
         with self.assertRaises(ValueError):
             UserHC.objects.create_user(**kwargs)
 
     def test_set_user_duplicate_email_username(self):
-        kwargs = {'email': 'fake@site.com', 'username': None, 'password': 1234}
+        kwargs = {'email': 'fake@site.com', 'username': None, 'password': 'test12'}
         first = UserHC.objects.create_user(first_name="first_in", last_name="my_email_first", **kwargs)
         first.save()
 
@@ -480,7 +480,7 @@ class UserManagerTests(TestCase):
             key_list = ['username', 'email', 'first_name', 'last_name']
             kwargs = {key: getattr(first, key) for key in key_list}
         else:
-            kwargs = {'username': None, 'email': 'fake@site.com', 'password': 1234}
+            kwargs = {'username': None, 'email': 'fake@site.com', 'password': 'test12'}
             kwargs['first_name'] = "fake_first"
             kwargs['last_name'] = "fake_last"
             first = UserHC.objects.create_user(**kwargs)
@@ -492,7 +492,7 @@ class UserManagerTests(TestCase):
             UserHC.objects.create_user(**kwargs)
 
     def test_create_superuser_no_name_or_username(self):
-        kwargs = {'username': None, 'email': 'fake@site.com', 'password': 1234}
+        kwargs = {'username': None, 'email': 'fake@site.com', 'password': 'test12'}
         first = UserHC.objects.create_superuser(**kwargs)
         first.save()
         self.assertEqual(first.username, kwargs['email'].casefold())
@@ -537,7 +537,7 @@ class UserManagerTests(TestCase):
 
     def test_find_or_create_for_anon(self):
         initial_users = list(UserHC.objects.all())
-        kwargs = {'email': 'fake@site.com', 'password': 1234}
+        kwargs = {'email': 'fake@site.com', 'password': 'test12'}
         kwargs['first_name'] = "fake_anon_first"
         kwargs['last_name'] = "fake_anon_last"
         del kwargs['password']
@@ -548,7 +548,7 @@ class UserManagerTests(TestCase):
         self.assertNotIn(result, initial_users)
 
     def test_anon_is_existing_user(self):
-        kwargs = {'email': 'fake@site.com', 'password': 1234}
+        kwargs = {'email': 'fake@site.com', 'password': 'test12'}
         kwargs['first_name'] = "fake_first"
         kwargs['last_name'] = "fake_last"
         first = UserHC.objects.create_user(**kwargs)
@@ -561,7 +561,7 @@ class UserManagerTests(TestCase):
         self.assertEqual(first, result[0])
 
     def test_find_or_create_by_name(self):
-        kwargs = {'email': 'fake@site.com', 'password': 1234}
+        kwargs = {'email': 'fake@site.com', 'password': 'test12'}
         kwargs['first_name'] = "fake_first"
         kwargs['last_name'] = "fake_last"
         first = UserHC.objects.create_user(**kwargs)
@@ -579,7 +579,7 @@ class UserManagerTests(TestCase):
             UserHC.objects.find_or_create_by_name(**kwargs)
 
     def test_find_or_create_by_name_multiple_matches_error(self):
-        kwargs = {'email': 'fake@site.com', 'password': 1234}
+        kwargs = {'email': 'fake@site.com', 'password': 'test12'}
         kwargs['first_name'] = "fake_first"
         kwargs['last_name'] = "fake_last"
         first = UserHC.objects.create_user(**kwargs)
@@ -600,7 +600,7 @@ class UserManagerTests(TestCase):
         self.assertNotIn(result, initial_users)
 
     def test_find_or_create_by_name_user_does_not_exist(self):
-        kwargs = {'email': 'fake@site.com', 'password': 1234}
+        kwargs = {'email': 'fake@site.com', 'password': 'test12'}
         kwargs['first_name'] = "fake_first"
         kwargs['last_name'] = "fake_last"
         first = UserHC.objects.create_user(**kwargs)
