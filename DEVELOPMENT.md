@@ -115,7 +115,7 @@ The last seven are expected to be integers.
 
 ## Deployment
 
-It should be possible to install this app on a variety of potential deployment locations, such as Google Cloud Platform, Amazon Web Service (AWS), Python Anywhere, Heroku, Digital Ocean, and others.
+It should be possible to install this app on a variety of potential deployment locations, such as Google Cloud Platform, Amazon Web Service (AWS), Python Anywhere, Heroku, Digital Ocean, and others. Check [Deployment checklist](https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/).
 
 ### Amazon Web Service - AWS
 
@@ -211,6 +211,7 @@ There are a low-cost and free tier options on [PythonAnywhere](https://www.pytho
       * Link at the top of the Web tab of the Dashboard.
       * <username>.pythonanywhere.com
       * or custom domain.
+* [Deployment checklist](https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/)
 
 Include the following code in [path-to-file]/[username]_pythonanywhere_com_wsgi.py
 

@@ -417,6 +417,9 @@ Current Status:
 
 ### General Site
 
+- [ ] Implement using ISO-8601 Date and Datetime:
+  - [ ] week day with day 1 being Monday and day 7 being Sunday.
+  - [ ] class ExtractIsoWeekDay, lookup_name = 'iso_week_day'
 - [x] 'About Us' page should only show staff members.
 - [x] Models use 'name' and not 'title'.
 - [x] More consistent Model str and repr methods.
@@ -439,3 +442,7 @@ Current Status:
   - [x] django-sites (useful if managing multiple sites with the same application)
   - [x] rest-framework (useful for making API)
   - [ ] Others?
+- [ ] Run `django-admin remove_stale_contenttypes`
+  - [ ] as `./manage.py` instead of `django-admin`?
+  - [ ] with `--include-stale-apps` flag?
+- [ ] [Deployment checklist](https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/)
