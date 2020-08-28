@@ -432,3 +432,10 @@ Current Status:
 - [ ] Review all completed site pages for consistency, including different view sizes.
 - [ ] Deploy development site
 - [ ] Deploy production site
+- [ ] Remove `psycopg2-binary` since we are now using MySQL
+- [ ] Audit what packages should be added or removed?
+  - [x] boto3 (used for AWS).
+  - [x] django-storages (used for AWS, but could be for others as well).
+  - [x] django-sites (useful if managing multiple sites with the same application)
+  - [x] rest-framework (useful for making API)
+  - [ ] Others?
