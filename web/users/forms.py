@@ -163,14 +163,25 @@ class CustomRegistrationForm(RegistrationForm):
         self.focus_correct_field(name=email_field_name)
         self.attach_critical_validators()
 
-        self.add_error(email_field_name, _("Use a non-shared email, or set a username below. "))
-        # self.add_error(flag_name, _("Username only needed if you share an email with another user. "))
-        # TODO: Update 'login_element' as an HTML a element to link to login route.
-        login_element = '<a href="{}">login</a>'.format(reverse('login'))
-        reset_element = '<a href="{}">reset the password</a>'.format('password')
-        message = "Have you had classes or created an account using that email address? "
-        message += "Go to {} to sign in with that account or {} if needed. ".format(login_element, reset_element)
-        message += "If you share an email with another user, then you will login with a username instead. "
+        login_link = self.get_login_message(link_text='login to existing account', link_only=True)
+        text = "Use a non-shared email, or set a username below, or {}. ".format(login_link)
+        self.add_error(email_field_name, mark_safe(_(text)))
+        message = "Do you already make an account, or have one because you've had classes with us before? <br />"
+        message += self.get_login_message(reset=True)
+        message += "<p></p>Typically people have their own unique email address, which you can update below. "
+        message += "If you share an email with another user, then you will need to create a username for your login. "
+        return message
+
+    def get_login_message(self, link_text=None, link_only=False, reset=False):
+        """ Returns text with html links to login. If reset is True, the message includes a link for password reset. """
+        login_link = '<a href="{}">{}</a>'.format(reverse('login'), link_text or 'login')
+        reset_link = '<a href="{}">{}</a>'.format(reverse('password'), link_text or 'reset the password')
+        if link_only:
+            return login_link if not reset else reset_link
+        message = "You can {} to your existing account".format(login_link)
+        if reset:
+            message += " or {} if needed".format(reset_link)
+        message += ". "
         return message
 
     def clean_username(self):
@@ -275,11 +286,12 @@ class CustomRegistrationForm(RegistrationForm):
         elif username_field_name not in self.data and username_value != email_value:
             print("- - - - - - - - - Confirmation Required - - - - - - - - - - - - - - -")
             message = "Login with existing account, change to a non-shared email, or create a username. "
-            message += self.configure_username_confirmation()
+            message = "<h3>{}</h3>".format(message)
+            message += "<p>{}</p>".format(self.configure_username_confirmation())
             print("---------------------- Form Data --------------------------------------")
             for key, items in self.data.lists():
                 print(f"{key}: {items} ")
-            raise ValidationError(_(message))
+            raise ValidationError(mark_safe(_(message)))
         else:
             print(" Computed Fields had no problems! ")
             self.fields.update(self.computed_fields)
