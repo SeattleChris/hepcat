@@ -135,7 +135,7 @@ class SimpleModelTests:
         arg = getattr(model, url_field, None)
         arg = arg() if callable(arg) else arg
         expected = reverse(self.detail_url_name, args=[arg])
-        self.assertEquals(url, expected)
+        self.assertEqual(url, expected)
 
 
 class AbstractProfileModelTests(SimpleModelTests):
@@ -203,8 +203,8 @@ class AbstractProfileModelTests(SimpleModelTests):
 #         pass
 
 #     def defaults_used(self):
-#         self.assertEquals(self.first_place.city, 'Seattle')
-#         self.assertEquals(self.first_place.state, 'WA')
+#         self.assertEqual(self.first_place.city, 'Seattle')
+#         self.assertEqual(self.first_place.state, 'WA')
 
 #     def test_false_is_false(self):
 #         print("Method: test_false_is_false.")

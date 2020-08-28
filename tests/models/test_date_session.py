@@ -63,15 +63,15 @@ class NoSkipToOneSkipSessionDates(TransactionTestCase):
             max_day_shift=day_adjust,
             flip_last_day=False,
             )
-        self.assertEquals(sess.key_day_date, key_day)
-        self.assertEquals(sess.publish_date, publish)
-        self.assertEquals(sess.expire_date, expire)
-        self.assertEquals(sess.start_date, start)
-        self.assertEquals(sess.end_date, end)
+        self.assertEqual(sess.key_day_date, key_day)
+        self.assertEqual(sess.publish_date, publish)
+        self.assertEqual(sess.expire_date, expire)
+        self.assertEqual(sess.start_date, start)
+        self.assertEqual(sess.end_date, end)
         sess.save(with_clean=True)
-        self.assertEquals(sess.prev_session.expire_date, sess.publish_date)
+        self.assertEqual(sess.prev_session.expire_date, sess.publish_date)
         self.assertLess(sess.prev_session.end_date, sess.start_date)
-        self.assertEquals(sess.prev_session.end_date, prev_end)
+        self.assertEqual(sess.prev_session.end_date, prev_end)
 
     def test_skip_key_date_late_shift(self):
         """ Session with late shift and 1 skip week on the key day, flipping last class day. """
@@ -90,15 +90,15 @@ class NoSkipToOneSkipSessionDates(TransactionTestCase):
             max_day_shift=day_adjust,
             flip_last_day=True,
             )
-        self.assertEquals(sess.key_day_date, key_day)
-        self.assertEquals(sess.publish_date, publish)
-        self.assertEquals(sess.expire_date, expire)
-        self.assertEquals(sess.start_date, start)
-        self.assertEquals(sess.end_date, end)
+        self.assertEqual(sess.key_day_date, key_day)
+        self.assertEqual(sess.publish_date, publish)
+        self.assertEqual(sess.expire_date, expire)
+        self.assertEqual(sess.start_date, start)
+        self.assertEqual(sess.end_date, end)
         sess.save(with_clean=True)
-        self.assertEquals(sess.prev_session.expire_date, sess.publish_date)
+        self.assertEqual(sess.prev_session.expire_date, sess.publish_date)
         self.assertLess(sess.prev_session.end_date, sess.start_date)
-        self.assertEquals(sess.prev_session.end_date, prev_end)
+        self.assertEqual(sess.prev_session.end_date, prev_end)
 
     def test_skip_other_date_early_shift(self):
         """ Session with early shift and 1 skip week NOT on the key day, flipping last class day. """
@@ -118,15 +118,15 @@ class NoSkipToOneSkipSessionDates(TransactionTestCase):
             flip_last_day=True,
             )
         sess.refresh_from_db()
-        self.assertEquals(sess.key_day_date, key_day)
-        self.assertEquals(sess.publish_date, publish)
-        self.assertEquals(sess.expire_date, expire)
-        self.assertEquals(sess.start_date, start)
-        self.assertEquals(sess.end_date, end)
+        self.assertEqual(sess.key_day_date, key_day)
+        self.assertEqual(sess.publish_date, publish)
+        self.assertEqual(sess.expire_date, expire)
+        self.assertEqual(sess.start_date, start)
+        self.assertEqual(sess.end_date, end)
         sess.save(with_clean=True)
-        self.assertEquals(sess.prev_session.expire_date, sess.publish_date)
+        self.assertEqual(sess.prev_session.expire_date, sess.publish_date)
         self.assertLess(sess.prev_session.end_date, sess.start_date)
-        self.assertEquals(sess.prev_session.end_date, prev_end)
+        self.assertEqual(sess.prev_session.end_date, prev_end)
 
     def test_skip_other_date_late_shift(self):
         """ Session with late shift and 1 skip week NOT on the key_day. """
@@ -146,15 +146,15 @@ class NoSkipToOneSkipSessionDates(TransactionTestCase):
             flip_last_day=False,
             )
         sess.refresh_from_db()
-        self.assertEquals(sess.key_day_date, key_day)
-        self.assertEquals(sess.publish_date, publish)
-        self.assertEquals(sess.expire_date, expire)
-        self.assertEquals(sess.start_date, start)
-        self.assertEquals(sess.end_date, end)
+        self.assertEqual(sess.key_day_date, key_day)
+        self.assertEqual(sess.publish_date, publish)
+        self.assertEqual(sess.expire_date, expire)
+        self.assertEqual(sess.start_date, start)
+        self.assertEqual(sess.end_date, end)
         sess.save(with_clean=True)
-        self.assertEquals(sess.prev_session.expire_date, sess.publish_date)
+        self.assertEqual(sess.prev_session.expire_date, sess.publish_date)
         self.assertLess(sess.prev_session.end_date, sess.start_date)
-        self.assertEquals(sess.prev_session.end_date, prev_end)
+        self.assertEqual(sess.prev_session.end_date, prev_end)
 
 
 class OneOtherSkipEarlyToOneSkip(NoSkipToOneSkipSessionDates):
@@ -197,14 +197,14 @@ class OneOtherSkipEarlyToThreeSkip(NoSkipToOneSkipSessionDates):
 #             skip_weeks=skips,
 #             flip_last_day=False,
 #             )
-#         self.assertEquals(sess.key_day_date, key_day)
-#         self.assertEquals(sess.publish_date, publish)
-#         self.assertEquals(sess.expire_date, expire)
-#         self.assertEquals(sess.start_date, start)
-#         self.assertEquals(sess.end_date, end)
-#         self.assertEquals(sess.prev_session.expire_date, sess.publish_date)
+#         self.assertEqual(sess.key_day_date, key_day)
+#         self.assertEqual(sess.publish_date, publish)
+#         self.assertEqual(sess.expire_date, expire)
+#         self.assertEqual(sess.start_date, start)
+#         self.assertEqual(sess.end_date, end)
+#         self.assertEqual(sess.prev_session.expire_date, sess.publish_date)
 #         self.assertLess(sess.prev_session.end_date, sess.start_date)
-#         self.assertEquals(sess.prev_session.end_date, prev_end)
+#         self.assertEqual(sess.prev_session.end_date, prev_end)
 
 #     def test_dates_skips_key_date_late_shift(self):
 #         """ Session with late shift and 1 skip week on the key day, flipping last class day. """
@@ -222,14 +222,14 @@ class OneOtherSkipEarlyToThreeSkip(NoSkipToOneSkipSessionDates):
 #             skip_weeks=skips,
 #             flip_last_day=True,
 #             )
-#         self.assertEquals(sess.key_day_date, key_day)
-#         self.assertEquals(sess.publish_date, publish)
-#         self.assertEquals(sess.expire_date, expire)
-#         self.assertEquals(sess.start_date, start)
-#         self.assertEquals(sess.end_date, end)
-#         self.assertEquals(sess.prev_session.expire_date, sess.publish_date)
+#         self.assertEqual(sess.key_day_date, key_day)
+#         self.assertEqual(sess.publish_date, publish)
+#         self.assertEqual(sess.expire_date, expire)
+#         self.assertEqual(sess.start_date, start)
+#         self.assertEqual(sess.end_date, end)
+#         self.assertEqual(sess.prev_session.expire_date, sess.publish_date)
 #         self.assertLess(sess.prev_session.end_date, sess.start_date)
-#         self.assertEquals(sess.prev_session.end_date, prev_end)
+#         self.assertEqual(sess.prev_session.end_date, prev_end)
 
 #     def test_dates_skips_other_date_early_shift(self):
 #         """ Session with early shift and 1 skip week NOT on the key day, flipping last class day. """
@@ -247,14 +247,14 @@ class OneOtherSkipEarlyToThreeSkip(NoSkipToOneSkipSessionDates):
 #             skip_weeks=skips,
 #             flip_last_day=True,
 #             )
-#         self.assertEquals(sess.key_day_date, key_day)
-#         self.assertEquals(sess.publish_date, publish)
-#         self.assertEquals(sess.expire_date, expire)
-#         self.assertEquals(sess.start_date, start)
-#         self.assertEquals(sess.end_date, end)
-#         self.assertEquals(sess.prev_session.expire_date, sess.publish_date)
+#         self.assertEqual(sess.key_day_date, key_day)
+#         self.assertEqual(sess.publish_date, publish)
+#         self.assertEqual(sess.expire_date, expire)
+#         self.assertEqual(sess.start_date, start)
+#         self.assertEqual(sess.end_date, end)
+#         self.assertEqual(sess.prev_session.expire_date, sess.publish_date)
 #         self.assertLess(sess.prev_session.end_date, sess.start_date)
-#         self.assertEquals(sess.prev_session.end_date, prev_end)
+#         self.assertEqual(sess.prev_session.end_date, prev_end)
 
 #     def test_dates_skips_other_date_late_shift(self):
 #         """ Session with late shift and 1 skip week NOT on the key_day. """
@@ -272,14 +272,14 @@ class OneOtherSkipEarlyToThreeSkip(NoSkipToOneSkipSessionDates):
 #             skip_weeks=skips,
 #             flip_last_day=False,
 #             )
-#         self.assertEquals(sess.key_day_date, key_day)
-#         self.assertEquals(sess.publish_date, publish)
-#         self.assertEquals(sess.expire_date, expire)
-#         self.assertEquals(sess.start_date, start)
-#         self.assertEquals(sess.end_date, end)
-#         self.assertEquals(sess.prev_session.expire_date, sess.publish_date)
+#         self.assertEqual(sess.key_day_date, key_day)
+#         self.assertEqual(sess.publish_date, publish)
+#         self.assertEqual(sess.expire_date, expire)
+#         self.assertEqual(sess.start_date, start)
+#         self.assertEqual(sess.end_date, end)
+#         self.assertEqual(sess.prev_session.expire_date, sess.publish_date)
 #         self.assertLess(sess.prev_session.end_date, sess.start_date)
-#         self.assertEquals(sess.prev_session.end_date, prev_end)
+#         self.assertEqual(sess.prev_session.end_date, prev_end)
 
 
 # end class SessionDateTests

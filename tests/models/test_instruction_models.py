@@ -316,7 +316,7 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         self.assertLessEqual(sess.end_date, date.today())
         self.assertLessEqual(sess.end_date, dt.utcnow().date())
         self.assertEqual(res_count, resource_count)
-        self.assertEquals(len(expected_res), len(actual_res))
+        self.assertEqual(len(expected_res), len(actual_res))
         self.assertTrue(all(ea in expected_res for ea in actual_res))
         # self.assertSetEqual(set(expected_names), set(actual_names))
 
@@ -374,7 +374,7 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         full_price = subject.full_price
 
         self.assertEqual(classoffer.subject_id, subject.id)
-        self.assertEquals(full_price, classoffer.full_price)
+        self.assertEqual(full_price, classoffer.full_price)
 
     def test_pre_discount(self):
         subject = Subject.objects.first()
@@ -382,7 +382,7 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         pre_discount = subject.pre_pay_discount
 
         self.assertEqual(classoffer.subject_id, subject.id)
-        self.assertEquals(pre_discount, classoffer.pre_discount)
+        self.assertEqual(pre_discount, classoffer.pre_discount)
 
     def test_multi_discount_reports_discount(self):
         subject = Subject.objects.first()
@@ -391,7 +391,7 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
 
         self.assertEqual(classoffer.subject_id, subject.id)
         self.assertTrue(subject.qualifies_as_multi_class_discount)
-        self.assertEquals(multi_discount, classoffer.multi_discount)
+        self.assertEqual(multi_discount, classoffer.multi_discount)
 
     def test_multi_discount_not_qualified(self):
         subject = Subject.objects.first()
@@ -399,10 +399,10 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         subject.save()
         classoffer = ClassOffer.objects.first()
 
-        self.assertEquals(classoffer.subject_id, subject.id)
+        self.assertEqual(classoffer.subject_id, subject.id)
         self.assertFalse(subject.qualifies_as_multi_class_discount)
         self.assertGreater(subject.multiple_purchase_discount, 0)
-        self.assertEquals(classoffer.multi_discount, 0)
+        self.assertEqual(classoffer.multi_discount, 0)
 
     def test_multi_discount_zero_discount(self):
         subject = Subject.objects.first()
@@ -410,10 +410,10 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         subject.save()
         classoffer = ClassOffer.objects.first()
 
-        self.assertEquals(classoffer.subject_id, subject.id)
+        self.assertEqual(classoffer.subject_id, subject.id)
         self.assertTrue(subject.qualifies_as_multi_class_discount)
-        self.assertEquals(subject.multiple_purchase_discount, 0)
-        self.assertEquals(classoffer.multi_discount, 0)
+        self.assertEqual(subject.multiple_purchase_discount, 0)
+        self.assertEqual(classoffer.multi_discount, 0)
 
     def test_pre_price(self):
         classoffer = ClassOffer.objects.first()
@@ -447,7 +447,7 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
 
         self.assertEqual(model.subject, subject)
         self.assertFalse(model.subject.num_weeks > 1)
-        self.assertEquals(model.day, day)
+        self.assertEqual(model.day, day)
 
     def test_day_plural(self):
         model = ClassOffer.objects.first()
@@ -455,7 +455,7 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         day = str(day) + 's'
 
         self.assertTrue(model.subject.num_weeks > 1)
-        self.assertEquals(model.day, day)
+        self.assertEqual(model.day, day)
 
     def test_day_short_singular(self):
         model = ClassOffer.objects.first()
@@ -467,7 +467,7 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
 
         self.assertEqual(model.subject, subject)
         self.assertFalse(model.subject.num_weeks > 1)
-        self.assertEquals(model.day_short, day)
+        self.assertEqual(model.day_short, day)
 
     def test_day_short_plural(self):
         model = ClassOffer.objects.first()
@@ -476,7 +476,7 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         day += '(s)'
 
         self.assertTrue(model.subject.num_weeks > 1)
-        self.assertEquals(model.day_short, day)
+        self.assertEqual(model.day_short, day)
 
     def test_start_date_is_key_day(self):
         model = ClassOffer.objects.first()
@@ -486,8 +486,8 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
             model.class_day = key_day_of_week
             model.save()
 
-        self.assertEquals(model.class_day, key_day_of_week)
-        self.assertEquals(model.start_date, model.session.key_day_date)
+        self.assertEqual(model.class_day, key_day_of_week)
+        self.assertEqual(model.start_date, model.session.key_day_date)
 
     def test_start_date_zero_max_shift(self):
         model = ClassOffer.objects.first()
@@ -499,10 +499,10 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
             model.class_day = key_day_of_week
             model.save()
 
-        self.assertEquals(model.session, session)
-        self.assertEquals(session.max_day_shift, 0)
-        self.assertEquals(model.class_day, key_day_of_week)
-        self.assertEquals(model.start_date, session.key_day_date)
+        self.assertEqual(model.session, session)
+        self.assertEqual(session.max_day_shift, 0)
+        self.assertEqual(model.class_day, key_day_of_week)
+        self.assertEqual(model.start_date, session.key_day_date)
 
     def test_start_date_negative_shift(self):
         model = ClassOffer.objects.first()
@@ -516,11 +516,11 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         model.save()
         model = ClassOffer.objects.first()
 
-        self.assertEquals(model.session, session)
+        self.assertEqual(model.session, session)
         self.assertLess(session.max_day_shift, 0)
         self.assertNotEquals(model.class_day, key_day_of_week)
         self.assertNotEquals(date_shift, 0)
-        self.assertEquals(model.start_date, expected_date)
+        self.assertEqual(model.start_date, expected_date)
 
     def test_start_date_positive_shift(self):
         model = ClassOffer.objects.first()
@@ -534,11 +534,11 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         model.save()
         model = ClassOffer.objects.first()
 
-        self.assertEquals(model.session, session)
+        self.assertEqual(model.session, session)
         self.assertGreater(session.max_day_shift, 0)
         self.assertNotEquals(model.class_day, key_day_of_week)
         self.assertNotEquals(date_shift, 0)
-        self.assertEquals(model.start_date, result_date)
+        self.assertEqual(model.start_date, result_date)
 
     def test_start_date_out_of_negative_shift_range_opposite_direction(self):
         model = ClassOffer.objects.first()
@@ -555,10 +555,10 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         model.save()
         model = ClassOffer.objects.first()
 
-        self.assertEquals(model.session, session)
+        self.assertEqual(model.session, session)
         self.assertLess(session.max_day_shift, 0)
         self.assertNotEquals(model.class_day, key_day_of_week)
-        self.assertEquals(model.start_date, result_date)
+        self.assertEqual(model.start_date, result_date)
 
     def test_start_date_out_of_positive_shift_range_opposite_direction(self):
         model = ClassOffer.objects.first()
@@ -575,10 +575,10 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         model.save()
         model = ClassOffer.objects.first()
 
-        self.assertEquals(model.session, session)
+        self.assertEqual(model.session, session)
         self.assertGreater(session.max_day_shift, 0)
         self.assertNotEquals(model.class_day, key_day_of_week)
-        self.assertEquals(model.start_date, result_date)
+        self.assertEqual(model.start_date, result_date)
 
     def test_start_date_beyond_negative_shift_range(self):
         model = ClassOffer.objects.first()
@@ -595,10 +595,10 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         model.save()
         model = ClassOffer.objects.first()
 
-        self.assertEquals(model.session, session)
+        self.assertEqual(model.session, session)
         self.assertLess(session.max_day_shift, 0)
         self.assertNotEquals(model.class_day, key_day_of_week)
-        self.assertEquals(model.start_date, result_date)
+        self.assertEqual(model.start_date, result_date)
 
     def test_start_date_beyond_positive_shift_range(self):
         model = ClassOffer.objects.first()
@@ -615,11 +615,11 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         model.save()
         model = ClassOffer.objects.first()
 
-        self.assertEquals(model.session, session)
+        self.assertEqual(model.session, session)
         self.assertEqual(session.max_day_shift, 2)
         self.assertEqual(shift, 3)
         self.assertNotEquals(model.class_day, key_day_of_week)
-        self.assertEquals(model.start_date, result_date)
+        self.assertEqual(model.start_date, result_date)
 
     def test_end_date_no_skips(self):
         subject = Subject.objects.first()  # expected to be connected to model
@@ -632,11 +632,11 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         model.save()
         model = ClassOffer.objects.first()
 
-        self.assertEquals(model.subject, subject)
-        self.assertEquals(model.session, session)
-        self.assertEquals(session.skip_weeks, 0)
-        self.assertEquals(model.skip_weeks, 0)
-        self.assertEquals(model.end_date, expected)
+        self.assertEqual(model.subject, subject)
+        self.assertEqual(model.session, session)
+        self.assertEqual(session.skip_weeks, 0)
+        self.assertEqual(model.skip_weeks, 0)
+        self.assertEqual(model.end_date, expected)
 
     def test_end_date_skips_on_session_not_classoffer(self):
         subject = Subject.objects.first()  # expected to be connected to model
@@ -649,11 +649,11 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         model.save()
         model = ClassOffer.objects.first()
 
-        self.assertEquals(model.subject, subject)
-        self.assertEquals(model.session, session)
+        self.assertEqual(model.subject, subject)
+        self.assertEqual(model.session, session)
         self.assertGreater(session.skip_weeks, 0)
-        self.assertEquals(model.skip_weeks, 0)
-        self.assertEquals(model.end_date, expected)
+        self.assertEqual(model.skip_weeks, 0)
+        self.assertEqual(model.end_date, expected)
 
     def test_end_date_with_skips(self):
         subject = Subject.objects.first()  # expected to be connected to model
@@ -666,11 +666,11 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         model.save()
         model = ClassOffer.objects.first()
 
-        self.assertEquals(model.subject, subject)
-        self.assertEquals(model.session, session)
+        self.assertEqual(model.subject, subject)
+        self.assertEqual(model.session, session)
         self.assertGreater(session.skip_weeks, 0)
         self.assertGreater(model.skip_weeks, 0)
-        self.assertEquals(model.end_date, expected)
+        self.assertEqual(model.end_date, expected)
 
     def test_num_level(self):
         model = ClassOffer.objects.first()
@@ -692,9 +692,9 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         expected = higher
         model.set_num_level()
 
-        self.assertEquals(model.subject, subject)
+        self.assertEqual(model.subject, subject)
         self.assertNotEqual(model.num_level, original)
-        self.assertEquals(model.num_level, expected)
+        self.assertEqual(model.num_level, expected)
 
     def test_set_num_level_correct(self):
         level_dict = Subject.LEVEL_ORDER
@@ -710,9 +710,9 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         expected = level_dict.get(subj_level, None)
         model.set_num_level()
 
-        self.assertEquals(model.subject, subject)
+        self.assertEqual(model.subject, subject)
         self.assertNotEqual(model.num_level, original)
-        self.assertEquals(model.num_level, expected)
+        self.assertEqual(model.num_level, expected)
 
 
 class SessionModelTests(SimpleModelTests, TestCase):
@@ -739,7 +739,7 @@ class SessionModelTests(SimpleModelTests, TestCase):
         arg = getattr(model, url_field, None)
         arg = arg() if callable(arg) else arg
         expected = reverse(self.detail_admin_url_name, args=[arg])
-        self.assertEquals(url, expected)
+        self.assertEqual(url, expected)
 
 
 class SessionCoverageTests(TransactionTestCase):
@@ -767,13 +767,13 @@ class SessionCoverageTests(TransactionTestCase):
         self.assertGreater(minimum_session_weeks, 1)  # Otherwise we probably have error on create of second.
         self.assertEqual(first.skip_weeks, 0)  # Therefore, expected_key_day should be correct.
         self.assertGreater(third.start_date, first.end_date)
-        self.assertEquals(third.publish_date, first.expire_date)
-        self.assertEquals(expected_key_day, third.key_day_date)
+        self.assertEqual(third.publish_date, first.expire_date)
+        self.assertEqual(expected_key_day, third.key_day_date)
 
     def test_compute_expire_day_with_key_day_none(self):
         session = Session.objects.get(id=1)
         computed_expire = session.computed_expire_day()
-        self.assertEquals(session.expire_date, computed_expire)
+        self.assertEqual(session.expire_date, computed_expire)
 
     def test_clean_determine_date_from_previous(self):
         first = Session.objects.first()  # key_day_date = "2020-04-30", num_weeks = 5
@@ -791,7 +791,7 @@ class SessionCoverageTests(TransactionTestCase):
     def test_repr(self):
         session = Session.objects.first()
         repr_string = f"<Session: {session.name} >"
-        self.assertEquals(repr_string, repr(session))
+        self.assertEqual(repr_string, repr(session))
 
     def test_create_no_default_functions_no_shift(self):
         """ Session.create works with defined 'key_day_date' and 'publish_date'. """
@@ -808,10 +808,10 @@ class SessionCoverageTests(TransactionTestCase):
         )
         self.assertTrue(isinstance(sess, Session))
         self.assertEqual(sess.__str__(), sess.name)
-        self.assertEquals(sess.start_date, sess.key_day_date)
-        self.assertEquals(sess.publish_date, publish)
-        self.assertEquals(sess.expire_date, expire)
-        self.assertEquals(sess.end_date, key_day + timedelta(days=7*(duration - 1)))
+        self.assertEqual(sess.start_date, sess.key_day_date)
+        self.assertEqual(sess.publish_date, publish)
+        self.assertEqual(sess.expire_date, expire)
+        self.assertEqual(sess.end_date, key_day + timedelta(days=7*(duration - 1)))
 
     def test_session_defaults_on_creation(self):
         """ Session.create works with the date default functions in the model. """
@@ -826,13 +826,13 @@ class SessionCoverageTests(TransactionTestCase):
             max_day_shift=day_adjust,
             num_weeks=duration,
         )
-        self.assertEquals(sess.key_day_date, key_day)
-        self.assertEquals(sess.start_date, key_day)
-        self.assertEquals(sess.publish_date, new_publish_date)
-        self.assertEquals(sess.expire_date, expire)
-        self.assertEquals(sess.end_date, end)
-        self.assertEquals(sess.prev_session.name, first.name)
-        self.assertEquals(sess.prev_session.expire_date, sess.publish_date)
+        self.assertEqual(sess.key_day_date, key_day)
+        self.assertEqual(sess.start_date, key_day)
+        self.assertEqual(sess.publish_date, new_publish_date)
+        self.assertEqual(sess.expire_date, expire)
+        self.assertEqual(sess.end_date, end)
+        self.assertEqual(sess.prev_session.name, first.name)
+        self.assertEqual(sess.prev_session.expire_date, sess.publish_date)
         self.assertLess(sess.prev_session.end_date, sess.start_date)
 
     def test_create_early_shift_no_skip(self):
@@ -849,13 +849,13 @@ class SessionCoverageTests(TransactionTestCase):
             max_day_shift=day_adjust,
             num_weeks=duration,
         )
-        self.assertEquals(sess.key_day_date, key_day)
-        self.assertEquals(sess.publish_date, publish)
-        self.assertEquals(sess.expire_date, expire)
-        self.assertEquals(sess.start_date, start)
-        self.assertEquals(sess.start_date, sess.key_day_date + timedelta(days=day_adjust))
-        self.assertEquals(sess.end_date, end)
-        self.assertEquals(sess.prev_session.expire_date, sess.publish_date)
+        self.assertEqual(sess.key_day_date, key_day)
+        self.assertEqual(sess.publish_date, publish)
+        self.assertEqual(sess.expire_date, expire)
+        self.assertEqual(sess.start_date, start)
+        self.assertEqual(sess.start_date, sess.key_day_date + timedelta(days=day_adjust))
+        self.assertEqual(sess.end_date, end)
+        self.assertEqual(sess.prev_session.expire_date, sess.publish_date)
         self.assertLess(sess.prev_session.end_date, sess.start_date)
 
     def test_dates_late_shift_no_skip(self):
@@ -873,13 +873,13 @@ class SessionCoverageTests(TransactionTestCase):
             max_day_shift=day_adjust,
             num_weeks=duration,
         )
-        self.assertEquals(sess.key_day_date, key_day)
-        self.assertEquals(sess.publish_date, publish)
-        self.assertEquals(sess.expire_date, expire)
-        self.assertEquals(sess.start_date, start)
-        self.assertEquals(sess.end_date, end)
+        self.assertEqual(sess.key_day_date, key_day)
+        self.assertEqual(sess.publish_date, publish)
+        self.assertEqual(sess.expire_date, expire)
+        self.assertEqual(sess.start_date, start)
+        self.assertEqual(sess.end_date, end)
         self.assertLess(sess.prev_session.end_date, sess.start_date)
-        self.assertEquals(sess.prev_session.end_date, initial_end)
+        self.assertEqual(sess.prev_session.end_date, initial_end)
 
 
 # end test_instruction_models.py

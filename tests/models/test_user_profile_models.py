@@ -133,7 +133,7 @@ class StudentModelTests(AbstractProfileModelTests, TestCase):
         expected.update({key: 0 for key, string in Subject.VERSION_CHOICES if key not in ('N', )})
 
         self.assertTrue(model.l2.get('done'))
-        self.assertEquals(model.l2, expected)
+        self.assertEqual(model.l2, expected)
         self.assertEqual(model.compute_level(), 2.5)
 
     def test_level_methods_when_attended_double_l2_goal(self):
@@ -152,7 +152,7 @@ class StudentModelTests(AbstractProfileModelTests, TestCase):
         expected.update({key: 1 for key, string in Subject.VERSION_CHOICES if key not in ('N', )})
 
         self.assertTrue(model.l2.get('done'))
-        self.assertEquals(model.l2, expected)
+        self.assertEqual(model.l2, expected)
         self.assertEqual(model.compute_level(), 3)
 
     def test_level_methods_when_no_l3_attended(self):
@@ -186,7 +186,7 @@ class StudentModelTests(AbstractProfileModelTests, TestCase):
         expected.update({key: 0 for key, string in Subject.VERSION_CHOICES if key not in ('N', )})
 
         self.assertTrue(model.l3.get('done'))
-        self.assertEquals(model.l3, expected)
+        self.assertEqual(model.l3, expected)
         self.assertEqual(model.compute_level(), 3.5)
 
     def test_level_methods_when_attended_double_l3_goal(self):
@@ -206,7 +206,7 @@ class StudentModelTests(AbstractProfileModelTests, TestCase):
         expected.update({key: 1 for key, string in Subject.VERSION_CHOICES if key not in ('N', )})
 
         self.assertTrue(model.l3.get('done'))
-        self.assertEquals(model.l3, expected)
+        self.assertEqual(model.l3, expected)
         self.assertEqual(model.compute_level(), 4)
 
     def test_subject_data_invalid_level_parameter(self):
