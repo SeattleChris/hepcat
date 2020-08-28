@@ -587,7 +587,7 @@
         "filepath": "",
         "link": "",
         "text": "After class congrats! This is the text content.",
-        "title": "Congrats on Finishing class!",
+        "name": "Congrats on Finishing class!",
         "description": "description of post-class resource.",
         "date_added": "2020-06-30",
         "date_modified": "2020-06-30"
@@ -599,7 +599,7 @@
     "fields": {
         "level": "Beg",
         "version": "A",
-        "title": "Beginning Swing Dance - Lindy Hop",
+        "name": "Beginning Swing Dance - Lindy Hop",
         "tagline_1": "Partner Not Required!",
         "tagline_2": "No Experience Needed!",
         "num_weeks": 5,

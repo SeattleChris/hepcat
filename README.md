@@ -112,11 +112,9 @@ This is a specific subject, offered during a specific session. It includes infor
 ## Architecture
 
 * python 3.7+
-* boto3 1.14+
 * Django 3.0+
   * django-registration 3.1+
   * django-payments 0.13.0
-  * django-storages 1.9+
   * django-compressor 2.4
   * django-ses 1.0+
 * psycopg2-binary 2.8+
@@ -126,6 +124,11 @@ This is a specific subject, offered during a specific session. It includes infor
 * PayPal integration (django-payments 0.13+)
 * stripe 2.48+
 * coverage and django.test for tests.
+
+Optional depending on deployment location:
+
+* boto3 1.14+
+* django-storages 1.9+
 
 Dev:
 

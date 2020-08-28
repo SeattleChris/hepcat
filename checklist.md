@@ -418,6 +418,7 @@ Current Status:
 ### General Site
 
 - [x] 'About Us' page should only show staff members.
+- [x] Models use 'name' and not 'title'.
 - [x] More consistent Model str and repr methods.
 - [x] Fix max_length to 191 for utf8mb4.
 - [x] About Us page shows only teacher & staff profile info, plus business info.

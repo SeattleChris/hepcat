@@ -121,6 +121,18 @@ It should be possible to install this app on a variety of potential deployment l
 
 This app has been successfully installed on [Amazon Web Service (AWS)](https://aws.amazon.com/), using Elastic Beanstalk (EBS). The repo has an appropriate `.ebignore` file. Environment configuration templates can be found in the `.elasticbeanstalk/` to make `config.yml` and `01_env.config` files, respectively in each folder. These new files should never be added to the repo. The `.ebextensions` directory also has AWS EBS setup and management procedures used on AWS. In the hepcat app there is a management command added for creating the initial superuser (which is called by procedures in `.ebextensions`). The `.env` file should also be updated with appropriate AWS settings, such as setting `S3=True` to use S3 buckets, as well as various location definitions.
 
+If hosting static files on AWS S3, you should look into [django-storages](https://django-storages.readthedocs.io/en/latest/index.html). In the `hepcat/settings.py` file make sure you have `storages` in the installed apps (may be commented out currently). You can also look into and modify the code in `hepcat/web/storage_backends.py` and modify as appropriate. You will need to install `django-storages` and update the `requirements.txt` file. If you are using `pipenv` you'll just want to use the first set of commands. Otherwise you probably want to use only the second list of commands. Either way, make sure you are in your activated virtual environment before executing each line in the terminal.
+
+```Bash
+pipenv install django-storages
+pipenv lock -r > requirements.txt
+```
+
+```Bash
+pip install django-storages
+pip freeze > requirements.txt
+```
+
 While AWS is an industry standard, it may not be the best choice for organizations that expect low or even medium usage.
 
 ### Python Anywhere
@@ -224,6 +236,10 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'hepcat.settings'
 # serve django via WSGI
 application = get_wsgi_application()
 ```
+
+### Other Common Deployment Hosts & Platforms
+
+Check to see if [django-storages](https://django-storages.readthedocs.io/en/latest/index.html) has support for hosting static files for your deployment host. If the host is built on top of AWS, there may be insights from the AWS deployment notes above.
 
 ## Development Progress
 

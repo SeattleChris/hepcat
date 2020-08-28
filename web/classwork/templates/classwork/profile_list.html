@@ -10,7 +10,7 @@
 
   {% for ea in class_list %}
   <article>
-    <h3>{{ ea.subject }}: {{ ea.subject.title }} </h3>
+    <h3>{{ ea.subject }}: {{ ea.subject.name }} </h3>
     <ul>
       {% for student in ea.students.all %}
       <li>{{ student }} {{student.beg_finished}} {{student.l2_finished}}</li>

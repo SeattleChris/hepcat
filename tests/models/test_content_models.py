@@ -20,8 +20,8 @@ class ResourceModelTests(SimpleModelTests, TransactionTestCase):
     fixtures = ['tests/fixtures/db_basic.json', 'tests/fixtures/db_hidden.json']
     Model = Resource
     detail_url_name = 'resource_detail'
-    repr_dict = {'Resource': 'title', 'Type': 'content_type'}
-    str_list = ['title', ]
+    repr_dict = {'Resource': 'name', 'Type': 'content_type'}
+    str_list = ['name', ]
     ProfileStudent = Student
 
     # Setup for publish method
@@ -36,7 +36,7 @@ class ResourceModelTests(SimpleModelTests, TransactionTestCase):
     # - Already expired
     # # # #
     # Have
-    # resource = Resource.objects.get(id=1) has .title = "Congrats on Finishing class!"
+    # resource = Resource.objects.get(id=1) has .name = "Congrats on Finishing class!"
     # resource is connected to a Subject with id=1 and a ClassOffer with id=1
     # classoffer = ClassOffer.objects.get(id=1) is connected to resource and a Session, Subject, Location.
     # there is a student with id=1, and they have a registration for this classoffer.

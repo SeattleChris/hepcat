@@ -3,7 +3,7 @@ from django.urls import path, include
 from django.contrib.auth.views import PasswordChangeView
 # from django.contrib.auth.views import LoginView
 # from django.contrib.auth.forms import AuthenticationForm
-from .views import CustomRegistrationView, SignUp, Modify
+from .views import CustomRegistrationView, Modify  # , SignUp,
 # TODO: Report that the UserChangeForm seems to have a hard coded a element href attribute of '../password/'
 # TODO: Submit a PR to django-registration for docs update to include One-step workflow URL names.
 

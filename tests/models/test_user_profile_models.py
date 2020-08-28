@@ -21,7 +21,7 @@ class StudentModelTests(AbstractProfileModelTests, TestCase):
         versions = ('A', 'B', 'C', 'D', )
         subjs = []
         for level, string in Subject.LEVEL_CHOICES:
-            subjs += [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}", ) for ver in versions]
+            subjs += [Subject.objects.create(level=level, version=ver, name=f"{level}_{ver}", ) for ver in versions]
         session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
         location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
         kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
@@ -50,7 +50,7 @@ class StudentModelTests(AbstractProfileModelTests, TestCase):
             subj_no_level = Subject.LEVEL_CHOICES[i][0] if i < len(Subject.LEVEL_CHOICES) else None
         levels = (subj_has_level, subj_no_level) if subj_no_level else (subj_has_level, )
         ver = Subject.VERSION_CHOICES[0][0]
-        subjs = [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}", ) for level in levels]
+        subjs = [Subject.objects.create(level=level, version=ver, name=f"{level}_{ver}", ) for level in levels]
         session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
         location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
         kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
@@ -74,7 +74,7 @@ class StudentModelTests(AbstractProfileModelTests, TestCase):
     def test_level_methods_when_only_some_beg_attended(self):
         model = self.instance
         level = Subject.LEVEL_CHOICES[0][0]
-        beg_a_subj = Subject.objects.create(level=level, version='A', title='beg_a_test', )
+        beg_a_subj = Subject.objects.create(level=level, version='A', name='beg_a_test', )
         session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
         location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
         kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
@@ -88,7 +88,7 @@ class StudentModelTests(AbstractProfileModelTests, TestCase):
         model = self.instance
         level = Subject.LEVEL_CHOICES[0][0]
         versions = ('A', 'B', )
-        subjs = [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}_test", ) for ver in versions]
+        subjs = [Subject.objects.create(level=level, version=ver, name=f"{level}_{ver}_test", ) for ver in versions]
         session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
         location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
         kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
@@ -106,9 +106,9 @@ class StudentModelTests(AbstractProfileModelTests, TestCase):
         model = self.instance
         level = Subject.LEVEL_CHOICES[1][0]
         versions = ('A', 'B', )
-        subjs = [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}_test", ) for ver in versions]
+        subjs = [Subject.objects.create(level=level, version=ver, name=f"{level}_{ver}_test", ) for ver in versions]
         level = Subject.LEVEL_CHOICES[0][0]
-        subjs += [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}_test", ) for ver in versions]
+        subjs += [Subject.objects.create(level=level, version=ver, name=f"{level}_{ver}_test", ) for ver in versions]
         session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
         location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
         kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
@@ -123,7 +123,7 @@ class StudentModelTests(AbstractProfileModelTests, TestCase):
         model = self.instance
         level = Subject.LEVEL_CHOICES[1][0]
         versions = ('A', 'B', 'C', 'D', )
-        subjs = [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}_test", ) for ver in versions]
+        subjs = [Subject.objects.create(level=level, version=ver, name=f"{level}_{ver}_test", ) for ver in versions]
         session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
         location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
         kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
@@ -140,7 +140,7 @@ class StudentModelTests(AbstractProfileModelTests, TestCase):
         model = self.instance
         level = Subject.LEVEL_CHOICES[1][0]
         versions = ('A', 'B', 'C', 'D', )
-        subjs = [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}_test", ) for ver in versions]
+        subjs = [Subject.objects.create(level=level, version=ver, name=f"{level}_{ver}_test", ) for ver in versions]
         session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
         location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
         kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
@@ -163,7 +163,7 @@ class StudentModelTests(AbstractProfileModelTests, TestCase):
         model = self.instance
         level = Subject.LEVEL_CHOICES[2][0]
         versions = ('C', 'D', )
-        subjs = [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}_test", ) for ver in versions]
+        subjs = [Subject.objects.create(level=level, version=ver, name=f"{level}_{ver}_test", ) for ver in versions]
         session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
         location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
         kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
@@ -176,7 +176,7 @@ class StudentModelTests(AbstractProfileModelTests, TestCase):
         model = self.instance
         level = Subject.LEVEL_CHOICES[2][0]
         versions = ('A', 'B', 'C', 'D', )
-        subjs = [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}_test", ) for ver in versions]
+        subjs = [Subject.objects.create(level=level, version=ver, name=f"{level}_{ver}_test", ) for ver in versions]
         session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
         location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
         kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
@@ -193,7 +193,7 @@ class StudentModelTests(AbstractProfileModelTests, TestCase):
         model = self.instance
         level = Subject.LEVEL_CHOICES[2][0]
         versions = ('A', 'B', 'C', 'D', )
-        subjs = [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}_test", ) for ver in versions]
+        subjs = [Subject.objects.create(level=level, version=ver, name=f"{level}_{ver}_test", ) for ver in versions]
         session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
         location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
         kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
@@ -249,7 +249,7 @@ class StudentModelTests(AbstractProfileModelTests, TestCase):
         model = self.instance
         level = Subject.LEVEL_CHOICES[0][0]
         versions = [first for first, second in Subject.VERSION_CHOICES]
-        subjs = [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}_test", ) for ver in versions]
+        subjs = [Subject.objects.create(level=level, version=ver, name=f"{level}_{ver}_test", ) for ver in versions]
         session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
         location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
         kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
@@ -273,7 +273,7 @@ class StudentModelTests(AbstractProfileModelTests, TestCase):
         versions = [first for first, second in Subject.VERSION_CHOICES]
         subjs = []
         for level, string in Subject.LEVEL_CHOICES:
-            subjs += [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}", ) for ver in versions]
+            subjs += [Subject.objects.create(level=level, version=ver, name=f"{level}_{ver}", ) for ver in versions]
         session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
         location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
         kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
@@ -315,7 +315,7 @@ class StudentModelTests(AbstractProfileModelTests, TestCase):
         versions = [first for first, second in Subject.VERSION_CHOICES]
         subjs = []
         for level, string in Subject.LEVEL_CHOICES:
-            subjs += [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}", ) for ver in versions]
+            subjs += [Subject.objects.create(level=level, version=ver, name=f"{level}_{ver}", ) for ver in versions]
         session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
         location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
         kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
@@ -360,7 +360,7 @@ class StudentModelTests(AbstractProfileModelTests, TestCase):
         versions = [first for first, second in Subject.VERSION_CHOICES]
         subjs = []
         for level, string in Subject.LEVEL_CHOICES:
-            subjs += [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}", ) for ver in versions]
+            subjs += [Subject.objects.create(level=level, version=ver, name=f"{level}_{ver}", ) for ver in versions]
         session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
         location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
         kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
@@ -385,7 +385,7 @@ class StudentModelTests(AbstractProfileModelTests, TestCase):
         versions = [first for first, second in Subject.VERSION_CHOICES]
         subjs = []
         for level, string in Subject.LEVEL_CHOICES:
-            subjs += [Subject.objects.create(level=level, version=ver, title=f"{level}_{ver}", ) for ver in versions]
+            subjs += [Subject.objects.create(level=level, version=ver, name=f"{level}_{ver}", ) for ver in versions]
         session = Session.objects.create(name='test_sess', key_day_date=date(2020, 1, 9))
         location = Location.objects.create(name='test_location', code='tl', address='12 main st', zipcode=98112, )
         kwargs = {'session': session, 'location': location, 'start_time': time(19, 0), }
@@ -457,7 +457,7 @@ class UserManagerTests(TestCase):
         self.assertEqual(expected_username, user.username)
 
     def test_set_user_bad_email_is_username(self):
-        kwargs = {'uses_email_username': True, 'email': None, 'username': None, 'password': 1234}
+        kwargs = {'username_not_email': False, 'email': None, 'username': None, 'password': 1234}
         kwargs['first_name'] = "email_less"
         kwargs['last_name'] = "try_email_username_foolishly"
         with self.assertRaises(ValueError):
@@ -614,29 +614,29 @@ class UserManagerTests(TestCase):
         self.assertNotIn(result, initial_users)
 
     def test_make_username_use_email(self):
-        """ Notice that switching to True for 'uses_email_username' is not enough to modify the 'username'. """
+        """ Notice that switching to False for 'username_not_email' is not enough to modify the 'username'. """
         kwargs = USER_DEFAULTS.copy()
-        kwargs['uses_email_username'] = False
+        kwargs['username_not_email'] = True
         username = 'manual_username'
         kwargs['username'] = username
         username_from_email = kwargs['email'].casefold()
         user = UserHC.objects.create_user(**kwargs)
         user.save()
         initial_username = user.username
-        user.uses_email_username = True
+        user.username_not_email = False
         user.save()
         later_username = user.make_username()
         final_username = user.username
 
         self.assertEqual(username, initial_username)
         self.assertNotEqual(initial_username, later_username)
-        self.assertTrue(user.uses_email_username)
+        self.assertFalse(user.username_not_email)
         self.assertEqual(username_from_email, later_username)
         self.assertNotEqual(later_username, final_username)
 
     def test_make_username_not_use_email(self):
         kwargs = USER_DEFAULTS.copy()
-        kwargs['uses_email_username'] = False
+        kwargs['username_not_email'] = True
         username = 'manual_username'
         kwargs['username'] = username
         username_from_name = kwargs['first_name'] + '_' + kwargs['last_name']
@@ -651,7 +651,7 @@ class UserManagerTests(TestCase):
 
     def test_save_with_no_username(self):
         kwargs = USER_DEFAULTS.copy()
-        kwargs['uses_email_username'] = False
+        kwargs['username_not_email'] = True
         username = 'manual_username'
         kwargs['username'] = username
         username_from_name = kwargs['first_name'] + '_' + kwargs['last_name']
@@ -661,7 +661,7 @@ class UserManagerTests(TestCase):
         user.username = None
         user.save()
         later_username = user.username
-        user.uses_email_username = True
+        user.username_not_email = False
         user.username = None
         user.save()
         final_username = user.username

@@ -18,7 +18,7 @@
 
   {% for classoffer in classoffers %}
   <article class="classoffer">
-    <h2>{{ classoffer.subject.title }}</h2>
+    <h2>{{ classoffer.subject.name }}</h2>
     <p>dif, shifted: {{classoffer.dif}}, {{classoffer.shifted}}
        | dates: {{classoffer.start_date}} - {{classoffer.end_date}}</p>
     <ul>

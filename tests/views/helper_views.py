@@ -105,7 +105,7 @@ class MimicAsView:
         levels += [lvl for lvl, display in Subject.LEVEL_CHOICES if lvl not in levels]
         levels = [lvl for lvl, display in Subject.LEVEL_CHOICES]
         ver = Subject.VERSION_CHOICES[0][0]
-        subjs = [Subject.objects.create(level=lvl, version=ver, title='_'.join((lvl, ver))) for lvl in levels]
+        subjs = [Subject.objects.create(level=lvl, version=ver, name='_'.join((lvl, ver))) for lvl in levels]
         dur = settings.DEFAULT_SESSION_WEEKS
         # now = dt.utcnow().date()
         now = dt.now().date()
