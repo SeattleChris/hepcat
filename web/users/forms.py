@@ -17,6 +17,10 @@ class CustomRegistrationForm(RegistrationForm):
         computed_fields = (model.USERNAME_FIELD, USERNAME_FLAG_FIELD, )
         strict_username = True  # case_insensitive
         strict_email = False  # unique_email and case_insensitive
+        help_texts = {
+            model.USERNAME_FIELD: _("Use the suggested username or create one. Only needed if using a shared email. "),
+            model.get_email_field_name(): _("used for confirmation and typically for login"),
+        }
 
     def __init__(self, *args, **kwargs):
         model = getattr(self._meta, 'model', None)
@@ -31,11 +35,13 @@ class CustomRegistrationForm(RegistrationForm):
         super().__init__(*args, **kwargs)
         username_field_name = self._meta.model.USERNAME_FIELD
         email_field_name = self._meta.model.get_email_field_name()
-        named_focus = email_field_name if username_field_name in self.data else None
+        named_focus = None
+        keep_keys = set(self.data.keys())
+        if username_field_name in self.data:
+            keep_keys.add(self.Meta.USERNAME_FLAG_FIELD)
+            named_focus = email_field_name
         # TODO: If using RegistrationForm init, then much, but not all, of attach_critical_validators is duplicate code.
         self.attach_critical_validators()  # strict_email=not bool(named_focus)
-        keep_keys = self.data.keys()
-        keep_keys -= [self.Meta.USERNAME_FLAG_FIELD] if username_field_name in self.data else []
         extracted_fields = {key: self.fields.pop(key, None) for key in set(self.Meta.computed_fields) - keep_keys}
         self.computed_fields = extracted_fields
         self.focus_correct_field(name=named_focus)
@@ -46,7 +52,7 @@ class CustomRegistrationForm(RegistrationForm):
     def focus_correct_field(self, name=None):
         """ The named or first non-hidden, non-disabled field gets 'autofocus'. Removes 'autofocus' from others. """
         found = self.fields.get(name, None) if name else None
-        for name, field in self.fields.items():
+        for field_name, field in self.fields.items():
             if not found and not field.disabled and not getattr(field, 'is_hidden', False):
                 found = field
             else:
@@ -131,8 +137,6 @@ class CustomRegistrationForm(RegistrationForm):
         username_field_name = username_field_name or self._meta.model.USERNAME_FIELD
         field = self.computed_fields.pop(username_field_name, None) or self.fields.pop(username_field_name, None)
         field.initial = self.cleaned_data.get(username_field_name, field.initial)
-        username_message = "Use the suggested username or create your own. Only needed if using a shared email. "
-        field.help_text = _(username_message)
         email_field_name = email_field_name or self._meta.model.get_email_field_name()
         email_field = self.fields.pop(email_field_name, None) or self.computed_fields.pop(email_field_name, None)
         email_field.initial = self.cleaned_data.get(email_field_name, email_field.initial)
