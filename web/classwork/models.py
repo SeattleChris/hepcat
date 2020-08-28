@@ -14,14 +14,10 @@ from decimal import Decimal  # used for Payments
 from payments import PurchasedItem
 from payments.models import BasePayment
 from datetime import date, timedelta, datetime as dt
-# from django.contrib.auth import get_user_model
-# User = get_user_model()
-# should use settings.AUTH_USER_MODEL for foreign key, many-to-many relations, or connecting to signals.
-# Docs: https://docs.djangoproject.com/en/3.1/topics/auth/customizing/#custom-users-and-the-built-in-auth-forms
 
-# Create your models here.
 # TODO: Implement calling resource_filepath for resource uploads.
 # TODO: Add @staff_member_required decorator to admin views?
+# Create your models here.
 
 
 class SiteContent(models.Model):
@@ -796,8 +792,6 @@ class Staff(AbstractProfile):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._meta.get_field('bio').max_length = 1530  # Current for Chris is 1349 characters!
-        # self._meta.get_field('user').limit_choices_to = {'is_staff': True}  # Q(is_staff=True)
-        # self._meta.get_field('user').queryset = User.objects.filter(is_staff=True)  # Q(is_staff=True)
 
     def get_absolute_url(self):
         return reverse("profile_staff", kwargs={"id": self.user_id})

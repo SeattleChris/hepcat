@@ -257,6 +257,11 @@ class StaffUser(UserHC):
         verbose_name = 'Staff User'
         verbose_name_plural = 'Staff Users'
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._meta.get_field('is_student').default = False
+        self._meta.get_field('is_teacher').default = True
+
 
 class StudentUser(UserHC):
 
@@ -264,8 +269,3 @@ class StudentUser(UserHC):
         proxy = True
         verbose_name = 'Student User'
         verbose_name_plural = 'Student Users'
-
-
-# The following causes the UserHC model to also use these default settings.
-# StaffUser._meta.get_field('is_student').default = False
-# StaffUser._meta.get_field('is_teacher').default = True
