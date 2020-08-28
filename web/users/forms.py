@@ -175,7 +175,7 @@ class CustomRegistrationForm(RegistrationForm):
     def get_login_message(self, link_text=None, link_only=False, reset=False):
         """ Returns text with html links to login. If reset is True, the message includes a link for password reset. """
         login_link = '<a href="{}">{}</a>'.format(reverse('login'), link_text or 'login')
-        reset_link = '<a href="{}">{}</a>'.format(reverse('password'), link_text or 'reset the password')
+        reset_link = '<a href="{}">{}</a>'.format(reverse('password_reset'), link_text or 'reset the password')
         if link_only:
             return login_link if not reset else reset_link
         message = "You can {} to your existing account".format(login_link)
