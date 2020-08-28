@@ -278,3 +278,5 @@ We are keeping a checklist of upcoming tasks and feature development, as well as
   * `browser htmlcov/index.html`
   * `browse htmlcov/index.html`
   * `chrome htmlcov/index.html`
+* Check for depreciation warnings:
+  * `python -Wa web/manage.py test`
