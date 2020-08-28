@@ -181,8 +181,8 @@ class UserHC(AbstractUser):
     is_teacher = models.BooleanField(_('teacher'), default=False, )
     is_admin = models.BooleanField(_('admin'), default=False, )
     # is_superuser, is_staff, is_active exist from inherited models.
-    username_not_email = models.BooleanField(_('login with username, not with email'), default=False,
-                                             help_text=_('Leave empty to login with email (Typical use)'), )
+    username_not_email = models.BooleanField(_('create a username for login? '), default=False,
+                                             help_text=_('Typically left empty to use email as your login. '), )
     billing_address_1 = models.CharField(_('street address (line 1)'), max_length=191, blank=True, )
     billing_address_2 = models.CharField(_('street address (continued)'), max_length=191, blank=True, )
     billing_city = models.CharField(_('city'), max_length=191, default=settings.DEFAULT_CITY, blank=True, )

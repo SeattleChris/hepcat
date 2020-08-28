@@ -1,6 +1,7 @@
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.forms.utils import ErrorDict  # , ErrorList
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as _
+from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.urls import reverse
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
@@ -20,8 +21,8 @@ class CustomRegistrationForm(RegistrationForm):
         strict_username = True  # case_insensitive
         strict_email = False  # unique_email and case_insensitive
         help_texts = {
-            model.USERNAME_FIELD: _("Use the suggested username or create one. Only needed if using a shared email. "),
-            model.get_email_field_name(): _("used for confirmation and typically for login"),
+            model.USERNAME_FIELD: _("Without a unique email, a username is needed. Use suggested or create one. "),
+            model.get_email_field_name(): _("Used for confirmation and typically for login"),
         }
 
     def __init__(self, *args, **kwargs):
@@ -166,23 +167,32 @@ class CustomRegistrationForm(RegistrationForm):
         login_link = self.get_login_message(link_text='login to existing account', link_only=True)
         text = "Use a non-shared email, or set a username below, or {}. ".format(login_link)
         self.add_error(email_field_name, mark_safe(_(text)))
-        message = "Do you already make an account, or have one because you've had classes with us before? <br />"
-        message += self.get_login_message(reset=True)
-        message += "<p></p>Typically people have their own unique email address, which you can update below. "
-        message += "If you share an email with another user, then you will need to create a username for your login. "
+        e_note = "Typically people have their own unique email address, which you can update. "
+        e_note += "If you share an email with another user, then you will need to create a username for your login. "
+        self.add_error(email_field_name, (_(e_note)))
+        title = "Login with existing account, change to a non-shared email, or create a username. "
+        message = "Did you already make an account, or have one because you've had classes with us before? "
+        message = format_html(
+            "<h3>{}</h3> <p>{} <br />{}</p>",  # <p>{}</p>
+            _(title),
+            _(message),
+            self.get_login_message(reset=True),
+            # _(e_note)
+            )
         return message
 
     def get_login_message(self, link_text=None, link_only=False, reset=False):
         """ Returns text with html links to login. If reset is True, the message includes a link for password reset. """
-        login_link = '<a href="{}">{}</a>'.format(reverse('login'), link_text or 'login')
-        reset_link = '<a href="{}">{}</a>'.format(reverse('password_reset'), link_text or 'reset the password')
+        link_text = _(link_text) if link_text else None
+        login_link = format_html('<a href="{}">{}</a>', reverse('login'), link_text or _('login'))
+        reset_link = format_html('<a href="{}">{}</a>', reverse('password_reset'), link_text or _('reset the password'))
         if link_only:
             return login_link if not reset else reset_link
         message = "You can {} to your existing account".format(login_link)
         if reset:
             message += " or {} if needed".format(reset_link)
         message += ". "
-        return message
+        return mark_safe(_(message))
 
     def clean_username(self):
         # This is called if no ValidationError was raised by to_python(), validate(), or run_validators().
@@ -285,13 +295,11 @@ class CustomRegistrationForm(RegistrationForm):
             raise ValidationError(_("Error occurred with the computed fields. "))
         elif username_field_name not in self.data and username_value != email_value:
             print("- - - - - - - - - Confirmation Required - - - - - - - - - - - - - - -")
-            message = "Login with existing account, change to a non-shared email, or create a username. "
-            message = "<h3>{}</h3>".format(message)
-            message += "<p>{}</p>".format(self.configure_username_confirmation())
+            marked_safe_translatable_html = self.configure_username_confirmation()
             print("---------------------- Form Data --------------------------------------")
             for key, items in self.data.lists():
                 print(f"{key}: {items} ")
-            raise ValidationError(mark_safe(_(message)))
+            raise ValidationError(marked_safe_translatable_html)
         else:
             print(" Computed Fields had no problems! ")
             self.fields.update(self.computed_fields)
