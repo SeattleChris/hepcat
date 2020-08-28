@@ -1,6 +1,8 @@
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.forms.utils import ErrorDict  # , ErrorList
 from django.utils.translation import gettext_lazy as _
+from django.utils.safestring import mark_safe
+from django.urls import reverse
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django_registration.forms import RegistrationForm
 from django_registration import validators
@@ -163,9 +165,11 @@ class CustomRegistrationForm(RegistrationForm):
 
         self.add_error(email_field_name, _("Use a non-shared email, or set a username below. "))
         # self.add_error(flag_name, _("Username only needed if you share an email with another user. "))
-        login_element = 'login'  # TODO: Update 'login_element' as an HTML a element to link to login route.
+        # TODO: Update 'login_element' as an HTML a element to link to login route.
+        login_element = '<a href="{}">login</a>'.format(reverse('login'))
+        reset_element = '<a href="{}">reset the password</a>'.format('password')
         message = "Have you had classes or created an account using that email address? "
-        message += "Go to {} to sign in with that account or reset the password if needed. ".format(login_element)
+        message += "Go to {} to sign in with that account or {} if needed. ".format(login_element, reset_element)
         message += "If you share an email with another user, then you will login with a username instead. "
         return message
 
