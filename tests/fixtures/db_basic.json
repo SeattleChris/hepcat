@@ -1,661 +1,5 @@
 [
 {
-    "model": "auth.permission",
-    "pk": 1,
-    "fields": {
-        "name": "Can add log entry",
-        "content_type": 1,
-        "codename": "add_logentry"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 2,
-    "fields": {
-        "name": "Can change log entry",
-        "content_type": 1,
-        "codename": "change_logentry"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 3,
-    "fields": {
-        "name": "Can delete log entry",
-        "content_type": 1,
-        "codename": "delete_logentry"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 4,
-    "fields": {
-        "name": "Can view log entry",
-        "content_type": 1,
-        "codename": "view_logentry"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 5,
-    "fields": {
-        "name": "Can add permission",
-        "content_type": 2,
-        "codename": "add_permission"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 6,
-    "fields": {
-        "name": "Can change permission",
-        "content_type": 2,
-        "codename": "change_permission"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 7,
-    "fields": {
-        "name": "Can delete permission",
-        "content_type": 2,
-        "codename": "delete_permission"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 8,
-    "fields": {
-        "name": "Can view permission",
-        "content_type": 2,
-        "codename": "view_permission"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 9,
-    "fields": {
-        "name": "Can add group",
-        "content_type": 3,
-        "codename": "add_group"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 10,
-    "fields": {
-        "name": "Can change group",
-        "content_type": 3,
-        "codename": "change_group"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 11,
-    "fields": {
-        "name": "Can delete group",
-        "content_type": 3,
-        "codename": "delete_group"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 12,
-    "fields": {
-        "name": "Can view group",
-        "content_type": 3,
-        "codename": "view_group"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 13,
-    "fields": {
-        "name": "Can add content type",
-        "content_type": 4,
-        "codename": "add_contenttype"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 14,
-    "fields": {
-        "name": "Can change content type",
-        "content_type": 4,
-        "codename": "change_contenttype"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 15,
-    "fields": {
-        "name": "Can delete content type",
-        "content_type": 4,
-        "codename": "delete_contenttype"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 16,
-    "fields": {
-        "name": "Can view content type",
-        "content_type": 4,
-        "codename": "view_contenttype"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 17,
-    "fields": {
-        "name": "Can add session",
-        "content_type": 5,
-        "codename": "add_session"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 18,
-    "fields": {
-        "name": "Can change session",
-        "content_type": 5,
-        "codename": "change_session"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 19,
-    "fields": {
-        "name": "Can delete session",
-        "content_type": 5,
-        "codename": "delete_session"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 20,
-    "fields": {
-        "name": "Can view session",
-        "content_type": 5,
-        "codename": "view_session"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 21,
-    "fields": {
-        "name": "Can add class offer",
-        "content_type": 6,
-        "codename": "add_classoffer"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 22,
-    "fields": {
-        "name": "Can change class offer",
-        "content_type": 6,
-        "codename": "change_classoffer"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 23,
-    "fields": {
-        "name": "Can delete class offer",
-        "content_type": 6,
-        "codename": "delete_classoffer"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 24,
-    "fields": {
-        "name": "Can view class offer",
-        "content_type": 6,
-        "codename": "view_classoffer"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 25,
-    "fields": {
-        "name": "Can add location",
-        "content_type": 7,
-        "codename": "add_location"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 26,
-    "fields": {
-        "name": "Can change location",
-        "content_type": 7,
-        "codename": "change_location"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 27,
-    "fields": {
-        "name": "Can delete location",
-        "content_type": 7,
-        "codename": "delete_location"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 28,
-    "fields": {
-        "name": "Can view location",
-        "content_type": 7,
-        "codename": "view_location"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 29,
-    "fields": {
-        "name": "Can add payment",
-        "content_type": 8,
-        "codename": "add_payment"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 30,
-    "fields": {
-        "name": "Can change payment",
-        "content_type": 8,
-        "codename": "change_payment"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 31,
-    "fields": {
-        "name": "Can delete payment",
-        "content_type": 8,
-        "codename": "delete_payment"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 32,
-    "fields": {
-        "name": "Can view payment",
-        "content_type": 8,
-        "codename": "view_payment"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 33,
-    "fields": {
-        "name": "Can add registration",
-        "content_type": 9,
-        "codename": "add_registration"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 34,
-    "fields": {
-        "name": "Can change registration",
-        "content_type": 9,
-        "codename": "change_registration"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 35,
-    "fields": {
-        "name": "Can delete registration",
-        "content_type": 9,
-        "codename": "delete_registration"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 36,
-    "fields": {
-        "name": "Can view registration",
-        "content_type": 9,
-        "codename": "view_registration"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 37,
-    "fields": {
-        "name": "Can add resource",
-        "content_type": 10,
-        "codename": "add_resource"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 38,
-    "fields": {
-        "name": "Can change resource",
-        "content_type": 10,
-        "codename": "change_resource"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 39,
-    "fields": {
-        "name": "Can delete resource",
-        "content_type": 10,
-        "codename": "delete_resource"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 40,
-    "fields": {
-        "name": "Can view resource",
-        "content_type": 10,
-        "codename": "view_resource"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 41,
-    "fields": {
-        "name": "Can add session",
-        "content_type": 11,
-        "codename": "add_session"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 42,
-    "fields": {
-        "name": "Can change session",
-        "content_type": 11,
-        "codename": "change_session"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 43,
-    "fields": {
-        "name": "Can delete session",
-        "content_type": 11,
-        "codename": "delete_session"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 44,
-    "fields": {
-        "name": "Can view session",
-        "content_type": 11,
-        "codename": "view_session"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 45,
-    "fields": {
-        "name": "Can add site content",
-        "content_type": 12,
-        "codename": "add_sitecontent"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 46,
-    "fields": {
-        "name": "Can change site content",
-        "content_type": 12,
-        "codename": "change_sitecontent"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 47,
-    "fields": {
-        "name": "Can delete site content",
-        "content_type": 12,
-        "codename": "delete_sitecontent"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 48,
-    "fields": {
-        "name": "Can view site content",
-        "content_type": 12,
-        "codename": "view_sitecontent"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 49,
-    "fields": {
-        "name": "Can add subject",
-        "content_type": 13,
-        "codename": "add_subject"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 50,
-    "fields": {
-        "name": "Can change subject",
-        "content_type": 13,
-        "codename": "change_subject"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 51,
-    "fields": {
-        "name": "Can delete subject",
-        "content_type": 13,
-        "codename": "delete_subject"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 52,
-    "fields": {
-        "name": "Can view subject",
-        "content_type": 13,
-        "codename": "view_subject"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 53,
-    "fields": {
-        "name": "Can add student",
-        "content_type": 14,
-        "codename": "add_student"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 54,
-    "fields": {
-        "name": "Can change student",
-        "content_type": 14,
-        "codename": "change_student"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 55,
-    "fields": {
-        "name": "Can delete student",
-        "content_type": 14,
-        "codename": "delete_student"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 56,
-    "fields": {
-        "name": "Can view student",
-        "content_type": 14,
-        "codename": "view_student"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 57,
-    "fields": {
-        "name": "Can add staff",
-        "content_type": 15,
-        "codename": "add_staff"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 58,
-    "fields": {
-        "name": "Can change staff",
-        "content_type": 15,
-        "codename": "change_staff"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 59,
-    "fields": {
-        "name": "Can delete staff",
-        "content_type": 15,
-        "codename": "delete_staff"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 60,
-    "fields": {
-        "name": "Can view staff",
-        "content_type": 15,
-        "codename": "view_staff"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 61,
-    "fields": {
-        "name": "Can add user",
-        "content_type": 16,
-        "codename": "add_userhc"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 62,
-    "fields": {
-        "name": "Can change user",
-        "content_type": 16,
-        "codename": "change_userhc"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 63,
-    "fields": {
-        "name": "Can delete user",
-        "content_type": 16,
-        "codename": "delete_userhc"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 64,
-    "fields": {
-        "name": "Can view user",
-        "content_type": 16,
-        "codename": "view_userhc"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 65,
-    "fields": {
-        "name": "Can add staff user",
-        "content_type": 17,
-        "codename": "add_staffuser"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 66,
-    "fields": {
-        "name": "Can change staff user",
-        "content_type": 17,
-        "codename": "change_staffuser"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 67,
-    "fields": {
-        "name": "Can delete staff user",
-        "content_type": 17,
-        "codename": "delete_staffuser"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 68,
-    "fields": {
-        "name": "Can view staff user",
-        "content_type": 17,
-        "codename": "view_staffuser"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 69,
-    "fields": {
-        "name": "Can add student user",
-        "content_type": 18,
-        "codename": "add_studentuser"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 70,
-    "fields": {
-        "name": "Can change student user",
-        "content_type": 18,
-        "codename": "change_studentuser"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 71,
-    "fields": {
-        "name": "Can delete student user",
-        "content_type": 18,
-        "codename": "delete_studentuser"
-    }
-},
-{
-    "model": "auth.permission",
-    "pk": 72,
-    "fields": {
-        "name": "Can view student user",
-        "content_type": 18,
-        "codename": "view_studentuser"
-    }
-},
-{
-    "model": "sessions.session",
-    "pk": "cjjvzw5yhl3vmyfhk7xkzr0altwnnur8",
-    "fields": {
-        "session_data": "Y2RkNTQ3OWE4YWRkM2QzNDYyZWEzZjY2YzhiMWU0NDEzYzQ3M2M4Njp7Il9hdXRoX3VzZXJfaWQiOiIxIiwiX2F1dGhfdXNlcl9iYWNrZW5kIjoiZGphbmdvLmNvbnRyaWIuYXV0aC5iYWNrZW5kcy5Nb2RlbEJhY2tlbmQiLCJfYXV0aF91c2VyX2hhc2giOiI2ODkzZDAwMWY2NmZiMjEzM2Q4NjIyOTA1ZGI3ZTVhY2U1MmY4NDdjIn0=",
-        "expire_date": "2020-08-08T21:56:09.595Z"
-    }
-},
-{
     "model": "classwork.sitecontent",
     "pk": 1,
     "fields": {
@@ -684,12 +28,10 @@
     "model": "classwork.resource",
     "pk": 1,
     "fields": {
-        "subjects": [1],
-        "classoffers": [],
         "content_type": "text",
         "user_type": 1,
         "avail": 0,
-        "expire": 2,
+        "expire": 0,
         "imagepath": "",
         "filepath": "",
         "link": "",
@@ -697,7 +39,34 @@
         "name": "Your Beginning Class!",
         "description": "You have signed up for the Beginning Swing Dance - Lindy Hop class!",
         "date_added": "2020-07-25",
-        "date_modified": "2020-07-25"
+        "date_modified": "2020-08-10",
+        "subjects": [
+            1,
+            2
+        ],
+        "classoffers": []
+    }
+},
+{
+    "model": "classwork.resource",
+    "pk": 2,
+    "fields": {
+        "content_type": "text",
+        "user_type": 1,
+        "avail": 1,
+        "expire": 0,
+        "imagepath": "",
+        "filepath": "",
+        "link": "",
+        "text": "",
+        "name": "Hope Beg B Week 1 was Good",
+        "description": "I hope your first week of Beginning Swing Dance - Lindy Hop (version B) was good!",
+        "date_added": "2020-08-01",
+        "date_modified": "2020-08-10",
+        "subjects": [
+            2
+        ],
+        "classoffers": []
     }
 },
 {
@@ -720,7 +89,30 @@
         "multiple_purchase_discount": "10.00",
         "qualifies_as_multi_class_discount": true,
         "date_added": "2020-07-25",
-        "date_modified": "2020-07-25"
+        "date_modified": "2020-08-01"
+    }
+},
+{
+    "model": "classwork.subject",
+    "pk": 2,
+    "fields": {
+        "level": "Beg",
+        "level_num": "1.0",
+        "version": "B",
+        "name": "Beg Lindy B",
+        "tagline_1": "Partner Not Required!",
+        "tagline_2": "No experience needed!",
+        "tagline_3": "",
+        "num_weeks": 5,
+        "num_minutes": 60,
+        "description": "Learn this fun dance and make new friends in this welcoming social activity. A dance partner is not needed as you'll be able to dance with a variety of others in the class. Whether you have two left feet, no dance experience, or if Lindy Hop (swing dancing) is something you'd like to add to your repertoire -- this is the class for you! As the original swing dance, Lindy Hop has it all -- from exciting and flashy to smooth and cool. Come join us in this fun & versatile dance and we'll get you dancing before you know it!",
+        "image": "",
+        "full_price": "70.00",
+        "pre_pay_discount": "5.00",
+        "multiple_purchase_discount": "10.00",
+        "qualifies_as_multi_class_discount": true,
+        "date_added": "2020-08-01",
+        "date_modified": "2020-08-01"
     }
 },
 {
@@ -734,10 +126,10 @@
         "skip_weeks": 0,
         "flip_last_day": false,
         "break_weeks": 0,
-        "publish_date": "2019-12-13",
+        "publish_date": "2019-12-11",
         "expire_date": "2020-01-17",
         "date_added": "2020-07-25",
-        "date_modified": "2020-07-25"
+        "date_modified": "2020-08-01"
     }
 },
 {
@@ -754,10 +146,32 @@
         "skip_weeks": 0,
         "skip_tagline": "",
         "date_added": "2020-07-25",
-        "date_modified": "2020-07-25",
+        "date_modified": "2020-08-14",
         "teachers": [
             1
         ]
+    }
+},
+{
+    "model": "classwork.staff",
+    "pk": 1,
+    "fields": {
+        "bio": "",
+        "date_added": "2020-07-25",
+        "date_modified": "2020-08-28",
+        "listing": 0,
+        "tax_doc": ""
+    }
+},
+{
+    "model": "classwork.student",
+    "pk": 1,
+    "fields": {
+        "bio": "",
+        "date_added": "2020-07-25",
+        "date_modified": "2020-08-28",
+        "level": 2,
+        "credit": "0.00"
     }
 },
 {
@@ -768,28 +182,6 @@
         "classoffer": 1,
         "payment": 1,
         "paid": false
-    }
-},
-{
-    "model": "classwork.student",
-    "pk": 1,
-    "fields": {
-        "bio": "",
-        "date_added": "2020-07-25",
-        "date_modified": "2020-07-25",
-        "level": 0,
-        "credit": "0.00"
-    }
-},
-{
-    "model": "classwork.staff",
-    "pk": 1,
-    "fields": {
-        "bio": "",
-        "date_added": "2020-07-25",
-        "date_modified": "2020-07-25",
-        "listing": 0,
-        "tax_doc": ""
     }
 }
 ]

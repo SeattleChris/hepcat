@@ -15,8 +15,8 @@ Resource = import_string('classwork.models.Resource')
 # , Location, SiteContent, Profile, Payment, Registration, Notify
 UserHC = import_string('users.models.UserHC')
 AnonymousUser = import_string('django.contrib.auth.models.AnonymousUser')
-USER_DEFAULTS = {'email': 'user_fake@fakesite.com', 'password': '1234', 'first_name': 'f_user', 'last_name': 'fake_y'}
-OTHER_USER = {'email': 'other@fakesite.com', 'password': '1234', 'first_name': 'other_user', 'last_name': 'fake_y'}
+USER_DEFAULTS = {'email': 'user_fake@fake.com', 'password': 'test1234', 'first_name': 'f_user', 'last_name': 'fake_y'}
+OTHER_USER = {'email': 'other@fake.com', 'password': 'test1234', 'first_name': 'other_user', 'last_name': 'fake_y'}
 
 
 class TestFormLoginRequired:
