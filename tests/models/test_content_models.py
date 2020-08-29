@@ -58,7 +58,7 @@ class ResourceModelTests(SimpleModelTests, TransactionTestCase):
         self.assertGreater(len(student.taken), 0)
         self.assertIn(classoffer, student.taken)
         self.assertIn(student, classoffer.students)
-        self.assertEquals(resource.classoffer, classoffer)
+        self.assertEqual(resource.classoffer, classoffer)
         self.assertIn(resource, classoffer.resources)
         self.assertFalse(available)
 
@@ -85,7 +85,7 @@ class ResourceModelTests(SimpleModelTests, TransactionTestCase):
 
         self.assertGreater(len(student.taken), 0)
         self.assertIn(classoffer, student.taken)
-        self.assertEquals(resource.classoffer, classoffer)
+        self.assertEqual(resource.classoffer, classoffer)
         self.assertIn(student, classoffer.students)
         self.assertIn(resource, classoffer.resources)
         self.assertTrue(available)

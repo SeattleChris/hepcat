@@ -134,7 +134,7 @@ class AdminSessionModelManagement(TestCase):
         current_admin = SessiontAdmin(model=Session, admin_site=AdminSite())
         form = getattr(current_admin, 'form', None)
         form_class = AdminSessionForm
-        self.assertEquals(form, form_class)
+        self.assertEqual(form, form_class)
 
     def test_admin_has_all_model_fields(self):
         """ The admin SessiontAdmin should use all the fields of the Session model. """
@@ -191,7 +191,7 @@ class AdminSessionModelManagement(TestCase):
         sess = Session.objects.filter(name=name).first()
 
         self.assertTrue(login_try)
-        self.assertEquals(post_response.status_code, 200)
+        self.assertEqual(post_response.status_code, 200)
         self.assertIsNotNone(sess)
         self.assertIsInstance(sess, Session)
 
@@ -220,10 +220,10 @@ class AdminSessionModelManagement(TestCase):
 
         self.assertIsNotNone(sess)
         self.assertIsInstance(sess, Session)
-        self.assertEquals(first_sess, sess)
+        self.assertEqual(first_sess, sess)
         self.assertTrue(login_try)
         self.assertIn(template_target, post_response.template_name)
-        self.assertEquals(post_response.status_code, 200)
+        self.assertEqual(post_response.status_code, 200)
         self.assertGreater(first_sess.end_date, second_sess.start_date)
 
     def test_form_clean_validation_error_message(self):
@@ -324,7 +324,7 @@ class AdminClassDayListFilterTests(TestCase):
         self.assertEqual(len(classoffers), 3)
         self.assertEqual(ClassOffer.objects.count(), 3)
         self.assertIsInstance(lookup, GeneratorType)
-        self.assertEquals(list(expected_lookup), list(lookup))
+        self.assertEqual(list(expected_lookup), list(lookup))
 
     def test_admin_classoffer_queryset(self):
         key_day, name = date.today(), 'sess1'
@@ -369,7 +369,7 @@ class AdminClassDayListFilterTests(TestCase):
         self.assertEqual(len(registrations), 3)
         self.assertEqual(Registration.objects.count(), 3)
         self.assertIsInstance(lookup, GeneratorType)
-        self.assertEquals(list(expected_lookup), list(lookup))
+        self.assertEqual(list(expected_lookup), list(lookup))
 
     def test_admin_registration_queryset(self):
         key_day, name = date.today(), 'sess1'
@@ -428,7 +428,7 @@ class AdminUserHCTests:
         current_admin = self.ModelAdmin(model=self.Model, admin_site=AdminSite())
         form = getattr(current_admin, 'form', None)
         form_class = UserChangeForm
-        self.assertEquals(form, form_class)
+        self.assertEqual(form, form_class)
 
     def test_get_queryset(self):
         """ Proxy models tend to be a subset of all models. This tests the queryset is as expected. """

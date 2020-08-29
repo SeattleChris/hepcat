@@ -117,13 +117,20 @@ if HOSTED_PYTHONANYWHERE and not LOCAL:  # pragma: no cover
     DATABASES['TEST'] = test_db
     DATABASES['TEST']['NAME'] = LOGNAME + '$test_' + DB_NAME
 # Password validation
-# https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
+# https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
+# PASSWORD_RESET_TIMEOUT = 259200  # 259200 deafult is 3 days in seconds.
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator', },
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator', },
     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator', },
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator', },
-]
+]  # from earlier Django version.
+# PASSWORD_HASHERS = [
+#     'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+#     'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
+#     'django.contrib.auth.hashers.Argon2PasswordHasher',
+#     'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
+# ]  # default for Django 3.1
 AUTH_USER_MODEL = 'users.UserHC'
 # Internationalization
 # https://docs.djangoproject.com/en/3.0/topics/i18n/

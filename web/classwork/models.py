@@ -968,12 +968,12 @@ class Student(AbstractProfile):
 def create_or_update_user_profile(sender, instance, created, **kwargs):
     profile = None
     if instance.is_student:
-        if getattr(instance, 'student', None):
+        if hasattr(instance, 'student'):
             instance.student.save()
         else:
             profile = Student.objects.create(user=instance)
     if instance.is_staff:
-        if getattr(instance, 'staff', None):
+        if hasattr(instance, 'staff'):
             instance.staff.save()
         else:
             profile = Staff.objects.create(user=instance)
