@@ -1,6 +1,6 @@
 from django.test import TestCase, TransactionTestCase
 from django.conf import settings
-from django.db.models import Max, Subquery
+from django.db.models import Q, Max, Subquery
 from unittest import skip
 from .helper_models import SimpleModelTests, Resource, UserHC, Student, Session, Subject, ClassOffer
 from datetime import date, time, timedelta, datetime as dt
@@ -24,10 +24,15 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
 
     def test_manager_queryset_resources_no_expire(self):
         sess = Session.objects.first()
-        res_count = Resource.objects.count()
         initial_max_level = ClassOffer.objects.all().aggregate(Max('_num_level')).get('_num_level__max', 0)
         no_res_results = ClassOffer.objects.filter(_num_level__gt=initial_max_level).resources()
-        avail, expected_resources = 0, []  # expire will always be 0
+        avail, res_count, expected_resources = 0, 0, []  # expire will always be 0
+        if Resource.objects.count() > 0:
+            co_ids = ClassOffer.objects.values_list('id', flat=True)
+            subj_ids = ClassOffer.objects.values_list('subject', flat=True)
+            init_res = Resource.objects.filter(Q(subjects__in=subj_ids) | Q(classoffers__in=co_ids))
+            expected_resources.extend(set(init_res.all()))
+            res_count = len(expected_resources)
         for lvl, display in Subject.LEVEL_CHOICES[:2]:
             res_lvl = Resource.objects.create(
                 content_type='text',
@@ -61,7 +66,7 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         self.assertTrue(len(no_res_results) == 0)
         self.assertLessEqual(sess.end_date, date.today())
         self.assertLessEqual(sess.end_date, dt.utcnow().date())
-        self.assertEqual(res_count, Resource.objects.count())
+        self.assertEqual(res_count, len(expected_resources))
         self.assertSetEqual(set(expected_names), set(actual_names))
 
     def test_manager_queryset_resources_various_expire(self):
