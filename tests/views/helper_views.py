@@ -94,7 +94,7 @@ class MimicAsView:
         return view
 
     def prep_http_method(self, method):
-        # # emulate View.as_view() would seem to put these on EACH http method of view.
+        """ To emulate View.as_view() we could do this on EACH http method. Normally as_view is only made with one. """
         method.view_class = self.viewClass
         method.init_kwargs = self.kwargs
         return method
@@ -107,8 +107,7 @@ class MimicAsView:
         ver = Subject.VERSION_CHOICES[0][0]
         subjs = [Subject.objects.create(level=lvl, version=ver, name='_'.join((lvl, ver))) for lvl in levels]
         dur = settings.DEFAULT_SESSION_WEEKS
-        # now = dt.utcnow().date()
-        now = dt.now().date()
+        now = dt.now().date()  # now = dt.utcnow().date()
         class_day = now.weekday()
         classoffers = {}
         for num, name in enumerate(sess_names):

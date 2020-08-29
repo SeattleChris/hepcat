@@ -237,7 +237,7 @@ class UserHC(AbstractUser):
         # TODO: Deal with username (email) being checked as existing even when we want a new user
         super().save(*args, **kwargs)
         for role, group in groups_from_role.items():
-            if getattr(self, role):
+            if getattr(self, role, None):
                 self.groups.add(group)
             else:
                 self.groups.remove(group)
@@ -260,8 +260,9 @@ class StaffUser(UserHC):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._meta.get_field('is_student').default = False
-        self._meta.get_field('is_teacher').default = True
+        # The folowing modifies the defaults for all of UserHC. This is true even class Meta does not mention UserHC
+        # self._meta.get_field('is_student').default = False
+        # self._meta.get_field('is_teacher').default = True
 
 
 class StudentUser(UserHC):
