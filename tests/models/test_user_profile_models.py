@@ -585,7 +585,7 @@ class UserManagerTests(TestCase):
         first = UserHC.objects.create_user(**kwargs)
         first.save()
         kwargs['email'] = 'another_fake@site.com'
-        kwargs['password'] = 5678
+        kwargs['password'] = 'pw5678'
         second = UserHC.objects.create_user(**kwargs)
         second.save()
         initial_users = list(UserHC.objects.all())

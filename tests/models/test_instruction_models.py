@@ -66,7 +66,7 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
 
     def test_manager_queryset_resources_various_expire(self):
         """ Making many ClassOffers that today is the week 3 class with resources on all weeks with 0 <= expire < 3. """
-        user = UserHC.objects.create_user(email="fake@faker.com", password=1234, first_name='fa', last_name='la')
+        user = UserHC.objects.create_user(email="fake@faker.com", password='test12', first_name='fa', last_name='la')
         user.save()
         student = user.student
         now = date.today()
@@ -518,8 +518,8 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
 
         self.assertEqual(model.session, session)
         self.assertLess(session.max_day_shift, 0)
-        self.assertNotEquals(model.class_day, key_day_of_week)
-        self.assertNotEquals(date_shift, 0)
+        self.assertNotEqual(model.class_day, key_day_of_week)
+        self.assertNotEqual(date_shift, 0)
         self.assertEqual(model.start_date, expected_date)
 
     def test_start_date_positive_shift(self):
@@ -536,8 +536,8 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
 
         self.assertEqual(model.session, session)
         self.assertGreater(session.max_day_shift, 0)
-        self.assertNotEquals(model.class_day, key_day_of_week)
-        self.assertNotEquals(date_shift, 0)
+        self.assertNotEqual(model.class_day, key_day_of_week)
+        self.assertNotEqual(date_shift, 0)
         self.assertEqual(model.start_date, result_date)
 
     def test_start_date_out_of_negative_shift_range_opposite_direction(self):
@@ -557,7 +557,7 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
 
         self.assertEqual(model.session, session)
         self.assertLess(session.max_day_shift, 0)
-        self.assertNotEquals(model.class_day, key_day_of_week)
+        self.assertNotEqual(model.class_day, key_day_of_week)
         self.assertEqual(model.start_date, result_date)
 
     def test_start_date_out_of_positive_shift_range_opposite_direction(self):
@@ -577,7 +577,7 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
 
         self.assertEqual(model.session, session)
         self.assertGreater(session.max_day_shift, 0)
-        self.assertNotEquals(model.class_day, key_day_of_week)
+        self.assertNotEqual(model.class_day, key_day_of_week)
         self.assertEqual(model.start_date, result_date)
 
     def test_start_date_beyond_negative_shift_range(self):
@@ -597,7 +597,7 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
 
         self.assertEqual(model.session, session)
         self.assertLess(session.max_day_shift, 0)
-        self.assertNotEquals(model.class_day, key_day_of_week)
+        self.assertNotEqual(model.class_day, key_day_of_week)
         self.assertEqual(model.start_date, result_date)
 
     def test_start_date_beyond_positive_shift_range(self):
@@ -618,7 +618,7 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         self.assertEqual(model.session, session)
         self.assertEqual(session.max_day_shift, 2)
         self.assertEqual(shift, 3)
-        self.assertNotEquals(model.class_day, key_day_of_week)
+        self.assertNotEqual(model.class_day, key_day_of_week)
         self.assertEqual(model.start_date, result_date)
 
     def test_end_date_no_skips(self):
