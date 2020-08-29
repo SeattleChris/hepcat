@@ -110,12 +110,23 @@ Current Status:
     - [x] Afternoon: CURDATE or UTC_DATE
     - [x] Evening: UTC_DATE misses when avail_week + expire == 3, but CURDATE does not!
 - [ ] Profile not created if Admin page creates a new Staff User or Student User.
-- [ ] User not deleted when deleting their student profile (but what if they have a staff profile?).
-- [ ] Possibly profile not deleted when user deleted.
-- [ ] Django-Registration creation form not correctly assigning 'uses_email_username' value.
+- [x] Django-Registration creation form not correctly assigning 'uses_email_username' value.
+- [ ] Check Django-Registration creation form management of 'username_not_email' value.
+- [ ] Fix ON_DELETE cascade settings for Registration (or payments, or related). Admin view couldn't load.
+- [ ] Fix ON_DELETE cascade for user models.
+  - [x] Deleting the User seems to delete their Staff or Student profile.
+  - [ ] Other related model deletion on User delete? See [Optimization and Structure improvements]
+  - [ ] How to handle when deleting a profile. See [Optimization and Structure improvements]
 
 ### Optimization and Structure improvements
 
+- [ ] User and Profile delete:
+  - [ ] Create a listener on Staff and Student profile delete
+    - [ ] ? Possibly delete the User if no profiles?
+    - [ ] ? Possibly just set user.is_active to false?
+  - [ ] ? Is there any other content that should be deleted on User deletion?
+  - [ ] ? What to do with related registrations and payments?
+- [ ] DB: revisit ON_DELETE and general delete scheme for each model.
 - [x] Look into methods for Session model prev_session and next_session.
   - [x] instance methods .get_next_by_FOO and .get_previous_by_FOO for Session model next and previous
     - [x] Does not work on unsaved models, which may be our main use case for these properties.
