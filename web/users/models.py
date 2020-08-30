@@ -175,13 +175,17 @@ class UserHC(AbstractUser):
     """ This will be the custom Users model for the site.
         Inherits from: AbstractUser, AbstractBaseUser, models.Model, ModelBase, ...
     """
+    USERNAME_CHOICES = (
+        (False, _("Use email address as login. ")),
+        (True, _("Create a username. "))
+    )
 
     # first_name, last_name, id, email, and username (often not used directly) - all exist from inherited models.
     is_student = models.BooleanField(_('student'), default=True, )
     is_teacher = models.BooleanField(_('teacher'), default=False, )
     is_admin = models.BooleanField(_('admin'), default=False, )
     # is_superuser, is_staff, is_active exist from inherited models.
-    username_not_email = models.BooleanField(_('create a username for login? '), default=False,
+    username_not_email = models.BooleanField(_('login type'), choices=USERNAME_CHOICES, default=False,
                                              help_text=_('Typically left empty to use email as your login. '), )
     billing_address_1 = models.CharField(_('street address (line 1)'), max_length=191, blank=True, )
     billing_address_2 = models.CharField(_('street address (continued)'), max_length=191, blank=True, )
@@ -237,7 +241,7 @@ class UserHC(AbstractUser):
         # TODO: Deal with username (email) being checked as existing even when we want a new user
         super().save(*args, **kwargs)
         for role, group in groups_from_role.items():
-            if getattr(self, role):
+            if getattr(self, role, None):
                 self.groups.add(group)
             else:
                 self.groups.remove(group)
@@ -260,8 +264,9 @@ class StaffUser(UserHC):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._meta.get_field('is_student').default = False
-        self._meta.get_field('is_teacher').default = True
+        # The folowing modifies the defaults for all of UserHC. This is true even class Meta does not mention UserHC
+        # self._meta.get_field('is_student').default = False
+        # self._meta.get_field('is_teacher').default = True
 
 
 class StudentUser(UserHC):

@@ -1,5 +1,7 @@
 from django.urls import reverse_lazy
 from django.views import generic
+from django.views.decorators.csrf import csrf_protect
+from django.utils.decorators import method_decorator
 from .models import UserHC
 # from django_registration.views import RegistrationView as BaseRegistrationView
 from django_registration.backends.one_step.views import RegistrationView
@@ -8,6 +10,7 @@ from .forms import CustomRegistrationForm, CustomUserCreationForm, CustomUserCha
 from pprint import pprint  # TODO: Remove after debug
 
 
+@method_decorator(csrf_protect, name='dispatch')
 class CustomRegistrationView(RegistrationView):
     form_class = CustomRegistrationForm
     success_url = reverse_lazy('profile_page')

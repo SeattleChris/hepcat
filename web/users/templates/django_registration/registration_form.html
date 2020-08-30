@@ -1,5 +1,8 @@
 {% extends 'generic/base.html' %}
 
+{% block head %}
+<title>Create User Account</title>
+{% endblock head %}
 
 {% block content %}
 <section>
@@ -7,7 +10,10 @@
     <h2>Create Account</h2>
     <form method="post">
       {% csrf_token %}
-      {{ form.as_p }}
+      <table>
+        {{ form.as_person_details }}
+
+      </table>
       <input type="submit" value="Create Account"/>
     </form>
   </article>
