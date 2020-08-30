@@ -26,6 +26,9 @@ DEBUG = strtobool(os.environ.get('DEBUG', 'False'))
 # Update LIVE_ALLOWED_HOSTS in ENV settings if adding another environment.
 ALLOWED_HOSTS = os.environ.get('LOCAL_ALLOWED_HOSTS' if LOCAL else 'LIVE_ALLOWED_HOSTS',
                                os.environ.get('ALLOWED_HOSTS', '')).split(',')
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 # Application definition
 INSTALLED_APPS = [
     'hepcat',  # CUSTOM: Project name
