@@ -1,5 +1,6 @@
 from django import forms
 from .models import Student, Payment, Registration, Notify  # , Staff, Session, ClassOffer
+from users.mixins import PersonFormMixIn
 from django.utils.translation import gettext_lazy as _
 # from django.urls import reverse_lazy
 # from django.shortcuts import render
@@ -9,7 +10,7 @@ from collections import abc
 User = get_user_model()
 
 
-class RegisterForm(forms.ModelForm):
+class RegisterForm(PersonFormMixIn, forms.ModelForm):
     """ This is where existing and even new users/students can sign up for a ClassOffer """
     # TODO: Lookup formsets. See if we can make a form combining fields from User and from Payment models.
     # TODO: Create the workflow for when (if) the user wants to fill out the registration form for someone else.
