@@ -153,6 +153,7 @@ class ClassOfferAdmin(admin.ModelAdmin):
     """ Admin change/add for ClassOffers. Has an inline for Resources. """
     model = ClassOffer
     list_display = ('__str__', 'subject', 'session', 'time', 'start_day', 'end_day', )
+    list_select_related = ('subject', 'session', )
     list_display_links = ('__str__', )
     list_filter = ('session', 'subject', '_num_level', ClassDayListFilter, )
     ordering = ('session__key_day_date', '_num_level', )

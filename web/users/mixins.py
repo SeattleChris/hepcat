@@ -103,7 +103,7 @@ class PersonFormMixIn:
             errors_on_separate_row=errors_on_separate_row,
         )
         line_ender = "%s\n" % row_ender
-        rows = html_output.split(line_ender)
+        rows = html_output.split(line_ender)  # TODO: Consider using .splitlines([keepends])
         for prep_label, prep_data in prepared.items():
             self.fields.update(prep_data['fields'])
 
