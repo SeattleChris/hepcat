@@ -171,3 +171,46 @@ The following routes have been made or scaffolded (mostly in classwork app):
 <!-- TODO: Update the payment url and view -->
 <!-- /user/register/         django_registration one_step.urls -->
 <!-- /user/                  django.contrib.auth.urls -->
+| aboutus                      | ['/aboutus']                                  | classwork.views.AboutUsListView                       | {}
+| checkin                      | ['/checkin/']                                 | classwork.views.Checkin                               | {}
+| checkin_session              | ['/checkin/<str:display_session>']            | classwork.views.Checkin                               | {}
+| classoffer_detail            | ['/classes/<int:id>']                         | classwork.views.ClassOfferDetailView                  | {}
+| classoffer_display_date      | ['/classes/date/<str:display_date>']          | classwork.views.ClassOfferListView                    | {}
+| classoffer_display_session   | ['/classes/sess/<str:display_session>']       | classwork.views.ClassOfferListView                    | {}
+| classoffer_list              | ['/classes/']                                 | classwork.views.ClassOfferListView                    | {}
+| django_registration_complete | ['/user/register/complete/']                  | django.views.generic.base.TemplateView                | {}
+| django_registration_disallowed| ['/user/register/closed/']                   | django.views.generic.base.TemplateView                | {}
+| django_registration_register | ['/user/register/']                           | django_registration.backends.one_step.views.RegistrationView| {}
+| home                         | ['/']                                         | hepcat.views.home_view                                | {}
+| location_detail              | ['/location/<int:id>']                        | classwork.views.LocationDetailView                    | {}
+| location_list                | ['/location/']                                | classwork.views.LocationListView                      | {}
+| login                        | ['/user/login/']                              | django.contrib.auth.views.LoginView                   | {}
+| logout                       | ['/user/logout/']                             | django.contrib.auth.views.LogoutView                  | {}
+| password                     | ['/user/password/']                           | django.contrib.auth.views.PasswordChangeView          | {}
+| password_change              | ['/user/password_change/']                    | django.contrib.auth.views.PasswordChangeView          | {}
+| password_change_done         | ['/user/password_change/done/']               | django.contrib.auth.views.PasswordChangeDoneView      | {}
+| password_reset               | ['/user/password_reset/']                     | django.contrib.auth.views.PasswordResetView           | {}
+| password_reset_complete      | ['/user/reset/done/']                         | django.contrib.auth.views.PasswordResetCompleteView   | {}
+| password_reset_confirm       | ['/user/reset/<uidb64>/<token>/']             | django.contrib.auth.views.PasswordResetConfirmView    | {}
+| password_reset_done          | ['/user/password_reset/done/']                | django.contrib.auth.views.PasswordResetDoneView       | {}
+| payment                      | ['/payment/<int:id>']                         | classwork.views.payment_details                       | {}
+| payment_done                 | ['/payment/done/<int:id>']                    | classwork.views.PaymentProcessView                    | {}
+| payment_fail                 | ['/payment/fail/<int:id>']                    | classwork.views.PaymentProcessView                    | {}
+| payment_success              | ['/payment/success/<int:id>']                 | classwork.views.PaymentProcessView                    | {}
+| process_payment              | ['/payments/^process/(?P<token><regex>']      | payments.urls.process_data                            | {}
+| profile_page                 | ['/profile/']                                 | classwork.views.ProfileView                           | {}
+| profile_staff                | ['/staff/<int:id>']                           | classwork.views.ProfileView                           | {}
+| profile_student              | ['/student/<int:id>']                         | classwork.views.ProfileView                           | {}
+| profile_user                 | ['/profile/<int:id>']                         | classwork.views.ProfileView                           | {}
+| register                     | ['/register/']                                | classwork.views.RegisterView                          | {}
+| resource_detail              | ['/resource/<int:id>']                        | classwork.views.ResourceDetailView                    | {}
+| signup                       | ['/user/register/']                           | users.views.CustomRegistrationView                    | {}
+| static_process_payment       | ['/payments/process/(?P<variant><regex>']     | payments.urls.static_callback                         | {}
+| user_update                  | ['/user/update/']                             | users.views.Modify                                    | {}
+| index                        | ['/admin/']                                   | django.contrib.admin.sites.AdminSite.index            | {}
+| jsi18n                       | ['/admin/jsi18n/']                            | django.contrib.admin.sites.AdminSite.i18n_javascript  | {}
+| login                        | ['/admin/login/']                             | django.contrib.admin.sites.AdminSite.login            | {}
+| logout                       | ['/admin/logout/']                            | django.contrib.admin.sites.AdminSite.logout           | {}
+| password_change              | ['/admin/password_change/']                   | django.contrib.admin.sites.AdminSite.password_change  | {}
+| password_change_done         | ['/admin/password_change/done/']              | django.contrib.admin.sites.AdminSite.password_change_done  | {}
+| view_on_site                 |['/admin/r/<int:c...t...id>/<path:object_id>/']| django.contrib.contenttypes.views.shortcut            | {}
