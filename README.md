@@ -171,6 +171,7 @@ The following routes have been made or scaffolded (mostly in classwork app):
 <!-- TODO: Update the payment url and view -->
 <!-- /user/register/         django_registration one_step.urls -->
 <!-- /user/                  django.contrib.auth.urls -->
+
 | **URL Name**                 | **Route*                                  | **View**                              |
 | ---------------------------- | ----------------------------------------- | ------------------------------------- |
 | home                         | ['/']                                     | hepcat.views.home_view                |

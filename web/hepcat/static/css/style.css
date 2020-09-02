@@ -87,6 +87,10 @@ aside#levels { display: none; }
     margin-bottom: 0;
 }
 .class_history p { margin-top: 0; }
+/* form label { text-align: right; } */
+form table th { vertical-align: text-top; text-align: right; font-weight: bold; }
+form td, form th { padding: 0.25rem; }
+form input { margin-right: 0.5rem; }
 /****************** End of sub-parts. Adjustments for screen size. ************************/
 @media screen and (max-width: 380px) {
     /* .classoffer p.description, .classoffer ul { display: block; width: unset; } */
