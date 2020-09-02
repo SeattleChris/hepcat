@@ -1,7 +1,7 @@
 -i https://pypi.org/simple
 asgiref==3.2.10
-boto3==1.14.53
-botocore==1.17.53
+boto3==1.14.50
+botocore==1.17.50
 braintree==4.3.0
 certifi==2020.6.20
 cffi==1.14.2
@@ -14,13 +14,15 @@ django-compressor==2.4
 django-payments==0.13.0
 django-registration==3.1
 django-ses==1.0.2
-django==3.1.1
+django-storages==1.9.1
+django==3.1
 docutils==0.15.2
 future==0.18.2
 idna==2.10
 jmespath==0.10.0
 mysqlclient==2.0.1
 pillow==7.2.0
+psycopg2-binary==2.8.5
 pycparser==2.20
 pyjwt==1.7.1
 python-dateutil==2.8.1
