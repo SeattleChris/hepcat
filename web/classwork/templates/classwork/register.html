@@ -22,7 +22,9 @@
   </header>
   <form method="post">
     {% csrf_token %}
-    {{ form.as_p }}
+    <table>
+      {{ form.as_person_details }}
+    </table>
     <input type="submit" value="save">
   </form>
 </section>
