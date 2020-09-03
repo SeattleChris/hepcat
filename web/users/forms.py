@@ -42,7 +42,6 @@ class CustomRegistrationForm(PersonFormMixIn, RegistrationForm):
         named_focus = None
         keep_keys = set(self.data.keys())
         if username_field_name in self.data:
-            keep_keys.add(self.Meta.USERNAME_FLAG_FIELD)
             named_focus = email_field_name
         # TODO: If using RegistrationForm init, then much, but not all, of attach_critical_validators is duplicate code.
         self.attach_critical_validators()  # strict_email=not bool(named_focus)
@@ -350,9 +349,3 @@ class CustomUserChangeForm(UserChangeForm):
     #         first_field = next(field_gen)
     #     first_field.widget.attrs['autofocus'] = True
     #     return first_field
-
-    def as_person_details(self):
-
-        pass
-
-        # end as_person_details
