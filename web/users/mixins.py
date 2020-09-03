@@ -21,34 +21,6 @@ class PersonFormMixIn:
             'position': 'end'
         }, }
 
-    def _intercept_html_output(self, normal_row, error_row, row_ender, help_text_html, errors_on_separate_row):
-        # row_start, attr, row_data = normal_row.partition('%(html_class_attr)s>')
-        # row_start = row_start.split(' ')
-        # start_tag = row_start[0]
-        # row_end = '</' + start_tag[1:] + '>'  # expected start_tag: '<tr' or '<li' or '<p'
-        # endlen = len(row_end)
-        # if row_data[-endlen:] == row_end:
-        #     row_data = row_data[:-endlen]
-        #     col_data = {'hasclass': '', 'noclass': ''}
-        #     if row_data.startswith('<'):
-        #         col_start, tag_end, col_data = row_data.partition('>')
-        #         col_data['noclass'] = col_data['hasclass'] = col_start + ' ' + attr + col_data
-        #     else:
-        #         col_data['noclass'] = row_data
-        #         col_data['hasclass'] = '<div' + ' ' + attr + row_data + '</div>'
-        # else:
-        #     row_end = ''
-        #     col_data = None
-
-        # # Errors that should be displayed above all fields.
-        # top_errors = self.non_field_errors().copy()
-        # output, hidden_fields = [], []
-
-        # for row_label, opts in prepared.items():
-        #     fields = opts['fields']
-        #     for name, field in fields.items():
-        pass
-
     def _make_fieldsets(self):
         all_fields = self.fields.copy()
         fieldsets = getattr(self, 'fieldsets', ((None, {'fields': [], 'position': None}), ))
@@ -57,10 +29,11 @@ class PersonFormMixIn:
         for row_label, opts in fieldsets.items():
             if 'fields' not in opts or 'position' not in opts:
                 raise ImproperlyConfigured(_("There must be 'fields' and 'position' in each fieldset. "))
-            prepared[row_label] = {'position': opts['position']}
             fields = {name: all_fields.pop(name) for name in opts['fields'] if name in all_fields}
-            prepared[row_label]['fields'] = fields
-            max_position += opts['position'] if isinstance(opts['position'], int) else 0
+            if fields:
+                prepared[row_label] = {'position': opts['position']}
+                prepared[row_label]['fields'] = fields
+                max_position += opts['position'] if isinstance(opts['position'], int) else 0
         max_position += 1
         lookup = {'end': max_position + 2, None: max_position}
         prepared['remaining'] = {'fields': all_fields, 'position': max_position + 1, }
@@ -156,7 +129,18 @@ class PersonFormMixIn:
             attr = ''
             if col_head_tag and single_col_tag == 'td' and max_columns > 0:
                 attr = ' colspan=' + str(max_columns * 2)
-            column = [self._html_tag(single_col_tag, ' '.join(top_errors), attr)]
+            attr += ' id="top_errors"'
+            column_kwargs = {
+                'field': ' '.join(top_errors),
+                'html_col_attr': attr,
+                'errors': '',
+                'label': '',
+                'help_text': '',
+                'html_class_attr': '',
+                'css_classes': '',
+                'field_name': '',
+                }
+            column = [single_col_html % column_kwargs]
             error_row = self.make_row(column, None, row_tag)[0]
             output.insert(0, error_row)
         if hidden_fields:  # Insert any hidden fields in the last row.
@@ -340,7 +324,7 @@ class PersonFormMixIn:
             single_col_tag='',
             class_attr='%(html_class_attr)s',
             col_head_data='',
-            col_data='%(errors)s%(label)s %(field)s%(help_text)s',
+            col_data='%(errors)s%(label)s%(field)s%(help_text)s',
             error_col='%s',
             help_text_html='<span class="helptext">%s</span>',
             errors_on_separate_row=False,
@@ -355,7 +339,7 @@ class PersonFormMixIn:
             single_col_tag='',
             class_attr='%(html_class_attr)s',
             col_head_data='',
-            col_data='%(label)s %(field)s%(help_text)s',
+            col_data='%(label)s%(field)s%(help_text)s',
             error_col='%s',
             help_text_html='<span class="helptext">%s</span>',
             errors_on_separate_row=True,
