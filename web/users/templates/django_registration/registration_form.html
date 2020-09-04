@@ -10,10 +10,7 @@
     <h2>Create Account</h2>
     <form method="post">
       {% csrf_token %}
-      <table>
-        {{ form.as_person_details }}
-
-      </table>
+        {{ form.as_p }}
       <input type="submit" value="Create Account"/>
     </form>
   </article>
