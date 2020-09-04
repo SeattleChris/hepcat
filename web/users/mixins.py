@@ -21,8 +21,39 @@ class PersonFormMixIn:
             'position': 'end'
         }, }
 
+    formfield_attrs_overrides = {
+        '_default_': {'size': 15, },
+        'email': {'maxlength': 191, 'size': 20, },
+        'billing_address_1': {'size': 20, },
+        'billing_address_2': {'size': 20, },
+        }
+
+    def prep_fields(self):
+        print("============= PersonFormMixIn.prep_fields ===========================")
+        pprint(self.base_fields)
+        fields = self.fields
+        pprint(fields)
+        overrides = getattr(self, 'formfield_attrs_overrides', {})
+        DEFAULT = overrides.pop('_default_', {})
+
+        for name, field in fields.items():
+            if name in overrides:
+                for key, value in overrides[name].items():
+                    field.widget.attrs[key] = value  # TODO: Use dict.update instead
+            if not overrides.get(name, {}).get('no_size_override', False):
+                default = DEFAULT.get('size', None)  # Cannot use float("inf") as an int.
+                display_size = field.widget.attrs.get('size', default)
+                input_size = field.widget.attrs.get('maxlength', None)
+                if input_size:
+                    possible_size = [int(ea) for ea in (display_size, input_size) if ea]
+                    # field.widget.attrs['size'] = str(int(min(float(display_size), float(input_size))))
+                    field.widget.attrs['size'] = str(min(possible_size))
+        print("-------------------------------------------------------")
+        pprint(fields)
+        return fields.copy()
+
     def _make_fieldsets(self):
-        all_fields = self.fields.copy()
+        all_fields = self.prep_fields()
         fieldsets = getattr(self, 'fieldsets', ((None, {'fields': [], 'position': None}), ))
 
         max_position, prepared = 0, {}
@@ -71,6 +102,10 @@ class PersonFormMixIn:
         col_html, single_col_html = self.column_formats(col_head_tag, col_tag, single_col_tag, col_head_data, col_data)
         prepared = self._make_fieldsets()
         top_errors = self.non_field_errors().copy()  # Errors that should be displayed above all fields.
+        print("========================== PersonFormMixIn._html_output ================================")
+        pprint(prepared)
+        print("------------------------------------- top_errors ---------------------------------------")
+        pprint(top_errors)
         output, hidden_fields, max_columns = [], [], 0
         for row_label, opts in prepared.items():
             fields = opts['fields']
@@ -93,6 +128,8 @@ class PersonFormMixIn:
                     continue
                 # Create a 'class="..."' attribute if the row or column should have any
                 css_classes = bf.css_classes()
+                if multi_field_row:
+                    css_classes = ' '.join([css_classes, 'nowrap'])
                 html_class_attr = ' class="%s"' % css_classes if css_classes else ''
                 if errors_on_separate_row and bf_errors:
                     error_data.append(error_col % str(bf_errors))
@@ -115,10 +152,26 @@ class PersonFormMixIn:
                     'css_classes': css_classes,
                     'field_name': bf.html_name,
                 }
+                print("----------------- html_class_attr, label, help_text ----------------------------")
+                pprint(html_class_attr)
+                pprint(label)
+                pprint(help_text)
+                print("----------------------- format_kwargs ------------------------------------------")
+                pprint(format_kwargs)
+                print("--------------------------------------------------------------------------------")
+
                 if multi_field_row:
-                    columns_data.append(col_html % format_kwargs)
+                    result = col_html % format_kwargs
+                    print("-------------------- Col HTML ----------------------------------------------")
+                    pprint(result)
+                    print("----------------------------------------------------------------------------")
+                    columns_data.append(result)
                 else:
-                    columns_data.append(single_col_html % format_kwargs)
+                    result = single_col_html % format_kwargs
+                    print("-------------------- Row HTML ----------------------------------------------")
+                    pprint(result)
+                    print("----------------------------------------------------------------------------")
+                    columns_data.append(result)
                     output.extend(self.make_row(columns_data, error_data, row_tag, html_class_attr))
                     columns_data, error_data, html_class_attr = [], [], ''
             if multi_field_row:
