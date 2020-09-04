@@ -29,10 +29,10 @@ class PersonFormMixIn:
         }
 
     def prep_fields(self):
-        print("============= PersonFormMixIn.prep_fields ===========================")
-        pprint(self.base_fields)
         fields = self.fields
-        pprint(fields)
+        print("============= PersonFormMixIn.prep_fields ===========================")
+        # pprint(self.base_fields)
+        # pprint(fields)
         overrides = getattr(self, 'formfield_attrs_overrides', {})
         DEFAULT = overrides.pop('_default_', {})
 
@@ -48,8 +48,8 @@ class PersonFormMixIn:
                     possible_size = [int(ea) for ea in (display_size, input_size) if ea]
                     # field.widget.attrs['size'] = str(int(min(float(display_size), float(input_size))))
                     field.widget.attrs['size'] = str(min(possible_size))
-        print("-------------------------------------------------------")
-        pprint(fields)
+        # print("-------------------------------------------------------")
+        # pprint(fields)
         return fields.copy()
 
     def _make_fieldsets(self):
@@ -129,7 +129,7 @@ class PersonFormMixIn:
                 # Create a 'class="..."' attribute if the row or column should have any
                 css_classes = bf.css_classes()
                 if multi_field_row:
-                    css_classes = ' '.join([css_classes, 'nowrap'])
+                    css_classes = ' '.join(['nowrap', css_classes])
                 html_class_attr = ' class="%s"' % css_classes if css_classes else ''
                 if errors_on_separate_row and bf_errors:
                     error_data.append(error_col % str(bf_errors))
@@ -152,26 +152,13 @@ class PersonFormMixIn:
                     'css_classes': css_classes,
                     'field_name': bf.html_name,
                 }
-                print("----------------- html_class_attr, label, help_text ----------------------------")
-                pprint(html_class_attr)
-                pprint(label)
-                pprint(help_text)
                 print("----------------------- format_kwargs ------------------------------------------")
                 pprint(format_kwargs)
                 print("--------------------------------------------------------------------------------")
-
                 if multi_field_row:
-                    result = col_html % format_kwargs
-                    print("-------------------- Col HTML ----------------------------------------------")
-                    pprint(result)
-                    print("----------------------------------------------------------------------------")
-                    columns_data.append(result)
+                    columns_data.append(col_html % format_kwargs)
                 else:
-                    result = single_col_html % format_kwargs
-                    print("-------------------- Row HTML ----------------------------------------------")
-                    pprint(result)
-                    print("----------------------------------------------------------------------------")
-                    columns_data.append(result)
+                    columns_data.append(single_col_html % format_kwargs)
                     output.extend(self.make_row(columns_data, error_data, row_tag, html_class_attr))
                     columns_data, error_data, html_class_attr = [], [], ''
             if multi_field_row:
