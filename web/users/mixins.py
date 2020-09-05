@@ -10,6 +10,16 @@ from pprint import pprint
 
 class PersonFormMixIn:
     other_country_switch = True
+    alt_country_text = {
+        # 'billing_country_code':  {
+        #     'label': _(""),
+        #     'help_text': _("")},
+        'billing_country_area': {
+            'label': _("Territory, or Province"),
+            'help_text': ''},
+        'billing_postcode':  {
+            'label': _("Postal Code"),
+            'help_text': ''}, }
     fieldsets = {
         'names_row': {
             'fields': ['first_name', 'last_name'],
@@ -41,6 +51,7 @@ class PersonFormMixIn:
 
     def prep_fields(self):
         fields = self.fields
+        alt_country = self.data.get('other_country', False) if self.other_country_switch else False
         print("============= PersonFormMixIn.prep_fields ===========================")
         # pprint(self.base_fields)
         # pprint(fields)
@@ -66,11 +77,21 @@ class PersonFormMixIn:
                     value = str(min(possible_size))
                     field.widget.attrs['size'] = value
                 temp['size_update'] = {'default': default, 'old': display_size, 'length': input_size, 'new': value}
+            if alt_country and name in self.alt_country_text:
+                field.label = self.alt_country_text[name].get('label', field.label)
+                field.help_text = self.alt_country_text[name].get('help_text', field.help_text)
+                temp['alt'] = self.alt_country_text[name].copy()
             mods[name] = temp
         pprint(mods)
         print("-------------------------------------------------------")
-        # pprint(fields)
         return fields.copy()
+
+    def add_other_country_field(self):
+        country_name = settings.DEFAULT_COUNTRY
+        label = "Not a {} address. ".format(country_name)
+        other_country = forms.BooleanField(label=_(label), required=False, )
+        self.fields['other_country'] = other_country
+        return {'other_country': other_country}
 
     def _make_fieldsets(self):
         all_fields = self.prep_fields()
@@ -86,11 +107,7 @@ class PersonFormMixIn:
                 prepared[row_label]['fields'] = fields
                 max_position += opts['position'] if isinstance(opts['position'], int) else 0
                 if self.other_country_switch and row_label == 'address_row':
-                    country_name = settings.DEFAULT_COUNTRY or 'US'
-                    label = "Not a {} address. ".format(country_name)
-                    other_country = forms.BooleanField(label=_(label), required=False, )
-                    new_fields = {'other_country': other_country}
-                    self.fields['other_country'] = other_country
+                    new_fields = self.add_other_country_field()
                     prepared['other_country'] = {'position': opts['position'], 'fields': new_fields}
                     max_position += 1
         max_position += 1
@@ -379,7 +396,7 @@ class PersonFormMixIn:
             col_head_data='%(label)s',
             col_data='%(errors)s%(field)s%(help_text)s',
             error_col='<td colspan="2">%s</td>',
-            help_text_html='<br><span class="helptext">%s</span>',
+            help_text_html='<br /><span class="helptext">%s</span>',
             errors_on_separate_row=False,
         )
 
