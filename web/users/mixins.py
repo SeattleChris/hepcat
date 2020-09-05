@@ -1,3 +1,5 @@
+from django import forms
+from django.conf import settings
 from django.contrib.admin.helpers import AdminForm,  Fieldline
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import gettext as _
@@ -7,6 +9,7 @@ from pprint import pprint
 
 
 class PersonFormMixIn:
+    other_country_switch = True
     fieldsets = {
         'names_row': {
             'fields': ['first_name', 'last_name'],
@@ -20,7 +23,6 @@ class PersonFormMixIn:
             'fields': ['billing_city', 'billing_country_area', 'billing_postcode'],
             'position': 'end'
         }, }
-
     formfield_attrs_overrides = {
         '_default_': {'size': 15, },
         'email': {'maxlength': 191, 'size': 20, },
@@ -72,7 +74,7 @@ class PersonFormMixIn:
 
     def _make_fieldsets(self):
         all_fields = self.prep_fields()
-        fieldsets = getattr(self, 'fieldsets', ((None, {'fields': [], 'position': None}), ))
+        fieldsets = getattr(self, 'fieldsets', ((None, {'fields': {}, 'position': None}), ))
 
         max_position, prepared = 0, {}
         for row_label, opts in fieldsets.items():
@@ -83,6 +85,14 @@ class PersonFormMixIn:
                 prepared[row_label] = {'position': opts['position']}
                 prepared[row_label]['fields'] = fields
                 max_position += opts['position'] if isinstance(opts['position'], int) else 0
+                if self.other_country_switch and row_label == 'address_row':
+                    country_name = settings.DEFAULT_COUNTRY or 'US'
+                    label = "Not a {} address. ".format(country_name)
+                    other_country = forms.BooleanField(label=_(label), required=False, )
+                    new_fields = {'other_country': other_country}
+                    self.fields['other_country'] = other_country
+                    prepared['other_country'] = {'position': opts['position'], 'fields': new_fields}
+                    max_position += 1
         max_position += 1
         lookup = {'end': max_position + 2, None: max_position}
         prepared['remaining'] = {'fields': all_fields, 'position': max_position + 1, }
