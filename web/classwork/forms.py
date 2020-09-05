@@ -36,18 +36,19 @@ class RegisterForm(PersonFormMixIn, forms.ModelForm):
             'billing_address_1',
             'billing_address_2',
             'billing_city',
-            'billing_country_area',
+            'billing_country_code',
+            # 'billing_country_area',
             'billing_postcode',
         )
         labels = {
-            'billing_address_1': _('Street Address (line 1)'),
-            'billing_address_2': _('Street Address (continued)'),
+            'billing_address_1': _('Street Address'),
+            'billing_address_2': _('Address (continued)'),
             'billing_city': _('City'),
-            'billing_country_area': _('State'),
-            'billing_postcode': _('Zip'),
+            'billing_country_code': _('State'),
+            'billing_postcode': _('Zipcode'),
         }
         help_texts = {
-            'billing_country_area': _('State, Territory, or Province'),
+            'billing_country_code': _(' or Territory, or Province'),
             'billing_postcode': _('Zip or Postal Code'),
         }
 
