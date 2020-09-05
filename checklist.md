@@ -87,7 +87,7 @@
 - [s] Stretch Goal. Not for current feature plan.
 
 Current Status:
-2020-08-25 18:11:14
+2020-09-04 19:48:38
 <!-- Ctrl-Shift-I to generate timestamp -->
 
 ### Bug Fixes
@@ -361,9 +361,13 @@ Current Status:
 ### Form Views - Style & Layout
 
 - [x] Auto-focus first (or critical) field.
-- [ ] Name input: First and Last default to same line if screen size allows.
-- [ ] Address input: City, State, Zip default to same line if screen size allows.
+- [x] Name input: First and Last default to same line if screen size allows.
+- [x] Address input: City, State, Zip default to same line if screen size allows.
 - [x] Address input: Address1 and Address2 on separate lines with explanation of continued input.
+- [ ] Default settings for local-country settings for Address inputs.
+- [ ] Non-local-country settings for Address inputs.
+- [ ] Form validation triggers next form for non-local-country if checked on first submit.
+- [x] The local vs. non-local country form input is optional.
 - [ ] Label and Input box line up across different rows
   - [ ] ? Using table layout?
   - [ ] ? Using non-table layout?
