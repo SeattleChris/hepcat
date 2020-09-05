@@ -1074,6 +1074,13 @@ class Payment(BasePayment):
     credit_applied = models.DecimalField(max_digits=6, decimal_places=2, default='0.0', )
     # items = models.ManyToManyField(ClassOffer, related_name='payments', through='Registration', )
 
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
+    #     self._meta.get_field('email').max_length = 191
+    #     self._meta.get_field('billing_postcode').max_length = 9
+    #     self._meta.get_field('email').max_length = 191
+    #     self._meta.get_field('email').max_length = 191
+
     @property
     def full_total(self):
         """ Amount owed if they do not pay before the pre-paid discount deadline """
@@ -1120,8 +1127,6 @@ class Payment(BasePayment):
     # message = models.TextField(blank=True, default='')
     # token = models.CharField(max_length=36, blank=True, default='')
     # captured_amount = models.DecimalField(max_digits=9, decimal_places=2, default='0.0')
-    # def get_form(self):
-    #     pass
 
     def get_failure_url(self):
         print('============ Payment.get_failure_url =================')

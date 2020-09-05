@@ -87,13 +87,34 @@ aside#levels { display: none; }
     margin-bottom: 0;
 }
 .class_history p { margin-top: 0; }
-.nowrap { white-space: nowrap; }
-/* form label { text-align: right; } */
+
+/****************** End of sub-parts. Form Styling ************************/
+/* Note: The .nowrap rule is taken advantage of within forms. */
+form input, form select, form textarea,
+form meter, form progress, form output {
+    margin: 0 0.5rem;
+    padding: 0.125rem 0.25rem;
+    /* font: inherit;
+    color: inherit; */
+    box-shadow: 0.125rem 0.125rem 0.375rem #EBEBEB;
+	-moz-box-shadow: 0.125rem 0.125rem 0.375rem #EBEBEB;
+	-webkit-box-shadow: 0.125rem 0.125rem 0.375rem #EBEBEB;
+	border-radius: 0.25rem;
+	-webkit-border-radius: 0.25rem;
+    -moz-border-radius: 0.25rem;
+}
+form label { text-align: right; }
+.helptext { text-align: left; margin-right: 1rem; }
+form input[type=text] { width: 10rem; }
+form input[type=email] { width: 18rem; }
+form input[type=url] { width: 25rem; }
+form input[type=password] { width: 7rem; }
+form input[maxlength] { width: unset; }
 form th { vertical-align: text-top; text-align: right; font-weight: bold; }
 form td, form th { padding: 0.25rem; }
-form input { margin: 0 0.5rem; }
 form > ul > li {margin: 0.5rem 0; }
 /****************** End of sub-parts. Adjustments for screen size. ************************/
+/****************** Adjustments for screen size. ************************/
 @media screen and (max-width: 380px) {
     /* .classoffer p.description, .classoffer ul { display: block; width: unset; } */
     .shorten {
