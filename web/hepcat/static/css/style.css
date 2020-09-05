@@ -104,7 +104,7 @@ form meter, form progress, form output {
     -moz-border-radius: 0.25rem;
 }
 form label { text-align: right; }
-.helptext { text-align: left; }
+.helptext { text-align: left; margin-right: 1rem; }
 form input[type=text] { width: 10rem; }
 form input[type=email] { width: 18rem; }
 form input[type=url] { width: 25rem; }

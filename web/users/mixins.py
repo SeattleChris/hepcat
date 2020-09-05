@@ -24,7 +24,8 @@ class PersonFormMixIn:
     formfield_attrs_overrides = {
         '_default_': {'size': 15, },
         'email': {'maxlength': 191, 'size': 20, },
-        'billing_country_area': {'maxlength': 2, 'size': 2, }
+        'billing_country_area': {'maxlength': 2, 'size': 2, },
+        'billing_postcode': {'maxlength': 5, 'size': 5, },
         # 'first_name': {'size': 12, },
         # 'username': {'size': 25, },
         # # 'last_name': {'size': 18, },

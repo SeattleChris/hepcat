@@ -48,8 +48,8 @@ class RegisterForm(PersonFormMixIn, forms.ModelForm):
             'billing_postcode': _('Zipcode'),
         }
         help_texts = {
-            'billing_country_area': _(' or Territory, or Province'),
-            'billing_postcode': _('Zip or Postal Code'),
+            'billing_country_area': _('or Territory, or Province'),
+            'billing_postcode': _('Postal Code'),
         }
 
     field_order = [*new_fields, *Meta.fields]

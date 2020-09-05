@@ -193,7 +193,7 @@ class UserHC(AbstractUser):
     billing_country_area = models.CharField(_('state'), max_length=2, default=settings.DEFAULT_COUNTRY_AREA_STATE,
                                             help_text=_('or Territory, or Province'), blank=True, )
     billing_postcode = models.CharField(_('zipcode'), max_length=10, blank=True,
-                                        help_text=_('Zip or Postal Code'), )
+                                        help_text=_('or Postal Code'), )
     billing_country_code = models.CharField(_('country'), default=settings.DEFAULT_COUNTRY, max_length=191, blank=True,)
     # # # user.student or user.staff holds the linked profile for this user.
     objects = UserManagerHC()
