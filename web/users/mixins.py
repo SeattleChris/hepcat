@@ -42,21 +42,30 @@ class PersonFormMixIn:
         # pprint(self.base_fields)
         # pprint(fields)
         overrides = getattr(self, 'formfield_attrs_overrides', {})
-        DEFAULT = overrides.pop('_default_', {})
+        DEFAULT = overrides.get('_default_', {})
+        mods = {}
 
         for name, field in fields.items():
+            temp = {}
             if name in overrides:
                 for key, value in overrides[name].items():
                     field.widget.attrs[key] = value  # TODO: Use dict.update instead
+                    temp[key] = value
             if not overrides.get(name, {}).get('no_size_override', False):
+                # TODO: Correct size attributes for all form controls: textarea, others?
                 default = DEFAULT.get('size', None)  # Cannot use float("inf") as an int.
-                display_size = field.widget.attrs.get('size', default)
+                display_size = field.widget.attrs.get('size', None)
                 input_size = field.widget.attrs.get('maxlength', None)
+                value = ''
                 if input_size:
-                    possible_size = [int(ea) for ea in (display_size, input_size) if ea]
+                    possible_size = [int(ea) for ea in (display_size or default, input_size) if ea]
                     # field.widget.attrs['size'] = str(int(min(float(display_size), float(input_size))))
-                    field.widget.attrs['size'] = str(min(possible_size))
-        # print("-------------------------------------------------------")
+                    value = str(min(possible_size))
+                    field.widget.attrs['size'] = value
+                temp['size_update'] = {'default': default, 'old': display_size, 'length': input_size, 'new': value}
+            mods[name] = temp
+        pprint(mods)
+        print("-------------------------------------------------------")
         # pprint(fields)
         return fields.copy()
 
@@ -111,9 +120,9 @@ class PersonFormMixIn:
         prepared = self._make_fieldsets()
         top_errors = self.non_field_errors().copy()  # Errors that should be displayed above all fields.
         print("========================== PersonFormMixIn._html_output ================================")
-        pprint(prepared)
-        print("------------------------------------- top_errors ---------------------------------------")
-        pprint(top_errors)
+        # pprint(prepared)
+        # print("------------------------------------- top_errors ---------------------------------------")
+        # pprint(top_errors)
         output, hidden_fields, max_columns = [], [], 0
         for row_label, opts in prepared.items():
             fields = opts['fields']
@@ -160,9 +169,9 @@ class PersonFormMixIn:
                     'css_classes': css_classes,
                     'field_name': bf.html_name,
                 }
-                print("----------------------- format_kwargs ------------------------------------------")
-                pprint(format_kwargs)
-                print("--------------------------------------------------------------------------------")
+                # print("----------------------- format_kwargs ------------------------------------------")
+                # pprint(format_kwargs)
+                # print("--------------------------------------------------------------------------------")
                 if multi_field_row:
                     columns_data.append(col_html % format_kwargs)
                 else:

@@ -292,17 +292,22 @@ class RegisterView(CreateView):
     #     print(context)
     #     return context
 
-    # def get_form(self, form_class=None):
-    #     print('================ RegisterView.get_form =================')
-    #     return super().get_form(form_class)
+    def get_form(self, form_class=None):
+        print('================ RegisterView.get_form =================')
+        form = super().get_form(form_class)
+        print('---------------------- form -----------------------------')
+        print(form)
+        print('---------------------- form done -----------------------------')
+        return form
 
     # def get_form_class(self):
     #     print('================ RegisterView.get_form_class =================')
     #     return super().get_form_class()
 
     def get_form_kwargs(self):
-        # print('================ RegisterView.get_form_kwargs =================')
+        print('================ RegisterView.get_form_kwargs =================')
         kwargs = super(RegisterView, self).get_form_kwargs()
+        print(kwargs)
         sess = self.kwargs.get('display_session', None)
         display_date = self.kwargs.get('display_date', None)
         class_choices = ClassOffer.objects.filter(session__in=decide_session(sess=sess, display_date=display_date))

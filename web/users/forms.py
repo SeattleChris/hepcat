@@ -33,9 +33,9 @@ class CustomRegistrationForm(PersonFormMixIn, RegistrationForm):
             err = "Missing features for user model. Try subclassing Django's AbstractBaseUser, AbstractUser, or User. "
             raise ImproperlyConfigured(_(err))
         print("================================== CustomRegistrationForm.__init__ =====================")
-        pprint(args)
-        pprint(kwargs)
-        print("*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*")
+        # pprint(args)
+        # pprint(kwargs)
+        # print("*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*")
         super().__init__(*args, **kwargs)
         username_field_name = self._meta.model.USERNAME_FIELD
         email_field_name = self._meta.model.get_email_field_name()
@@ -48,9 +48,9 @@ class CustomRegistrationForm(PersonFormMixIn, RegistrationForm):
         extracted_fields = {key: self.fields.pop(key, None) for key in set(self.Meta.computed_fields) - keep_keys}
         self.computed_fields = extracted_fields
         self.focus_correct_field(name=named_focus)
-        print("---------------------------------------------------------")
-        print(named_focus)
-        pprint(self.computed_fields)
+        # print("---------------------------------------------------------")
+        # print(named_focus)
+        # pprint(self.computed_fields)
 
     def focus_correct_field(self, name=None):
         """ The named or first non-hidden, non-disabled field gets 'autofocus'. Removes 'autofocus' from others. """
@@ -321,7 +321,7 @@ class CustomUserCreationForm(UserCreationForm):
         fields = ('first_name', 'last_name', 'email')  # 'username_not_email',
 
 
-class CustomUserChangeForm(UserChangeForm):
+class CustomUserChangeForm(PersonFormMixIn, UserChangeForm):
     class Meta(UserChangeForm.Meta):
         model = UserHC
         fields = (
