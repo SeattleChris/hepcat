@@ -24,8 +24,16 @@ class PersonFormMixIn:
     formfield_attrs_overrides = {
         '_default_': {'size': 15, },
         'email': {'maxlength': 191, 'size': 20, },
-        'billing_address_1': {'size': 20, },
-        'billing_address_2': {'size': 20, },
+        'billing_country_area': {'maxlength': 2, 'size': 2, }
+        # 'first_name': {'size': 12, },
+        # 'username': {'size': 25, },
+        # # 'last_name': {'size': 18, },
+        # 'password': {'size': 10, },
+        # 'password1': {'size': 10, },
+        # 'password2': {'size': 10, },
+        # # 'email': {'maxlength': 191, 'size': 24, },
+        # 'billing_address_1': {'size': 20, },
+        # 'billing_address_2': {'size': 20, },
         }
 
     def prep_fields(self):
