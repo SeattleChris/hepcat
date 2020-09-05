@@ -191,7 +191,7 @@ class UserHC(AbstractUser):
     billing_address_2 = models.CharField(_('street address (continued)'), max_length=191, blank=True, )
     billing_city = models.CharField(_('city'), max_length=191, default=settings.DEFAULT_CITY, blank=True, )
     billing_country_area = models.CharField(_('state'), max_length=2, default=settings.DEFAULT_COUNTRY_AREA_STATE,
-                                            help_text=_('State, Territory, or Province'), blank=True, )
+                                            help_text=_('or Territory, or Province'), blank=True, )
     billing_postcode = models.CharField(_('zipcode'), max_length=10, blank=True,
                                         help_text=_('Zip or Postal Code'), )
     billing_country_code = models.CharField(_('country'), default=settings.DEFAULT_COUNTRY, max_length=191, blank=True,)
