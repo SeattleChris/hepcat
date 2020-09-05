@@ -105,6 +105,11 @@ form meter, form progress, form output {
 }
 form label { text-align: right; }
 .helptext { text-align: left; }
+form input[type=text] { width: 10rem; }
+form input[type=email] { width: 18rem; }
+form input[type=url] { width: 25rem; }
+form input[type=password] { width: 7rem; }
+form input[maxlength] { width: unset; }
 form th { vertical-align: text-top; text-align: right; font-weight: bold; }
 form td, form th { padding: 0.25rem; }
 form > ul > li {margin: 0.5rem 0; }
