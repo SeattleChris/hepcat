@@ -11,7 +11,7 @@ html {
     box-sizing: inherit;
 }
 li, p { margin: 0; padding: 0; }
-ul, ol { margin: 0.25em 0; padding: 0 0 0 1.5625em; }
+ul, ol { margin: 0.25em 0; padding: 0 0 0 1.5625em; }  /* Gecko style for bullet: padding-left; IE style: margin-left */
 ul.no_bullet, li.no_bullet { list-style: none; margin: 0; padding: 0; }
 /* h1, h2, h3, h4, h5, h6 { margin: 0.67em 0; } */
 
