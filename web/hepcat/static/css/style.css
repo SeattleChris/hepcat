@@ -15,7 +15,12 @@ body > header h1 { font-family: 'Diplomata', cursive; }
 /* Main Site Nav inside a nav inside of Header. Repeated page navigation in footer. */
 body > header nav { align-self: flex-end; text-align: right; font-size: 100%; }
 footer { font-size: 90%; text-align: center; }
-nav ul, footer ul { margin-block-start: 0; margin-block-end: 0; padding-inline-start: 0; list-style: none; }
+nav ul, footer ul {
+    margin: 0; padding: 0;
+    margin-block-start: 0; margin-block-end: 0;
+    padding-inline-start: 0;
+    list-style: none;
+}
 nav ul.site-nav a, body > header h1 a { text-decoration: none; }
 ul#user-login, nav label, nav li, footer li { display: inline-block; text-align: center; }
 nav li::before, footer li::after { content: ' | '; }
@@ -78,7 +83,7 @@ main section p { margin: 1rem 0; }
 .video iframe, .video video { position: absolute; top:0; right:0; width:100%; height:100%; border-radius: 2rem; }
 #offers-visual-element { z-index: -1; background-color: #77161e; display: none; }
 /* List view (maybe detail view also) for ClassOffers */
-.classoffer ul { list-style: none; display: inline-block; width: 29%; text-align: center; }
+.classoffer ul { list-style: none; margin: 0; padding: 0; display: inline-block; width: 29%; text-align: center; }
 .classoffer p.description { display: inline-block; width: 69%;}
 .classoffer { border: 0.25rem solid #FFF1BD; border-radius: 2rem; padding: 0.25rem 0.5rem; }
 /* .classoffer li { white-space: nowrap; } */
@@ -92,7 +97,7 @@ aside#levels { display: none; }
 /* Note: The .nowrap rule is taken advantage of within forms. */
 form input, form select, form textarea,
 form meter, form progress, form output {
-    margin: 0 0.5rem;
+    margin: 0 1rem 0 0.5rem;
     padding: 0.125rem 0.25rem;
     /* font: inherit;
     color: inherit; */

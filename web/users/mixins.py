@@ -131,7 +131,6 @@ class PersonFormMixIn:
                 max_position += opts['position'] if isinstance(opts['position'], int) else 0
                 if self.other_country_switch and row_label == 'address_row':
                     country_fields = self.make_country_row(all_fields)
-
                     prepared['other_country'] = {'position': opts['position'], 'fields': country_fields}
                     max_position += 1
         max_position += 1
