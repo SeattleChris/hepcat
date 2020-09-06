@@ -131,11 +131,6 @@ class PersonFormMixIn:
             fieldset_label, opts = fieldset
             if 'fields' not in opts or 'position' not in opts:
                 raise ImproperlyConfigured(_("There must be 'fields' and 'position' in each fieldset. "))
-            # field_names = flatten(opts['fields'])
-            # fields = {name: all_fields.pop(name) for name in field_names if name in all_fields}
-            # if fields:
-            #     rows = [[ea] if isinstance(ea, str) else list(ea) for ea in opts['fields']]
-            #     field_rows = [{name: fields[name] for name in row if name in fields} for row in rows]
             field_rows = []
             for ea in opts['fields']:
                 row = [ea] if isinstance(ea, str) else ea
@@ -146,6 +141,8 @@ class PersonFormMixIn:
                 fieldset_label = fieldset_label or 'fieldset_' + str(index)
                 prepared[fieldset_label] = {'position': opts['position']}
                 prepared[fieldset_label]['rows'] = field_rows
+                prepared[fieldset_label]['field_names'] = flatten(opts['fields'])
+                prepared[fieldset_label]['classes'] = opts.get('classes', [])
                 max_position += 1  # opts['position'] if isinstance(opts['position'], int) else 0
                 if self.other_country_switch and 'address' in opts.get('classes', ''):
                     country_fields = self.make_country_row(all_fields)
@@ -155,6 +152,7 @@ class PersonFormMixIn:
         field_rows = [{name: value} for name, value in all_fields.items()]
         prepared['remaining'] = {'rows': field_rows, 'position': max_position + 1, }
         lookup = {'end': max_position + 2, None: max_position}
+        # TODO: Refactor prepared to match fieldset format, but still sort.
         prepared = {k: v for k, v in sorted(prepared.items(),
                     key=lambda ea: lookup.get(ea[1]['position'], ea[1]['position']))
                     }
