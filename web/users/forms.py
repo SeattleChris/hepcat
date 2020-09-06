@@ -276,7 +276,6 @@ class CustomRegistrationForm(PersonFormMixIn, RegistrationForm):
         username_value = self.cleaned_data.get(username_field_name, '')
         email_field_name = self._meta.model.get_email_field_name()
         email_value = self.cleaned_data.get(email_field_name, None)
-
         print("============================ CustomRegistrationForm.clean =========================")
         print("***********************************************************************************")
         for key, items in self.data.lists():

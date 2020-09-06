@@ -51,6 +51,18 @@ class PersonFormMixIn:
         # 'billing_address_2': {'size': 20, },
         }
 
+    def set_alt_data(self, name, field, value):
+        initial = self.get_initial_for_field(field, name)
+        data_name = self.add_prefix(name)
+        data_val = field.widget.value_from_datadict(self.data, self.files, data_name)
+        if not field.has_changed(initial, data_val):
+            data = self.data.copy()
+            data[data_name] = value
+            data._mutable = False
+            self.data = data
+            self.initial[name] = value  # TODO: Won't work since initial determined earlier.
+    # end def set_alt_data
+
     def prep_fields(self):
         alt_country = False
         if self.other_country_switch:
@@ -58,10 +70,7 @@ class PersonFormMixIn:
             if not alt_country:
                 self.fields.pop(self.country_field_name, None)
         fields = self.fields
-
-        print("============= PersonFormMixIn.prep_fields ===========================")
-        pprint(self.base_fields)
-        pprint(fields)
+        # print("============= PersonFormMixIn.prep_fields ===========================")
         overrides = getattr(self, 'formfield_attrs_overrides', {})
         DEFAULT = overrides.get('_default_', {})
         mods = {}
@@ -86,13 +95,13 @@ class PersonFormMixIn:
                 temp['size_update'] = {'default': default, 'old': display_size, 'length': input_size, 'new': value}
             if alt_country and name in self.alt_country_text:
                 for prop, value in self.alt_country_text[name].items():
+                    if prop == 'initial' or prop == 'default':
+                        self.set_alt_data(name, field, value)
                     setattr(field, prop, value)
-                # field.label = self.alt_country_text[name].get('label', field.label)
-                # field.help_text = self.alt_country_text[name].get('help_text', field.help_text)
                 temp['alt'] = self.alt_country_text[name].copy()
             mods[name] = temp
-        pprint(mods)
-        print("-------------------------------------------------------")
+        # pprint(mods)
+        # print("-------------------------------------------------------")
         return fields.copy()
 
     def make_country_row(self, remaining_fields):
@@ -112,8 +121,8 @@ class PersonFormMixIn:
         all_fields = self.prep_fields()
         fieldsets = getattr(self, 'fieldsets', ((None, {'fields': {}, 'position': None}), ))
         print("================ PersonFormMixIn._make_fieldsets =========================")
-        pprint(all_fields)
-        print("--------------------------------------------------------------------")
+        # pprint(all_fields)
+        # print("--------------------------------------------------------------------")
 
         max_position, prepared = 0, {}
         for row_label, opts in fieldsets.items():
@@ -131,9 +140,9 @@ class PersonFormMixIn:
                     max_position += 1
         max_position += 1
         lookup = {'end': max_position + 2, None: max_position}
-        pprint(self.fields)
-        print("--------------------------------------------------------------------")
-        pprint(all_fields)
+        # pprint(self.fields)
+        # print("--------------------------------------------------------------------")
+        # pprint(all_fields)
         prepared['remaining'] = {'fields': all_fields, 'position': max_position + 1, }
         prepared = {k: v for k, v in sorted(prepared.items(),
                     key=lambda ea: lookup.get(ea[1]['position'], ea[1]['position']))
@@ -175,8 +184,8 @@ class PersonFormMixIn:
         # pprint(top_errors)
         output, hidden_fields, max_columns = [], [], 0
         for row_label, opts in prepared.items():
-            print(f"Prep {row_label} row: ")
-            pprint(opts)
+            # print(f"Prep {row_label} row: ")
+            # pprint(opts)
             fields = opts['fields']
             col_count = len(fields)
             if row_label == 'remaining' or col_count == 1:
