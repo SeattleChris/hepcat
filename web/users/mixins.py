@@ -10,13 +10,15 @@ from pprint import pprint
 
 class PersonFormMixIn:
     other_country_switch = True
+    country_field_name = 'billing_country_code'
     alt_country_text = {
         # 'billing_country_code':  {
         #     'label': _(""),
         #     'help_text': _("")},
         'billing_country_area': {
             'label': _("Territory, or Province"),
-            'help_text': ''},
+            'help_text': '',
+            'initial': ''},
         'billing_postcode':  {
             'label': _("Postal Code"),
             'help_text': ''}, }
@@ -50,11 +52,16 @@ class PersonFormMixIn:
         }
 
     def prep_fields(self):
+        alt_country = False
+        if self.other_country_switch:
+            alt_country = self.data.get('other_country', False)
+            if not alt_country:
+                self.fields.pop(self.country_field_name, None)
         fields = self.fields
-        alt_country = self.data.get('other_country', False) if self.other_country_switch else False
+
         print("============= PersonFormMixIn.prep_fields ===========================")
-        # pprint(self.base_fields)
-        # pprint(fields)
+        pprint(self.base_fields)
+        pprint(fields)
         overrides = getattr(self, 'formfield_attrs_overrides', {})
         DEFAULT = overrides.get('_default_', {})
         mods = {}
@@ -78,24 +85,35 @@ class PersonFormMixIn:
                     field.widget.attrs['size'] = value
                 temp['size_update'] = {'default': default, 'old': display_size, 'length': input_size, 'new': value}
             if alt_country and name in self.alt_country_text:
-                field.label = self.alt_country_text[name].get('label', field.label)
-                field.help_text = self.alt_country_text[name].get('help_text', field.help_text)
+                for prop, value in self.alt_country_text[name].items():
+                    setattr(field, prop, value)
+                # field.label = self.alt_country_text[name].get('label', field.label)
+                # field.help_text = self.alt_country_text[name].get('help_text', field.help_text)
                 temp['alt'] = self.alt_country_text[name].copy()
             mods[name] = temp
         pprint(mods)
         print("-------------------------------------------------------")
         return fields.copy()
 
-    def add_other_country_field(self):
-        country_name = settings.DEFAULT_COUNTRY
-        label = "Not a {} address. ".format(country_name)
-        other_country = forms.BooleanField(label=_(label), required=False, )
-        self.fields['other_country'] = other_country
-        return {'other_country': other_country}
+    def make_country_row(self, remaining_fields):
+        field_name = self.country_field_name
+        field = remaining_fields.pop(field_name, None)
+        result = {field_name: field} if field else {}
+        other_country_field = remaining_fields.pop('other_country', None)
+        if not other_country_field:
+            country_name = settings.DEFAULT_COUNTRY
+            label = "Not a {} address. ".format(country_name)
+            other_country_field = forms.BooleanField(label=_(label), required=False, )
+            self.fields['other_country'] = other_country_field
+        result.update({'other_country': other_country_field})
+        return result
 
     def _make_fieldsets(self):
         all_fields = self.prep_fields()
         fieldsets = getattr(self, 'fieldsets', ((None, {'fields': {}, 'position': None}), ))
+        print("================ PersonFormMixIn._make_fieldsets =========================")
+        pprint(all_fields)
+        print("--------------------------------------------------------------------")
 
         max_position, prepared = 0, {}
         for row_label, opts in fieldsets.items():
@@ -107,11 +125,15 @@ class PersonFormMixIn:
                 prepared[row_label]['fields'] = fields
                 max_position += opts['position'] if isinstance(opts['position'], int) else 0
                 if self.other_country_switch and row_label == 'address_row':
-                    new_fields = self.add_other_country_field()
-                    prepared['other_country'] = {'position': opts['position'], 'fields': new_fields}
+                    country_fields = self.make_country_row(all_fields)
+
+                    prepared['other_country'] = {'position': opts['position'], 'fields': country_fields}
                     max_position += 1
         max_position += 1
         lookup = {'end': max_position + 2, None: max_position}
+        pprint(self.fields)
+        print("--------------------------------------------------------------------")
+        pprint(all_fields)
         prepared['remaining'] = {'fields': all_fields, 'position': max_position + 1, }
         prepared = {k: v for k, v in sorted(prepared.items(),
                     key=lambda ea: lookup.get(ea[1]['position'], ea[1]['position']))
@@ -153,6 +175,8 @@ class PersonFormMixIn:
         # pprint(top_errors)
         output, hidden_fields, max_columns = [], [], 0
         for row_label, opts in prepared.items():
+            print(f"Prep {row_label} row: ")
+            pprint(opts)
             fields = opts['fields']
             col_count = len(fields)
             if row_label == 'remaining' or col_count == 1:
@@ -225,7 +249,7 @@ class PersonFormMixIn:
                 'css_classes': '',
                 'field_name': '',
                 }
-            column = [single_col_html % column_kwargs]
+            column = [single_col_html % column_kwargs]  # attr is only applied if there is a col_head_tag
             error_row = self.make_row(column, None, row_tag)[0]
             output.insert(0, error_row)
         if hidden_fields:  # Insert any hidden fields in the last row.
@@ -254,6 +278,7 @@ class PersonFormMixIn:
                     output.append(last_row)
             else:  # If there aren't any rows in the output, just append the hidden fields.
                 output.append(str_hidden)
+        print("------------------------ End PersonFormMixIn._html_output ------------------------------")
         return mark_safe('\n'.join(output))
 
     def as_person_details(self):

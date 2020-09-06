@@ -28,7 +28,7 @@ class RegisterForm(PersonFormMixIn, forms.ModelForm):
     # TODO: Change to CheckboxSelectMultiple and make sure it works
     class_selected = forms.ModelMultipleChoiceField(label=_('Choose your class(es)'), queryset=None)
     paid_by_other = forms.BooleanField(label=_('paid by a different person'), required=False)
-    new_fields = ['new_user', 'first_name', 'last_name', 'email', 'class_selected', 'paid_by_other']
+    new_fields = ['first_name', 'last_name', 'new_user', 'email', 'class_selected', 'paid_by_other']
 
     class Meta:
         model = Payment
@@ -38,7 +38,7 @@ class RegisterForm(PersonFormMixIn, forms.ModelForm):
             'billing_city',
             'billing_country_area',
             'billing_postcode',
-            # 'billing_country_code',
+            'billing_country_code',
         )
         labels = {
             'billing_address_1': _('Street Address'),
@@ -46,10 +46,7 @@ class RegisterForm(PersonFormMixIn, forms.ModelForm):
             'billing_city': _('City'),
             'billing_country_area': _('State'),
             'billing_postcode': _('Zipcode'),
-        }
-        help_texts = {
-            'billing_country_area': _('or Territory, or Province'),
-            'billing_postcode': _('Postal Code'),
+            'billing_country_code': _('Country'),
         }
 
     field_order = [*new_fields, *Meta.fields]
