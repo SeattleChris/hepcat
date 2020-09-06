@@ -32,10 +32,7 @@ class CustomRegistrationForm(PersonFormMixIn, RegistrationForm):
         if not model or not all(hasattr(model, ea) for ea in required_attributes):
             err = "Missing features for user model. Try subclassing Django's AbstractBaseUser, AbstractUser, or User. "
             raise ImproperlyConfigured(_(err))
-        print("================================== CustomRegistrationForm.__init__ =====================")
-        # pprint(args)
-        # pprint(kwargs)
-        # print("*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*")
+        # print("================================== CustomRegistrationForm.__init__ =====================")
         super().__init__(*args, **kwargs)
         username_field_name = self._meta.model.USERNAME_FIELD
         email_field_name = self._meta.model.get_email_field_name()
@@ -48,9 +45,6 @@ class CustomRegistrationForm(PersonFormMixIn, RegistrationForm):
         extracted_fields = {key: self.fields.pop(key, None) for key in set(self.Meta.computed_fields) - keep_keys}
         self.computed_fields = extracted_fields
         self.focus_correct_field(name=named_focus)
-        # print("---------------------------------------------------------")
-        # print(named_focus)
-        # pprint(self.computed_fields)
 
     def focus_correct_field(self, name=None):
         """ The named or first non-hidden, non-disabled field gets 'autofocus'. Removes 'autofocus' from others. """
@@ -193,12 +187,6 @@ class CustomRegistrationForm(PersonFormMixIn, RegistrationForm):
         message += ". "
         return mark_safe(_(message))
 
-    def clean_username(self):
-        # This is called if no ValidationError was raised by to_python(), validate(), or run_validators().
-        print("=================== CustomRegistrationForm.clean_username ===========================")
-        value = self.cleaned_data['username']
-        return value  # Likely will not need this method.
-
     def compute_username(self):
         """ Determine a str value or callable returning one and set this in self.initial dict. """
         print("=================== CustomRegistrationForm.compute_username ===========================")
@@ -334,17 +322,5 @@ class CustomUserChangeForm(PersonFormMixIn, UserChangeForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # TODO: Integrate focus_correct_field method as a MixIn
         self.fields['billing_address_1'].widget.attrs['autofocus'] = True
-
-    # def focus_first_usable_field(self, fields):
-    #     """ Gives autofocus to the first non-hidden, non-disabled form field from the given iterable of form fields. """
-    #     if not isinstance(fields, (list, tuple, abc.ValuesView)):
-    #         raise TypeError(_("Expected an iterable of form fields. "))
-    #     field_gen = (ea for ea in fields)
-    #     first_field = next(field_gen)
-    #     while first_field.disabled or (hasattr(first_field, 'is_hidden') and first_field.is_hidden):
-    #         if 'autofocus' in first_field.widget.attrs:
-    #             first_field.widget.attrs['autofocus'] = False
-    #         first_field = next(field_gen)
-    #     first_field.widget.attrs['autofocus'] = True
-    #     return first_field

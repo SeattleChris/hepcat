@@ -3,14 +3,10 @@ from django.template.response import TemplateResponse  # used for Payments
 from django.urls import reverse_lazy
 from django.shortcuts import get_object_or_404, redirect  # used for Payments
 from django.utils.translation import gettext_lazy as _
-# from django.db.models import Q, F, Case, When, DateField, ExpressionWrapper as EW
-# from django.db.models import BooleanField, SmallIntegerField, DurationField
-# from django.db.models.functions import Trunc  # , Extract, ExtractYear, ExtractMonth, ExtractDay
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist  # , PermissionDenied
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import UserPassesTestMixin  # , LoginRequiredMixin
-# from django.contrib.auth.views import redirect_to_login
 from payments import get_payment_model, RedirectNeeded  # used for Payments
 from .forms import RegisterForm, PaymentForm
 from .models import (SiteContent, Resource, Location, ClassOffer, Subject,  # ? Session, Student
@@ -36,8 +32,6 @@ def decide_session(sess=None, display_date=None):
         if not isinstance(sess, str):
             raise TypeError(_("Parameter 'sess' expected a string with possible comma-seperated values. "))
         sess = sess.split(',')
-        # if not isinstance(sess, list):
-        #     sess = [sess]
         query = query.filter(name__in=sess)
     sess_data = query.all()
     if not sess_data and not sess:

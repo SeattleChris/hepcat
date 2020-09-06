@@ -6,7 +6,6 @@ from django.db.models.functions import Least, Extract  # , ExtractWeek, ExtractI
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
-# from django.core.exceptions import ValidationError
 from django.core.mail import EmailMessage
 from django.conf import settings
 from django.urls import reverse
@@ -112,6 +111,7 @@ class Resource(models.Model):
     text = models.TextField(_("Text Content"), help_text=_('Content used in page or email publication'), blank=True, )
     name = models.CharField(max_length=60, )
     description = models.TextField(_("Staff Notes Description"), help_text=_("Only used as staff notes"), blank=True, )
+
     date_added = models.DateField(auto_now_add=True, )
     date_modified = models.DateField(auto_now=True, )
     objects = ResourceManager()
@@ -638,10 +638,11 @@ class ClassOffer(models.Model):
     start_time = models.TimeField()
     skip_weeks = models.PositiveSmallIntegerField(_('skipped mid-session class weeks'), default=0, )
     skip_tagline = models.CharField(max_length=46, blank=True, )
-    date_added = models.DateField(auto_now_add=True, )
-    date_modified = models.DateField(auto_now=True, )
     # resources exits, but only directly connected Resources, not those connected through Subject.
     # # future: class_resources exists, but only includes directly connected Resources, but not those through Subject.
+
+    date_added = models.DateField(auto_now_add=True, )
+    date_modified = models.DateField(auto_now=True, )
     objects = ClassOfferManager()
 
     def model_resources(self, live=False):
@@ -744,7 +745,6 @@ class ClassOffer(models.Model):
 class AbstractProfile(models.Model):
     """ Extending user model to have profile fields as appropriate as either a student or a staff member. """
 
-    # TODO: Allow users to modify their profile.
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True,
                                 limit_choices_to={}, )
     bio = models.TextField(max_length=760, blank=True, )  # Staff will override max_length to be bigger.
@@ -835,6 +835,7 @@ class Student(AbstractProfile):
     @property
     def beg(self):
         """ Completed the two versions of Beginning. """
+        # TODO: Allow this mapping logic to be created by admin or in settings.
         ver_map = {'A': ['A', 'C'], 'B': ['B', 'D']}
         goal, data, extra = self.subject_data(level=0, each_ver=1, ver_map=ver_map)
         return extra
@@ -1241,9 +1242,6 @@ class Registration(models.Model):
     @property
     def start_time(self):
         return self.classoffer.start_time
-    # class Meta:
-    #     order_with_respect_to = 'classoffer'
-    #     pass
 
     @property
     def _pay_report(self):

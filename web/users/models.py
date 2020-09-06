@@ -17,7 +17,6 @@ class UserManagerHC(UserManager):
     """ Adding & Modifying some features to the default UserManager.
         Inherits from: UserManager, BaseUserManager, models.Manager, ...
     """
-    # from Django's UserManager: use_in_migrations = True
 
     @staticmethod
     def normalize_email(email):
