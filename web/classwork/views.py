@@ -3,13 +3,10 @@ from django.template.response import TemplateResponse  # used for Payments
 from django.urls import reverse_lazy
 from django.shortcuts import get_object_or_404, redirect  # used for Payments
 from django.utils.translation import gettext_lazy as _
-# from django.db.models import Q, F, Case, When, DateField, ExpressionWrapper as EW
-# from django.db.models import BooleanField, SmallIntegerField, DurationField
-# from django.db.models.functions import Trunc  # , Extract, ExtractYear, ExtractMonth, ExtractDay
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist  # , PermissionDenied
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import UserPassesTestMixin  # , LoginRequiredMixin
-# from django.contrib.auth.views import redirect_to_login
 from payments import get_payment_model, RedirectNeeded  # used for Payments
 from .forms import RegisterForm, PaymentForm
 from .models import (SiteContent, Resource, Location, ClassOffer, Subject,  # ? Session, Student
@@ -35,8 +32,6 @@ def decide_session(sess=None, display_date=None):
         if not isinstance(sess, str):
             raise TypeError(_("Parameter 'sess' expected a string with possible comma-seperated values. "))
         sess = sess.split(',')
-        # if not isinstance(sess, list):
-        #     sess = [sess]
         query = query.filter(name__in=sess)
     sess_data = query.all()
     if not sess_data and not sess:
@@ -260,6 +255,9 @@ class RegisterView(CreateView):
     # failure_url = reverse_lazy('payment_fail')
     test_url = '../payment/done/'
     # TODO: We will need to adjust the payment url stuff later.
+    initial = {
+        'billing_country_area': settings.DEFAULT_COUNTRY_AREA_STATE,
+    }
 
     # unsure how to accurately call this one
     # def as_view(**initkwargs):
@@ -292,22 +290,22 @@ class RegisterView(CreateView):
     #     print(context)
     #     return context
 
-    def get_form(self, form_class=None):
-        print('================ RegisterView.get_form =================')
-        form = super().get_form(form_class)
-        print('---------------------- form -----------------------------')
-        print(form)
-        print('---------------------- form done -----------------------------')
-        return form
+    # def get_form(self, form_class=None):
+    #     # print('================ RegisterView.get_form =================')
+    #     form = super().get_form(form_class)
+    #     # print('---------------------- form -----------------------------')
+    #     # print(form)
+    #     # print('---------------------- form done -----------------------------')
+    #     return form
 
     # def get_form_class(self):
     #     print('================ RegisterView.get_form_class =================')
     #     return super().get_form_class()
 
     def get_form_kwargs(self):
-        print('================ RegisterView.get_form_kwargs =================')
+        # print('================ RegisterView.get_form_kwargs =================')
         kwargs = super(RegisterView, self).get_form_kwargs()
-        print(kwargs)
+        # print(kwargs)
         sess = self.kwargs.get('display_session', None)
         display_date = self.kwargs.get('display_date', None)
         class_choices = ClassOffer.objects.filter(session__in=decide_session(sess=sess, display_date=display_date))
@@ -317,19 +315,17 @@ class RegisterView(CreateView):
     def get_initial(self):
         # print('================ RegisterView.get_initial ====================')
         initial = super().get_initial()
+        default_area = initial.get('billing_country_area', '')
         user = self.request.user
-        home_state = User._meta.get_field('billing_country_area').get_default()
         initial['user'] = user
-        # print(user)
-        # print('------- Update initial Values --------------')
-        initial['first_name'] = getattr(user, 'first_name', '')
-        initial['last_name'] = getattr(user, 'last_name', '')
-        initial['email'] = getattr(user, 'email', '')
-        initial['billing_address_1'] = getattr(user, 'billing_address_1', '')
-        initial['billing_address_2'] = getattr(user, 'billing_address_2', '')
-        initial['billing_country_area'] = getattr(user, 'billing_country_area', home_state)
-        initial['billing_postcode'] = getattr(user, 'billing_postcode', '')
-        # print(initial)
+        if not user.is_anonymous:
+            initial['first_name'] = getattr(user, 'first_name', '')
+            initial['last_name'] = getattr(user, 'last_name', '')
+            initial['email'] = getattr(user, 'email', '')
+            initial['billing_address_1'] = getattr(user, 'billing_address_1', '')
+            initial['billing_address_2'] = getattr(user, 'billing_address_2', '')
+            initial['billing_country_area'] = getattr(user, 'billing_country_area', default_area)
+            initial['billing_postcode'] = getattr(user, 'billing_postcode', '')
         return initial
 
     # def get_prefix(self):

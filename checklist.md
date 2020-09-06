@@ -117,6 +117,7 @@ Current Status:
   - [x] Deleting the User seems to delete their Staff or Student profile.
   - [ ] Other related model deletion on User delete? See [Optimization and Structure improvements]
   - [ ] How to handle when deleting a profile. See [Optimization and Structure improvements]
+- [x] Form: non-local-country Boolean field shows up twice, despite only given once by _html_output.
 
 ### Optimization and Structure improvements
 

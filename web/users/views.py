@@ -6,8 +6,9 @@ from .models import UserHC
 # from django_registration.views import RegistrationView as BaseRegistrationView
 from django_registration.backends.one_step.views import RegistrationView
 from .forms import CustomRegistrationForm, CustomUserCreationForm, CustomUserChangeForm
-# Create your views here.
 from pprint import pprint  # TODO: Remove after debug
+
+# Create your views here.
 
 
 @method_decorator(csrf_protect, name='dispatch')

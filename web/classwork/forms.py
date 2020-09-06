@@ -5,8 +5,8 @@ from django.utils.translation import gettext_lazy as _
 # from django.urls import reverse_lazy
 # from django.shortcuts import render
 # TODO: should we be using datetime.datetime or datetime.today ?
-from django.contrib.auth import get_user_model
 from collections import abc
+from django.contrib.auth import get_user_model
 User = get_user_model()
 
 
@@ -24,11 +24,10 @@ class RegisterForm(PersonFormMixIn, forms.ModelForm):
     first_name = forms.CharField(label=_('First Name'), max_length=User._meta.get_field('first_name').max_length)
     last_name = forms.CharField(label=_('Last Name'), max_length=User._meta.get_field('last_name').max_length)
     email = forms.CharField(max_length=User._meta.get_field('email').max_length, widget=forms.EmailInput())
-    # password = forms.CharField(min_length=6, max_length=16, widget=forms.PasswordInput())
     # TODO: Change to CheckboxSelectMultiple and make sure it works
     class_selected = forms.ModelMultipleChoiceField(label=_('Choose your class(es)'), queryset=None)
     paid_by_other = forms.BooleanField(label=_('paid by a different person'), required=False)
-    new_fields = ['new_user', 'first_name', 'last_name', 'email', 'class_selected', 'paid_by_other']
+    new_fields = ['first_name', 'last_name', 'new_user', 'email', 'class_selected', 'paid_by_other']
 
     class Meta:
         model = Payment
@@ -38,7 +37,7 @@ class RegisterForm(PersonFormMixIn, forms.ModelForm):
             'billing_city',
             'billing_country_area',
             'billing_postcode',
-            # 'billing_country_code',
+            'billing_country_code',
         )
         labels = {
             'billing_address_1': _('Street Address'),
@@ -46,10 +45,7 @@ class RegisterForm(PersonFormMixIn, forms.ModelForm):
             'billing_city': _('City'),
             'billing_country_area': _('State'),
             'billing_postcode': _('Zipcode'),
-        }
-        help_texts = {
-            'billing_country_area': _('or Territory, or Province'),
-            'billing_postcode': _('Postal Code'),
+            'billing_country_code': _('Country'),
         }
 
     field_order = [*new_fields, *Meta.fields]
@@ -57,7 +53,6 @@ class RegisterForm(PersonFormMixIn, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         # print('========= RegistrationForm.__init__========================')
         class_choices = kwargs.pop('class_choices', None)
-        # print(class_choices)
         super(RegisterForm, self).__init__(*args, **kwargs)
         self.fields['class_selected'].queryset = class_choices
         self.focus_first_usable_field(self.fields.values())
@@ -213,13 +208,6 @@ class RegisterForm(PersonFormMixIn, forms.ModelForm):
 
     def save(self, commit=True):
         print('======== Inside RegisterForm.save ===========')
-        # student = self.cleaned_data.get('student')
-        # print(f'student: {student}')
-        # paid_by = self.cleaned_data.get('paid_by')
-        # print(f'paid_by: {paid_by}')
-        # print('======== Cleaned Data =================')
-        # for ea in self.cleaned_data:
-        #     print(ea)
         # TODO: If billing address info added to user Profile, let
         # Payment.objects.classRegister get that info from student (profile)
         # TODO: we could create a new dict with items starting with 'billing'

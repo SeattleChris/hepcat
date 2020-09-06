@@ -1,15 +1,27 @@
 from django import forms
 from django.conf import settings
-from django.contrib.admin.helpers import AdminForm,  Fieldline
+# from django.contrib.admin.helpers import AdminForm,  Fieldline
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import gettext as _
 from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
-from pprint import pprint
+# from pprint import pprint
 
 
 class PersonFormMixIn:
     other_country_switch = True
+    country_field_name = 'billing_country_code'
+    alt_country_text = {
+        # 'billing_country_code':  {
+        #     'label': _(""),
+        #     'help_text': _("")},
+        'billing_country_area': {
+            'label': _("Territory, or Province"),
+            'help_text': '',
+            'initial': ''},
+        'billing_postcode':  {
+            'label': _("Postal Code"),
+            'help_text': ''}, }
     fieldsets = {
         'names_row': {
             'fields': ['first_name', 'last_name'],
@@ -34,16 +46,30 @@ class PersonFormMixIn:
         # 'password': {'size': 10, },
         # 'password1': {'size': 10, },
         # 'password2': {'size': 10, },
-        # # 'email': {'maxlength': 191, 'size': 24, },
         # 'billing_address_1': {'size': 20, },
         # 'billing_address_2': {'size': 20, },
         }
 
+    def set_alt_data(self, name, field, value):
+        initial = self.get_initial_for_field(field, name)
+        data_name = self.add_prefix(name)
+        data_val = field.widget.value_from_datadict(self.data, self.files, data_name)
+        if not field.has_changed(initial, data_val):
+            data = self.data.copy()
+            data[data_name] = value
+            data._mutable = False
+            self.data = data
+            self.initial[name] = value  # TODO: Won't work since initial determined earlier.
+    # end def set_alt_data
+
     def prep_fields(self):
+        alt_country = False
+        if self.other_country_switch:
+            alt_country = self.data.get('other_country', False)
+            if not alt_country:
+                self.fields.pop(self.country_field_name, None)
         fields = self.fields
-        print("============= PersonFormMixIn.prep_fields ===========================")
-        # pprint(self.base_fields)
-        # pprint(fields)
+        # print("============= PersonFormMixIn.prep_fields ===========================")
         overrides = getattr(self, 'formfield_attrs_overrides', {})
         DEFAULT = overrides.get('_default_', {})
         mods = {}
@@ -66,11 +92,29 @@ class PersonFormMixIn:
                     value = str(min(possible_size))
                     field.widget.attrs['size'] = value
                 temp['size_update'] = {'default': default, 'old': display_size, 'length': input_size, 'new': value}
+            if alt_country and name in self.alt_country_text:
+                for prop, value in self.alt_country_text[name].items():
+                    if prop == 'initial' or prop == 'default':
+                        self.set_alt_data(name, field, value)
+                    setattr(field, prop, value)
+                temp['alt'] = self.alt_country_text[name].copy()
             mods[name] = temp
-        pprint(mods)
-        print("-------------------------------------------------------")
-        # pprint(fields)
+        # pprint(mods)
+        # print("-------------------------------------------------------")
         return fields.copy()
+
+    def make_country_row(self, remaining_fields):
+        field_name = self.country_field_name
+        field = remaining_fields.pop(field_name, None)
+        result = {field_name: field} if field else {}
+        other_country_field = remaining_fields.pop('other_country', None)
+        if not other_country_field:
+            country_name = settings.DEFAULT_COUNTRY
+            label = "Not a {} address. ".format(country_name)
+            other_country_field = forms.BooleanField(label=_(label), required=False, )
+            self.fields['other_country'] = other_country_field
+        result.update({'other_country': other_country_field})
+        return result
 
     def _make_fieldsets(self):
         all_fields = self.prep_fields()
@@ -86,12 +130,9 @@ class PersonFormMixIn:
                 prepared[row_label]['fields'] = fields
                 max_position += opts['position'] if isinstance(opts['position'], int) else 0
                 if self.other_country_switch and row_label == 'address_row':
-                    country_name = settings.DEFAULT_COUNTRY or 'US'
-                    label = "Not a {} address. ".format(country_name)
-                    other_country = forms.BooleanField(label=_(label), required=False, )
-                    new_fields = {'other_country': other_country}
-                    self.fields['other_country'] = other_country
-                    prepared['other_country'] = {'position': opts['position'], 'fields': new_fields}
+                    country_fields = self.make_country_row(all_fields)
+
+                    prepared['other_country'] = {'position': opts['position'], 'fields': country_fields}
                     max_position += 1
         max_position += 1
         lookup = {'end': max_position + 2, None: max_position}
@@ -136,6 +177,8 @@ class PersonFormMixIn:
         # pprint(top_errors)
         output, hidden_fields, max_columns = [], [], 0
         for row_label, opts in prepared.items():
+            # print(f"Prep {row_label} row: ")
+            # pprint(opts)
             fields = opts['fields']
             col_count = len(fields)
             if row_label == 'remaining' or col_count == 1:
@@ -208,7 +251,7 @@ class PersonFormMixIn:
                 'css_classes': '',
                 'field_name': '',
                 }
-            column = [single_col_html % column_kwargs]
+            column = [single_col_html % column_kwargs]  # attr is only applied if there is a col_head_tag
             error_row = self.make_row(column, None, row_tag)[0]
             output.insert(0, error_row)
         if hidden_fields:  # Insert any hidden fields in the last row.
@@ -237,139 +280,11 @@ class PersonFormMixIn:
                     output.append(last_row)
             else:  # If there aren't any rows in the output, just append the hidden fields.
                 output.append(str_hidden)
+        print("------------------------ End PersonFormMixIn._html_output ------------------------------")
         return mark_safe('\n'.join(output))
 
-    def as_person_details(self):
-        # custom_fields = {
-        #     'names_row': ['first_name', 'last_name', ],
-        #     'address_row': ['billing_city', 'billing_country_area', 'billing_postcode', ],
-        # }
-        # prepared = {
-        #     'names_row': {
-        #         'field_names': ['first_name', 'last_name'],
-        #         'fields': {},
-        #         'html': '',
-        #         'position': 1,
-        #     },
-        #     'address_row': {
-        #         'field_names': ['billing_city', 'billing_country_area', 'billing_postcode'],
-        #         'fields': {},
-        #         'html': '',
-        #         'position': None
-        #     },
-        # }
-        # errors_on_separate_row = False
-        # help_text_br = False
-        # for row_label, field_lables in custom_fields.items():
-        #     prepared[row_label]['fields'] = {name: field for name, field in self.fields.items() if name in field_lables}
-        # max_columns = 2 * max(len(data['fields']) for data in prepared.values())
-
-        # row_ender = '</td></tr>'
-        # help_text_html = '<span class="helptext">%s</span>'
-        # header_col = '<th%(html_class_attr)s>%(label)s</th>'
-        # if help_text_br:
-        #     data_col = '%(errors)s%(field)s<br />%(help_text)s'
-        # else:
-        #     data_col = '%(errors)s%(field)s%(help_text)s'
-        # data_html = header_col + '<td>' + data_col + '</td>'  # will need the <tr> ... </tr>
-        # error_column_html = '<td colspan="2">%s</td>'  # will need the <tr> ... </tr>
-        # error_row_start = '<tr><td colspan="' + str(max_columns)
-        # error_row = error_row_start + '">%s ' + row_ender
-        # normal_row = '<tr%(html_class_attr)s><th>%(label)s</th><td colspan="'
-        # normal_row += str(max_columns - 1) + '">' + data_col + row_ender
-
-        # top_errors, hidden_fields, used_field_names = [], [], []
-        # for prep_label, prep_data in prepared.items():
-        #     error_count, output = 0, []
-        #     error_columns = ['<tr>']
-        #     row_columns = ['<tr>']
-        #     for name, field in prep_data['fields'].items():
-        #         bf = self[name]
-        #         bf_errors = self.error_class(bf.errors)
-        #         if bf.is_hidden:
-        #             if bf_errors:
-        #                 top_errors.extend(
-        #                     [_('(Hidden field %(name)s) %(error)s') % {'name': name, 'error': str(e)}
-        #                         for e in bf_errors])
-        #             hidden_fields.append(str(bf))
-        #         else:
-        #             # Create a 'class="..."' attribute if needed and apply CSS classes.
-        #             css_classes = bf.css_classes()
-        #             html_class_attr = ' class="%s"' % css_classes if css_classes else ''
-        #             if errors_on_separate_row:
-        #                 error_string = str(bf_errors) if bf_errors else ' '
-        #                 error_count += 1 if bf_errors else 0
-        #                 error_columns.append(error_column_html % error_string)
-        #             if bf.label:
-        #                 label = conditional_escape(bf.label)
-        #                 label = bf.label_tag(label) or ''
-        #             else:
-        #                 label = ''
-        #             help_text = help_text_html % field.help_text if field.help_text else ''
-        #         row_columns.append(data_html % {
-        #             'errors': bf_errors,
-        #             'label': label,
-        #             'field': bf,
-        #             'help_text': help_text,
-        #             'html_class_attr': html_class_attr,
-        #             'css_classes': css_classes,
-        #             'field_name': bf.html_name,
-        #         })
-        #     row_columns.append('</tr>')
-        #     if error_count:
-        #         error_columns.append('</tr>')
-        #         output.append(''.join(error_columns))
-        #     output.append(''.join(row_columns))
-        #     prepared[prep_label]['html'] = "\n".join(output)
-        #     used_field_names.extend(prep_data['field_names'])
-        # if top_errors or hidden_fields:
-        #     new_errors = str(top_errors) + ''.join(hidden_fields)
-        # else:
-        #     new_errors = ''
-        # has_initial_top_errors = self.non_field_errors() or \
-        #     any(self[name].is_hidden and self.error_class(self[name].errors) for name in self.fields)
-
-        # self.fields = {name: field for name, field in self.fields.items() if name not in used_field_names}
-        # html_output = self._html_output(
-        #     normal_row=normal_row,
-        #     error_row=error_row,
-        #     row_ender=row_ender,
-        #     help_text_html=help_text_html,
-        #     errors_on_separate_row=errors_on_separate_row,
-        # )
-        # line_ender = "%s\n" % row_ender
-        # rows = html_output.split(line_ender)  # TODO: Consider using .splitlines([keepends])
-        # for prep_label, prep_data in prepared.items():
-        #     self.fields.update(prep_data['fields'])
-
-        # if new_errors:
-        #     if has_initial_top_errors:
-        #         initial_errors = rows[0][len(error_row_start):-len(line_ender)]
-        #         rows[0] = error_row % ''.join((initial_errors, new_errors) + '\n')
-        #     else:
-        #         rows.insert(0, error_row % new_errors + '\n')
-        # first_field_row = 1 if new_errors or has_initial_top_errors else 0
-        # for row_label, row_data in prepared.items():
-        #     if not row_data['fields']:
-        #         continue
-        #     if isinstance(row_data['position'], int):
-        #         position = row_data['position'] + first_field_row - 1
-        #         rows.insert(position, row_data['html'] + '\n')
-        #     else:
-        #         rows.append(row_data['html'] + '\n')
-
-        # print("=========================== PersonFormMixIn.as_person_details =======================")
-        # print(f"New errors: {new_errors} |  ")
-        # pprint(prepared)
-        # print("-------------------------------------------------------------------------------------")
-        # pprint(rows)
-        # print("-------------------------------------------------------------------------------------")
-        # pprint(self.fields)
-        # return mark_safe(' '.join(rows))
-        pass
-
     def as_table(self):
-        "Return this form rendered as HTML <tr>s -- excluding the <table></table>."
+        "Overwrite BaseForm.as_table. Return this form rendered as HTML <tr>s -- excluding the <table></table>."
         return self._html_output(
             row_tag='tr',
             col_head_tag='th',
@@ -379,12 +294,12 @@ class PersonFormMixIn:
             col_head_data='%(label)s',
             col_data='%(errors)s%(field)s%(help_text)s',
             error_col='<td colspan="2">%s</td>',
-            help_text_html='<br><span class="helptext">%s</span>',
+            help_text_html='<br /><span class="helptext">%s</span>',
             errors_on_separate_row=False,
         )
 
     def as_ul(self):
-        "Return this form rendered as HTML <li>s -- excluding the <ul></ul>."
+        "Overwrite BaseForm.as_ul. Return this form rendered as HTML <li>s -- excluding the <ul></ul>."
         return self._html_output(
             row_tag='li',
             col_head_tag=None,
@@ -399,7 +314,7 @@ class PersonFormMixIn:
         )
 
     def as_p(self):
-        "Return this form rendered as HTML <p>s."
+        "Overwrite BaseForm.as_p. Return this form rendered as HTML <p>s."
         return self._html_output(
             row_tag='p',
             col_head_tag=None,
@@ -412,59 +327,3 @@ class PersonFormMixIn:
             help_text_html='<span class="helptext">%s</span>',
             errors_on_separate_row=True,
         )
-
-# class FormLineMixIn:
-#     """ Allows Django forms to define fields or fieldsets similarly to admin.ModelAdmin setup. """
-#     model = None
-#     USERNAME_FLAG = ''
-#     fields = None
-#     fieldsets = (
-#         (None, {
-#             'fields': [('first_name', 'last_name'), model.get_email_field_name(), USERNAME_FLAG, model.USERNAME_FIELD],
-#         }),
-#         ('address', {
-#             'fields': [('billing_city', 'billing_country_area', 'billing_postcode', )],
-#             'position': None,
-#         }),
-#     )
-#     # self, form, fieldsets, prepopulated_fields, readonly_fields=None, model_admin=None
-
-#     def _get_fieldsets(self):
-#         fields = getattr(self, 'fields', None)
-#         if hasattr(self, 'fieldsets'):
-#             if fields is not None:
-#                 raise ImproperlyConfigured(_("Only one of 'fields' and 'fieldsets' should be defined, not both. "))
-#             return self.fieldsets
-#         if fields is None:
-#             raise ImproperlyConfigured(_("Either 'fields' or 'fieldsets' must be defined. "))
-#         return ((None, {'fields': list(fields)}))
-
-#     def _get_fields(self):
-#         fieldsets = self._get_fieldsets()
-#         field_groups = []
-#         for label, opts in fieldsets.items():
-#             if 'fields' not in opts:
-#                 raise ImproperlyConfigured(_("There is a missing 'fields' key in the fieldsets definition. "))
-#             field_groups.extend(opts['fields'])
-#         fields, fieldlines = [], []
-#         for ea in field_groups:
-#             if isinstance(ea, tuple):
-#                 fields.extend(ea)
-#                 fieldlines.append(ea)
-#             elif isinstance(ea, str):
-#                 fields.append(ea)
-#                 fieldlines.append((ea, ))
-#         self._fieldlines = fieldlines
-#         return fields
-
-#     def __iter__(self):
-#         for field in self.fields:
-#             yield FormFieldline(self.form, field, self.readonly_fields, model_admin=self.model_admin)
-#     # end class FormLineMixIn
-
-
-# class FormFieldline(Fieldline):
-
-#     pass
-
-#     # end class FormFieldLine
