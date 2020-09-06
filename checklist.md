@@ -332,7 +332,7 @@ Current Status:
 
 - [x] Django-registration: basic user creation method
 - [x] Django-registration: can create a user without asking for a username input
-- [ ] Django-registration: integration, managing our computed username.
+- [x] Django-registration: integration, managing our computed username.
 - [ ] Django-registration: Catch username IntegrityError:
   - [ ] ? Confirm with user they are not the existing user?
   - [ ] Recompute username.
