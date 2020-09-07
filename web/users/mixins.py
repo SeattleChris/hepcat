@@ -7,7 +7,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import gettext as _
 from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
-from pprint import pprint
+# from pprint import pprint
 
 
 class PersonFormMixIn:
@@ -126,7 +126,7 @@ class PersonFormMixIn:
     def _make_fieldsets(self):
         all_fields = self.prep_fields()
         fieldsets = getattr(self, 'fieldsets', ((None, {'fields': [], 'position': None}), ))
-        print("=============== PersonFormMixIn._make_fieldsets =====================")
+        # print("=============== PersonFormMixIn._make_fieldsets =====================")
         max_position, prepared = 0, {}
         for index, fieldset in enumerate(fieldsets):
             fieldset_label, opts = fieldset
@@ -157,7 +157,6 @@ class PersonFormMixIn:
         prepared = {k: v for k, v in sorted(prepared.items(),
                     key=lambda ea: lookup.get(ea[1]['position'], ea[1]['position']))
                     }
-        pprint(prepared)
         return prepared
 
     def _html_tag(self, tag, data, attr=''):
@@ -187,35 +186,16 @@ class PersonFormMixIn:
     def _html_output(self, row_tag, col_head_tag, col_tag, single_col_tag, class_attr,
                      col_head_data, col_data, error_col, help_text_html, errors_on_separate_row):
         "Overriding BaseForm._html_output. Output HTML. Used by as_table(), as_ul(), as_p()."
-        # string_field_classes = ['CharField', 'EmailField', 'DurationField', 'ComboField', 'MultiValueField', 'GenericIPAddressField', 'URLField', 'UUIDField', 'RegexField', 'SlugField', ]
-        # textarea_field_classes = ['JSONField', ]
-        # select_field_classes = ['ChoiceField', 'ModelChoiceField', 'ModelMultipleChoiceField', 'TypedChoiceField', 'FilePathField', 'MultipleChoiceField', 'TypedMultipleChoiceField', ]
-        # number_field_classes = ['IntegerField', 'DecimalField', 'FloatField']
-        # file_field_classes = ['FileField', 'ImageField', ]
-        # date_field_classes = ['DateField', 'DateTimeField', 'TimeField', 'SplitDateTimeField', ]
-        # other_field_classes = ['BooleanField', 'NullBooleanField', ]
-
-        # text_widget_classes = ['TextInput', 'EmailInput', 'URLInput', 'PasswordInput', 'Textarea', ]
-        # file_widget_classes = ['FileInput', 'ClearableFileInput', ]
-        # number_widget_classes = ['NumberInput', ]
-
-        # date_widget_classes = ['DateInput', 'DateTimeInput', 'TimeInput', 'SplitDateTimeWidget', ]
-        # select_widget_classes = ['Select', 'NullBooleanSelect', 'SelectMultiple', 'SelectDateWidget', ]
-        # radio_widget_classes = ['RadioSelect', ]
-        # check_widget_classes = ['CheckboxInput', 'CheckboxSelectMultiple', ]
-
-        # ignored_base_widget_classes = ['ChoiceWidget', 'MultiWidget', 'SelectDateWidget', ]
-        # 'ChoiceWidget' is the base for 'RadioSelect', 'Select', and many variations of them.
         include_widgets = (Input, Textarea, )  # Base classes for the field.widgets we want.
         exclude_widgets = (CheckboxInput, HiddenInput)  # classes for the field.widgets we do NOT want.
+        # ignored_base_widgets = ['ChoiceWidget', 'MultiWidget', 'SelectDateWidget', ]
+        # 'ChoiceWidget' is the base for 'RadioSelect', 'Select', and variations.
         col_html, single_col_html = self.column_formats(col_head_tag, col_tag, single_col_tag, col_head_data, col_data)
         prepared = self._make_fieldsets()
         top_errors = self.non_field_errors().copy()  # Errors that should be displayed above all fields.
-        print("========================== PersonFormMixIn._html_output ================================")
+        # print("========================== PersonFormMixIn._html_output ================================")
         output, hidden_fields, max_columns = [], [], 0
         for fieldset_label, opts in prepared.items():
-            # print(f"Prep {fieldset_label} row: ")
-            # pprint(opts)
             single_fields = [ea for ea in opts['rows'] if len(ea) == 1]
             visual_group, styled_labels, label_attrs = [], [], ''
             if len(single_fields) > 1:
@@ -224,15 +204,11 @@ class PersonFormMixIn:
                     if issubclass(klass, include_widgets) and not issubclass(klass, exclude_widgets):
                         visual_group.append(ea)
             if len(visual_group) > 1:
-                print("-------------- visual_group ------------------------")
-                pprint(visual_group)
                 max_label_length = max(len(list(ea.values())[0].label) for ea in visual_group)
-                max_word_length = max(len(w) for ea in visual_group for w in list(ea.values())[0].label.split())
-                pprint(max_label_length)
-                pprint(max_word_length)
-                label_attrs = {'style': "width: {}rem; display: inline-block".format(max_label_length)}
+                # max_word_length = max(len(w) for ea in visual_group for w in list(ea.values())[0].label.split())
+                width = (max_label_length + 1) // 2  # * 0.85 ch
+                label_attrs = {'style': "width: {}rem; display: inline-block".format(width)}
                 styled_labels = [list(ea.keys())[0] for ea in visual_group]
-                print("------------------------------------------------------")
             for fields in opts['rows']:
                 col_count = len(fields)
                 multi_field_row = False if col_count == 1 else True
@@ -257,7 +233,7 @@ class PersonFormMixIn:
                     if errors_on_separate_row and bf_errors:
                         error_data.append(error_col % str(bf_errors))
                     has_label_style = name in styled_labels and label_attrs
-                    print(f"{name} has style: {has_label_style} ")
+                    # print(f"{name} has style: {has_label_style} ")
                     if bf.label or has_label_style:
                         attrs = label_attrs if has_label_style else ''
                         label = conditional_escape(bf.label)
@@ -278,18 +254,12 @@ class PersonFormMixIn:
                         'css_classes': css_classes,
                         'field_name': bf.html_name,
                     }
-                    # print("----------------------- format_kwargs ------------------------------------------")
-                    # pprint(format_kwargs)
-                    # print("--------------------------------------------------------------------------------")
                     if multi_field_row:
                         columns_data.append(col_html % format_kwargs)
                         html_row_attr = ''
                     else:
                         columns_data.append(single_col_html % format_kwargs)
                         html_row_attr = html_class_attr
-                        # output.extend(self.make_row(columns_data, error_data, row_tag, html_class_attr))
-                        # columns_data, error_data, html_class_attr = [], [], ''
-                # if multi_field_row:
                 output.extend(self.make_row(columns_data, error_data, row_tag, html_row_attr))
         # end iterating fieldsets
         row_ender = '' if not single_col_tag else '</' + single_col_tag + '>'
@@ -338,7 +308,7 @@ class PersonFormMixIn:
                     output.append(last_row)
             else:  # If there aren't any rows in the output, just append the hidden fields.
                 output.append(str_hidden)
-        print("------------------------ End PersonFormMixIn._html_output ------------------------------")
+        # print("------------------------ End PersonFormMixIn._html_output ------------------------------")
         return mark_safe('\n'.join(output))
 
     def as_table(self):
