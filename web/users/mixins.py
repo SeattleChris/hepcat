@@ -76,17 +76,13 @@ class PersonFormMixIn:
             if not alt_country:
                 self.fields.pop(self.country_field_name, None)
         fields = self.fields
-        # print("============= PersonFormMixIn.prep_fields ===========================")
         overrides = getattr(self, 'formfield_attrs_overrides', {})
         DEFAULT = overrides.get('_default_', {})
-        mods = {}
 
         for name, field in fields.items():
-            temp = {}
             if name in overrides:
                 for key, value in overrides[name].items():
                     field.widget.attrs[key] = value  # TODO: Use dict.update instead
-                    temp[key] = value
             if not overrides.get(name, {}).get('no_size_override', False):
                 # TODO: Correct size attributes for all form controls: textarea, others?
                 default = DEFAULT.get('size', None)  # Cannot use float("inf") as an int.
@@ -98,16 +94,11 @@ class PersonFormMixIn:
                     # field.widget.attrs['size'] = str(int(min(float(display_size), float(input_size))))
                     value = str(min(possible_size))
                     field.widget.attrs['size'] = value
-                temp['size_update'] = {'default': default, 'old': display_size, 'length': input_size, 'new': value}
             if alt_country and name in self.alt_country_text:
                 for prop, value in self.alt_country_text[name].items():
                     if prop == 'initial' or prop == 'default':
                         self.set_alt_data(name, field, value)
                     setattr(field, prop, value)
-                temp['alt'] = self.alt_country_text[name].copy()
-            mods[name] = temp
-        # pprint(mods)
-        # print("-------------------------------------------------------")
         return fields.copy()
 
     def make_country_row(self, remaining_fields):
