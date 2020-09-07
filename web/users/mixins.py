@@ -2,6 +2,7 @@ from django import forms
 from django.conf import settings
 # from django.contrib.admin.helpers import AdminForm,  Fieldline
 from django.contrib.admin.utils import flatten
+from django.forms.widgets import Input, CheckboxInput, Textarea
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import gettext as _
 from django.utils.html import conditional_escape
@@ -186,18 +187,45 @@ class PersonFormMixIn:
     def _html_output(self, row_tag, col_head_tag, col_tag, single_col_tag, class_attr,
                      col_head_data, col_data, error_col, help_text_html, errors_on_separate_row):
         "Overriding BaseForm._html_output. Output HTML. Used by as_table(), as_ul(), as_p()."
+        # string_field_classes = ['CharField', 'EmailField', 'DurationField', 'ComboField', 'MultiValueField', 'GenericIPAddressField', 'URLField', 'UUIDField', 'RegexField', 'SlugField', ]
+        # textarea_field_classes = ['JSONField', ]
+        # select_field_classes = ['ChoiceField', 'ModelChoiceField', 'ModelMultipleChoiceField', 'TypedChoiceField', 'FilePathField', 'MultipleChoiceField', 'TypedMultipleChoiceField', ]
+        # number_field_classes = ['IntegerField', 'DecimalField', 'FloatField']
+        # file_field_classes = ['FileField', 'ImageField', ]
+        # date_field_classes = ['DateField', 'DateTimeField', 'TimeField', 'SplitDateTimeField', ]
+        # other_field_classes = ['BooleanField', 'NullBooleanField', ]
+
+        # text_widget_classes = ['TextInput', 'EmailInput', 'URLInput', 'PasswordInput', 'Textarea', ]
+        # file_widget_classes = ['FileInput', 'ClearableFileInput', ]
+        # number_widget_classes = ['NumberInput', ]
+
+        # date_widget_classes = ['DateInput', 'DateTimeInput', 'TimeInput', 'SplitDateTimeWidget', ]
+        # select_widget_classes = ['Select', 'NullBooleanSelect', 'SelectMultiple', 'SelectDateWidget', ]
+        # radio_widget_classes = ['RadioSelect', ]
+        # check_widget_classes = ['CheckboxInput', 'CheckboxSelectMultiple', ]
+
+        # ignored_base_widget_classes = ['ChoiceWidget', 'Select', 'MultiWidget', 'SelectDateWidget', ]
+        include_widgets = (Input, Textarea, )  # Base classes for the field.widgets we want.
+        exclude_widgets = (CheckboxInput, )  # classes for the field.widgets we do NOT want.
         col_html, single_col_html = self.column_formats(col_head_tag, col_tag, single_col_tag, col_head_data, col_data)
         prepared = self._make_fieldsets()
         top_errors = self.non_field_errors().copy()  # Errors that should be displayed above all fields.
         print("========================== PersonFormMixIn._html_output ================================")
-        # pprint(prepared)
-        # print("------------------------------------- top_errors ---------------------------------------")
-        # pprint(top_errors)
         output, hidden_fields, max_columns = [], [], 0
         for fieldset_label, opts in prepared.items():
             # print(f"Prep {fieldset_label} row: ")
             # pprint(opts)
-            # fields = opts['fields']
+            single_fields = [ea for ea in opts['rows'] if len(ea) == 1]
+            visual_group = []
+            if len(single_fields) > 1:
+                for ea in single_fields:
+                    klass = list(ea.values())[0].widget.__class__
+                    if issubclass(klass, include_widgets) and not issubclass(klass, exclude_widgets):
+                        visual_group.append(ea)
+            if len(visual_group) > 1:
+                print("-------------- visual_group ------------------------")
+                pprint(visual_group)
+                print("------------------------------------------------------")
             for fields in opts['rows']:
                 col_count = len(fields)
                 multi_field_row = False if col_count == 1 else True
