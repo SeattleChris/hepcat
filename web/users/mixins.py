@@ -1,6 +1,8 @@
 from django import forms
 from django.conf import settings
 # from django.contrib.admin.helpers import AdminForm,  Fieldline
+from django.contrib.admin.utils import flatten
+from django.forms.widgets import Input, CheckboxInput, HiddenInput, Textarea
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import gettext as _
 from django.utils.html import conditional_escape
@@ -22,19 +24,24 @@ class PersonFormMixIn:
         'billing_postcode':  {
             'label': _("Postal Code"),
             'help_text': ''}, }
-    fieldsets = {
-        'names_row': {
-            'fields': ['first_name', 'last_name'],
+    fieldsets = (
+        (_('names_row'), {
+            'fields': [('first_name', 'last_name', )],
             'position': 1,
-        },
-        'username': {
+        }),
+        (_('username'), {
             'fields': ['username'],
             'position': None
-        },
-        'address_row': {
-            'fields': ['billing_city', 'billing_country_area', 'billing_postcode'],
+        }),
+        (_('address'), {
+            'classes': ('collapse', 'address', ),
+            'fields': [
+                'billing_address_1',
+                'billing_address_2',
+                ('billing_city', 'billing_country_area', 'billing_postcode', )
+                ],
             'position': 'end'
-        }, }
+        }), )
     formfield_attrs_overrides = {
         '_default_': {'size': 15, },
         'email': {'maxlength': 191, 'size': 20, },
@@ -69,17 +76,13 @@ class PersonFormMixIn:
             if not alt_country:
                 self.fields.pop(self.country_field_name, None)
         fields = self.fields
-        # print("============= PersonFormMixIn.prep_fields ===========================")
         overrides = getattr(self, 'formfield_attrs_overrides', {})
         DEFAULT = overrides.get('_default_', {})
-        mods = {}
 
         for name, field in fields.items():
-            temp = {}
             if name in overrides:
                 for key, value in overrides[name].items():
                     field.widget.attrs[key] = value  # TODO: Use dict.update instead
-                    temp[key] = value
             if not overrides.get(name, {}).get('no_size_override', False):
                 # TODO: Correct size attributes for all form controls: textarea, others?
                 default = DEFAULT.get('size', None)  # Cannot use float("inf") as an int.
@@ -91,16 +94,11 @@ class PersonFormMixIn:
                     # field.widget.attrs['size'] = str(int(min(float(display_size), float(input_size))))
                     value = str(min(possible_size))
                     field.widget.attrs['size'] = value
-                temp['size_update'] = {'default': default, 'old': display_size, 'length': input_size, 'new': value}
             if alt_country and name in self.alt_country_text:
                 for prop, value in self.alt_country_text[name].items():
                     if prop == 'initial' or prop == 'default':
                         self.set_alt_data(name, field, value)
                     setattr(field, prop, value)
-                temp['alt'] = self.alt_country_text[name].copy()
-            mods[name] = temp
-        # pprint(mods)
-        # print("-------------------------------------------------------")
         return fields.copy()
 
     def make_country_row(self, remaining_fields):
@@ -118,25 +116,35 @@ class PersonFormMixIn:
 
     def _make_fieldsets(self):
         all_fields = self.prep_fields()
-        fieldsets = getattr(self, 'fieldsets', ((None, {'fields': {}, 'position': None}), ))
-
+        fieldsets = getattr(self, 'fieldsets', ((None, {'fields': [], 'position': None}), ))
+        # print("=============== PersonFormMixIn._make_fieldsets =====================")
         max_position, prepared = 0, {}
-        for row_label, opts in fieldsets.items():
+        for index, fieldset in enumerate(fieldsets):
+            fieldset_label, opts = fieldset
             if 'fields' not in opts or 'position' not in opts:
                 raise ImproperlyConfigured(_("There must be 'fields' and 'position' in each fieldset. "))
-            fields = {name: all_fields.pop(name) for name in opts['fields'] if name in all_fields}
-            if fields:
-                prepared[row_label] = {'position': opts['position']}
-                prepared[row_label]['fields'] = fields
-                max_position += opts['position'] if isinstance(opts['position'], int) else 0
-                if self.other_country_switch and row_label == 'address_row':
+            field_rows = []
+            for ea in opts['fields']:
+                row = [ea] if isinstance(ea, str) else ea
+                temp = {name: all_fields.pop(name) for name in row if name in all_fields}
+                if temp:
+                    field_rows.append(temp)
+            if field_rows:
+                fieldset_label = fieldset_label or 'fieldset_' + str(index)
+                prepared[fieldset_label] = {'position': opts['position']}
+                prepared[fieldset_label]['rows'] = field_rows
+                prepared[fieldset_label]['field_names'] = flatten(opts['fields'])
+                prepared[fieldset_label]['classes'] = opts.get('classes', [])
+                max_position += 1  # opts['position'] if isinstance(opts['position'], int) else 0
+                if self.other_country_switch and 'address' in opts.get('classes', ''):
                     country_fields = self.make_country_row(all_fields)
-
-                    prepared['other_country'] = {'position': opts['position'], 'fields': country_fields}
+                    prepared['other_country'] = {'position': opts['position'], 'rows': [country_fields]}
                     max_position += 1
         max_position += 1
+        field_rows = [{name: value} for name, value in all_fields.items()]
+        prepared['remaining'] = {'rows': field_rows, 'position': max_position + 1, }
         lookup = {'end': max_position + 2, None: max_position}
-        prepared['remaining'] = {'fields': all_fields, 'position': max_position + 1, }
+        # TODO: Refactor prepared to match fieldset format, but still sort.
         prepared = {k: v for k, v in sorted(prepared.items(),
                     key=lambda ea: lookup.get(ea[1]['position'], ea[1]['position']))
                     }
@@ -150,8 +158,9 @@ class PersonFormMixIn:
         if error_data:
             row = self._html_tag(row_tag, ' '.join(error_data))
             result.append(row)
-        row = self._html_tag(row_tag, ' '.join(columns_data), html_row_attr)
-        result.append(row)
+        if columns_data:
+            row = self._html_tag(row_tag, ' '.join(columns_data), html_row_attr)
+            result.append(row)
         return result
 
     def column_formats(self, col_head_tag, col_tag, single_col_tag, col_head_data, col_data):
@@ -168,72 +177,82 @@ class PersonFormMixIn:
     def _html_output(self, row_tag, col_head_tag, col_tag, single_col_tag, class_attr,
                      col_head_data, col_data, error_col, help_text_html, errors_on_separate_row):
         "Overriding BaseForm._html_output. Output HTML. Used by as_table(), as_ul(), as_p()."
+        include_widgets = (Input, Textarea, )  # Base classes for the field.widgets we want.
+        exclude_widgets = (CheckboxInput, HiddenInput)  # classes for the field.widgets we do NOT want.
+        # ignored_base_widgets = ['ChoiceWidget', 'MultiWidget', 'SelectDateWidget', ]
+        # 'ChoiceWidget' is the base for 'RadioSelect', 'Select', and variations.
         col_html, single_col_html = self.column_formats(col_head_tag, col_tag, single_col_tag, col_head_data, col_data)
         prepared = self._make_fieldsets()
         top_errors = self.non_field_errors().copy()  # Errors that should be displayed above all fields.
-        print("========================== PersonFormMixIn._html_output ================================")
-        # pprint(prepared)
-        # print("------------------------------------- top_errors ---------------------------------------")
-        # pprint(top_errors)
+        # print("========================== PersonFormMixIn._html_output ================================")
         output, hidden_fields, max_columns = [], [], 0
-        for row_label, opts in prepared.items():
-            # print(f"Prep {row_label} row: ")
-            # pprint(opts)
-            fields = opts['fields']
-            col_count = len(fields)
-            if row_label == 'remaining' or col_count == 1:
-                multi_field_row = False
-            else:
-                multi_field_row = True
+        for fieldset_label, opts in prepared.items():
+            single_fields = [ea for ea in opts['rows'] if len(ea) == 1]
+            visual_group, styled_labels, label_attrs = [], [], ''
+            if len(single_fields) > 1:
+                for ea in single_fields:
+                    klass = list(ea.values())[0].widget.__class__
+                    if issubclass(klass, include_widgets) and not issubclass(klass, exclude_widgets):
+                        visual_group.append(ea)
+            if len(visual_group) > 1:
+                max_label_length = max(len(list(ea.values())[0].label) for ea in visual_group)
+                # max_word_length = max(len(w) for ea in visual_group for w in list(ea.values())[0].label.split())
+                width = (max_label_length + 1) // 2  # * 0.85 ch
+                label_attrs = {'style': "width: {}rem; display: inline-block".format(width)}
+                styled_labels = [list(ea.keys())[0] for ea in visual_group]
+            for fields in opts['rows']:
+                col_count = len(fields)
+                multi_field_row = False if col_count == 1 else True
                 max_columns = col_count if col_count > max_columns else max_columns
-            columns_data, error_data, html_class_attr = [], [], ''
-            for name, field in fields.items():
-                bf = self[name]
-                bf_errors = self.error_class(bf.errors)
-                if bf.is_hidden:
-                    if bf_errors:
-                        top_errors.extend(
-                            [_('(Hidden field %(name)s) %(error)s') % {'name': name, 'error': str(e)}
-                             for e in bf_errors])
-                    hidden_fields.append(str(bf))
-                    continue
-                # Create a 'class="..."' attribute if the row or column should have any
-                css_classes = bf.css_classes()
-                if multi_field_row:
-                    css_classes = ' '.join(['nowrap', css_classes])
-                html_class_attr = ' class="%s"' % css_classes if css_classes else ''
-                if errors_on_separate_row and bf_errors:
-                    error_data.append(error_col % str(bf_errors))
-                if bf.label:
-                    label = conditional_escape(bf.label)
-                    label = bf.label_tag(label) or ''
-                else:
-                    label = ''
-                if field.help_text:
-                    help_text = help_text_html % field.help_text
-                else:
-                    help_text = ''
-                format_kwargs = {
-                    'errors': bf_errors,
-                    'label': label,
-                    'field': bf,
-                    'help_text': help_text,
-                    'html_col_attr': html_class_attr if multi_field_row else '',
-                    'html_class_attr': html_class_attr,
-                    'css_classes': css_classes,
-                    'field_name': bf.html_name,
-                }
-                # print("----------------------- format_kwargs ------------------------------------------")
-                # pprint(format_kwargs)
-                # print("--------------------------------------------------------------------------------")
-                if multi_field_row:
-                    columns_data.append(col_html % format_kwargs)
-                else:
-                    columns_data.append(single_col_html % format_kwargs)
-                    output.extend(self.make_row(columns_data, error_data, row_tag, html_class_attr))
-                    columns_data, error_data, html_class_attr = [], [], ''
-            if multi_field_row:
-                output.extend(self.make_row(columns_data, error_data, row_tag))
+                columns_data, error_data, html_class_attr = [], [], ''
+                for name, field in fields.items():
+                    bf = self[name]
+                    bf_errors = self.error_class(bf.errors)
+                    if bf.is_hidden:
+                        if bf_errors:
+                            top_errors.extend(
+                                [_('(Hidden field %(name)s) %(error)s') %
+                                 {'name': name, 'error': str(e)}
+                                 for e in bf_errors])
+                        hidden_fields.append(str(bf))
+                        continue
+                    # Create a 'class="..."' attribute if the row or column should have any
+                    css_classes = bf.css_classes()
+                    if multi_field_row:
+                        css_classes = ' '.join(['nowrap', css_classes])
+                    html_class_attr = ' class="%s"' % css_classes if css_classes else ''
+                    if errors_on_separate_row and bf_errors:
+                        error_data.append(error_col % str(bf_errors))
+                    has_label_style = name in styled_labels and label_attrs
+                    # print(f"{name} has style: {has_label_style} ")
+                    if bf.label or has_label_style:
+                        attrs = label_attrs if has_label_style else ''
+                        label = conditional_escape(bf.label)
+                        label = bf.label_tag(label, attrs) or ''
+                    else:
+                        label = ''
+                    if field.help_text:
+                        help_text = help_text_html % field.help_text
+                    else:
+                        help_text = ''
+                    format_kwargs = {
+                        'errors': bf_errors,
+                        'label': label,
+                        'field': bf,
+                        'help_text': help_text,
+                        'html_col_attr': html_class_attr if multi_field_row else '',
+                        'html_class_attr': html_class_attr,
+                        'css_classes': css_classes,
+                        'field_name': bf.html_name,
+                    }
+                    if multi_field_row:
+                        columns_data.append(col_html % format_kwargs)
+                        html_row_attr = ''
+                    else:
+                        columns_data.append(single_col_html % format_kwargs)
+                        html_row_attr = html_class_attr
+                output.extend(self.make_row(columns_data, error_data, row_tag, html_row_attr))
+        # end iterating fieldsets
         row_ender = '' if not single_col_tag else '</' + single_col_tag + '>'
         row_ender += '</' + row_tag + '>'
         if top_errors:
@@ -280,7 +299,7 @@ class PersonFormMixIn:
                     output.append(last_row)
             else:  # If there aren't any rows in the output, just append the hidden fields.
                 output.append(str_hidden)
-        print("------------------------ End PersonFormMixIn._html_output ------------------------------")
+        # print("------------------------ End PersonFormMixIn._html_output ------------------------------")
         return mark_safe('\n'.join(output))
 
     def as_table(self):
