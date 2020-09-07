@@ -2,7 +2,7 @@ from django import forms
 from django.conf import settings
 # from django.contrib.admin.helpers import AdminForm,  Fieldline
 from django.contrib.admin.utils import flatten
-from django.forms.widgets import Input, CheckboxInput, Textarea
+from django.forms.widgets import Input, CheckboxInput, HiddenInput, Textarea
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import gettext as _
 from django.utils.html import conditional_escape
@@ -204,9 +204,10 @@ class PersonFormMixIn:
         # radio_widget_classes = ['RadioSelect', ]
         # check_widget_classes = ['CheckboxInput', 'CheckboxSelectMultiple', ]
 
-        # ignored_base_widget_classes = ['ChoiceWidget', 'Select', 'MultiWidget', 'SelectDateWidget', ]
+        # ignored_base_widget_classes = ['ChoiceWidget', 'MultiWidget', 'SelectDateWidget', ]
+        # 'ChoiceWidget' is the base for 'RadioSelect', 'Select', and many variations of them.
         include_widgets = (Input, Textarea, )  # Base classes for the field.widgets we want.
-        exclude_widgets = (CheckboxInput, )  # classes for the field.widgets we do NOT want.
+        exclude_widgets = (CheckboxInput, HiddenInput)  # classes for the field.widgets we do NOT want.
         col_html, single_col_html = self.column_formats(col_head_tag, col_tag, single_col_tag, col_head_data, col_data)
         prepared = self._make_fieldsets()
         top_errors = self.non_field_errors().copy()  # Errors that should be displayed above all fields.
@@ -216,7 +217,7 @@ class PersonFormMixIn:
             # print(f"Prep {fieldset_label} row: ")
             # pprint(opts)
             single_fields = [ea for ea in opts['rows'] if len(ea) == 1]
-            visual_group = []
+            visual_group, styled_labels, label_attrs = [], [], ''
             if len(single_fields) > 1:
                 for ea in single_fields:
                     klass = list(ea.values())[0].widget.__class__
@@ -225,6 +226,12 @@ class PersonFormMixIn:
             if len(visual_group) > 1:
                 print("-------------- visual_group ------------------------")
                 pprint(visual_group)
+                max_label_length = max(len(list(ea.values())[0].label) for ea in visual_group)
+                max_word_length = max(len(w) for ea in visual_group for w in list(ea.values())[0].label.split())
+                pprint(max_label_length)
+                pprint(max_word_length)
+                label_attrs = {'style': "width: {}rem; display: inline-block".format(max_label_length)}
+                styled_labels = [list(ea.keys())[0] for ea in visual_group]
                 print("------------------------------------------------------")
             for fields in opts['rows']:
                 col_count = len(fields)
@@ -249,9 +256,12 @@ class PersonFormMixIn:
                     html_class_attr = ' class="%s"' % css_classes if css_classes else ''
                     if errors_on_separate_row and bf_errors:
                         error_data.append(error_col % str(bf_errors))
-                    if bf.label:
+                    has_label_style = name in styled_labels and label_attrs
+                    print(f"{name} has style: {has_label_style} ")
+                    if bf.label or has_label_style:
+                        attrs = label_attrs if has_label_style else ''
                         label = conditional_escape(bf.label)
-                        label = bf.label_tag(label) or ''
+                        label = bf.label_tag(label, attrs) or ''
                     else:
                         label = ''
                     if field.help_text:
