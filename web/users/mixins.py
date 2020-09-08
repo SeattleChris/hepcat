@@ -138,11 +138,18 @@ class PersonFormMixIn:
                 max_position += 1  # opts['position'] if isinstance(opts['position'], int) else 0
                 if self.other_country_switch and 'address' in opts.get('classes', ''):
                     country_fields = self.make_country_row(all_fields)
+                    new_opts = {'position': opts['position'], 'classes': '', }
+                    new_opts['fields'] = [('other_country', self.country_field_name, )]
+                    new_opts['field_names'] = flatten(new_opts['fields'])
+                    new_opts['rows'] = [country_fields]
                     prepared['other_country'] = {'position': opts['position'], 'rows': [country_fields]}
                     max_position += 1
+        if new_opts:
+            fieldsets.append(('other_country', new_opts))
         max_position += 1
         field_rows = [{name: value} for name, value in all_fields.items()]
         prepared['remaining'] = {'rows': field_rows, 'position': max_position + 1, }
+        fieldsets.append(('remaining', {'rows': field_rows, 'position': max_position + 1, }))
         lookup = {'end': max_position + 2, None: max_position}
         # TODO: Refactor prepared to match fieldset format, but still sort.
         prepared = {k: v for k, v in sorted(prepared.items(),
