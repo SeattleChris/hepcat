@@ -208,7 +208,7 @@ class PersonFormMixIn:
         include_widgets = (Input, Textarea, )  # Base classes for the field.widgets we want.
         exclude_widgets = (CheckboxInput, HiddenInput)  # classes for the field.widgets we do NOT want.
         single_fields = [ea for ea in opts['rows'] if len(ea) == 1]
-        visual_group, styled_labels, label_attrs = [], [], ''
+        visual_group, styled_labels, label_attrs_dict = [], [], {}
         if len(single_fields) > 1:
             for ea in single_fields:
                 klass = list(ea.values())[0].widget.__class__
@@ -218,10 +218,10 @@ class PersonFormMixIn:
             max_label_length = max(len(list(ea.values())[0].label) for ea in visual_group)
             # max_word_length = max(len(w) for ea in visual_group for w in list(ea.values())[0].label.split())
             width = (max_label_length + 1) // 2  # * 0.85 ch
-            label_attrs = {'style': "width: {}rem; display: inline-block".format(width)}
+            label_attrs_dict = {'style': "width: {}rem; display: inline-block".format(width)}
             styled_labels = [list(ea.keys())[0] for ea in visual_group]
 
-        return styled_labels, label_attrs
+        return styled_labels, label_attrs_dict
 
     def form_row_content(self, html_args, fieldsets, form_col_count):
         *args, as_type, all_fieldsets = html_args
@@ -247,10 +247,11 @@ class PersonFormMixIn:
         return output
 
     def _html_output(self, row_tag, col_head_tag, col_tag, single_col_tag, col_head_data, col_data,
-                     help_text_html, errors_on_separate_row, as_type=None):
+                     help_text_br, errors_on_separate_row, as_type=None):
         """ Overriding BaseForm._html_output. Output HTML. Used by as_table(), as_ul(), as_p(). """
-        all_fieldsets = True if as_type == 'fieldsets' else False
+        help_tag = 'span'
         # class_attr='%(html_class_attr)s',
+        all_fieldsets = True if as_type == 'fieldset' else False
         html_args = [row_tag, col_head_tag, col_tag, single_col_tag, as_type, all_fieldsets]
         # ignored_base_widgets = ['ChoiceWidget', 'MultiWidget', 'SelectDateWidget', ]
         # 'ChoiceWidget' is the base for 'RadioSelect', 'Select', and variations.
@@ -261,7 +262,7 @@ class PersonFormMixIn:
         hidden_fields, form_col_count = [], 0
         for fieldset_label, opts in fieldsets:
             max_fs_columns = 0
-            width_labels, label_width_attrs = self.determine_label_width(opts)
+            width_labels, label_width_attrs_dict = self.determine_label_width(opts)
             row_data = []
             for row in opts['rows']:
                 col_count = len(row)
@@ -269,6 +270,7 @@ class PersonFormMixIn:
                 max_fs_columns = col_count if col_count > max_fs_columns else max_fs_columns
                 columns_data, error_data, html_class_attr = [], [], ''
                 for name, field in row.items():
+                    field_attrs_dict = {}
                     bf = self[name]
                     bf_errors = self.error_class(bf.errors)
                     if bf.is_hidden:
@@ -289,21 +291,35 @@ class PersonFormMixIn:
                         tag = col_tag if multi_field_row else single_col_tag
                         err = str(bf_errors) if not tag else self._html_tag(tag, bf_errors, attr)
                         error_data.append(err)
-                    has_label_width = name in width_labels and label_width_attrs
-                    if bf.label or has_label_width:
-                        attrs = label_width_attrs if has_label_width else ''
+                    if bf.label:
+                        attrs = label_width_attrs_dict if name in width_labels else {}
                         label = conditional_escape(bf.label)
                         label = bf.label_tag(label, attrs) or ''
-                    else:
-                        label = ''
+                    else:  # TODO: Check bf.label always exists?
+                        raise ImproperlyConfigured(_("Visible Bound Fields must have a non-empty label. "))
                     if field.help_text:
-                        help_text = help_text_html % field.help_text
+                        help_text = '<br />' if help_text_br else ''
+                        help_text += str(field.help_text)
+                        id_ = field.widget.attrs.get('id') or bf.auto_id
+                        field_html_id = field.widget.id_for_label(id_) if id_ else ''
+                        help_id = field_html_id or bf.html_name
+                        help_id += '-help'
+                        field_attrs_dict.update({'aria-describedby': help_id})
+                        help_attr = ' id="{}" class="help-text"'.format(help_id)
+                        # help_text = help_text_html % field.help_text
+                        help_text = self._html_tag(help_tag, help_text, help_attr)
                     else:
                         help_text = ''
+                    if field_attrs_dict:
+                        field_display = bf.as_widget(attrs=field_attrs_dict)
+                        if field.show_hidden_initial:
+                            field_display += bf.as_hidden(only_initial=True)
+                    else:
+                        field_display = bf
                     format_kwargs = {
                         'errors': bf_errors,
                         'label': label,
-                        'field': bf,
+                        'field': field_display,
                         'help_text': help_text,
                         'html_col_attr': html_class_attr if multi_field_row else '',
                         'html_class_attr': html_class_attr,
@@ -361,8 +377,7 @@ class PersonFormMixIn:
             single_col_tag='td',
             col_head_data='%(label)s',
             col_data='%(errors)s%(field)s%(help_text)s',
-            # error_col='<td colspan="2">%s</td>',
-            help_text_html='<br /><span class="helptext">%s</span>',
+            help_text_br=True,
             errors_on_separate_row=False,
             as_type='table',
         )
@@ -376,8 +391,7 @@ class PersonFormMixIn:
             single_col_tag='',
             col_head_data='',
             col_data='%(errors)s%(label)s%(field)s%(help_text)s',
-            # error_col='%s',
-            help_text_html='<span class="helptext">%s</span>',
+            help_text_br=False,
             errors_on_separate_row=False,
             as_type='ul',
         )
@@ -391,8 +405,7 @@ class PersonFormMixIn:
             single_col_tag='',
             col_head_data='',
             col_data='%(label)s%(field)s%(help_text)s',
-            # error_col='%s',
-            help_text_html='<span class="helptext">%s</span>',
+            help_text_br=False,
             errors_on_separate_row=True,
             as_type='p'
         )
