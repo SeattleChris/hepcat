@@ -181,8 +181,16 @@ class PersonFormMixIn:
         single_col_html += col_data if not single_col_tag else self._html_tag(single_col_tag, col_data)
         return col_html, single_col_html
 
-    def _html_output(self, row_tag, col_head_tag, col_tag, single_col_tag, class_attr,
-                     col_head_data, col_data, error_col, help_text_html, errors_on_separate_row):
+    def as_test(self):
+        """ Prepares and calls different 'as_<variation>' method variations. """
+        data = self.as_p()
+        container = 'p'  # table, ul, ''
+        if container != 'p':
+            data = self._html_tag(container, data)
+        return mark_safe(data)
+
+    def _html_output(self, row_tag, col_head_tag, col_tag, single_col_tag, class_attr, col_head_data, col_data,
+                     error_col, help_text_html, errors_on_separate_row, as_type=None):
         "Overriding BaseForm._html_output. Output HTML. Used by as_table(), as_ul(), as_p()."
         include_widgets = (Input, Textarea, )  # Base classes for the field.widgets we want.
         exclude_widgets = (CheckboxInput, HiddenInput)  # classes for the field.widgets we do NOT want.
@@ -322,6 +330,7 @@ class PersonFormMixIn:
             error_col='<td colspan="2">%s</td>',
             help_text_html='<br /><span class="helptext">%s</span>',
             errors_on_separate_row=False,
+            as_type='table',
         )
 
     def as_ul(self):
@@ -337,6 +346,7 @@ class PersonFormMixIn:
             error_col='%s',
             help_text_html='<span class="helptext">%s</span>',
             errors_on_separate_row=False,
+            as_type='ul',
         )
 
     def as_p(self):
@@ -352,4 +362,5 @@ class PersonFormMixIn:
             error_col='%s',
             help_text_html='<span class="helptext">%s</span>',
             errors_on_separate_row=True,
+            as_type='p'
         )
