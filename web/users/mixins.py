@@ -101,6 +101,13 @@ class PersonFormMixIn:
                     setattr(field, prop, value)
         return fields.copy()
 
+    def test_field_order(self, data):
+        """ Log printing the dict, array, or tuple in the order they are currently stored. """
+        log_lines = [(key, value) for key, value in data.items()] if isinstance(data, dict) else data
+        for line in log_lines:
+            pprint(line)
+        # end test_field_order
+
     def make_country_row(self, remaining_fields):
         field_name = self.country_field_name
         field = remaining_fields.pop(field_name, None)
@@ -117,8 +124,8 @@ class PersonFormMixIn:
     def _make_fieldsets(self):
         all_fields = self.prep_fields()
         fieldsets = list(getattr(self, 'fieldsets', ((None, {'fields': [], 'position': None}), )))
-        print("=============== PersonFormMixIn._make_fieldsets =====================")
-        max_position, prepared, new_opts = 0, {}, {}
+        # print("=============== PersonFormMixIn._make_fieldsets =====================")
+        max_position, remove_idx = 0, []
         for index, fieldset in enumerate(fieldsets):
             fieldset_label, opts = fieldset
             if 'fields' not in opts or 'position' not in opts:
@@ -131,40 +138,25 @@ class PersonFormMixIn:
                     field_rows.append(existing_fields)
             if field_rows:
                 fieldset_label = fieldset_label or 'fieldset_' + str(index)
-                prepared[fieldset_label] = {'position': opts['position']}
                 if self.other_country_switch and 'address' in opts.get('classes', ''):
                     country_fields = self.make_country_row(all_fields)
                     opts['fields'].append(('other_country', self.country_field_name, ))
                     field_rows.append(country_fields)
-                prepared[fieldset_label]['rows'] = field_rows
                 opts['rows'] = field_rows
                 opts['field_names'] = flatten(opts['fields'])
-                prepared[fieldset_label]['field_names'] = flatten(opts['fields'])
-                prepared[fieldset_label]['classes'] = opts.get('classes', [])
                 max_position += 1  # opts['position'] if isinstance(opts['position'], int) else 0
-        if new_opts:
-            fieldsets.append(('other_country', new_opts))
+            else:
+                remove_idx.append(index)
+        for index in reversed(remove_idx):
+            fieldsets.pop(index)
         max_position += 1
         field_rows = [{name: value} for name, value in all_fields.items()]
-        prepared['remaining'] = {'rows': field_rows, 'position': max_position + 1, }
         fieldsets.append(('remaining', {'rows': field_rows, 'position': max_position + 1, }))
         lookup = {'end': max_position + 2, None: max_position}
-        # TODO: Refactor prepared to match fieldset format, but still sort.
-        prepared = {k: v for k, v in sorted(prepared.items(),
-                    key=lambda ea: lookup.get(ea[1]['position'], ea[1]['position']))
-                    }
-        pprint(prepared)
-        print("-------------------------------------------------------------------------------------")
         fieldsets = [(k, v) for k, v in sorted(fieldsets,
                      key=lambda ea: lookup.get(ea[1]['position'], ea[1]['position']))
                      ]
-        pprint(fieldsets)
-        print("-------------------------------------------------------------------------------------")
-        setup = [(k, v) for k, v in sorted(prepared.items(),
-                 key=lambda ea: lookup.get(ea[1]['position'], ea[1]['position']))
-                 ]
-        pprint(setup)
-        return prepared
+        return fieldsets
 
     def _html_tag(self, tag, data, attr=''):
         return '<' + tag + attr + '>' + data + '</' + tag + '>'
@@ -206,11 +198,11 @@ class PersonFormMixIn:
         # ignored_base_widgets = ['ChoiceWidget', 'MultiWidget', 'SelectDateWidget', ]
         # 'ChoiceWidget' is the base for 'RadioSelect', 'Select', and variations.
         col_html, single_col_html = self.column_formats(col_head_tag, col_tag, single_col_tag, col_head_data, col_data)
-        prepared = self._make_fieldsets()
+        fieldsets = self._make_fieldsets()
         top_errors = self.non_field_errors().copy()  # Errors that should be displayed above all fields.
         # print("========================== PersonFormMixIn._html_output ================================")
         output, hidden_fields, max_columns = [], [], 0
-        for fieldset_label, opts in prepared.items():
+        for fieldset_label, opts in fieldsets:
             single_fields = [ea for ea in opts['rows'] if len(ea) == 1]
             visual_group, styled_labels, label_attrs = [], [], ''
             if len(single_fields) > 1:
