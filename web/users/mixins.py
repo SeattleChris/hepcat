@@ -7,7 +7,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import gettext as _
 from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
-# from pprint import pprint
+from pprint import pprint
 
 
 class PersonFormMixIn:
@@ -25,7 +25,7 @@ class PersonFormMixIn:
             'label': _("Postal Code"),
             'help_text': ''}, }
     fieldsets = (
-        (_('names_row'), {
+        (None, {
             'fields': [('first_name', 'last_name', )],
             'position': 1,
         }),
@@ -116,9 +116,9 @@ class PersonFormMixIn:
 
     def _make_fieldsets(self):
         all_fields = self.prep_fields()
-        fieldsets = getattr(self, 'fieldsets', ((None, {'fields': [], 'position': None}), ))
-        # print("=============== PersonFormMixIn._make_fieldsets =====================")
-        max_position, prepared = 0, {}
+        fieldsets = list(getattr(self, 'fieldsets', ((None, {'fields': [], 'position': None}), )))
+        print("=============== PersonFormMixIn._make_fieldsets =====================")
+        max_position, prepared, new_opts = 0, {}, {}
         for index, fieldset in enumerate(fieldsets):
             fieldset_label, opts = fieldset
             if 'fields' not in opts or 'position' not in opts:
@@ -133,6 +133,8 @@ class PersonFormMixIn:
                 fieldset_label = fieldset_label or 'fieldset_' + str(index)
                 prepared[fieldset_label] = {'position': opts['position']}
                 prepared[fieldset_label]['rows'] = field_rows
+                opts['rows'] = field_rows
+                opts['field_names'] = flatten(opts['fields'])
                 prepared[fieldset_label]['field_names'] = flatten(opts['fields'])
                 prepared[fieldset_label]['classes'] = opts.get('classes', [])
                 max_position += 1  # opts['position'] if isinstance(opts['position'], int) else 0
@@ -155,6 +157,17 @@ class PersonFormMixIn:
         prepared = {k: v for k, v in sorted(prepared.items(),
                     key=lambda ea: lookup.get(ea[1]['position'], ea[1]['position']))
                     }
+        pprint(prepared)
+        print("-------------------------------------------------------------------------------------")
+        fieldsets = [(k, v) for k, v in sorted(fieldsets,
+                     key=lambda ea: lookup.get(ea[1]['position'], ea[1]['position']))
+                     ]
+        pprint(fieldsets)
+        print("-------------------------------------------------------------------------------------")
+        setup = [(k, v) for k, v in sorted(prepared.items(),
+                 key=lambda ea: lookup.get(ea[1]['position'], ea[1]['position']))
+                 ]
+        pprint(setup)
         return prepared
 
     def _html_tag(self, tag, data, attr=''):
@@ -215,12 +228,13 @@ class PersonFormMixIn:
                 width = (max_label_length + 1) // 2  # * 0.85 ch
                 label_attrs = {'style': "width: {}rem; display: inline-block".format(width)}
                 styled_labels = [list(ea.keys())[0] for ea in visual_group]
-            for fields in opts['rows']:
-                col_count = len(fields)
+            row_data = []
+            for row in opts['rows']:
+                col_count = len(row)
                 multi_field_row = False if col_count == 1 else True
                 max_columns = col_count if col_count > max_columns else max_columns
                 columns_data, error_data, html_class_attr = [], [], ''
-                for name, field in fields.items():
+                for name, field in row.items():
                     bf = self[name]
                     bf_errors = self.error_class(bf.errors)
                     if bf.is_hidden:
@@ -266,13 +280,34 @@ class PersonFormMixIn:
                     else:
                         columns_data.append(single_col_html % format_kwargs)
                         html_row_attr = html_class_attr
-                output.extend(self.make_row(columns_data, error_data, row_tag, html_row_attr))
+                row_data.extend(self.make_row(columns_data, error_data, row_tag, html_row_attr))
+            # end iterating field rows
+            if fieldset_label is not None:
+                container_attr = f' class="fieldset_{as_type}""'
+                container = None if as_type in ('p', 'fieldset') else as_type
+                data = '\n'.join(row_data)
+                if container:
+                    data = self._html_tag(container, data, container_attr) + '\n'
+                legend = self._html_tag('legend', fieldset_label) + '\n'
+                fieldset_attr = ''
+                fieldset_el = self._html_tag('fieldset', legend + data, fieldset_attr)
+                if container:
+                    attr = ''
+                    if as_type == 'table' and max_columns > 1:
+                        colspan = max_columns * 2 if col_head_tag else max_columns
+                        attr += f' colspan="{colspan}"'
+                    fieldset_col = self._html_tag(single_col_tag or col_tag, fieldset_el, attr)
+                    row_attr = ' class="fieldset_row"'
+                    fieldset_el = self._html_tag(row_tag, fieldset_col, row_attr)
+                output.append(fieldset_el)
+            else:
+                output.extend(row_data)
         # end iterating fieldsets
         row_ender = '' if not single_col_tag else '</' + single_col_tag + '>'
         row_ender += '</' + row_tag + '>'
         if top_errors:
             attr = ''
-            if col_head_tag and single_col_tag == 'td' and max_columns > 0:
+            if col_head_tag and as_type == 'table' and max_columns > 0:  # as_type == 'table' or single_col_tag == 'td'
                 attr = ' colspan=' + str(max_columns * 2)
             attr += ' id="top_errors"'
             column_kwargs = {
