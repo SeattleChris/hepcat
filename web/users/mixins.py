@@ -126,26 +126,22 @@ class PersonFormMixIn:
             field_rows = []
             for ea in opts['fields']:
                 row = [ea] if isinstance(ea, str) else ea
-                temp = {name: all_fields.pop(name) for name in row if name in all_fields}
-                if temp:
-                    field_rows.append(temp)
+                existing_fields = {name: all_fields.pop(name) for name in row if name in all_fields}
+                if existing_fields:  # only adding non-empty rows. May be empty if these fields are not in current form.
+                    field_rows.append(existing_fields)
             if field_rows:
                 fieldset_label = fieldset_label or 'fieldset_' + str(index)
                 prepared[fieldset_label] = {'position': opts['position']}
+                if self.other_country_switch and 'address' in opts.get('classes', ''):
+                    country_fields = self.make_country_row(all_fields)
+                    opts['fields'].append(('other_country', self.country_field_name, ))
+                    field_rows.append(country_fields)
                 prepared[fieldset_label]['rows'] = field_rows
                 opts['rows'] = field_rows
                 opts['field_names'] = flatten(opts['fields'])
                 prepared[fieldset_label]['field_names'] = flatten(opts['fields'])
                 prepared[fieldset_label]['classes'] = opts.get('classes', [])
                 max_position += 1  # opts['position'] if isinstance(opts['position'], int) else 0
-                if self.other_country_switch and 'address' in opts.get('classes', ''):
-                    country_fields = self.make_country_row(all_fields)
-                    new_opts = {'position': opts['position'], 'classes': '', }
-                    new_opts['fields'] = [('other_country', self.country_field_name, )]
-                    new_opts['field_names'] = flatten(new_opts['fields'])
-                    new_opts['rows'] = [country_fields]
-                    prepared['other_country'] = {'position': opts['position'], 'rows': [country_fields]}
-                    max_position += 1
         if new_opts:
             fieldsets.append(('other_country', new_opts))
         max_position += 1
