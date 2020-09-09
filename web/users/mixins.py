@@ -404,3 +404,16 @@ class PersonFormMixIn:
             as_type='p'
         )
 
+    def as_fieldset(self):
+        " Return this form rendered as, or in, HTML <fieldset>s. Untitled fieldsets will be borderless. "
+        return self._html_output(
+            row_tag='p',
+            col_head_tag=None,
+            col_tag='span',
+            single_col_tag='',
+            col_head_data='',
+            col_data='%(errors)s%(label)s%(field)s%(help_text)s',
+            help_text_br=False,
+            errors_on_separate_row=False,
+            as_type='fieldset',
+        )
