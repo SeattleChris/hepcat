@@ -184,9 +184,9 @@ class PersonFormMixIn:
         col_html, single_col_html = '', ''
         attrs = '%(html_col_attr)s'
         if col_head_tag:
-            col_html += self._html_tag(col_head_tag, col_head_data, attrs)
+            col_html += self._html_tag(col_head_tag, col_head_data)  # , attrs
             single_col_html += col_html
-            attrs = ''
+            # attrs = ''
         col_html += self._html_tag(col_tag, col_data, attrs)
         single_col_html += col_data if not single_col_tag else self._html_tag(single_col_tag, col_data, attrs)
         return col_html, single_col_html
@@ -222,8 +222,12 @@ class PersonFormMixIn:
                 data = '\n'.join(row_data)
                 if container:
                     data = self._html_tag(container, data, container_attr) + '\n'
-                legend = self._html_tag('legend', fieldset_label) + '\n'
-                fieldset_attr = ''
+                if fieldset_label:
+                    legend = self._html_tag('legend', fieldset_label) + '\n'
+                    fieldset_attr = ''
+                else:
+                    legend = ''
+                    fieldset_attr = ' class="noline"'
                 fieldset_el = self._html_tag('fieldset', legend + data, fieldset_attr)
                 if container:
                     col_attr = ''
@@ -236,11 +240,11 @@ class PersonFormMixIn:
 
     def as_test(self):
         """ Prepares and calls different 'as_<variation>' method variations. """
-        container = 'table'  # table, ul, p, ...
+        container = 'table'  # table, ul, p, fieldset, ...
 
         func = getattr(self, 'as_' + container)
         data = func()
-        if container != 'p':
+        if container not in ('p', 'fieldset', ):
             data = self._html_tag(container, data)
         return mark_safe(data)
 
@@ -258,7 +262,7 @@ class PersonFormMixIn:
         hidden_fields, form_col_count = [], 0
         for fieldset_label, opts in fieldsets:
             max_fs_columns = 0
-            label_width_attrs_dict, width_labels = self.determine_label_width(opts)
+            label_width_attrs_dict, width_labels = '', [] if as_type == 'table' else self.determine_label_width(opts)
             row_data = []
             for row in opts['rows']:
                 col_count = len(row)
@@ -311,12 +315,15 @@ class PersonFormMixIn:
                             field_display += bf.as_hidden(only_initial=True)
                     else:
                         field_display = bf
+                    html_col_attr = html_class_attr
+                    # if not multi_field_row:
+                    #     html_col_attr += ' colspan="%(col_count)s"'
                     format_kwargs = {
                         'errors': bf_errors,
                         'label': label,
                         'field': field_display,
                         'help_text': help_text,
-                        'html_col_attr': html_class_attr if multi_field_row else '',
+                        'html_col_attr': html_col_attr,  # html_class_attr,  # if multi_field_row else '',
                         'html_class_attr': html_class_attr,
                         'css_classes': css_classes,
                         'field_name': bf.html_name,
@@ -326,7 +333,8 @@ class PersonFormMixIn:
                         html_row_attr = ''
                     else:
                         columns_data.append(single_col_html % format_kwargs)
-                        html_row_attr = html_class_attr
+                        # html_row_attr = html_class_attr
+                        html_row_attr = ''
                 row_data.extend(self.make_row(columns_data, error_data, row_tag, html_row_attr))
             # end iterating field rows
             opts['row_data'] = row_data
