@@ -117,11 +117,13 @@ form input[type=password] { width: 7rem; }
 form input[maxlength] { width: unset; }
 form th { vertical-align: text-top; text-align: right; font-weight: bold; }
 form td, form th { padding: 0.25rem; }
-form > ul > li { margin: 0.5rem 0; }  /* TODO: update selection to avoid error list or help text */
+form > ul, form ul.fieldset_ul { list-style-type: none; }  /* TODO: update selection to avoid error list or help text */
+form > ul > li, form ul.fieldset_ul > li { margin: 0.5rem 0; }  /* TODO: update selection to avoid error list or help text */
+
 form .fieldset_row { padding-top: 1rem; }
 form .fieldset_row legend { background-color: #80b0c8; padding: 0.125rem 0.5rem; }
-form .fieldset_table { margin: 0; padding: 0; }
-form .fieldset_ul { margin: 0; padding: 0; }
+form .fieldset_table { font-size: inherit; }
+form .fieldset_ul { font-size: inherit; }
 
 /****************** End of sub-parts. Adjustments for screen size. ************************/
 /****************** Adjustments for screen size. ************************/
