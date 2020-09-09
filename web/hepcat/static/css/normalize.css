@@ -173,7 +173,7 @@ svg:not(:root) { overflow: hidden; }
  * Address margin not present in IE 8/9 and Safari.
  */
 
-figure { margin: 1em 40px; }
+figure { margin: 1em 2.5em; }
 
 /**
  * Address differences between Firefox and other browsers.
@@ -209,7 +209,7 @@ code, kbd, pre, samp { font-family: monospace, monospace; font-size: 1em; }
  */
 
 button, input, optgroup, select, textarea {
-    color: inherit; /* 1 */
+  color: inherit; /* 1 */
   font: inherit; /* 2 */
   margin: 0; /* 3 */
 }
@@ -316,8 +316,8 @@ input[type="search"]::-webkit-search-decoration {
  * Define consistent border, margin, and padding.
  */
 
-fieldset { border: 1px solid #303030; margin: 0 2px; padding: 0.35em 0.625em 0.75em; }  /* #c0c0c0 */
-
+fieldset { border: 1px solid #303030; margin: 0 0.125rem; padding: 0.35em 0.625em 0.75em; }  /* #c0c0c0 margin:0 2px*/
+fieldset.noline { border: none; }
 /**
  * 1. Correct `color` not being inherited in IE 8/9/10/11.
  * 2. Remove padding so people aren't caught out if they zero out fieldsets.
