@@ -119,24 +119,46 @@ class PersonFormMixIn:
         """ Updates the dictionaries of each fieldset with 'rows' of field dicts, and a flattend 'field_names' list. """
         all_fields = self.prep_fields()
         fieldsets = list(getattr(self, 'fieldsets', ((None, {'fields': [], 'position': None}), )))
-        max_position, remove_idx = 0, []
+        top_errors = self.non_field_errors().copy()  # Errors that should be displayed above all fields.
+        max_position, form_column_count, hidden_fields, remove_idx = 0, 0, [], []
         for index, fieldset in enumerate(fieldsets):
             fieldset_label, opts = fieldset
             if 'fields' not in opts or 'position' not in opts:
                 raise ImproperlyConfigured(_("There must be 'fields' and 'position' in each fieldset. "))
-            field_rows = []
+            field_rows, fs_column_count = [], 0
             for ea in opts['fields']:
                 row = [ea] if isinstance(ea, str) else ea
-                existing_fields = {name: all_fields.pop(name) for name in row if name in all_fields}
+                existing_fields = {}
+                for name in row:
+                    if name not in all_fields:
+                        continue
+                    field = all_fields.pop(name)
+                    bf = self[name]
+                    bf_errors = self.error_class(bf.errors)
+                    if bf.is_hidden:
+                        if bf_errors:
+                            top_errors.extend(
+                                [_('(Hidden field %(name)s) %(error)s') %
+                                    {'name': name, 'error': str(e)}
+                                    for e in bf_errors])
+                        hidden_fields.append(str(bf))
+                    else:
+                        existing_fields[name] = field
                 if existing_fields:  # only adding non-empty rows. May be empty if these fields are not in current form.
+                    fs_column_count = max((fs_column_count, len(existing_fields)))
                     field_rows.append(existing_fields)
             if field_rows:
                 if self.other_country_switch and 'address' in opts.get('classes', ''):
                     country_fields = self.prep_country_fields(all_fields)
                     opts['fields'].append(('other_country', self.country_field_name, ))
+                    fs_column_count = max((fs_column_count, len(country_fields)))
                     field_rows.append(country_fields)
                 opts['rows'] = field_rows
                 opts['field_names'] = flatten(opts['fields'])
+                opts['rows'] = field_rows
+                opts['column_count'] = fs_column_count
+                if fieldset_label is None:
+                    form_column_count = max((fs_column_count, form_column_count))
                 max_position += 1
             else:
                 remove_idx.append(index)
@@ -144,11 +166,14 @@ class PersonFormMixIn:
             fieldsets.pop(index)
         max_position += 1
         field_rows = [{name: value} for name, value in all_fields.items()]
-        fieldsets.append((None, {'rows': field_rows, 'position': max_position + 1, }))
+        field_names = list(all_fields.keys())
+        fieldsets.append((None, {'rows': field_rows, 'position': max_position + 1, 'field_names': field_names, }))
         lookup = {'end': max_position + 2, None: max_position}
         fieldsets = [(k, v) for k, v in sorted(fieldsets,
                      key=lambda ea: lookup.get(ea[1]['position'], ea[1]['position']))
                      ]
+        summary = {'top_errors': top_errors, 'hidden_fields': hidden_fields, 'columns': form_column_count}
+        fieldsets.append(('summary', summary, ))
         return fieldsets
 
     def _html_tag(self, tag, data, attr_string=''):
@@ -258,34 +283,26 @@ class PersonFormMixIn:
         # 'ChoiceWidget' is the base for 'RadioSelect', 'Select', and variations.
         col_html, single_col_html = self.column_formats(col_head_tag, col_tag, single_col_tag, col_head_data, col_data)
         fieldsets = self._make_fieldsets()
-        top_errors = self.non_field_errors().copy()  # Errors that should be displayed above all fields.
-        hidden_fields, form_col_count = [], 0
+        assert fieldsets[-1][0] == 'summary', "The final row from _make_fieldsets is reserved for form summary data. "
+        summary = fieldsets.pop()[1]
+        data_labels = ('top_errors', 'hidden_fields', 'columns')
+        assert isinstance(summary, dict) and all(ea in summary for ea in data_labels), "Malformed fieldsets summary. "
+        hidden_fields = summary['hidden_fields']
+        top_errors = summary['top_errors']
+        form_col_count = 1 if all_fieldsets else summary['columns']
+        col_double = col_head_tag and as_type == 'table'
+
         for fieldset_label, opts in fieldsets:
-            max_fs_columns = 0
             label_width_attrs_dict, width_labels = '', [] if as_type == 'table' else self.determine_label_width(opts)
+            col_count = opts['column_count'] if fieldset_label else form_col_count
             row_data = []
             for row in opts['rows']:
-                col_count = len(row)
-                multi_field_row = False if col_count == 1 else True
-                max_fs_columns = max((col_count, max_fs_columns))
+                multi_field_row = False if len(row) == 1 else True
                 columns_data, error_data, html_class_attr = [], [], ''
                 for name, field in row.items():
                     field_attrs_dict = {}
                     bf = self[name]
                     bf_errors = self.error_class(bf.errors)
-                    if bf.is_hidden:
-                        if bf_errors:
-                            top_errors.extend(
-                                [_('(Hidden field %(name)s) %(error)s') %
-                                 {'name': name, 'error': str(e)}
-                                 for e in bf_errors])
-                        hidden_fields.append(str(bf))
-                        continue
-                    # Create a 'class="..."' attribute if the row or column should have any
-                    css_classes = bf.css_classes()
-                    if multi_field_row:
-                        css_classes = ' '.join(['nowrap', css_classes])
-                    html_class_attr = ' class="%s"' % css_classes if css_classes else ''
                     if errors_on_separate_row and bf_errors:
                         attr = ' colspan="2"' if col_head_tag and as_type == 'table' else ''  # TODO: colspan for single_col_tag
                         tag = col_tag if multi_field_row else single_col_tag
@@ -338,9 +355,7 @@ class PersonFormMixIn:
                 row_data.extend(self.make_row(columns_data, error_data, row_tag, html_row_attr))
             # end iterating field rows
             opts['row_data'] = row_data
-            opts['column_count'] = max_fs_columns
-            if not fieldset_label and not all_fieldsets:
-                form_col_count = max(form_col_count, max_fs_columns)
+            # opts['column_count'] = max_fs_columns
         # end iterating fieldsets
         output = self.form_main_rows(html_args, fieldsets, form_col_count)
         row_ender = '' if not single_col_tag else '</' + single_col_tag + '>'
