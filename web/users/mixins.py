@@ -208,7 +208,7 @@ class PersonFormMixIn:
         col_html, single_col_html = '', ''
         attrs = '%(html_col_attr)s'
         if col_head_tag:
-            col_html += self._html_tag(col_head_tag, col_head_data)  # , attrs
+            col_html += self._html_tag(col_head_tag, col_head_data, '%(html_head_attr)s')
             single_col_html += col_html
             # attrs = ''
         col_html += self._html_tag(col_tag, col_data, attrs)
@@ -273,9 +273,10 @@ class PersonFormMixIn:
         return mark_safe(data)
 
     def _html_output(self, row_tag, col_head_tag, col_tag, single_col_tag, col_head_data, col_data,
-                     help_text_br, errors_on_separate_row, as_type=None):
+                     help_text_br, errors_on_separate_row, as_type=None, strict_columns=False):
         """ Overriding BaseForm._html_output. Output HTML. Used by as_table(), as_ul(), as_p(), etc. """
         help_tag = 'span'
+        allow_colspan = not strict_columns and as_type == 'table'
         all_fieldsets = True if as_type == 'fieldset' else False
         html_args = [row_tag, col_head_tag, col_tag, single_col_tag, as_type, all_fieldsets]
         # ignored_base_widgets = ['ChoiceWidget', 'MultiWidget', 'SelectDateWidget', ]
@@ -306,13 +307,13 @@ class PersonFormMixIn:
                         colspan = 1 if multi_field_row else col_count
                         colspan *= 2 if col_double else 1
                         attr = ''
-                        if colspan > 1 and as_type == 'table':
+                        if colspan > 1 and allow_colspan:
                             attr += ' colspan="{}"'.format(colspan)
                         tag = col_tag if multi_field_row else single_col_tag
                         err = str(bf_errors) if not tag else self._html_tag(tag, bf_errors, attr)
                         error_data.append(err)
-                    # Create a 'class="..."' attribute if the row or column should have any
                     css_classes = bf.css_classes()  # a string of space seperated css classes.
+                    # can add to css_classes, used to make 'class="..."' attribute if the row or column should need it.
                     if multi_field_row:
                         css_classes = ' '.join(['nowrap', css_classes])
                     if bf.label:
@@ -333,10 +334,11 @@ class PersonFormMixIn:
                         help_text = self._html_tag(help_tag, help_text, help_attr)
                     else:
                         help_text = ''
-                    html_row_attr = ''
                     html_class_attr = ' class="%s"' % css_classes if css_classes else ''
+                    html_row_attr = ''
+                    html_head_attr = ' class="nowrap"' if multi_field_row else ''
                     html_col_attr = html_class_attr
-                    if not multi_field_row and col_count > 1 and as_type == 'table':
+                    if allow_colspan and not multi_field_row and col_count > 1:
                         colspan = col_count * 2 - 1 if col_double else col_count
                         html_col_attr += ' colspan="{}"'.format(colspan)
                     if field_attrs_dict:
@@ -350,9 +352,8 @@ class PersonFormMixIn:
                         'label': label,
                         'field': field_display,
                         'help_text': help_text,
+                        'html_head_attr': html_head_attr,
                         'html_col_attr': html_col_attr,  # html_class_attr,  # if multi_field_row else '',
-                        'html_class_attr': html_class_attr,
-                        'css_classes': css_classes,
                         'field_name': bf.html_name,
                     }
                     if multi_field_row:
@@ -364,17 +365,19 @@ class PersonFormMixIn:
                 row_data.extend(self.make_row(columns_data, error_data, row_tag, html_row_attr))
             # end iterating field rows
             opts['row_data'] = row_data
-            # opts['column_count'] = max_fs_columns
         # end iterating fieldsets
-        output = self.form_main_rows(html_args, fieldsets, form_col_count)
+        # output = self.form_main_rows(html_args, fieldsets, form_col_count)
         row_ender = '' if not single_col_tag else '</' + single_col_tag + '>'
         row_ender += '</' + row_tag + '>'
+        output = []
         if top_errors:
             col_attr = ' id="top_errors"'
             row_attr = ''
             data = ' '.join(top_errors)
             error_row = self.make_headless_row(html_args, data, form_col_count, col_attr, row_attr)
-            output.insert(0, error_row)
+            output.append(error_row)
+            # output.insert(0, error_row)
+        output.extend(self.form_main_rows(html_args, fieldsets, form_col_count))
         if hidden_fields:  # Insert any hidden fields in the last row.
             str_hidden = ''.join(hidden_fields)
             if output:
@@ -406,6 +409,7 @@ class PersonFormMixIn:
             help_text_br=True,
             errors_on_separate_row=False,
             as_type='table',
+            strict_columns=False,
         )
 
     def as_ul(self):
