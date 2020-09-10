@@ -217,21 +217,27 @@ class PersonFormMixIn:
 
     def determine_label_width(self, opts):
         """ Returns a attr_dict and list of names of fields whose labels should apply these attributes. """
+        max_width = 12
         include_widgets = (Input, Textarea, )  # Base classes for the field.widgets we want.
         exclude_widgets = (CheckboxInput, HiddenInput)  # classes for the field.widgets we do NOT want.
-        single_fields = [ea for ea in opts['rows'] if len(ea) == 1]
+        single_field_rows = [row for row in opts['rows'] if len(row) == 1]
         visual_group, styled_labels, label_attrs_dict = [], [], {}
-        if len(single_fields) > 1:
-            for ea in single_fields:
-                klass = list(ea.values())[0].widget.__class__
+        if len(single_field_rows) > 1:
+            for field_dict in single_field_rows:
+                name = list(field_dict.keys())[0]
+                field = list(field_dict.values())[0]
+                klass = field.widget.__class__
                 if issubclass(klass, include_widgets) and not issubclass(klass, exclude_widgets):
-                    visual_group.append(ea)
+                    visual_group.append((name, field, ))
         if len(visual_group) > 1:
-            max_label_length = max(len(list(ea.values())[0].label) for ea in visual_group)
-            # max_word_length = max(len(w) for ea in visual_group for w in list(ea.values())[0].label.split())
+            max_label_length = max(len(field.label) for name, field in visual_group)
             width = (max_label_length + 1) // 2  # * 0.85 ch
-            label_attrs_dict = {'style': "width: {}rem; display: inline-block".format(width)}
-            styled_labels = [list(ea.keys())[0] for ea in visual_group]
+            if width > max_width:
+                max_word_length = max(len(w) for name, field in visual_group for w in field.label.split())
+                width = max_word_length // 2
+            style_text = 'width: {}rem; display: inline-block'.format(width)
+            label_attrs_dict = {'style': style_text}
+            styled_labels = [name for name, field in visual_group]
         return label_attrs_dict, styled_labels
 
     def form_main_rows(self, html_args, fieldsets, form_col_count):
@@ -264,7 +270,7 @@ class PersonFormMixIn:
 
     def as_test(self):
         """ Prepares and calls different 'as_<variation>' method variations. """
-        container = 'table'  # table, ul, p, fieldset, ...
+        container = 'ul'  # table, ul, p, fieldset, ...
 
         func = getattr(self, 'as_' + container)
         data = func()
@@ -293,7 +299,9 @@ class PersonFormMixIn:
         col_double = col_head_tag and as_type == 'table'
 
         for fieldset_label, opts in fieldsets:
-            label_width_attrs_dict, width_labels = '', [] if as_type == 'table' else self.determine_label_width(opts)
+            label_width_attrs_dict, width_labels = self.determine_label_width(opts)
+            if as_type == 'table':
+                width_labels = []
             col_count = opts['column_count'] if fieldset_label else form_col_count
             row_data = []
             for row in opts['rows']:
@@ -353,7 +361,7 @@ class PersonFormMixIn:
                         'field': field_display,
                         'help_text': help_text,
                         'html_head_attr': html_head_attr,
-                        'html_col_attr': html_col_attr,  # html_class_attr,  # if multi_field_row else '',
+                        'html_col_attr': html_col_attr,
                         'field_name': bf.html_name,
                     }
                     if multi_field_row:
@@ -366,7 +374,6 @@ class PersonFormMixIn:
             # end iterating field rows
             opts['row_data'] = row_data
         # end iterating fieldsets
-        # output = self.form_main_rows(html_args, fieldsets, form_col_count)
         row_ender = '' if not single_col_tag else '</' + single_col_tag + '>'
         row_ender += '</' + row_tag + '>'
         output = []
@@ -376,7 +383,6 @@ class PersonFormMixIn:
             data = ' '.join(top_errors)
             error_row = self.make_headless_row(html_args, data, form_col_count, col_attr, row_attr)
             output.append(error_row)
-            # output.insert(0, error_row)
         output.extend(self.form_main_rows(html_args, fieldsets, form_col_count))
         if hidden_fields:  # Insert any hidden fields in the last row.
             str_hidden = ''.join(hidden_fields)
