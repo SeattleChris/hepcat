@@ -51,7 +51,6 @@ class RegisterForm(PersonFormMixIn, forms.ModelForm):
     field_order = [*new_fields, *Meta.fields]
 
     def __init__(self, *args, **kwargs):
-        # print('========= RegistrationForm.__init__========================')
         class_choices = kwargs.pop('class_choices', None)
         super(RegisterForm, self).__init__(*args, **kwargs)
         self.fields['class_selected'].queryset = class_choices
@@ -94,7 +93,20 @@ class RegisterForm(PersonFormMixIn, forms.ModelForm):
         # However, some names have capitols in the middle, so leave unmodified.
         return value
 
+    def _clean_fields(self):
+        print('======== RegisterForm._clean_fields =========')
+        super()._clean_fields()
+
+    def _clean_form(self):
+        print('======== RegisterForm._clean_form =========')
+        super()._clean_form()
+
+    def full_clean(self):
+        print('======== RegisterForm.full_clean =========')
+        super().full_clean()
+
     def clean_email(self):
+        print('======== RegisterForm.clean_email =========')
         email = self.cleaned_data.get('email')
         if email is None:
             raise forms.ValidationError("Email is required")

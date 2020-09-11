@@ -6,9 +6,15 @@ from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import gettext as _
 from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
+from pprint import pprint
 
 
 class PersonFormMixIn:
+    other_country = forms.BooleanField(
+        label=_("Not a {} address. ".format(settings.DEFAULT_COUNTRY)),
+        required=False,
+        )
+
     other_country_switch = True
     country_field_name = 'billing_country_code'
     alt_country_text = {
@@ -47,6 +53,45 @@ class PersonFormMixIn:
         'billing_postcode': {'maxlength': 5, 'size': 5, },
         }
 
+    def __init__(self, *args, **kwargs):
+        print("======================= INIT =================================")
+        country_field = self.base_fields('')
+        if self.other_country_switch and self.country_field_name in self.base_fields:
+
+            self.base_fields['other_country'] = self.other_country
+        super().__init__(*args, **kwargs)
+
+    def clean_other_country(self):
+        print("================== Clean Other Country ================================")
+        other_country = self.cleaned_data.get('other_country')
+        if other_country:
+            field_name = self.country_field_name
+            field = self.fields.get(field_name, None)
+            data_value = self.data.get(field_name, None)
+            pprint(field_name)
+            pprint(field.initial)
+            pprint(data_value)
+            raise forms.ValidationError("You can input your address. ")
+        return other_country
+
+    def full_clean(self):
+        print("=================== PersonFormMixIn == FULL CLEAN ========================== ")
+        if 'other_country' in self.data and 'other_country' not in self.fields:
+            print("***** MISSING OTHER COUNTRY! *****")
+        # name = 'billing_address_1'
+        # field = self.fields.get(name)
+        # data = self.data.get(name)
+        # print("------------------------------------------------")
+        # # # pprint(self.fields.keys())
+        # pprint(dir(field))
+        # print("------------------------------------------------")
+        # pprint(field.validators)
+        # pprint(field.bound_data)
+        # print("------------------------------------------------")
+        # pprint(data)
+        # print("------------------------------------------------")
+        super().full_clean()
+
     def set_alt_data(self, name, field, value):
         """ Modify the form submitted value if it matches a no longer accurate default value. """
         initial = self.get_initial_for_field(field, name)
@@ -73,8 +118,6 @@ class PersonFormMixIn:
         for name, field in fields.items():
             if name in overrides:
                 field.widget.attrs.update(overrides[name])
-                # for key, value in overrides[name].items():
-                #     field.widget.attrs[key] = value  # TODO: Use dict.update instead
             if not overrides.get(name, {}).get('no_size_override', False):
                 # TODO: Correct size attributes for all form controls: textarea, others?
                 default = DEFAULT.get('size', None)  # Cannot use float("inf") as an int.
@@ -270,7 +313,7 @@ class PersonFormMixIn:
 
     def as_test(self):
         """ Prepares and calls different 'as_<variation>' method variations. """
-        container = 'ul'  # table, ul, p, fieldset, ...
+        container = 'fieldset'  # table, ul, p, fieldset, ...
 
         func = getattr(self, 'as_' + container)
         data = func()
@@ -299,14 +342,15 @@ class PersonFormMixIn:
         col_double = col_head_tag and as_type == 'table'
 
         for fieldset_label, opts in fieldsets:
-            label_width_attrs_dict, width_labels = self.determine_label_width(opts)
             if as_type == 'table':
-                width_labels = []
+                label_width_attrs_dict, width_labels = {}, []
+            else:
+                label_width_attrs_dict, width_labels = self.determine_label_width(opts)
             col_count = opts['column_count'] if fieldset_label else form_col_count
             row_data = []
             for row in opts['rows']:
                 multi_field_row = False if len(row) == 1 else True
-                columns_data, error_data, html_class_attr = [], [], ''
+                columns_data, error_data, html_row_attr = [], [], ''
                 for name, field in row.items():
                     field_attrs_dict = {}
                     bf = self[name]
