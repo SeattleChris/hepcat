@@ -32,11 +32,11 @@ class CustomRegistrationForm(PersonFormMixIn, RegistrationForm):
         if not model or not all(hasattr(model, ea) for ea in required_attributes):
             err = "Missing features for user model. Try subclassing Django's AbstractBaseUser, AbstractUser, or User. "
             raise ImproperlyConfigured(_(err))
-        # print("================================== CustomRegistrationForm.__init__ =====================")
+        print("================================== CustomRegistrationForm.__init__ =====================")
         super().__init__(*args, **kwargs)
         username_field_name = self._meta.model.USERNAME_FIELD
         email_field_name = self._meta.model.get_email_field_name()
-        named_focus = None
+        named_focus = kwargs.get('named_focus', None)
         keep_keys = set(self.data.keys())
         if username_field_name in self.data:
             named_focus = email_field_name
@@ -44,18 +44,8 @@ class CustomRegistrationForm(PersonFormMixIn, RegistrationForm):
         self.attach_critical_validators()  # strict_email=not bool(named_focus)
         extracted_fields = {key: self.fields.pop(key, None) for key in set(self.Meta.computed_fields) - keep_keys}
         self.computed_fields = extracted_fields
-        self.focus_correct_field(name=named_focus)
-
-    def focus_correct_field(self, name=None):
-        """ The named or first non-hidden, non-disabled field gets 'autofocus'. Removes 'autofocus' from others. """
-        found = self.fields.get(name, None) if name else None
-        for field_name, field in self.fields.items():
-            if not found and not field.disabled and not getattr(field, 'is_hidden', False):
-                found = field
-            else:
-                field.widget.attrs.pop('autofocus', None)
-        found.widget.attrs['autofocus'] = True
-        return found
+        print("--------------------- FINISH users.CustomRegistrationForm.__init__ --------------------")
+        self.assign_focus_field(name=named_focus)
 
     def attach_critical_validators(self, strict_email=None, strict_username=None):
         """Before setting computed_fields, assign validators to the email and username fields. """

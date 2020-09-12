@@ -99,6 +99,23 @@ class PersonFormMixIn:
         super().__init__(*args, **kwargs)
         fields = self.prep_fields()
         print(fields == self.fields)
+        print("--------------------- FINISH INIT --------------------")
+
+    def assign_focus_field(self, name=None, fields=None):
+        """ Gives autofocus to the first non-hidden, non-disabled form field from the given iterable of form fields. """
+        name = name() if callable(name) else name
+        fields = fields or self.fields
+        found = fields.get(name, None) if name else None
+        if found and (getattr(found, 'disabled', False) or getattr(found, 'is_hidden', False)):
+            found = None
+        for field_name, field in fields.items():
+            if not found and not field.disabled and not getattr(field, 'is_hidden', False):
+                found = field
+            else:
+                field.widget.attrs.pop('autofocus', None)
+        if found:
+            found.widget.attrs['autofocus'] = True
+        return found
 
     def clean_other_country(self):
         print("================== Clean Other Country ================================")
