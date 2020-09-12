@@ -6,10 +6,13 @@ from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import gettext as _
 from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
+from django_registration import validators
 from pprint import pprint
 
 
 class PersonFormMixIn:
+
+    country_display = forms.CharField(widget=forms.HiddenInput(), initial='local')
     other_country = forms.BooleanField(
         label=_("Not a {} address. ".format(settings.DEFAULT_COUNTRY)),
         required=False,
@@ -18,16 +21,18 @@ class PersonFormMixIn:
     other_country_switch = True
     country_field_name = 'billing_country_code'
     alt_country_text = {
-        # 'billing_country_code':  {
-        #     'label': _(""),
-        #     'help_text': _("")},
         'billing_country_area': {
             'label': _("Territory, or Province"),
             'help_text': '',
-            'initial': ''},
+            'initial': '',
+            'default': '', },
         'billing_postcode':  {
             'label': _("Postal Code"),
-            'help_text': ''}, }
+            'help_text': ''},
+        'billing_country_code':  {
+            # 'label': _(""),
+            'help_text': _("Here is your country field!"),
+            'default': '', }, }
     fieldsets = (
         (None, {
             'fields': [('first_name', 'last_name', )],
@@ -55,22 +60,120 @@ class PersonFormMixIn:
 
     def __init__(self, *args, **kwargs):
         print("======================= INIT =================================")
-        country_field = self.base_fields('')
-        if self.other_country_switch and self.country_field_name in self.base_fields:
-
-            self.base_fields['other_country'] = self.other_country
+        name = self.country_field_name
+        field = self.base_fields.get(name, None)
+        default = settings.DEFAULT_COUNTRY
+        val = ''
+        if self.other_country_switch and field:
+            data = kwargs.get('data', {})
+            if not data:  # Unbound form - initial display of the form.
+                self.base_fields['country_display'] = self.country_display
+                self.base_fields['other_country'] = self.other_country
+                pprint("Put 'country_display' and 'other_country' into base fields. ")
+            else:  # The form has been submitted.
+                data = data.copy()
+                display = data.get('country_display', 'DISPLAY NOT FOUND')
+                other_country = data.get('other_country', None)
+                val = data.get(name, None)
+                if display == 'local' and other_country:  # self.country_display.initial
+                    data['country_display'] = 'foreign'
+                    if val == default:
+                        data[name] = ''
+                data._mutable = True
+                kwargs['data'] = data
+                pprint(display)
+                pprint(other_country)
+                pprint(val)
+                pprint(default)
+                pprint(kwargs['data'].get(name, 'COUNTRY VALUE NOT FOUND'))
+            pprint(data)
+            print("-------------------------------------------------------------")
+        # else: Either this form does not have an address, or they don't what the switch functionality.
+        if field:
+            # pprint(dir(field.widget))
+            w = field.widget
+            # print("-------------------------------------------------------------")
+            print(w.__dict__)
+            # val = w.value_from_datadict(field.form.data, field.form.files, self.country_field_name)
+            print(val)
+            # print(w.attrs)
+        strict_email = kwargs.pop('strict_email', None)
+        strict_username = kwargs.pop('strict_username', None)
+        computed_fields = kwargs.pop('computed_fields', [])
+        named_focus = kwargs.pop('named_focus', None)
         super().__init__(*args, **kwargs)
+        fields = self.prep_fields()
+        print(fields == self.fields)
+        self.attach_critical_validators(strict_email, strict_username)
+        keep_keys = set(self.data.keys())
+        if computed_fields:
+            extracted_fields = {key: self.fields.pop(key, None) for key in set(computed_fields) - keep_keys}
+            self.computed_fields = extracted_fields
+        self.assign_focus_field(name=named_focus)
+        print("--------------------- FINISH INIT --------------------")
+
+    def assign_focus_field(self, name=None, fields=None):
+        """ Autofocus only on the non-hidden, non-disabled named or first form field from the given or self fields. """
+        name = name() if callable(name) else name
+        fields = fields or self.fields
+        found = fields.get(name, None) if name else None
+        if found and (getattr(found, 'disabled', False) or getattr(found, 'is_hidden', False)):
+            found = None
+        for field_name, field in fields.items():
+            if not found and not field.disabled and not getattr(field, 'is_hidden', False):
+                found = field
+            else:
+                field.widget.attrs.pop('autofocus', None)
+        if found:
+            found.widget.attrs['autofocus'] = True
+        return found
+
+    def attach_critical_validators(self, strict_email=None, strict_username=None):
+        """Before setting computed_fields, assign validators to the email and username fields. """
+        # strict_email = strict_email or self.Meta.strict_email
+        # strict_username = strict_username or self.Meta.strict_username
+
+        email_name = getattr(self._meta.model, 'get_email_field_name', None)
+        email_name = email_name() if callable(email_name) else email_name
+        if email_name and email_name in self.fields:
+            email_validators = [
+                validators.HTML5EmailValidator(),
+                validators.validate_confusables_email
+            ]
+            if strict_email:
+                email_validators.append(
+                    validators.CaseInsensitiveUnique(
+                        self._meta.model, email_name, validators.DUPLICATE_EMAIL
+                    )
+                )
+            email_field = self.fields[email_name]
+            email_field.validators.extend(email_validators)
+            email_field.required = True
+
+        username = getattr(self._meta.model, 'USERNAME_FIELD', None)
+        if username and username in self.fields:
+            reserved_names = getattr(self, 'reserved_names', validators.DEFAULT_RESERVED_NAMES)
+            username_validators = [
+                validators.ReservedNameValidator(reserved_names),
+                validators.validate_confusables,
+            ]
+            if strict_username:
+                username_validators.append(
+                    validators.CaseInsensitiveUnique(
+                        self._meta.model, username, validators.DUPLICATE_USERNAME
+                    )
+                )
+            username_field = self.fields[username]
+            username_field.validators.extend(username_validators)
 
     def clean_other_country(self):
         print("================== Clean Other Country ================================")
         other_country = self.cleaned_data.get('other_country')
         if other_country:
-            field_name = self.country_field_name
-            field = self.fields.get(field_name, None)
-            data_value = self.data.get(field_name, None)
-            pprint(field_name)
+            field = self.fields.get(self.country_field_name, None)
+            pprint(self.country_field_name)
             pprint(field.initial)
-            pprint(data_value)
+            pprint(self.data.get(self.country_field_name, None))
             raise forms.ValidationError("You can input your address. ")
         return other_country
 
@@ -92,17 +195,25 @@ class PersonFormMixIn:
         # print("------------------------------------------------")
         super().full_clean()
 
-    def set_alt_data(self, name, field, value):
+    def set_alt_data(self, data=None, name='', field=None, value=None):
         """ Modify the form submitted value if it matches a no longer accurate default value. """
-        initial = self.get_initial_for_field(field, name)
-        data_name = self.add_prefix(name)
-        data_val = field.widget.value_from_datadict(self.data, self.files, data_name)
-        if not field.has_changed(initial, data_val):
+        if not data:
+            data = {name: (field, value, )}
+        new_data = {}
+        for name, field_val in data.items():
+            field, value = field_val
+            initial = self.get_initial_for_field(field, name)
+            data_name = self.add_prefix(name)
+            data_val = field.widget.value_from_datadict(self.data, self.files, data_name)
+            if not field.has_changed(initial, data_val):
+                self.initial[name] = value  # TODO: Won't work since initial determined earlier.
+                # data[data_name] = value
+                new_data[data_name] = value
+        if new_data:
             data = self.data.copy()
-            data[data_name] = value
+            data.update(new_data)
             data._mutable = False
             self.data = data
-            self.initial[name] = value  # TODO: Won't work since initial determined earlier.
 
     def prep_fields(self):
         """ Returns a copy after it modifies self.fields according to overrides, country switch, and maxlength. """
@@ -115,6 +226,7 @@ class PersonFormMixIn:
         overrides = getattr(self, 'formfield_attrs_overrides', {})
         DEFAULT = overrides.get('_default_', {})
 
+        new_data = {}
         for name, field in fields.items():
             if name in overrides:
                 field.widget.attrs.update(overrides[name])
@@ -132,8 +244,11 @@ class PersonFormMixIn:
             if alt_country and name in self.alt_country_text:
                 for prop, value in self.alt_country_text[name].items():
                     if prop == 'initial' or prop == 'default':
-                        self.set_alt_data(name, field, value)
+                        new_data[name] = (field, value, )
+                        # self.set_alt_data(name, field, value)
                     setattr(field, prop, value)
+                # self.set_alt_data(name, field, value)
+
         return fields.copy()
 
     def test_field_order(self, data):
@@ -160,7 +275,7 @@ class PersonFormMixIn:
 
     def _make_fieldsets(self):
         """ Updates the dictionaries of each fieldset with 'rows' of field dicts, and a flattend 'field_names' list. """
-        all_fields = self.prep_fields()
+        all_fields = self.fields.copy()
         fieldsets = list(getattr(self, 'fieldsets', ((None, {'fields': [], 'position': None}), )))
         top_errors = self.non_field_errors().copy()  # Errors that should be displayed above all fields.
         max_position, form_column_count, hidden_fields, remove_idx = 0, 0, [], []

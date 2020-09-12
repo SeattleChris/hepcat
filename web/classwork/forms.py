@@ -52,22 +52,11 @@ class RegisterForm(PersonFormMixIn, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         class_choices = kwargs.pop('class_choices', None)
+        print("======================= classwork.RegisterForm.__init__ =================================")
         super(RegisterForm, self).__init__(*args, **kwargs)
         self.fields['class_selected'].queryset = class_choices
-        self.focus_first_usable_field(self.fields.values())
-
-    def focus_first_usable_field(self, fields):
-        """ Gives autofocus to the first non-hidden, non-disabled form field from the given iterable of form fields. """
-        if not isinstance(fields, (list, tuple, abc.ValuesView)):
-            raise TypeError(_("Expected an iterable of form fields. "))
-        field_gen = (ea for ea in fields)
-        first_field = next(field_gen)
-        while first_field.disabled or (hasattr(first_field, 'is_hidden') and first_field.is_hidden):
-            if 'autofocus' in first_field.widget.attrs:
-                first_field.widget.attrs['autofocus'] = False
-            first_field = next(field_gen)
-        first_field.widget.attrs['autofocus'] = True
-        return first_field
+        # self.assign_focus_field(kwargs.get('named_focus', None))
+        print("--------------------- FINISH RegisterForm.__init__ --------------------")
 
     # Cleaning data is done by:
     # 1) Field.clean() which will populate cleaned_data, and has 3 parts:
