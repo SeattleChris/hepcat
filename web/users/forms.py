@@ -6,7 +6,7 @@ from django.utils.safestring import mark_safe
 from django.urls import reverse
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django_registration.forms import RegistrationForm
-from django_registration import validators
+# from django_registration import validators
 from pprint import pprint  # TODO: Remove after debug.
 from .models import UserHC
 from .mixins import PersonFormMixIn
@@ -33,56 +33,23 @@ class CustomRegistrationForm(PersonFormMixIn, RegistrationForm):
             err = "Missing features for user model. Try subclassing Django's AbstractBaseUser, AbstractUser, or User. "
             raise ImproperlyConfigured(_(err))
         print("================================== CustomRegistrationForm.__init__ =====================")
-        super().__init__(*args, **kwargs)
         username_field_name = self._meta.model.USERNAME_FIELD
         email_field_name = self._meta.model.get_email_field_name()
         named_focus = kwargs.get('named_focus', None)
-        keep_keys = set(self.data.keys())
-        if username_field_name in self.data:
+        if username_field_name in kwargs.get('data', {}):
             named_focus = email_field_name
+        kwargs['named_focus'] = named_focus
+        kwargs['computed_fields'] = self.Meta.computed_fields
+        kwargs['strict_email'] = self.Meta.strict_email
+        kwargs['strict_username'] = self.Meta.strict_username
+        super().__init__(*args, **kwargs)
+        # keep_keys = set(self.data.keys())
         # TODO: If using RegistrationForm init, then much, but not all, of attach_critical_validators is duplicate code.
-        self.attach_critical_validators()  # strict_email=not bool(named_focus)
-        extracted_fields = {key: self.fields.pop(key, None) for key in set(self.Meta.computed_fields) - keep_keys}
-        self.computed_fields = extracted_fields
+        # self.attach_critical_validators()  # strict_email=not bool(named_focus)
+        # extracted_fields = {key: self.fields.pop(key, None) for key in set(self.Meta.computed_fields) - keep_keys}
+        # self.computed_fields = extracted_fields
         print("--------------------- FINISH users.CustomRegistrationForm.__init__ --------------------")
-        self.assign_focus_field(name=named_focus)
-
-    def attach_critical_validators(self, strict_email=None, strict_username=None):
-        """Before setting computed_fields, assign validators to the email and username fields. """
-        strict_email = strict_email or self.Meta.strict_email
-        strict_username = strict_username or self.Meta.strict_username
-
-        email_name = self._meta.model.get_email_field_name()
-        if email_name in self.fields:
-            email_validators = [
-                validators.HTML5EmailValidator(),
-                validators.validate_confusables_email
-            ]
-            if strict_email:
-                email_validators.append(
-                    validators.CaseInsensitiveUnique(
-                        self._meta.model, email_name, validators.DUPLICATE_EMAIL
-                    )
-                )
-            email_field = self.fields[email_name]
-            email_field.validators.extend(email_validators)
-            email_field.required = True
-
-        username = self._meta.model.USERNAME_FIELD
-        if username in self.fields:
-            reserved_names = getattr(self, 'reserved_names', validators.DEFAULT_RESERVED_NAMES)
-            username_validators = [
-                validators.ReservedNameValidator(reserved_names),
-                validators.validate_confusables,
-            ]
-            if strict_username:
-                username_validators.append(
-                    validators.CaseInsensitiveUnique(
-                        self._meta.model, username, validators.DUPLICATE_USERNAME
-                    )
-                )
-            username_field = self.fields[username]
-            username_field.validators.extend(username_validators)
+        # self.assign_focus_field(name=named_focus)
 
     def username_from_name(self):
         """ Must be evaluated after cleaned_data has 'first_name' and 'last_name' values populated. """

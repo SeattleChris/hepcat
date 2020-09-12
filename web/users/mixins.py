@@ -6,6 +6,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import gettext as _
 from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
+from django_registration import validators
 from pprint import pprint
 
 
@@ -96,13 +97,23 @@ class PersonFormMixIn:
             # val = w.value_from_datadict(field.form.data, field.form.files, self.country_field_name)
             print(val)
             # print(w.attrs)
+        strict_email = kwargs.pop('strict_email', None)
+        strict_username = kwargs.pop('strict_username', None)
+        computed_fields = kwargs.pop('computed_fields', [])
+        named_focus = kwargs.pop('named_focus', None)
         super().__init__(*args, **kwargs)
         fields = self.prep_fields()
         print(fields == self.fields)
+        self.attach_critical_validators(strict_email, strict_username)
+        keep_keys = set(self.data.keys())
+        if computed_fields:
+            extracted_fields = {key: self.fields.pop(key, None) for key in set(computed_fields) - keep_keys}
+            self.computed_fields = extracted_fields
+        self.assign_focus_field(name=named_focus)
         print("--------------------- FINISH INIT --------------------")
 
     def assign_focus_field(self, name=None, fields=None):
-        """ Gives autofocus to the first non-hidden, non-disabled form field from the given iterable of form fields. """
+        """ Autofocus only on the non-hidden, non-disabled named or first form field from the given or self fields. """
         name = name() if callable(name) else name
         fields = fields or self.fields
         found = fields.get(name, None) if name else None
@@ -116,6 +127,44 @@ class PersonFormMixIn:
         if found:
             found.widget.attrs['autofocus'] = True
         return found
+
+    def attach_critical_validators(self, strict_email=None, strict_username=None):
+        """Before setting computed_fields, assign validators to the email and username fields. """
+        # strict_email = strict_email or self.Meta.strict_email
+        # strict_username = strict_username or self.Meta.strict_username
+
+        email_name = getattr(self._meta.model, 'get_email_field_name', None)
+        email_name = email_name() if callable(email_name) else email_name
+        if email_name and email_name in self.fields:
+            email_validators = [
+                validators.HTML5EmailValidator(),
+                validators.validate_confusables_email
+            ]
+            if strict_email:
+                email_validators.append(
+                    validators.CaseInsensitiveUnique(
+                        self._meta.model, email_name, validators.DUPLICATE_EMAIL
+                    )
+                )
+            email_field = self.fields[email_name]
+            email_field.validators.extend(email_validators)
+            email_field.required = True
+
+        username = getattr(self._meta.model, 'USERNAME_FIELD', None)
+        if username and username in self.fields:
+            reserved_names = getattr(self, 'reserved_names', validators.DEFAULT_RESERVED_NAMES)
+            username_validators = [
+                validators.ReservedNameValidator(reserved_names),
+                validators.validate_confusables,
+            ]
+            if strict_username:
+                username_validators.append(
+                    validators.CaseInsensitiveUnique(
+                        self._meta.model, username, validators.DUPLICATE_USERNAME
+                    )
+                )
+            username_field = self.fields[username]
+            username_field.validators.extend(username_validators)
 
     def clean_other_country(self):
         print("================== Clean Other Country ================================")

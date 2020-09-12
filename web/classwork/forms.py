@@ -55,7 +55,7 @@ class RegisterForm(PersonFormMixIn, forms.ModelForm):
         print("======================= classwork.RegisterForm.__init__ =================================")
         super(RegisterForm, self).__init__(*args, **kwargs)
         self.fields['class_selected'].queryset = class_choices
-        self.assign_focus_field(kwargs.get('named_focus', None))
+        # self.assign_focus_field(kwargs.get('named_focus', None))
         print("--------------------- FINISH RegisterForm.__init__ --------------------")
 
     # Cleaning data is done by:
