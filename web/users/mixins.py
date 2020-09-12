@@ -85,29 +85,29 @@ class PersonFormMixIn:
                 pprint(val)
                 pprint(default)
                 pprint(kwargs['data'].get(name, 'COUNTRY VALUE NOT FOUND'))
-                # else They do not need us to switch to foreign address view.
             pprint(data)
             print("-------------------------------------------------------------")
         # else: Either this form does not have an address, or they don't what the switch functionality.
-        # pprint(dir(field.widget))
-        w = field.widget
-        print("-------------------------------------------------------------")
-        print(w.__dict__)
-        # val = w.value_from_datadict(field.form.data, field.form.files, self.country_field_name)
-        print(val)
-        # print(w.attrs)
+        if field:
+            # pprint(dir(field.widget))
+            w = field.widget
+            # print("-------------------------------------------------------------")
+            print(w.__dict__)
+            # val = w.value_from_datadict(field.form.data, field.form.files, self.country_field_name)
+            print(val)
+            # print(w.attrs)
         super().__init__(*args, **kwargs)
+        fields = self.prep_fields()
+        print(fields == self.fields)
 
     def clean_other_country(self):
         print("================== Clean Other Country ================================")
         other_country = self.cleaned_data.get('other_country')
         if other_country:
-            # field_name = self.country_field_name
-            # field = self.fields.get(field_name, None)
-            # data_value = self.data.get(field_name, None)
-            # pprint(field_name)
-            # pprint(field.initial)
-            # pprint(data_value)
+            field = self.fields.get(self.country_field_name, None)
+            pprint(self.country_field_name)
+            pprint(field.initial)
+            pprint(self.data.get(self.country_field_name, None))
             raise forms.ValidationError("You can input your address. ")
         return other_country
 
@@ -129,17 +129,25 @@ class PersonFormMixIn:
         # print("------------------------------------------------")
         super().full_clean()
 
-    def set_alt_data(self, name, field, value):
+    def set_alt_data(self, data=None, name='', field=None, value=None):
         """ Modify the form submitted value if it matches a no longer accurate default value. """
-        initial = self.get_initial_for_field(field, name)
-        data_name = self.add_prefix(name)
-        data_val = field.widget.value_from_datadict(self.data, self.files, data_name)
-        if not field.has_changed(initial, data_val):
+        if not data:
+            data = {name: (field, value, )}
+        new_data = {}
+        for name, field_val in data.items():
+            field, value = field_val
+            initial = self.get_initial_for_field(field, name)
+            data_name = self.add_prefix(name)
+            data_val = field.widget.value_from_datadict(self.data, self.files, data_name)
+            if not field.has_changed(initial, data_val):
+                self.initial[name] = value  # TODO: Won't work since initial determined earlier.
+                # data[data_name] = value
+                new_data[data_name] = value
+        if new_data:
             data = self.data.copy()
-            data[data_name] = value
+            data.update(new_data)
             data._mutable = False
             self.data = data
-            self.initial[name] = value  # TODO: Won't work since initial determined earlier.
 
     def prep_fields(self):
         """ Returns a copy after it modifies self.fields according to overrides, country switch, and maxlength. """
@@ -152,6 +160,7 @@ class PersonFormMixIn:
         overrides = getattr(self, 'formfield_attrs_overrides', {})
         DEFAULT = overrides.get('_default_', {})
 
+        new_data = {}
         for name, field in fields.items():
             if name in overrides:
                 field.widget.attrs.update(overrides[name])
@@ -166,12 +175,14 @@ class PersonFormMixIn:
                     # field.widget.attrs['size'] = str(int(min(float(display_size), float(input_size))))
                     value = str(min(possible_size))
                     field.widget.attrs['size'] = value
-
             if alt_country and name in self.alt_country_text:
                 for prop, value in self.alt_country_text[name].items():
                     if prop == 'initial' or prop == 'default':
-                        self.set_alt_data(name, field, value)
+                        new_data[name] = (field, value, )
+                        # self.set_alt_data(name, field, value)
                     setattr(field, prop, value)
+                # self.set_alt_data(name, field, value)
+
         return fields.copy()
 
     def test_field_order(self, data):
@@ -198,7 +209,7 @@ class PersonFormMixIn:
 
     def _make_fieldsets(self):
         """ Updates the dictionaries of each fieldset with 'rows' of field dicts, and a flattend 'field_names' list. """
-        all_fields = self.prep_fields()
+        all_fields = self.fields.copy()
         fieldsets = list(getattr(self, 'fieldsets', ((None, {'fields': [], 'position': None}), )))
         top_errors = self.non_field_errors().copy()  # Errors that should be displayed above all fields.
         max_position, form_column_count, hidden_fields, remove_idx = 0, 0, [], []
