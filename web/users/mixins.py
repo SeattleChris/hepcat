@@ -10,6 +10,8 @@ from pprint import pprint
 
 
 class PersonFormMixIn:
+
+    country_display = forms.CharField(widget=forms.HiddenInput(), initial='local')
     other_country = forms.BooleanField(
         label=_("Not a {} address. ".format(settings.DEFAULT_COUNTRY)),
         required=False,
@@ -18,16 +20,18 @@ class PersonFormMixIn:
     other_country_switch = True
     country_field_name = 'billing_country_code'
     alt_country_text = {
-        # 'billing_country_code':  {
-        #     'label': _(""),
-        #     'help_text': _("")},
         'billing_country_area': {
             'label': _("Territory, or Province"),
             'help_text': '',
-            'initial': ''},
+            'initial': '',
+            'default': '', },
         'billing_postcode':  {
             'label': _("Postal Code"),
-            'help_text': ''}, }
+            'help_text': ''},
+        'billing_country_code':  {
+            # 'label': _(""),
+            'help_text': _("Here is your country field!"),
+            'default': '', }, }
     fieldsets = (
         (None, {
             'fields': [('first_name', 'last_name', )],
@@ -55,22 +59,55 @@ class PersonFormMixIn:
 
     def __init__(self, *args, **kwargs):
         print("======================= INIT =================================")
-        country_field = self.base_fields('')
-        if self.other_country_switch and self.country_field_name in self.base_fields:
-
-            self.base_fields['other_country'] = self.other_country
+        name = self.country_field_name
+        field = self.base_fields.get(name, None)
+        default = settings.DEFAULT_COUNTRY
+        val = ''
+        if self.other_country_switch and field:
+            data = kwargs.get('data', {})
+            if not data:  # Unbound form - initial display of the form.
+                self.base_fields['country_display'] = self.country_display
+                self.base_fields['other_country'] = self.other_country
+                pprint("Put 'country_display' and 'other_country' into base fields. ")
+            else:  # The form has been submitted.
+                data = data.copy()
+                display = data.get('country_display', 'DISPLAY NOT FOUND')
+                other_country = data.get('other_country', None)
+                val = data.get(name, None)
+                if display == 'local' and other_country:  # self.country_display.initial
+                    data['country_display'] = 'foreign'
+                    if val == default:
+                        data[name] = ''
+                data._mutable = True
+                kwargs['data'] = data
+                pprint(display)
+                pprint(other_country)
+                pprint(val)
+                pprint(default)
+                pprint(kwargs['data'].get(name, 'COUNTRY VALUE NOT FOUND'))
+                # else They do not need us to switch to foreign address view.
+            pprint(data)
+            print("-------------------------------------------------------------")
+        # else: Either this form does not have an address, or they don't what the switch functionality.
+        # pprint(dir(field.widget))
+        w = field.widget
+        print("-------------------------------------------------------------")
+        print(w.__dict__)
+        # val = w.value_from_datadict(field.form.data, field.form.files, self.country_field_name)
+        print(val)
+        # print(w.attrs)
         super().__init__(*args, **kwargs)
 
     def clean_other_country(self):
         print("================== Clean Other Country ================================")
         other_country = self.cleaned_data.get('other_country')
         if other_country:
-            field_name = self.country_field_name
-            field = self.fields.get(field_name, None)
-            data_value = self.data.get(field_name, None)
-            pprint(field_name)
-            pprint(field.initial)
-            pprint(data_value)
+            # field_name = self.country_field_name
+            # field = self.fields.get(field_name, None)
+            # data_value = self.data.get(field_name, None)
+            # pprint(field_name)
+            # pprint(field.initial)
+            # pprint(data_value)
             raise forms.ValidationError("You can input your address. ")
         return other_country
 
@@ -129,6 +166,7 @@ class PersonFormMixIn:
                     # field.widget.attrs['size'] = str(int(min(float(display_size), float(input_size))))
                     value = str(min(possible_size))
                     field.widget.attrs['size'] = value
+
             if alt_country and name in self.alt_country_text:
                 for prop, value in self.alt_country_text[name].items():
                     if prop == 'initial' or prop == 'default':
