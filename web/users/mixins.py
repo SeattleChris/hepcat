@@ -12,14 +12,20 @@ from pprint import pprint
 
 class PersonFormMixIn:
 
+    tos_required = False
+    tos = forms.BooleanField(
+        widget=forms.CheckboxInput,
+        label=_("I have read and agree to the Terms of Service"),
+        error_messages={"required": validators.TOS_REQUIRED},
+    )
     country_display = forms.CharField(widget=forms.HiddenInput(), initial='local')
     other_country = forms.BooleanField(
         label=_("Not a {} address. ".format(settings.DEFAULT_COUNTRY)),
         required=False,
         )
-
     other_country_switch = True
     country_field_name = 'billing_country_code'
+    reserved_names_replace = False
     alt_country_text = {
         'billing_country_area': {
             'label': _("Territory, or Province"),
@@ -60,6 +66,8 @@ class PersonFormMixIn:
 
     def __init__(self, *args, **kwargs):
         print("======================= INIT =================================")
+        if self.tos_required:
+            self.base_fields['tos'] = self.tos
         name = self.country_field_name
         field = self.base_fields.get(name, None)
         default = settings.DEFAULT_COUNTRY
@@ -130,9 +138,6 @@ class PersonFormMixIn:
 
     def attach_critical_validators(self, strict_email=None, strict_username=None):
         """Before setting computed_fields, assign validators to the email and username fields. """
-        # strict_email = strict_email or self.Meta.strict_email
-        # strict_username = strict_username or self.Meta.strict_username
-
         email_name = getattr(self._meta.model, 'get_email_field_name', None)
         email_name = email_name() if callable(email_name) else email_name
         if email_name and email_name in self.fields:
@@ -152,7 +157,10 @@ class PersonFormMixIn:
 
         username = getattr(self._meta.model, 'USERNAME_FIELD', None)
         if username and username in self.fields:
-            reserved_names = getattr(self, 'reserved_names', validators.DEFAULT_RESERVED_NAMES)
+            if getattr(self, 'reserved_names_replace', False):
+                reserved_names = getattr(self, 'reserved_names', validators.DEFAULT_RESERVED_NAMES)
+            else:
+                reserved_names = getattr(self, 'reserved_names', []) + validators.DEFAULT_RESERVED_NAMES
             username_validators = [
                 validators.ReservedNameValidator(reserved_names),
                 validators.validate_confusables,
