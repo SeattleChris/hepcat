@@ -124,13 +124,13 @@ class PersonFormMixIn:
     tos = forms.BooleanField(
         widget=forms.CheckboxInput,
         label=_("I have read and agree to the Terms of Service"),
-        error_messages={"required": validators.TOS_REQUIRED},
-    )
-    country_display = forms.CharField(widget=forms.HiddenInput(), initial='local')
+        error_messages={"required": validators.TOS_REQUIRED}, )
+    country_display = forms.CharField(widget=forms.HiddenInput(), initial='local', )
     other_country = forms.BooleanField(
         label=_("Not a {} address. ".format(settings.DEFAULT_COUNTRY)),
-        required=False,
-        )
+        required=False, )
+
+    tos_required = False
     other_country_switch = True
     country_field_name = 'billing_country_code'
     alt_country_text = {
