@@ -10,8 +10,7 @@ from django_registration import validators
 from pprint import pprint
 
 
-class ExtractFieldsMixIn:
-    """ Allows for computed fields, or fields only needed in some circumstances. Should be last MixIn. """
+class FocusMixMin:
 
     def __init__(self, *args, **kwargs):
         print("======================= EXTRACT FIELDS MIXIN =================================")
