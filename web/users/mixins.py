@@ -104,6 +104,21 @@ class ExtractFieldsMixIn:
             username_field.validators.extend(username_validators)
 
 
+class OptionalUserNameMixIn(ExtractFieldsMixIn):
+
+    class Meta:
+        model = UserHC
+        USERNAME_FLAG_FIELD = 'username_not_email'
+        fields = ('first_name', 'last_name', model.get_email_field_name(), USERNAME_FLAG_FIELD, model.USERNAME_FIELD, )
+        computed_fields = (model.USERNAME_FIELD, USERNAME_FLAG_FIELD, )
+        strict_username = True  # case_insensitive
+        strict_email = False  # unique_email and case_insensitive
+        help_texts = {
+            model.USERNAME_FIELD: _("Without a unique email, a username is needed. Use suggested or create one. "),
+            model.get_email_field_name(): _("Used for confirmation and typically for login"),
+        }
+
+
 class PersonFormMixIn:
 
     tos = forms.BooleanField(
