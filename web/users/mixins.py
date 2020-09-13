@@ -10,16 +10,95 @@ from django_registration import validators
 from pprint import pprint
 
 
+class ExtractFieldsMixIn:
+    """ Allows for computed fields, or fields only needed in some circumstances. Should be last MixIn. """
+
+    def __init__(self, *args, **kwargs):
+        print("======================= EXTRACT FIELDS MIXIN =================================")
+        named_focus = kwargs.pop('named_focus', None)
+        strict_email = kwargs.pop('strict_email', None)
+        strict_username = kwargs.pop('strict_username', None)
+        computed_fields = kwargs.pop('computed_fields', [])
+        super().__init__(*args, **kwargs)
+        self.attach_critical_validators(strict_email, strict_username)
+        keep_keys = set(self.data.keys())
+        if computed_fields:
+            extracted_fields = {key: self.fields.pop(key, None) for key in set(computed_fields) - keep_keys}
+            self.computed_fields = extracted_fields
+        self.assign_focus_field(name=named_focus)
+        print("--------------------- FINISH EXTRACT FIELDS --------------------")
+
+    def assign_focus_field(self, name=None, fields=None):
+        """ Autofocus only on the non-hidden, non-disabled named or first form field from the given or self fields. """
+        name = name() if callable(name) else name
+        fields = fields or self.fields
+        found = fields.get(name, None) if name else None
+        if found and (getattr(found, 'disabled', False) or getattr(found, 'is_hidden', False)):
+            found = None
+        for field_name, field in fields.items():
+            if not found and not field.disabled and not getattr(field, 'is_hidden', False):
+                found = field
+            else:
+                field.widget.attrs.pop('autofocus', None)
+        if found:
+            found.widget.attrs['autofocus'] = True
+        return found
+
+    def attach_critical_validators(self, strict_email=None, strict_username=None):
+        """Before setting computed_fields, assign validators to the email and username fields. """
+        email_name = getattr(self._meta.model, 'get_email_field_name', None)
+        email_name = email_name() if callable(email_name) else email_name
+        if email_name and email_name in self.fields:
+            email_validators = [
+                validators.HTML5EmailValidator(),
+                validators.validate_confusables_email
+            ]
+            if strict_email:
+                email_validators.append(
+                    validators.CaseInsensitiveUnique(
+                        self._meta.model, email_name, validators.DUPLICATE_EMAIL
+                    )
+                )
+            email_field = self.fields[email_name]
+            email_field.validators.extend(email_validators)
+            email_field.required = True
+
+        username = getattr(self._meta.model, 'USERNAME_FIELD', None)
+        if username and username in self.fields:
+            if getattr(self, 'reserved_names_replace', False):
+                reserved_names = getattr(self, 'reserved_names', validators.DEFAULT_RESERVED_NAMES)
+            else:
+                reserved_names = getattr(self, 'reserved_names', []) + validators.DEFAULT_RESERVED_NAMES
+            username_validators = [
+                validators.ReservedNameValidator(reserved_names),
+                validators.validate_confusables,
+            ]
+            if strict_username:
+                username_validators.append(
+                    validators.CaseInsensitiveUnique(
+                        self._meta.model, username, validators.DUPLICATE_USERNAME
+                    )
+                )
+            username_field = self.fields[username]
+            username_field.validators.extend(username_validators)
+
+
 class PersonFormMixIn:
 
+    tos_required = False
+    tos = forms.BooleanField(
+        widget=forms.CheckboxInput,
+        label=_("I have read and agree to the Terms of Service"),
+        error_messages={"required": validators.TOS_REQUIRED},
+    )
     country_display = forms.CharField(widget=forms.HiddenInput(), initial='local')
     other_country = forms.BooleanField(
         label=_("Not a {} address. ".format(settings.DEFAULT_COUNTRY)),
         required=False,
         )
-
     other_country_switch = True
     country_field_name = 'billing_country_code'
+    reserved_names_replace = False
     alt_country_text = {
         'billing_country_area': {
             'label': _("Territory, or Province"),
@@ -60,6 +139,8 @@ class PersonFormMixIn:
 
     def __init__(self, *args, **kwargs):
         print("======================= INIT =================================")
+        if self.tos_required:
+            self.base_fields['tos'] = self.tos
         name = self.country_field_name
         field = self.base_fields.get(name, None)
         default = settings.DEFAULT_COUNTRY
@@ -81,11 +162,9 @@ class PersonFormMixIn:
                         data[name] = ''
                 data._mutable = True
                 kwargs['data'] = data
-                pprint(display)
-                pprint(other_country)
-                pprint(val)
-                pprint(default)
-                pprint(kwargs['data'].get(name, 'COUNTRY VALUE NOT FOUND'))
+                log = f"Displayed {display}, country value {val}, with default {default}. "
+                log += "Checked foreign country. " if other_country else "Not choosing foreign. "
+                print(log)
             pprint(data)
             print("-------------------------------------------------------------")
         # else: Either this form does not have an address, or they don't what the switch functionality.
@@ -97,74 +176,10 @@ class PersonFormMixIn:
             # val = w.value_from_datadict(field.form.data, field.form.files, self.country_field_name)
             print(val)
             # print(w.attrs)
-        strict_email = kwargs.pop('strict_email', None)
-        strict_username = kwargs.pop('strict_username', None)
-        computed_fields = kwargs.pop('computed_fields', [])
-        named_focus = kwargs.pop('named_focus', None)
         super().__init__(*args, **kwargs)
         fields = self.prep_fields()
         print(fields == self.fields)
-        self.attach_critical_validators(strict_email, strict_username)
-        keep_keys = set(self.data.keys())
-        if computed_fields:
-            extracted_fields = {key: self.fields.pop(key, None) for key in set(computed_fields) - keep_keys}
-            self.computed_fields = extracted_fields
-        self.assign_focus_field(name=named_focus)
         print("--------------------- FINISH INIT --------------------")
-
-    def assign_focus_field(self, name=None, fields=None):
-        """ Autofocus only on the non-hidden, non-disabled named or first form field from the given or self fields. """
-        name = name() if callable(name) else name
-        fields = fields or self.fields
-        found = fields.get(name, None) if name else None
-        if found and (getattr(found, 'disabled', False) or getattr(found, 'is_hidden', False)):
-            found = None
-        for field_name, field in fields.items():
-            if not found and not field.disabled and not getattr(field, 'is_hidden', False):
-                found = field
-            else:
-                field.widget.attrs.pop('autofocus', None)
-        if found:
-            found.widget.attrs['autofocus'] = True
-        return found
-
-    def attach_critical_validators(self, strict_email=None, strict_username=None):
-        """Before setting computed_fields, assign validators to the email and username fields. """
-        # strict_email = strict_email or self.Meta.strict_email
-        # strict_username = strict_username or self.Meta.strict_username
-
-        email_name = getattr(self._meta.model, 'get_email_field_name', None)
-        email_name = email_name() if callable(email_name) else email_name
-        if email_name and email_name in self.fields:
-            email_validators = [
-                validators.HTML5EmailValidator(),
-                validators.validate_confusables_email
-            ]
-            if strict_email:
-                email_validators.append(
-                    validators.CaseInsensitiveUnique(
-                        self._meta.model, email_name, validators.DUPLICATE_EMAIL
-                    )
-                )
-            email_field = self.fields[email_name]
-            email_field.validators.extend(email_validators)
-            email_field.required = True
-
-        username = getattr(self._meta.model, 'USERNAME_FIELD', None)
-        if username and username in self.fields:
-            reserved_names = getattr(self, 'reserved_names', validators.DEFAULT_RESERVED_NAMES)
-            username_validators = [
-                validators.ReservedNameValidator(reserved_names),
-                validators.validate_confusables,
-            ]
-            if strict_username:
-                username_validators.append(
-                    validators.CaseInsensitiveUnique(
-                        self._meta.model, username, validators.DUPLICATE_USERNAME
-                    )
-                )
-            username_field = self.fields[username]
-            username_field.validators.extend(username_validators)
 
     def clean_other_country(self):
         print("================== Clean Other Country ================================")
