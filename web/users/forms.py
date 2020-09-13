@@ -112,7 +112,7 @@ class CustomRegistrationForm(PersonFormMixIn, RegistrationForm):
         self.fields[username_field_name] = field
         self.fields['password1'] = self.fields.pop('password1', None)
         self.fields['password2'] = self.fields.pop('password2', None)
-        self.focus_correct_field(name=email_field_name)
+        self.assign_focus_field(name=email_field_name)  # TODO: How do we want to organize interconnected features.
         self.attach_critical_validators()
 
         login_link = self.get_login_message(link_text='login to existing account', link_only=True)
