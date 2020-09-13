@@ -7,25 +7,21 @@ from django.utils.translation import gettext as _
 from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
 from django_registration import validators
+from .models import UserHC
 from pprint import pprint
 
 
 class FocusMixMin:
 
     def __init__(self, *args, **kwargs):
-        print("======================= EXTRACT FIELDS MIXIN =================================")
+        print("======================= Focus MixIn =================================")
         named_focus = kwargs.pop('named_focus', None)
-        strict_email = kwargs.pop('strict_email', None)
-        strict_username = kwargs.pop('strict_username', None)
-        computed_fields = kwargs.pop('computed_fields', [])
+        fields_focus = kwargs.pop('fields_focus', None)
         super().__init__(*args, **kwargs)
-        self.attach_critical_validators(strict_email, strict_username)
-        keep_keys = set(self.data.keys())
-        if computed_fields:
-            extracted_fields = {key: self.fields.pop(key, None) for key in set(computed_fields) - keep_keys}
-            self.computed_fields = extracted_fields
-        self.assign_focus_field(name=named_focus)
-        print("--------------------- FINISH EXTRACT FIELDS --------------------")
+        named_focus = kwargs.pop('named_focus', named_focus)
+        fields_focus = kwargs.pop('fields_focus', fields_focus)
+        self.assign_focus_field(name=named_focus, fields=fields_focus)
+        print("--------------------- Finish Focus MixIn --------------------")
 
     def assign_focus_field(self, name=None, fields=None):
         """ Autofocus only on the non-hidden, non-disabled named or first form field from the given or self fields. """
@@ -667,3 +663,7 @@ class PersonFormMixIn:
             errors_on_separate_row=False,
             as_type='fieldset',
         )
+
+
+class FormSetMixIn:
+    """ Forms can be defined with multiple fields within the same row. """
