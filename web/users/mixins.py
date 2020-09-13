@@ -44,6 +44,28 @@ class ExtractFieldsMixIn:
             found.widget.attrs['autofocus'] = True
         return found
 
+
+class ExtractFieldsMixIn:
+    """ Allows for computed fields with optional user overrides triggered by validation checks. Should be last MixIn."""
+    computed_fields = []
+    strict_username = True  # case_insensitive
+    strict_email = False  # unique_email and case_insensitive
+    reserved_names_replace = False
+    # reserved_names = []
+
+    def __init__(self, *args, **kwargs):
+        print("======================= EXTRACT FIELDS MIXIN =================================")
+        strict_email = kwargs.pop('strict_email', None)
+        strict_username = kwargs.pop('strict_username', None)
+        computed_fields = kwargs.pop('computed_fields', [])
+        super().__init__(*args, **kwargs)
+        self.attach_critical_validators(strict_email, strict_username)
+        keep_keys = set(self.data.keys())
+        if computed_fields:
+            extracted_fields = {key: self.fields.pop(key, None) for key in set(computed_fields) - keep_keys}
+            self.computed_fields = extracted_fields
+        print("--------------------- FINISH EXTRACT FIELDS --------------------")
+
     def attach_critical_validators(self, strict_email=None, strict_username=None):
         """Before setting computed_fields, assign validators to the email and username fields. """
         email_name = getattr(self._meta.model, 'get_email_field_name', None)
