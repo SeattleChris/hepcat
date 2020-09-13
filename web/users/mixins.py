@@ -85,7 +85,6 @@ class ExtractFieldsMixIn:
 
 class PersonFormMixIn:
 
-    tos_required = False
     tos = forms.BooleanField(
         widget=forms.CheckboxInput,
         label=_("I have read and agree to the Terms of Service"),
@@ -98,7 +97,6 @@ class PersonFormMixIn:
         )
     other_country_switch = True
     country_field_name = 'billing_country_code'
-    reserved_names_replace = False
     alt_country_text = {
         'billing_country_area': {
             'label': _("Territory, or Province"),
@@ -262,8 +260,8 @@ class PersonFormMixIn:
                         new_data[name] = (field, value, )
                         # self.set_alt_data(name, field, value)
                     setattr(field, prop, value)
-                # self.set_alt_data(name, field, value)
-
+        if new_data:
+            self.set_alt_data(new_data)
         return fields.copy()
 
     def test_field_order(self, data):
