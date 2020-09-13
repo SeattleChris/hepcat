@@ -9,10 +9,10 @@ from django_registration.forms import RegistrationForm
 # from django_registration import validators
 from pprint import pprint  # TODO: Remove after debug.
 from .models import UserHC
-from .mixins import PersonFormMixIn
+from .mixins import PersonFormMixIn, ExtractFieldsMixIn
 
 
-class CustomRegistrationForm(PersonFormMixIn, RegistrationForm):
+class CustomRegistrationForm(PersonFormMixIn, ExtractFieldsMixIn, RegistrationForm):
 
     class Meta(RegistrationForm.Meta):
         model = UserHC
@@ -43,13 +43,8 @@ class CustomRegistrationForm(PersonFormMixIn, RegistrationForm):
         kwargs['strict_email'] = self.Meta.strict_email
         kwargs['strict_username'] = self.Meta.strict_username
         super().__init__(*args, **kwargs)
-        # keep_keys = set(self.data.keys())
         # TODO: If using RegistrationForm init, then much, but not all, of attach_critical_validators is duplicate code.
-        # self.attach_critical_validators()  # strict_email=not bool(named_focus)
-        # extracted_fields = {key: self.fields.pop(key, None) for key in set(self.Meta.computed_fields) - keep_keys}
-        # self.computed_fields = extracted_fields
         print("--------------------- FINISH users.CustomRegistrationForm.__init__ --------------------")
-        # self.assign_focus_field(name=named_focus)
 
     def username_from_name(self):
         """ Must be evaluated after cleaned_data has 'first_name' and 'last_name' values populated. """
