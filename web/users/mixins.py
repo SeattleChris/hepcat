@@ -43,7 +43,7 @@ class FocusMixMin:
         return found
 
 
-class ExtractFieldsMixIn:  # TODO: rename to ComputedFieldsMixIn
+class ComputedFieldsMixIn:
     """ Allows for computed fields with optional user overrides triggered by validation checks. Should be last MixIn."""
     computed_fields = []
     strict_username = True  # case_insensitive
@@ -166,7 +166,7 @@ class ExtractFieldsMixIn:  # TODO: rename to ComputedFieldsMixIn
         return cleaned_data
 
 
-class OptionalUserNameMixIn(ExtractFieldsMixIn):
+class OptionalUserNameMixIn(ComputedFieldsMixIn):
     """If possible, creates a username according to rules (defaults to email then to name), otherwise set manually. """
 
     class Meta:
@@ -948,3 +948,9 @@ class FormSetMixIn:
             errors_on_separate_row=False,
             as_type='fieldset',
         )
+
+
+class PersonFormMixIn(FocusMixMin, OptionalUserNameMixIn, OptionalCountryMixIn, FormSetMixIn):
+    """ Using fieldsets, optional country & username (with override and computed fields) and focus. """
+    # TODO: Determine correct import order
+    
