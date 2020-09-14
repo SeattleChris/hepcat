@@ -539,23 +539,28 @@ class FormSetMixIn:
 
     fieldsets = (
         (None, {
-            'fields': [('first_name', 'last_name', )],
             'position': 1,
+            'fields': [('first_name', 'last_name', )],
         }),
         (_('username'), {
+            'classes': ('noline', ),
+            'position': None,
             'fields': ['username'],
-            'position': None
         }),
         (_('address'), {
             'classes': ('collapse', 'address', ),
             'modifiers': ['address', 'prep_country_fields', ],
+            'position': 'end',
             'fields': [
                 'billing_address_1',
                 'billing_address_2',
                 ('billing_city', 'billing_country_area', 'billing_postcode', )
                 ],
-            'position': 'end'
         }), )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(args, kwargs)
+        self._fieldsets = self.make_fieldsets()
 
     def handle_modifiers(self, opts, *args, **kwargs):
         """ The parameters are passed to methods whose names are in a list assigned to modifiers for this fieldset. """
@@ -564,11 +569,12 @@ class FormSetMixIn:
             opts, *args, kwargs = mod(opts, *args, **kwargs)
         return (opts, *args, kwargs)
 
-    def _make_fieldsets(self):
+    def _make_fieldsets(self, *fs_args, **kwargs):
         """ Updates the dictionaries of each fieldset with 'rows' of field dicts, and a flattend 'field_names' list. """
         unassigned_fields = self.fields.copy()
         fieldsets = list(getattr(self, 'fieldsets', ((None, {'fields': [], 'position': None}), )))
-        top_errors = self.non_field_errors().copy()  # Errors that should be displayed above all fields.
+        top_error_attr = getattr(self, 'non_field_errors', [])  # Errors that should be displayed above all fields.
+        top_errors = top_error_attr().copy() if callable(top_error_attr) else top_error_attr.copy()
         max_position, form_column_count, hidden_fields, remove_idx = 0, 0, [], []
         for index, fieldset in enumerate(fieldsets):
             fieldset_label, opts = fieldset
@@ -596,11 +602,12 @@ class FormSetMixIn:
                 if existing_fields:  # only adding non-empty rows. May be empty if these fields are not in current form.
                     field_rows.append(existing_fields)
             if field_rows:
-                opts, field_rows, unassigned_fields = self.handle_modifiers(opts, field_rows, unassigned_fields)
+                args = [opts, field_rows, unassigned_fields, *fs_args]
+                opts, field_rows, unassigned_fields, *fs_args, kwargs = self.handle_modifiers(*args, **kwargs)
                 fs_column_count = max(len(row) for row in field_rows)
-                opts['column_count'] = fs_column_count
                 opts['field_names'] = flatten(opts['fields'])
                 opts['rows'] = field_rows
+                opts['column_count'] = fs_column_count
                 if fieldset_label is None:
                     form_column_count = max((fs_column_count, form_column_count))
                 max_position += 1
@@ -610,8 +617,10 @@ class FormSetMixIn:
             fieldsets.pop(index)
         max_position += 1
         field_rows = [{name: value} for name, value in unassigned_fields.items()]
-        field_names = list(unassigned_fields.keys())
-        fieldsets.append((None, {'rows': field_rows, 'position': max_position + 1, 'field_names': field_names, }))
+        fields = list(unassigned_fields.keys())
+        opts = {'position': max_position + 1, 'fields': fields, 'field_names': fields, 'rows': field_rows, }
+        opts['column_count'] = 1
+        fieldsets.append((None, opts))
 
         lookup = {'end': max_position + 2, None: max_position}
         fieldsets = [(k, v) for k, v in sorted(fieldsets,
@@ -733,7 +742,7 @@ class FormSetMixIn:
         # ignored_base_widgets = ['ChoiceWidget', 'MultiWidget', 'SelectDateWidget', ]
         # 'ChoiceWidget' is the base for 'RadioSelect', 'Select', and variations.
         col_html, single_col_html = self.column_formats(col_head_tag, col_tag, single_col_tag, col_head_data, col_data)
-        fieldsets = self._make_fieldsets()
+        fieldsets = getattr(self, '_fieldsets', None) or self._make_fieldsets()
         assert fieldsets[-1][0] == 'summary', "The final row from _make_fieldsets is reserved for form summary data. "
         summary = fieldsets.pop()[1]
         data_labels = ('top_errors', 'hidden_fields', 'columns')
