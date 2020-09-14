@@ -43,7 +43,7 @@ class FocusMixMin:
         return found
 
 
-class ExtractFieldsMixIn:
+class ExtractFieldsMixIn:  # TODO: rename to ComputedFieldsMixIn
     """ Allows for computed fields with optional user overrides triggered by validation checks. Should be last MixIn."""
     computed_fields = []
     strict_username = True  # case_insensitive
@@ -370,24 +370,6 @@ class PersonFormMixIn:
             # 'label': _(""),
             'help_text': _("Here is your country field!"),
             'default': '', }, }
-    fieldsets = (
-        (None, {
-            'fields': [('first_name', 'last_name', )],
-            'position': 1,
-        }),
-        (_('username'), {
-            'fields': ['username'],
-            'position': None
-        }),
-        (_('address'), {
-            'classes': ('collapse', 'address', ),
-            'fields': [
-                'billing_address_1',
-                'billing_address_2',
-                ('billing_city', 'billing_country_area', 'billing_postcode', )
-                ],
-            'position': 'end'
-        }), )
     formfield_attrs_overrides = {
         '_default_': {'size': 15, },
         'email': {'maxlength': 191, 'size': 20, },
@@ -546,6 +528,39 @@ class PersonFormMixIn:
         result.update({'other_country': other_country_field})
         return result
 
+
+class FormSetMixIn:
+    """ Forms can be defined with multiple fields within the same row. Allows fieldsets in all as_<type> methods. """
+
+    fieldsets = (
+        (None, {
+            'fields': [('first_name', 'last_name', )],
+            'position': 1,
+        }),
+        (_('username'), {
+            'fields': ['username'],
+            'position': None
+        }),
+        (_('address'), {
+            'classes': ('collapse', 'address', ),
+            'fields': [
+                'billing_address_1',
+                'billing_address_2',
+                ('billing_city', 'billing_country_area', 'billing_postcode', )
+                ],
+            'position': 'end'
+        }), )
+
+    def check_modified_rows(self, field_rows, opts, all_fields, fs_column_count):
+        if self.other_country_switch and 'address' in opts.get('classes', ''):
+            # TODO: Create some way to pass a callable to take in 'prep_country_fields' and others.
+            country_fields = self.prep_country_fields(all_fields)
+            opts['fields'].append(('other_country', self.country_field_name, ))
+            # TODO: possibly move next two lines outside this function and just return new rows.
+            fs_column_count = max((fs_column_count, len(country_fields)))
+            field_rows.append(country_fields)
+    # end modified_rows
+
     def _make_fieldsets(self):
         """ Updates the dictionaries of each fieldset with 'rows' of field dicts, and a flattend 'field_names' list. """
         all_fields = self.fields.copy()
@@ -579,11 +594,7 @@ class PersonFormMixIn:
                     fs_column_count = max((fs_column_count, len(existing_fields)))
                     field_rows.append(existing_fields)
             if field_rows:
-                if self.other_country_switch and 'address' in opts.get('classes', ''):
-                    country_fields = self.prep_country_fields(all_fields)
-                    opts['fields'].append(('other_country', self.country_field_name, ))
-                    fs_column_count = max((fs_column_count, len(country_fields)))
-                    field_rows.append(country_fields)
+                self.check_modified_rows(field_rows, opts, all_fields, fs_column_count)
                 opts['field_names'] = flatten(opts['fields'])
                 opts['rows'] = field_rows
                 opts['column_count'] = fs_column_count
@@ -605,46 +616,6 @@ class PersonFormMixIn:
         summary = {'top_errors': top_errors, 'hidden_fields': hidden_fields, 'columns': form_column_count}
         fieldsets.append(('summary', summary, ))
         return fieldsets
-
-    def _html_tag(self, tag, data, attr_string=''):
-        """ Wraps 'data' in an HTML element with an open and closed 'tag', applying the 'attr_string' attributes. """
-        return '<' + tag + attr_string + '>' + data + '</' + tag + '>'
-
-    def make_row(self, columns_data, error_data, row_tag, html_row_attr=''):
-        """ Flattens data lists, wraps them in HTML element of provided tag and attr string. Returns a list. """
-        result = []
-        if error_data:
-            row = self._html_tag(row_tag, ' '.join(error_data))
-            result.append(row)
-        if columns_data:
-            row = self._html_tag(row_tag, ' '.join(columns_data), html_row_attr)
-            result.append(row)
-        return result
-
-    def make_headless_row(self, html_args, html_el, column_count, col_attr='', row_attr=''):
-        """ Creates a row with no column head, spaned across as needed. Used for top errors and imbedding fieldsets. """
-        row_tag, col_head_tag, col_tag, single_col_tag, as_type, all_fieldsets = html_args
-        if as_type == 'table' and column_count > 0:
-            colspan = column_count * 2 if col_head_tag else column_count
-            col_attr += f' colspan="{colspan}"' if colspan > 1 else ''
-        if single_col_tag:
-            html_el = self._html_tag(single_col_tag, html_el, col_attr)
-        else:
-            row_attr += col_attr
-        html_el = self._html_tag(row_tag, html_el, row_attr)
-        return html_el
-
-    def column_formats(self, col_head_tag, col_tag, single_col_tag, col_head_data, col_data):
-        """ Returns multi-column and single-column string formatters with head and nested tags as needed. """
-        col_html, single_col_html = '', ''
-        attrs = '%(html_col_attr)s'
-        if col_head_tag:
-            col_html += self._html_tag(col_head_tag, col_head_data, '%(html_head_attr)s')
-            single_col_html += col_html
-            # attrs = ''
-        col_html += self._html_tag(col_tag, col_data, attrs)
-        single_col_html += col_data if not single_col_tag else self._html_tag(single_col_tag, col_data, attrs)
-        return col_html, single_col_html
 
     def determine_label_width(self, opts):
         """ Returns a attr_dict and list of names of fields whose labels should apply these attributes. """
@@ -670,6 +641,46 @@ class PersonFormMixIn:
             label_attrs_dict = {'style': style_text}
             styled_labels = [name for name, field in visual_group]
         return label_attrs_dict, styled_labels
+
+    def _html_tag(self, tag, data, attr_string=''):
+        """ Wraps 'data' in an HTML element with an open and closed 'tag', applying the 'attr_string' attributes. """
+        return '<' + tag + attr_string + '>' + data + '</' + tag + '>'
+
+    def column_formats(self, col_head_tag, col_tag, single_col_tag, col_head_data, col_data):
+        """ Returns multi-column and single-column string formatters with head and nested tags as needed. """
+        col_html, single_col_html = '', ''
+        attrs = '%(html_col_attr)s'
+        if col_head_tag:
+            col_html += self._html_tag(col_head_tag, col_head_data, '%(html_head_attr)s')
+            single_col_html += col_html
+            # attrs = ''
+        col_html += self._html_tag(col_tag, col_data, attrs)
+        single_col_html += col_data if not single_col_tag else self._html_tag(single_col_tag, col_data, attrs)
+        return col_html, single_col_html
+
+    def make_row(self, columns_data, error_data, row_tag, html_row_attr=''):
+        """ Flattens data lists, wraps them in HTML element of provided tag and attr string. Returns a list. """
+        result = []
+        if error_data:
+            row = self._html_tag(row_tag, ' '.join(error_data))
+            result.append(row)
+        if columns_data:
+            row = self._html_tag(row_tag, ' '.join(columns_data), html_row_attr)
+            result.append(row)
+        return result
+
+    def make_headless_row(self, html_args, html_el, column_count, col_attr='', row_attr=''):
+        """ Creates a row with no column head, spaned across as needed. Used for top errors and imbedding fieldsets. """
+        row_tag, col_head_tag, col_tag, single_col_tag, as_type, all_fieldsets = html_args
+        if as_type == 'table' and column_count > 0:
+            colspan = column_count * 2 if col_head_tag else column_count
+            col_attr += f' colspan="{colspan}"' if colspan > 1 else ''
+        if single_col_tag:
+            html_el = self._html_tag(single_col_tag, html_el, col_attr)
+        else:
+            row_attr += col_attr
+        html_el = self._html_tag(row_tag, html_el, row_attr)
+        return html_el
 
     def form_main_rows(self, html_args, fieldsets, form_col_count):
         """ Returns a list of formatted content of each main form 'row'. Called after preparing fields and row_data. """
@@ -702,7 +713,6 @@ class PersonFormMixIn:
     def as_test(self):
         """ Prepares and calls different 'as_<variation>' method variations. """
         container = 'fieldset'  # table, ul, p, fieldset, ...
-
         func = getattr(self, 'as_' + container)
         data = func()
         if container not in ('p', 'fieldset', ):
@@ -891,7 +901,3 @@ class PersonFormMixIn:
             errors_on_separate_row=False,
             as_type='fieldset',
         )
-
-
-class FormSetMixIn:
-    """ Forms can be defined with multiple fields within the same row. """
