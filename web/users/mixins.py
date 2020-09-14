@@ -514,19 +514,24 @@ class PersonFormMixIn:
             pprint(line)
         # end test_field_order
 
-    def prep_country_fields(self, remaining_fields):
+    def prep_country_fields(self, opts, field_rows, unassigned_fields, *args, **kwargs):
         """ Used in _make_fieldsets for a row that has the country field (if present) and the country switch. """
+        if not self.other_country_switch:
+            return (opts, field_rows, unassigned_fields, *args, kwargs)
         field_name = self.country_field_name
-        field = remaining_fields.pop(field_name, None)
+        field = unassigned_fields.pop(field_name, None)
         result = {field_name: field} if field else {}
-        other_country_field = remaining_fields.pop('other_country', None)
+        other_country_field = unassigned_fields.pop('other_country', None)
         if not other_country_field:
             country_name = settings.DEFAULT_COUNTRY
             label = "Not a {} address. ".format(country_name)
             other_country_field = forms.BooleanField(label=_(label), required=False, )
             self.fields['other_country'] = other_country_field
         result.update({'other_country': other_country_field})
-        return result
+        if result:
+            field_rows.append(result)
+        opts['fields'].append(('other_country', self.country_field_name, ))
+        return (opts, field_rows, unassigned_fields, *args, kwargs)
 
 
 class FormSetMixIn:
@@ -543,6 +548,7 @@ class FormSetMixIn:
         }),
         (_('address'), {
             'classes': ('collapse', 'address', ),
+            'modifiers': ['address', 'prep_country_fields', ],
             'fields': [
                 'billing_address_1',
                 'billing_address_2',
@@ -551,19 +557,16 @@ class FormSetMixIn:
             'position': 'end'
         }), )
 
-    def check_modified_rows(self, field_rows, opts, all_fields, fs_column_count):
-        if self.other_country_switch and 'address' in opts.get('classes', ''):
-            # TODO: Create some way to pass a callable to take in 'prep_country_fields' and others.
-            country_fields = self.prep_country_fields(all_fields)
-            opts['fields'].append(('other_country', self.country_field_name, ))
-            # TODO: possibly move next two lines outside this function and just return new rows.
-            fs_column_count = max((fs_column_count, len(country_fields)))
-            field_rows.append(country_fields)
-    # end modified_rows
+    def handle_modifiers(self, opts, *args, **kwargs):
+        """ The parameters are passed to methods whose names are in a list assigned to modifiers for this fieldset. """
+        modifiers = [self.mod for mod in opts.get('modifiers', []) if hasattr(self, mod)]
+        for mod in modifiers:
+            opts, *args, kwargs = mod(opts, *args, **kwargs)
+        return (opts, *args, kwargs)
 
     def _make_fieldsets(self):
         """ Updates the dictionaries of each fieldset with 'rows' of field dicts, and a flattend 'field_names' list. """
-        all_fields = self.fields.copy()
+        unassigned_fields = self.fields.copy()
         fieldsets = list(getattr(self, 'fieldsets', ((None, {'fields': [], 'position': None}), )))
         top_errors = self.non_field_errors().copy()  # Errors that should be displayed above all fields.
         max_position, form_column_count, hidden_fields, remove_idx = 0, 0, [], []
@@ -571,14 +574,14 @@ class FormSetMixIn:
             fieldset_label, opts = fieldset
             if 'fields' not in opts or 'position' not in opts:
                 raise ImproperlyConfigured(_("There must be 'fields' and 'position' in each fieldset. "))
-            field_rows, fs_column_count = [], 0
+            field_rows, = []
             for ea in opts['fields']:
                 row = [ea] if isinstance(ea, str) else ea
                 existing_fields = {}
                 for name in row:
-                    if name not in all_fields:
+                    if name not in unassigned_fields:
                         continue
-                    field = all_fields.pop(name)
+                    field = unassigned_fields.pop(name)
                     bf = self[name]
                     bf_errors = self.error_class(bf.errors)
                     if bf.is_hidden:
@@ -591,13 +594,13 @@ class FormSetMixIn:
                     else:
                         existing_fields[name] = field
                 if existing_fields:  # only adding non-empty rows. May be empty if these fields are not in current form.
-                    fs_column_count = max((fs_column_count, len(existing_fields)))
                     field_rows.append(existing_fields)
             if field_rows:
-                self.check_modified_rows(field_rows, opts, all_fields, fs_column_count)
+                opts, field_rows, unassigned_fields = self.handle_modifiers(opts, field_rows, unassigned_fields)
+                fs_column_count = max(len(row) for row in field_rows)
+                opts['column_count'] = fs_column_count
                 opts['field_names'] = flatten(opts['fields'])
                 opts['rows'] = field_rows
-                opts['column_count'] = fs_column_count
                 if fieldset_label is None:
                     form_column_count = max((fs_column_count, form_column_count))
                 max_position += 1
@@ -606,9 +609,10 @@ class FormSetMixIn:
         for index in reversed(remove_idx):
             fieldsets.pop(index)
         max_position += 1
-        field_rows = [{name: value} for name, value in all_fields.items()]
-        field_names = list(all_fields.keys())
+        field_rows = [{name: value} for name, value in unassigned_fields.items()]
+        field_names = list(unassigned_fields.keys())
         fieldsets.append((None, {'rows': field_rows, 'position': max_position + 1, 'field_names': field_names, }))
+
         lookup = {'end': max_position + 2, None: max_position}
         fieldsets = [(k, v) for k, v in sorted(fieldsets,
                      key=lambda ea: lookup.get(ea[1]['position'], ea[1]['position']))
