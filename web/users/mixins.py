@@ -1,32 +1,30 @@
 from django import forms
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.contrib.admin.utils import flatten
 from django.forms.widgets import Input, CheckboxInput, HiddenInput, Textarea
-from django.core.exceptions import ImproperlyConfigured
+from django.forms.utils import ErrorDict  # , ErrorList
 from django.utils.translation import gettext as _
-from django.utils.html import conditional_escape
+from django.utils.html import conditional_escape, format_html
 from django.utils.safestring import mark_safe
+from django.urls import reverse
 from django_registration import validators
+from .models import UserHC
 from pprint import pprint
 
 
-class ExtractFieldsMixIn:
-    """ Allows for computed fields, or fields only needed in some circumstances. Should be last MixIn. """
+class FocusMixMin:
+    """ Autofocus given to a field not hidden or disabled. Can limit to a fields subset, and prioritize a named one. """
 
     def __init__(self, *args, **kwargs):
-        print("======================= EXTRACT FIELDS MIXIN =================================")
+        print("======================= Focus MixIn =================================")
         named_focus = kwargs.pop('named_focus', None)
-        strict_email = kwargs.pop('strict_email', None)
-        strict_username = kwargs.pop('strict_username', None)
-        computed_fields = kwargs.pop('computed_fields', [])
+        fields_focus = kwargs.pop('fields_focus', None)
         super().__init__(*args, **kwargs)
-        self.attach_critical_validators(strict_email, strict_username)
-        keep_keys = set(self.data.keys())
-        if computed_fields:
-            extracted_fields = {key: self.fields.pop(key, None) for key in set(computed_fields) - keep_keys}
-            self.computed_fields = extracted_fields
-        self.assign_focus_field(name=named_focus)
-        print("--------------------- FINISH EXTRACT FIELDS --------------------")
+        named_focus = kwargs.pop('named_focus', named_focus)
+        fields_focus = kwargs.pop('fields_focus', fields_focus)
+        self.assign_focus_field(name=named_focus, fields=fields_focus)
+        print("--------------------- Finish Focus MixIn --------------------")
 
     def assign_focus_field(self, name=None, fields=None):
         """ Autofocus only on the non-hidden, non-disabled named or first form field from the given or self fields. """
@@ -43,6 +41,28 @@ class ExtractFieldsMixIn:
         if found:
             found.widget.attrs['autofocus'] = True
         return found
+
+
+class ComputedFieldsMixIn:
+    """ Allows for computed fields with optional user overrides triggered by validation checks. Should be last MixIn."""
+    computed_fields = []
+    strict_username = True  # case_insensitive
+    strict_email = False  # unique_email and case_insensitive
+    reserved_names_replace = False
+    # reserved_names = []
+
+    def __init__(self, *args, **kwargs):
+        print("======================= EXTRACT FIELDS MIXIN =================================")
+        strict_email = kwargs.pop('strict_email', getattr(self, 'strict_email', None))
+        strict_username = kwargs.pop('strict_username', getattr(self, 'strict_username', None))
+        computed_fields = kwargs.pop('computed_fields', getattr(self, 'computed_fields', []))
+        super().__init__(*args, **kwargs)
+        self.attach_critical_validators(strict_email, strict_username)
+        keep_keys = set(self.data.keys())
+        if computed_fields:
+            extracted_fields = {key: self.fields.pop(key, None) for key in set(computed_fields) - keep_keys}
+            self.computed_fields = extracted_fields
+        print("--------------------- FINISH EXTRACT FIELDS --------------------")
 
     def attach_critical_validators(self, strict_email=None, strict_username=None):
         """Before setting computed_fields, assign validators to the email and username fields. """
@@ -82,54 +102,250 @@ class ExtractFieldsMixIn:
             username_field = self.fields[username]
             username_field.validators.extend(username_validators)
 
+    def field_computed_from_fields(self, field_names=None, joiner='_', normalize=None):
+        """ Must be evaluated after cleaned_data has the named field values populated. """
+        if not field_names:
+            raise ImproperlyConfigured(_("There must me one or more field names to compute a value. "))
+        if not hasattr(self, 'cleaned_data'):
+            raise ImproperlyConfigured(_("This method can only be evaluated after 'cleaned_data' has been populated. "))
+        if any(field not in self.cleaned_data for field in field_names):
+            if hasattr(self, '_errors') and any(field in self._errors for field in field_names):
+                return None  # TODO: ? Need some technique to skip username validation without valid email?
+            err = "This initial value can only be evaluated after fields it depends on have been cleaned. "
+            err += "The field order must have the computed field after fields used for its value. "
+            raise ImproperlyConfigured(_(err))
 
-class PersonFormMixIn:
+        names = (self.cleaned_data[key].strip() for key in field_names if key in self.cleaned_data)
+        result_value = joiner.join(names).casefold()
+        if callable(normalize):
+            result_value = normalize(result_value)
+        elif normalize is not None:
+            raise ImproperlyConfigured(_("The normalize parameter must be a callable or None. "))
+        return result_value
 
-    tos_required = False
-    tos = forms.BooleanField(
-        widget=forms.CheckboxInput,
-        label=_("I have read and agree to the Terms of Service"),
-        error_messages={"required": validators.TOS_REQUIRED},
-    )
-    country_display = forms.CharField(widget=forms.HiddenInput(), initial='local')
-    other_country = forms.BooleanField(
-        label=_("Not a {} address. ".format(settings.DEFAULT_COUNTRY)),
-        required=False,
-        )
-    other_country_switch = True
-    country_field_name = 'billing_country_code'
-    reserved_names_replace = False
-    alt_country_text = {
-        'billing_country_area': {
-            'label': _("Territory, or Province"),
-            'help_text': '',
-            'initial': '',
-            'default': '', },
-        'billing_postcode':  {
-            'label': _("Postal Code"),
-            'help_text': ''},
-        'billing_country_code':  {
-            # 'label': _(""),
-            'help_text': _("Here is your country field!"),
-            'default': '', }, }
-    fieldsets = (
-        (None, {
-            'fields': [('first_name', 'last_name', )],
-            'position': 1,
-        }),
-        (_('username'), {
-            'fields': ['username'],
-            'position': None
-        }),
-        (_('address'), {
-            'classes': ('collapse', 'address', ),
-            'fields': [
-                'billing_address_1',
-                'billing_address_2',
-                ('billing_city', 'billing_country_area', 'billing_postcode', )
-                ],
-            'position': 'end'
-        }), )
+    def _clean_computed_fields(self):
+        """ Mimics _clean_fields for computed_fields. Calls compute_<fieldname> and clean_<fieldname> if present. """
+        compute_errors = ErrorDict()
+        print("=================== CustomRegistrationForm._clean_computed_fields ============================")
+        for name, field in self.computed_fields.items():
+            if hasattr(self, 'compute_%s' % name):
+                field = getattr(self, 'compute_%s' % name)()
+            self.computed_fields[name] = field  # self.fields[name] = field
+            value = self.get_initial_for_field(field, name)  # TODO: ? or check if it has a value set?
+            try:
+                value = field.clean(value)
+                self.cleaned_data[name] = value
+                if hasattr(self, 'clean_%s' % name):
+                    value = getattr(self, 'clean_%s' % name)()
+                    self.cleaned_data[name] = value
+            except ValidationError as e:
+                compute_errors[name] = e
+                self.add_error(None, e)
+        return compute_errors
+
+    def clean(self):
+        print("============================ CustomRegistrationForm.clean =========================")
+        # print("***********************************************************************************")
+        # for key, items in self.data.lists():
+        #     print(f"{key}: {items} ")
+        # print("-----------------------------------------------------------------------------------")
+        # pprint(self.cleaned_data)
+        # print("***********************************************************************************")
+        compute_errors = self._clean_computed_fields()
+        print("---------------- compute_errors -----------------------------------------")
+        print(compute_errors)
+        if compute_errors:
+            print("---------------- cleaned_computed_data -----------------------------------------")
+            cleaned_compute_data = {name: self.cleaned_data.pop(name, None) for name in self.computed_fields}
+            print(cleaned_compute_data)
+            raise ValidationError(_("Error occurred with the computed fields. "))
+        # print("--------------------- Cleaned Data After Cleaning Computed Fields ---------------------------------")
+        cleaned_data = super().clean()  # return self.cleaned_data, also sets boolean for unique validation.
+        # print(cleaned_data)
+        # print("---------------------------------------------------------")
+        return cleaned_data
+
+
+class OptionalUserNameMixIn(ComputedFieldsMixIn):
+    """If possible, creates a username according to rules (defaults to email then to name), otherwise set manually. """
+
+    class Meta:
+        model = UserHC
+        USERNAME_FLAG_FIELD = 'username_not_email'
+        fields = ('first_name', 'last_name', model.get_email_field_name(), USERNAME_FLAG_FIELD, model.USERNAME_FIELD, )
+        computed_fields = (model.USERNAME_FIELD, USERNAME_FLAG_FIELD, )
+        strict_username = True  # case_insensitive
+        strict_email = False  # unique_email and case_insensitive
+        help_texts = {
+            model.USERNAME_FIELD: _("Without a unique email, a username is needed. Use suggested or create one. "),
+            model.get_email_field_name(): _("Used for confirmation and typically for login"),
+        }
+
+    def __init__(self, *args, **kwargs):
+        model = getattr(self._meta, 'model', None)
+        required_attributes = ('USERNAME_FIELD', 'get_email_field_name', 'is_active')
+        if not model or not all(hasattr(model, ea) for ea in required_attributes):
+            err = "Missing features for user model. Try subclassing Django's AbstractBaseUser, AbstractUser, or User. "
+            raise ImproperlyConfigured(_(err))
+        if hasattr(self, 'assign_focus_field'):
+            username_field_name = self._meta.model.USERNAME_FIELD
+            if username_field_name in kwargs.get('data', {}):
+                email_field_name = self._meta.model.get_email_field_name()
+                kwargs['named_focus'] = email_field_name
+        super().__init__(*args, **kwargs)
+
+    def username_from_email_or_names(self, username_field_name=None, email_field_name=None):
+        """ Initial username field value. Must be evaluated after dependent fields populate cleaned_data. """
+        name_fields = ('first_name', 'last_name', )
+        email_field_name = email_field_name or self._meta.model.get_email_field_name()
+        username_field_name = username_field_name or self._meta.model.USERNAME_FIELD
+        normalize = self._meta.model.normalize_username
+        result_value = self.field_computed_from_fields(field_names=(email_field_name, ), normalize=normalize)
+        lookup = {"{}__iexact".format(username_field_name): result_value}
+        try:
+            if not result_value or self._meta.model._default_manager.filter(**lookup).exists():
+                result_value = self.field_computed_from_fields(field_names=name_fields, normalize=normalize)
+        except Exception as e:
+            print("Unable to query to lookup if this username exists. ")
+            print(e)
+        return result_value
+
+    def compute_username(self):
+        """ Determine a str value or callable returning one and set this in self.initial dict. """
+        print("=================== CustomRegistrationForm.compute_username ===========================")
+        model = self._meta.model
+        username_field_name = model.USERNAME_FIELD
+        field = self.computed_fields[username_field_name]
+        email_field_name = model.get_email_field_name()
+        result_value = self.username_from_email_or_names(username_field_name, email_field_name)
+        self.initial[username_field_name] = field.initial = result_value
+        return field
+
+    def configure_username_confirmation(self, username_field_name=None, email_field_name=None):
+        """ Since the username is using the alternative computation, prepare form for user confirmation. """
+        username_field_name = username_field_name or self._meta.model.USERNAME_FIELD
+        field = self.computed_fields.pop(username_field_name, None) or self.fields.pop(username_field_name, None)
+        field.initial = self.cleaned_data.get(username_field_name, field.initial)
+        email_field_name = email_field_name or self._meta.model.get_email_field_name()
+        email_field = self.fields.pop(email_field_name, None) or self.computed_fields.pop(email_field_name, None)
+        email_field.initial = self.cleaned_data.get(email_field_name, email_field.initial)
+        flag_name = self.Meta.USERNAME_FLAG_FIELD
+        flag_field = self.computed_fields.pop(flag_name, None) or self.fields.pop(flag_name, None)
+        if flag_field:
+            flag_field.initial = 'False'
+
+        data = self.data.copy()  # QueryDict datastructure, the copy is mutable. Has getlist and appendlist methods.
+        data.appendlist(email_field_name, email_field.initial)
+        if flag_field:
+            data.appendlist(flag_name, flag_field.initial)
+        data.appendlist(username_field_name, field.initial)
+        data._mutable = False
+        self.data = data
+
+        self.fields[email_field_name] = email_field
+        self.fields[flag_name] = flag_field
+        self.fields[username_field_name] = field
+        self.fields['password1'] = self.fields.pop('password1', None)
+        self.fields['password2'] = self.fields.pop('password2', None)
+        self.assign_focus_field(name=email_field_name)  # TODO: How do we want to organize interconnected features.
+        self.attach_critical_validators()
+
+        login_link = self.get_login_message(link_text='login to existing account', link_only=True)
+        text = "Use a non-shared email, or set a username below, or {}. ".format(login_link)
+        self.add_error(email_field_name, mark_safe(_(text)))
+        e_note = "Typically people have their own unique email address, which you can update. "
+        e_note += "If you share an email with another user, then you will need to create a username for your login. "
+        self.add_error(email_field_name, (_(e_note)))
+        title = "Login with existing account, change to a non-shared email, or create a username. "
+        message = "Did you already make an account, or have one because you've had classes with us before? "
+        message = format_html(
+            "<h3>{}</h3> <p>{} <br />{}</p>",  # <p>{}</p>
+            _(title),
+            _(message),
+            self.get_login_message(reset=True),
+            )
+        return message
+
+    def get_login_message(self, link_text=None, link_only=False, reset=False):
+        """ Returns text with html links to login. If reset is True, the message includes a link for password reset. """
+        link_text = _(link_text) if link_text else None
+        login_link = format_html('<a href="{}">{}</a>', reverse('login'), link_text or _('login'))
+        reset_link = format_html('<a href="{}">{}</a>', reverse('password_reset'), link_text or _('reset the password'))
+        if link_only:
+            return login_link if not reset else reset_link
+        message = "You can {} to your existing account".format(login_link)
+        if reset:
+            message += " or {} if needed".format(reset_link)
+        message += ". "
+        return mark_safe(_(message))
+
+    def handle_flag_field(self, email_field_name, user_field_name):
+        """ If the user gave a non-shared email, we expect flag is False, and no username value. """
+        flag_name = self.Meta.USERNAME_FLAG_FIELD
+        flag_field = self.fields.get(flag_name, None) or self.computed_fields.get(flag_name, None)
+        print("==================== handle_flag_field =====================================")
+        if not flag_field:
+            print("No flag field")
+            return
+        flag_value = self.cleaned_data[flag_name]
+        flag_prev = self.data.getlist(flag_name, [flag_field.initial])
+        flag_changed = flag_field.has_changed(flag_prev[-1], flag_value)
+        email_field = self.fields[email_field_name]
+        email_value = self.cleaned_data[email_field_name]
+        email_prev = self.data.getlist(email_field_name, [email_field.initial])
+        email_changed = email_field.has_changed(email_prev[-1], email_value)
+        user_field = self.fields[user_field_name]
+        user_value = self.cleaned_data[user_field_name]
+        user_prev = self.data.getlist(user_field_name, [user_field.initial])
+        user_changed = user_field.has_changed(user_prev[-1], user_value)
+        flag_data = f"Init: {flag_field.initial} | Prev: {flag_prev} | Clean: {flag_value} | New: {flag_changed} "
+        email_data = f"Init: {email_field.initial} | Prev: {email_prev} | Clean: {email_value} | New: {email_changed} "
+        user_data = f"Init: {user_field.initial} | Prev: {user_prev} | Clean: {user_value} | New: {user_changed} "
+        pprint(flag_data)
+        pprint(email_data)
+        pprint(user_data)
+        error_collected = {}
+        if not flag_value:
+            lookup = {"{}__iexact".format(user_field_name): email_value}
+            try:
+                if not email_changed or self._meta.model._default_manager.filter(**lookup).exists():
+                    message = "You must give a unique email not shared with other users (or create a username). "
+                    error_collected[email_field_name] = _(message)
+            except Exception as e:
+                print("Could not lookup if the new email is already used as a username. ")
+                print(e)
+            self.cleaned_data[user_field_name] = email_value
+        elif email_changed:
+            message = "Un-check the box, or leave empty, if you want to use this email address. "
+            error_collected[flag_name] = _(message)
+        return error_collected
+
+    def clean(self):
+        cleaned_data = super().clean()  # compute fields, return self.cleaned_data, sets unique validation boolean.
+        username_field_name = self._meta.model.USERNAME_FIELD
+        username_value = self.cleaned_data.get(username_field_name, '')
+        email_field_name = self._meta.model.get_email_field_name()
+        email_value = self.cleaned_data.get(email_field_name, None)
+        if username_field_name not in self.data and username_value != email_value:
+            print("- - - - - - - - - Confirmation Required - - - - - - - - - - - - - - -")
+            marked_safe_translatable_html = self.configure_username_confirmation()
+            # print("---------------------- Form Data --------------------------------------")
+            # for key, items in self.data.lists():
+            #     print(f"{key}: {items} ")
+            raise ValidationError(marked_safe_translatable_html)
+        else:
+            # print(" Computed Fields had no problems! ")
+            self.fields.update(self.computed_fields)
+        error_dict = self.handle_flag_field(email_field_name, username_field_name)
+        if error_dict:
+            print("We had an error processing the flag. ")
+            raise ValidationError(error_dict)
+        return cleaned_data
+
+
+class FormOverrideMixIn:
+
+    alt_field_info = {}
     formfield_attrs_overrides = {
         '_default_': {'size': 15, },
         'email': {'maxlength': 191, 'size': 20, },
@@ -138,59 +354,11 @@ class PersonFormMixIn:
         }
 
     def __init__(self, *args, **kwargs):
-        print("======================= INIT =================================")
-        if self.tos_required:
-            self.base_fields['tos'] = self.tos
-        name = self.country_field_name
-        field = self.base_fields.get(name, None)
-        default = settings.DEFAULT_COUNTRY
-        val = ''
-        if self.other_country_switch and field:
-            data = kwargs.get('data', {})
-            if not data:  # Unbound form - initial display of the form.
-                self.base_fields['country_display'] = self.country_display
-                self.base_fields['other_country'] = self.other_country
-                pprint("Put 'country_display' and 'other_country' into base fields. ")
-            else:  # The form has been submitted.
-                data = data.copy()
-                display = data.get('country_display', 'DISPLAY NOT FOUND')
-                other_country = data.get('other_country', None)
-                val = data.get(name, None)
-                if display == 'local' and other_country:  # self.country_display.initial
-                    data['country_display'] = 'foreign'
-                    if val == default:
-                        data[name] = ''
-                data._mutable = True
-                kwargs['data'] = data
-                log = f"Displayed {display}, country value {val}, with default {default}. "
-                log += "Checked foreign country. " if other_country else "Not choosing foreign. "
-                print(log)
-            pprint(data)
-            print("-------------------------------------------------------------")
-        # else: Either this form does not have an address, or they don't what the switch functionality.
-        if field:
-            # pprint(dir(field.widget))
-            w = field.widget
-            # print("-------------------------------------------------------------")
-            print(w.__dict__)
-            # val = w.value_from_datadict(field.form.data, field.form.files, self.country_field_name)
-            print(val)
-            # print(w.attrs)
+        print("======================= FormOverrideMixIn.__init__ =================================")
         super().__init__(*args, **kwargs)
         fields = self.prep_fields()
         print(fields == self.fields)
-        print("--------------------- FINISH INIT --------------------")
-
-    def clean_other_country(self):
-        print("================== Clean Other Country ================================")
-        other_country = self.cleaned_data.get('other_country')
-        if other_country:
-            field = self.fields.get(self.country_field_name, None)
-            pprint(self.country_field_name)
-            pprint(field.initial)
-            pprint(self.data.get(self.country_field_name, None))
-            raise forms.ValidationError("You can input your address. ")
-        return other_country
+        print("--------------------- FINISH FormOverrideMixIn.__init__ --------------------")
 
     def full_clean(self):
         print("=================== PersonFormMixIn == FULL CLEAN ========================== ")
@@ -230,16 +398,25 @@ class PersonFormMixIn:
             data._mutable = False
             self.data = data
 
+    def get_alt_field_info(self):
+        """ Checks conditions for each key in alt_field_info. Returns a dict of field names and attribute overrides. """
+        initial_field_info = getattr(self, 'alt_field_info', None)
+        if not initial_field_info:
+            return {}
+        result = {}
+        for key, field_info in initial_field_info.items():
+            method_name = 'condition' + key
+            is_condition = getattr(self, method_name)() if hasattr(self, method_name) else False
+            if is_condition:
+                result.update(field_info)
+        return result
+
     def prep_fields(self):
         """ Returns a copy after it modifies self.fields according to overrides, country switch, and maxlength. """
-        alt_country = False
-        if self.other_country_switch:
-            alt_country = self.data.get('other_country', False)
-            if not alt_country:
-                self.fields.pop(self.country_field_name, None)
         fields = self.fields
         overrides = getattr(self, 'formfield_attrs_overrides', {})
         DEFAULT = overrides.get('_default_', {})
+        alt_field_info = self.get_alt_field_info()
 
         new_data = {}
         for name, field in fields.items():
@@ -256,14 +433,14 @@ class PersonFormMixIn:
                     # field.widget.attrs['size'] = str(int(min(float(display_size), float(input_size))))
                     value = str(min(possible_size))
                     field.widget.attrs['size'] = value
-            if alt_country and name in self.alt_country_text:
-                for prop, value in self.alt_country_text[name].items():
+            if name in alt_field_info:
+                for prop, value in alt_field_info[name].items():
                     if prop == 'initial' or prop == 'default':
                         new_data[name] = (field, value, )
                         # self.set_alt_data(name, field, value)
                     setattr(field, prop, value)
-                # self.set_alt_data(name, field, value)
-
+        if new_data:
+            self.set_alt_data(new_data)
         return fields.copy()
 
     def test_field_order(self, data):
@@ -274,38 +451,177 @@ class PersonFormMixIn:
             pprint(line)
         # end test_field_order
 
-    def prep_country_fields(self, remaining_fields):
+
+class OptionalCountryMixIn(FormOverrideMixIn):
+
+    country_display = forms.CharField(widget=forms.HiddenInput(), initial='local', )
+    other_country = forms.BooleanField(
+        label=_("Not a {} address. ".format(settings.DEFAULT_COUNTRY)),
+        required=False, )
+    other_country_switch = True
+    country_field_name = 'billing_country_code'
+    flat_fields = True
+    alt_field_info = {
+        'alt_country': {
+            'billing_country_area': {
+                    'label': _("Territory, or Province"),
+                    'help_text': '',
+                    'initial': '',
+                    'default': '', },
+            'billing_postcode': {
+                    'label': _("Postal Code"),
+                    'help_text': '', },
+            'billing_country_code': {
+                    # 'label': _(""),
+                    'help_text': _("Here is your country field!"),
+                    'default': '', },
+            },
+        }
+
+    def __init__(self, *args, **kwargs):
+        name = self.country_field_name
+        field = self.base_fields.get(name, None)
+        default = settings.DEFAULT_COUNTRY
+        val = ''
+        if self.other_country_switch and field:
+            data = kwargs.get('data', {})
+            if not data:  # Unbound form - initial display of the form.
+                self.base_fields['country_display'] = self.country_display
+                self.base_fields['other_country'] = self.other_country
+                pprint("Put 'country_display' and 'other_country' into base fields. ")
+            else:  # The form has been submitted.
+                data = data.copy()
+                display = data.get('country_display', 'DISPLAY NOT FOUND')
+                other_country = data.get('other_country', None)
+                val = data.get(name, None)
+                if display == 'local' and other_country:  # self.country_display.initial
+                    data['country_display'] = 'foreign'
+                    if val == default:
+                        data[name] = ''
+                data._mutable = True
+                kwargs['data'] = data
+                log = f"Displayed {display}, country value {val}, with default {default}. "
+                log += "Checked foreign country. " if other_country else "Not choosing foreign. "
+                print(log)
+            pprint(data)
+            print("-------------------------------------------------------------")
+        # else: Either this form does not have an address, or they don't what the switch functionality.
+        if field:
+            # pprint(dir(field.widget))
+            w = field.widget
+            # print("-------------------------------------------------------------")
+            print(w.__dict__)
+            # val = w.value_from_datadict(field.form.data, field.form.files, self.country_field_name)
+            print(val)
+            # print(w.attrs)
+        super().__init__(*args, **kwargs)
+        if not self.fieldsets and self.flat_fields:
+            opts, field_rows, fields, *args = self.prep_country_fields(None, None, self.fields, flat_fields=True)
+            self.fields = fields
+
+    def condition_alt_country(self):
+        """ Returns a boolean if the alt_field_info['alt_country'] field info should be applied. """
+        alt_country = False
+        if self.other_country_switch:
+            alt_country = self.data.get('other_country', False)
+            if not alt_country:
+                self.fields.pop(self.country_field_name, None)
+        return bool(alt_country)
+
+    def prep_country_fields(self, opts, field_rows, unassigned_fields, *args, **kwargs):
         """ Used in _make_fieldsets for a row that has the country field (if present) and the country switch. """
+        if not self.other_country_switch:
+            return (opts, field_rows, unassigned_fields, *args, kwargs)
+        if field_rows is None:
+            field_rows = []
+        if unassigned_fields is self.fields:
+            unassigned_fields = self.fields.copy()
         field_name = self.country_field_name
-        field = remaining_fields.pop(field_name, None)
+        field = unassigned_fields.pop(field_name, None)
         result = {field_name: field} if field else {}
-        other_country_field = remaining_fields.pop('other_country', None)
+        other_country_field = unassigned_fields.pop('other_country', None)
         if not other_country_field:
             country_name = settings.DEFAULT_COUNTRY
             label = "Not a {} address. ".format(country_name)
             other_country_field = forms.BooleanField(label=_(label), required=False, )
             self.fields['other_country'] = other_country_field
         result.update({'other_country': other_country_field})
-        return result
+        attempted_field_names = ('other_country', self.country_field_name, )
+        if result:
+            field_rows.append(result)
+        if kwargs.get('flat_fields', None) is True:
+            unassigned_fields.update(result)
+        else:
+            opts['fields'].append(attempted_field_names)
+        return (opts, field_rows, unassigned_fields, *args, kwargs)
 
-    def _make_fieldsets(self):
+    def clean_other_country(self):
+        print("================== Clean Other Country ================================")
+        other_country = self.cleaned_data.get('other_country')
+        if other_country:
+            field = self.fields.get(self.country_field_name, None)
+            pprint(self.country_field_name)
+            pprint(field.initial)
+            pprint(self.data.get(self.country_field_name, None))
+            raise forms.ValidationError("You can input your address. ")
+        return other_country
+
+
+class FormSetMixIn:
+    """ Forms can be defined with multiple fields within the same row. Allows fieldsets in all as_<type> methods. """
+
+    flat_fields = False
+    fieldsets = (
+        (None, {
+            'position': 1,
+            'fields': [('first_name', 'last_name', )],
+        }),
+        (_('username'), {
+            'classes': ('noline', ),
+            'position': None,
+            'fields': ['username'],
+        }),
+        (_('address'), {
+            'classes': ('collapse', 'address', ),
+            'modifiers': ['address', 'prep_country_fields', ],
+            'position': 'end',
+            'fields': [
+                'billing_address_1',
+                'billing_address_2',
+                ('billing_city', 'billing_country_area', 'billing_postcode', )
+                ],
+        }), )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(args, kwargs)
+        self._fieldsets = self.make_fieldsets()
+
+    def handle_modifiers(self, opts, *args, **kwargs):
+        """ The parameters are passed to methods whose names are in a list assigned to modifiers for this fieldset. """
+        modifiers = [self.mod for mod in opts.get('modifiers', []) if hasattr(self, mod)]
+        for mod in modifiers:
+            opts, *args, kwargs = mod(opts, *args, **kwargs)
+        return (opts, *args, kwargs)
+
+    def _make_fieldsets(self, *fs_args, **kwargs):
         """ Updates the dictionaries of each fieldset with 'rows' of field dicts, and a flattend 'field_names' list. """
-        all_fields = self.fields.copy()
+        unassigned_fields = self.fields.copy()
         fieldsets = list(getattr(self, 'fieldsets', ((None, {'fields': [], 'position': None}), )))
-        top_errors = self.non_field_errors().copy()  # Errors that should be displayed above all fields.
+        top_error_attr = getattr(self, 'non_field_errors', [])  # Errors that should be displayed above all fields.
+        top_errors = top_error_attr().copy() if callable(top_error_attr) else top_error_attr.copy()
         max_position, form_column_count, hidden_fields, remove_idx = 0, 0, [], []
         for index, fieldset in enumerate(fieldsets):
             fieldset_label, opts = fieldset
             if 'fields' not in opts or 'position' not in opts:
                 raise ImproperlyConfigured(_("There must be 'fields' and 'position' in each fieldset. "))
-            field_rows, fs_column_count = [], 0
+            field_rows, = []
             for ea in opts['fields']:
                 row = [ea] if isinstance(ea, str) else ea
                 existing_fields = {}
                 for name in row:
-                    if name not in all_fields:
+                    if name not in unassigned_fields:
                         continue
-                    field = all_fields.pop(name)
+                    field = unassigned_fields.pop(name)
                     bf = self[name]
                     bf_errors = self.error_class(bf.errors)
                     if bf.is_hidden:
@@ -318,14 +634,11 @@ class PersonFormMixIn:
                     else:
                         existing_fields[name] = field
                 if existing_fields:  # only adding non-empty rows. May be empty if these fields are not in current form.
-                    fs_column_count = max((fs_column_count, len(existing_fields)))
                     field_rows.append(existing_fields)
             if field_rows:
-                if self.other_country_switch and 'address' in opts.get('classes', ''):
-                    country_fields = self.prep_country_fields(all_fields)
-                    opts['fields'].append(('other_country', self.country_field_name, ))
-                    fs_column_count = max((fs_column_count, len(country_fields)))
-                    field_rows.append(country_fields)
+                args = [opts, field_rows, unassigned_fields, *fs_args]
+                opts, field_rows, unassigned_fields, *fs_args, kwargs = self.handle_modifiers(*args, **kwargs)
+                fs_column_count = max(len(row) for row in field_rows)
                 opts['field_names'] = flatten(opts['fields'])
                 opts['rows'] = field_rows
                 opts['column_count'] = fs_column_count
@@ -337,9 +650,12 @@ class PersonFormMixIn:
         for index in reversed(remove_idx):
             fieldsets.pop(index)
         max_position += 1
-        field_rows = [{name: value} for name, value in all_fields.items()]
-        field_names = list(all_fields.keys())
-        fieldsets.append((None, {'rows': field_rows, 'position': max_position + 1, 'field_names': field_names, }))
+        field_rows = [{name: value} for name, value in unassigned_fields.items()]
+        fields = list(unassigned_fields.keys())
+        opts = {'position': max_position + 1, 'fields': fields, 'field_names': fields, 'rows': field_rows, }
+        opts['column_count'] = 1
+        fieldsets.append((None, opts))
+
         lookup = {'end': max_position + 2, None: max_position}
         fieldsets = [(k, v) for k, v in sorted(fieldsets,
                      key=lambda ea: lookup.get(ea[1]['position'], ea[1]['position']))
@@ -347,46 +663,6 @@ class PersonFormMixIn:
         summary = {'top_errors': top_errors, 'hidden_fields': hidden_fields, 'columns': form_column_count}
         fieldsets.append(('summary', summary, ))
         return fieldsets
-
-    def _html_tag(self, tag, data, attr_string=''):
-        """ Wraps 'data' in an HTML element with an open and closed 'tag', applying the 'attr_string' attributes. """
-        return '<' + tag + attr_string + '>' + data + '</' + tag + '>'
-
-    def make_row(self, columns_data, error_data, row_tag, html_row_attr=''):
-        """ Flattens data lists, wraps them in HTML element of provided tag and attr string. Returns a list. """
-        result = []
-        if error_data:
-            row = self._html_tag(row_tag, ' '.join(error_data))
-            result.append(row)
-        if columns_data:
-            row = self._html_tag(row_tag, ' '.join(columns_data), html_row_attr)
-            result.append(row)
-        return result
-
-    def make_headless_row(self, html_args, html_el, column_count, col_attr='', row_attr=''):
-        """ Creates a row with no column head, spaned across as needed. Used for top errors and imbedding fieldsets. """
-        row_tag, col_head_tag, col_tag, single_col_tag, as_type, all_fieldsets = html_args
-        if as_type == 'table' and column_count > 0:
-            colspan = column_count * 2 if col_head_tag else column_count
-            col_attr += f' colspan="{colspan}"' if colspan > 1 else ''
-        if single_col_tag:
-            html_el = self._html_tag(single_col_tag, html_el, col_attr)
-        else:
-            row_attr += col_attr
-        html_el = self._html_tag(row_tag, html_el, row_attr)
-        return html_el
-
-    def column_formats(self, col_head_tag, col_tag, single_col_tag, col_head_data, col_data):
-        """ Returns multi-column and single-column string formatters with head and nested tags as needed. """
-        col_html, single_col_html = '', ''
-        attrs = '%(html_col_attr)s'
-        if col_head_tag:
-            col_html += self._html_tag(col_head_tag, col_head_data, '%(html_head_attr)s')
-            single_col_html += col_html
-            # attrs = ''
-        col_html += self._html_tag(col_tag, col_data, attrs)
-        single_col_html += col_data if not single_col_tag else self._html_tag(single_col_tag, col_data, attrs)
-        return col_html, single_col_html
 
     def determine_label_width(self, opts):
         """ Returns a attr_dict and list of names of fields whose labels should apply these attributes. """
@@ -412,6 +688,46 @@ class PersonFormMixIn:
             label_attrs_dict = {'style': style_text}
             styled_labels = [name for name, field in visual_group]
         return label_attrs_dict, styled_labels
+
+    def _html_tag(self, tag, data, attr_string=''):
+        """ Wraps 'data' in an HTML element with an open and closed 'tag', applying the 'attr_string' attributes. """
+        return '<' + tag + attr_string + '>' + data + '</' + tag + '>'
+
+    def column_formats(self, col_head_tag, col_tag, single_col_tag, col_head_data, col_data):
+        """ Returns multi-column and single-column string formatters with head and nested tags as needed. """
+        col_html, single_col_html = '', ''
+        attrs = '%(html_col_attr)s'
+        if col_head_tag:
+            col_html += self._html_tag(col_head_tag, col_head_data, '%(html_head_attr)s')
+            single_col_html += col_html
+            # attrs = ''
+        col_html += self._html_tag(col_tag, col_data, attrs)
+        single_col_html += col_data if not single_col_tag else self._html_tag(single_col_tag, col_data, attrs)
+        return col_html, single_col_html
+
+    def make_row(self, columns_data, error_data, row_tag, html_row_attr=''):
+        """ Flattens data lists, wraps them in HTML element of provided tag and attr string. Returns a list. """
+        result = []
+        if error_data:
+            row = self._html_tag(row_tag, ' '.join(error_data))
+            result.append(row)
+        if columns_data:
+            row = self._html_tag(row_tag, ' '.join(columns_data), html_row_attr)
+            result.append(row)
+        return result
+
+    def make_headless_row(self, html_args, html_el, column_count, col_attr='', row_attr=''):
+        """ Creates a row with no column head, spaned across as needed. Used for top errors and imbedding fieldsets. """
+        row_tag, col_head_tag, col_tag, single_col_tag, as_type, all_fieldsets = html_args
+        if as_type == 'table' and column_count > 0:
+            colspan = column_count * 2 if col_head_tag else column_count
+            col_attr += f' colspan="{colspan}"' if colspan > 1 else ''
+        if single_col_tag:
+            html_el = self._html_tag(single_col_tag, html_el, col_attr)
+        else:
+            row_attr += col_attr
+        html_el = self._html_tag(row_tag, html_el, row_attr)
+        return html_el
 
     def form_main_rows(self, html_args, fieldsets, form_col_count):
         """ Returns a list of formatted content of each main form 'row'. Called after preparing fields and row_data. """
@@ -444,7 +760,6 @@ class PersonFormMixIn:
     def as_test(self):
         """ Prepares and calls different 'as_<variation>' method variations. """
         container = 'fieldset'  # table, ul, p, fieldset, ...
-
         func = getattr(self, 'as_' + container)
         data = func()
         if container not in ('p', 'fieldset', ):
@@ -461,7 +776,7 @@ class PersonFormMixIn:
         # ignored_base_widgets = ['ChoiceWidget', 'MultiWidget', 'SelectDateWidget', ]
         # 'ChoiceWidget' is the base for 'RadioSelect', 'Select', and variations.
         col_html, single_col_html = self.column_formats(col_head_tag, col_tag, single_col_tag, col_head_data, col_data)
-        fieldsets = self._make_fieldsets()
+        fieldsets = getattr(self, '_fieldsets', None) or self._make_fieldsets()
         assert fieldsets[-1][0] == 'summary', "The final row from _make_fieldsets is reserved for form summary data. "
         summary = fieldsets.pop()[1]
         data_labels = ('top_errors', 'hidden_fields', 'columns')
@@ -633,3 +948,9 @@ class PersonFormMixIn:
             errors_on_separate_row=False,
             as_type='fieldset',
         )
+
+
+class PersonFormMixIn(FocusMixMin, OptionalUserNameMixIn, OptionalCountryMixIn, FormSetMixIn):
+    """ Using fieldsets, optional country & username (with override and computed fields) and focus. """
+    # TODO: Determine correct import order
+    
