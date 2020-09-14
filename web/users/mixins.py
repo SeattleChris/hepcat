@@ -343,20 +343,14 @@ class OptionalUserNameMixIn(ExtractFieldsMixIn):
         return cleaned_data
 
 
-class PersonFormMixIn:
+class FormOverrideMixIn:
 
     tos = forms.BooleanField(
         widget=forms.CheckboxInput,
         label=_("I have read and agree to the Terms of Service"),
         error_messages={"required": validators.TOS_REQUIRED}, )
-    country_display = forms.CharField(widget=forms.HiddenInput(), initial='local', )
-    other_country = forms.BooleanField(
-        label=_("Not a {} address. ".format(settings.DEFAULT_COUNTRY)),
-        required=False, )
-
     tos_required = False
-    other_country_switch = True
-    country_field_name = 'billing_country_code'
+
     alt_country_text = {
         'billing_country_area': {
             'label': _("Territory, or Province"),
@@ -381,41 +375,6 @@ class PersonFormMixIn:
         print("======================= INIT =================================")
         if self.tos_required:
             self.base_fields['tos'] = self.tos
-        name = self.country_field_name
-        field = self.base_fields.get(name, None)
-        default = settings.DEFAULT_COUNTRY
-        val = ''
-        if self.other_country_switch and field:
-            data = kwargs.get('data', {})
-            if not data:  # Unbound form - initial display of the form.
-                self.base_fields['country_display'] = self.country_display
-                self.base_fields['other_country'] = self.other_country
-                pprint("Put 'country_display' and 'other_country' into base fields. ")
-            else:  # The form has been submitted.
-                data = data.copy()
-                display = data.get('country_display', 'DISPLAY NOT FOUND')
-                other_country = data.get('other_country', None)
-                val = data.get(name, None)
-                if display == 'local' and other_country:  # self.country_display.initial
-                    data['country_display'] = 'foreign'
-                    if val == default:
-                        data[name] = ''
-                data._mutable = True
-                kwargs['data'] = data
-                log = f"Displayed {display}, country value {val}, with default {default}. "
-                log += "Checked foreign country. " if other_country else "Not choosing foreign. "
-                print(log)
-            pprint(data)
-            print("-------------------------------------------------------------")
-        # else: Either this form does not have an address, or they don't what the switch functionality.
-        if field:
-            # pprint(dir(field.widget))
-            w = field.widget
-            # print("-------------------------------------------------------------")
-            print(w.__dict__)
-            # val = w.value_from_datadict(field.form.data, field.form.files, self.country_field_name)
-            print(val)
-            # print(w.attrs)
         super().__init__(*args, **kwargs)
         fields = self.prep_fields()
         print(fields == self.fields)
@@ -514,10 +473,66 @@ class PersonFormMixIn:
             pprint(line)
         # end test_field_order
 
+
+class OptionalCountryMixIn(FormOverrideMixIn):
+
+    country_display = forms.CharField(widget=forms.HiddenInput(), initial='local', )
+    other_country = forms.BooleanField(
+        label=_("Not a {} address. ".format(settings.DEFAULT_COUNTRY)),
+        required=False, )
+    other_country_switch = True
+    country_field_name = 'billing_country_code'
+    flat_fields = True
+
+    def __init__(self, *args, **kwargs):
+        name = self.country_field_name
+        field = self.base_fields.get(name, None)
+        default = settings.DEFAULT_COUNTRY
+        val = ''
+        if self.other_country_switch and field:
+            data = kwargs.get('data', {})
+            if not data:  # Unbound form - initial display of the form.
+                self.base_fields['country_display'] = self.country_display
+                self.base_fields['other_country'] = self.other_country
+                pprint("Put 'country_display' and 'other_country' into base fields. ")
+            else:  # The form has been submitted.
+                data = data.copy()
+                display = data.get('country_display', 'DISPLAY NOT FOUND')
+                other_country = data.get('other_country', None)
+                val = data.get(name, None)
+                if display == 'local' and other_country:  # self.country_display.initial
+                    data['country_display'] = 'foreign'
+                    if val == default:
+                        data[name] = ''
+                data._mutable = True
+                kwargs['data'] = data
+                log = f"Displayed {display}, country value {val}, with default {default}. "
+                log += "Checked foreign country. " if other_country else "Not choosing foreign. "
+                print(log)
+            pprint(data)
+            print("-------------------------------------------------------------")
+        # else: Either this form does not have an address, or they don't what the switch functionality.
+        if field:
+            # pprint(dir(field.widget))
+            w = field.widget
+            # print("-------------------------------------------------------------")
+            print(w.__dict__)
+            # val = w.value_from_datadict(field.form.data, field.form.files, self.country_field_name)
+            print(val)
+            # print(w.attrs)
+        super().__init__(*args, **kwargs)
+        if not self.fieldsets and self.flat_fields:
+            opts, field_rows, fields, *args = self.prep_country_fields(None, None, self.fields, flat_fields=True)
+            self.fields = fields
+
     def prep_country_fields(self, opts, field_rows, unassigned_fields, *args, **kwargs):
         """ Used in _make_fieldsets for a row that has the country field (if present) and the country switch. """
         if not self.other_country_switch:
             return (opts, field_rows, unassigned_fields, *args, kwargs)
+        if field_rows is None:
+            field_rows = []
+        if unassigned_fields is self.fields:
+            unassigned_fields = self.fields.copy()
         field_name = self.country_field_name
         field = unassigned_fields.pop(field_name, None)
         result = {field_name: field} if field else {}
@@ -528,15 +543,23 @@ class PersonFormMixIn:
             other_country_field = forms.BooleanField(label=_(label), required=False, )
             self.fields['other_country'] = other_country_field
         result.update({'other_country': other_country_field})
+        attempted_field_names = ('other_country', self.country_field_name, )
         if result:
             field_rows.append(result)
-        opts['fields'].append(('other_country', self.country_field_name, ))
+        if kwargs.get('flat_fields', None) is True:
+            unassigned_fields.update(result)
+        else:
+            opts['fields'].append(attempted_field_names)
         return (opts, field_rows, unassigned_fields, *args, kwargs)
+
+
+# end class OptionalCountryMixIn
 
 
 class FormSetMixIn:
     """ Forms can be defined with multiple fields within the same row. Allows fieldsets in all as_<type> methods. """
 
+    flat_fields = False
     fieldsets = (
         (None, {
             'position': 1,
