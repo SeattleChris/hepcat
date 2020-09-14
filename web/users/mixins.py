@@ -128,36 +128,30 @@ class OptionalUserNameMixIn(ExtractFieldsMixIn):
             kwargs['named_focus'] = email_field_name
         super().__init__(*args, **kwargs)
 
-    def username_from_name(self, field_names=('first_name', 'last_name'), joiner='_'):
-        """ Must be evaluated after cleaned_data has 'first_name' and 'last_name' values populated. """
+    def username_from_fields(self, field_names=('first_name', 'last_name'), joiner='_'):
+        """ Must be evaluated after cleaned_data has the named field values populated. """
         if not hasattr(self, 'cleaned_data'):
             raise ImproperlyConfigured(_("This method can only be evaluated after 'cleaned_data' has been populated. "))
-        names = (self.cleaned_data[key].strip() for key in field_names if self.cleaned_data.get(key))
-        result_value = self._meta.model.normalize_username(joiner.join(names).casefold())
-        return result_value
+        if any(field not in self.cleaned_data for field in field_names):
+            if hasattr(self, '_errors') and any(field in self._errors for field in field_names):
+                return None  # TODO: ? Need some technique to skip username validation without valid email?
+            err = "This initial value can only be evaluated after fields it depends on have been cleaned. "
+            err += "The field order must have the computed field after fields used for its value. "
+            raise ImproperlyConfigured(_(err))
 
-    def username_from_email(self, email_field_name):
-        """ Must be evaluated after cleaned_data has been populated with the the email field value. """
-        if not hasattr(self, 'cleaned_data') or email_field_name not in self.cleaned_data:
-            if hasattr(self, '_errors') and email_field_name in self._errors:
-                result_value = None  # TODO: ? Need some technique to skip username validation without valid email?
-            else:
-                err = "This initial value can only be evaluated after fields it depends on have been cleaned. "
-                err += "The field order must have the computed username field after fields used for its value. "
-                raise ImproperlyConfigured(_(err))
-        else:
-            result_value = self.cleaned_data.get(email_field_name, None)
+        names = (self.cleaned_data[key].strip() for key in field_names if key in self.cleaned_data)
+        result_value = self._meta.model.normalize_username(joiner.join(names).casefold())
         return result_value
 
     def username_from_email_or_names(self, username_field_name=None, email_field_name=None):
         """ Initial username field value. Must be evaluated after dependent fields populate cleaned_data. """
         email_field_name = email_field_name or self._meta.model.get_email_field_name()
         username_field_name = username_field_name or self._meta.model.USERNAME_FIELD
-        result_value = self.username_from_email(username_field_name, email_field_name)
+        result_value = self.username_from_fields(field_names=(email_field_name, ))
         lookup = {"{}__iexact".format(username_field_name): result_value}
         try:
             if not result_value or self._meta.model._default_manager.filter(**lookup).exists():
-                result_value = self.username_from_name()
+                result_value = self.username_from_fields()
         except Exception as e:
             print("Unable to query to lookup if this username exists. ")
             print(e)
