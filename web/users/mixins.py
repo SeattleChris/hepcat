@@ -12,6 +12,7 @@ from pprint import pprint
 
 
 class FocusMixMin:
+    """ Autofocus given to a field not hidden or disabled. Can limit to a fields subset, and prioritize a named one. """
 
     def __init__(self, *args, **kwargs):
         print("======================= Focus MixIn =================================")
@@ -101,6 +102,7 @@ class ExtractFieldsMixIn:
 
 
 class OptionalUserNameMixIn(ExtractFieldsMixIn):
+    """If possible, creates a username according to rules (defaults to email then to name), otherwise set manually. """
 
     class Meta:
         model = UserHC
@@ -113,6 +115,64 @@ class OptionalUserNameMixIn(ExtractFieldsMixIn):
             model.USERNAME_FIELD: _("Without a unique email, a username is needed. Use suggested or create one. "),
             model.get_email_field_name(): _("Used for confirmation and typically for login"),
         }
+
+    def __init__(self, *args, **kwargs):
+        model = getattr(self._meta, 'model', None)
+        required_attributes = ('USERNAME_FIELD', 'get_email_field_name', 'is_active')
+        if not model or not all(hasattr(model, ea) for ea in required_attributes):
+            err = "Missing features for user model. Try subclassing Django's AbstractBaseUser, AbstractUser, or User. "
+            raise ImproperlyConfigured(_(err))
+        username_field_name = self._meta.model.USERNAME_FIELD
+        email_field_name = self._meta.model.get_email_field_name()
+        if hasattr(self, 'assign_focus_field') and username_field_name in kwargs.get('data', {}):
+            kwargs['named_focus'] = email_field_name
+        super().__init__(*args, **kwargs)
+
+    def username_from_name(self, field_names=('first_name', 'last_name'), joiner='_'):
+        """ Must be evaluated after cleaned_data has 'first_name' and 'last_name' values populated. """
+        if not hasattr(self, 'cleaned_data'):
+            raise ImproperlyConfigured(_("This method can only be evaluated after 'cleaned_data' has been populated. "))
+        names = (self.cleaned_data[key].strip() for key in field_names if self.cleaned_data.get(key))
+        result_value = self._meta.model.normalize_username(joiner.join(names).casefold())
+        return result_value
+
+    def username_from_email(self, email_field_name):
+        """ Must be evaluated after cleaned_data has been populated with the the email field value. """
+        if not hasattr(self, 'cleaned_data') or email_field_name not in self.cleaned_data:
+            if hasattr(self, '_errors') and email_field_name in self._errors:
+                result_value = None  # TODO: ? Need some technique to skip username validation without valid email?
+            else:
+                err = "This initial value can only be evaluated after fields it depends on have been cleaned. "
+                err += "The field order must have the computed username field after fields used for its value. "
+                raise ImproperlyConfigured(_(err))
+        else:
+            result_value = self.cleaned_data.get(email_field_name, None)
+        return result_value
+
+    def username_from_email_or_names(self, username_field_name=None, email_field_name=None):
+        """ Initial username field value. Must be evaluated after dependent fields populate cleaned_data. """
+        email_field_name = email_field_name or self._meta.model.get_email_field_name()
+        username_field_name = username_field_name or self._meta.model.USERNAME_FIELD
+        result_value = self.username_from_email(username_field_name, email_field_name)
+        lookup = {"{}__iexact".format(username_field_name): result_value}
+        try:
+            if not result_value or self._meta.model._default_manager.filter(**lookup).exists():
+                result_value = self.username_from_name()
+        except Exception as e:
+            print("Unable to query to lookup if this username exists. ")
+            print(e)
+        return result_value
+
+    def compute_username(self):
+        """ Determine a str value or callable returning one and set this in self.initial dict. """
+        print("=================== CustomRegistrationForm.compute_username ===========================")
+        model = self._meta.model
+        username_field_name = model.USERNAME_FIELD
+        field = self.computed_fields[username_field_name]
+        email_field_name = model.get_email_field_name()
+        result_value = self.username_from_email_or_names(username_field_name, email_field_name)
+        self.initial[username_field_name] = field.initial = result_value
+        return field
 
 
 class PersonFormMixIn:

@@ -7,7 +7,7 @@ from django.urls import reverse
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django_registration.forms import RegistrationForm
 # from django_registration import validators
-from pprint import pprint  # TODO: Remove after debug.
+from pprint import pprint  # TODO: Remove after debug.USERNAME_FLAG_FIELD
 from .models import UserHC
 from .mixins import PersonFormMixIn, ExtractFieldsMixIn
 
@@ -27,59 +27,13 @@ class CustomRegistrationForm(PersonFormMixIn, ExtractFieldsMixIn, RegistrationFo
         }
 
     def __init__(self, *args, **kwargs):
-        model = getattr(self._meta, 'model', None)
-        required_attributes = ('USERNAME_FIELD', 'get_email_field_name', 'is_active')
-        if not model or not all(hasattr(model, ea) for ea in required_attributes):
-            err = "Missing features for user model. Try subclassing Django's AbstractBaseUser, AbstractUser, or User. "
-            raise ImproperlyConfigured(_(err))
         print("================================== CustomRegistrationForm.__init__ =====================")
-        username_field_name = self._meta.model.USERNAME_FIELD
-        email_field_name = self._meta.model.get_email_field_name()
-        named_focus = kwargs.get('named_focus', None)
-        if username_field_name in kwargs.get('data', {}):
-            named_focus = email_field_name
-        kwargs['named_focus'] = named_focus
         kwargs['computed_fields'] = self.Meta.computed_fields
         kwargs['strict_email'] = self.Meta.strict_email
         kwargs['strict_username'] = self.Meta.strict_username
         super().__init__(*args, **kwargs)
         # TODO: If using RegistrationForm init, then much, but not all, of attach_critical_validators is duplicate code.
         print("--------------------- FINISH users.CustomRegistrationForm.__init__ --------------------")
-
-    def username_from_name(self):
-        """ Must be evaluated after cleaned_data has 'first_name' and 'last_name' values populated. """
-        if not hasattr(self, 'cleaned_data'):
-            raise ImproperlyConfigured(_("This method can only be evaluated after 'cleaned_data' has been populated. "))
-        names = (self.cleaned_data[key].strip() for key in ('first_name', 'last_name') if self.cleaned_data.get(key))
-        result_value = self._meta.model.normalize_username('_'.join(names).casefold())
-        return result_value
-
-    def username_from_email(self, username_field_name, email_field_name):
-        """ Must be evaluated after cleaned_data has been populated with the the email field value. """
-        if not hasattr(self, 'cleaned_data') or email_field_name not in self.cleaned_data:
-            if hasattr(self, '_errors') and email_field_name in self._errors:
-                result_value = None  # TODO: ? Need some technique to skip username validation without valid email?
-            else:
-                err = "This initial value can only be evaluated after fields it depends on have been cleaned. "
-                err += "The field order must have {} after fields used for its value. ".format(username_field_name)
-                raise ImproperlyConfigured(_(err))
-        else:
-            result_value = self.cleaned_data.get(email_field_name, None)
-        return result_value
-
-    def username_from_email_or_names(self, username_field_name=None, email_field_name=None):
-        """ Initial username field value. Must be evaluated after dependent fields populate cleaned_data. """
-        email_field_name = email_field_name or self._meta.model.get_email_field_name()
-        username_field_name = username_field_name or self._meta.model.USERNAME_FIELD
-        result_value = self.username_from_email(username_field_name, email_field_name)
-        lookup = {"{}__iexact".format(username_field_name): result_value}
-        try:
-            if not result_value or self._meta.model._default_manager.filter(**lookup).exists():
-                result_value = self.username_from_name()
-        except Exception as e:
-            print("Unable to query to lookup if this username exists. ")
-            print(e)
-        return result_value
 
     def configure_username_confirmation(self, username_field_name=None, email_field_name=None):
         """ Since the username is using the alternative computation, prepare form for user confirmation. """
@@ -138,17 +92,6 @@ class CustomRegistrationForm(PersonFormMixIn, ExtractFieldsMixIn, RegistrationFo
             message += " or {} if needed".format(reset_link)
         message += ". "
         return mark_safe(_(message))
-
-    def compute_username(self):
-        """ Determine a str value or callable returning one and set this in self.initial dict. """
-        print("=================== CustomRegistrationForm.compute_username ===========================")
-        model = self._meta.model
-        username_field_name = model.USERNAME_FIELD
-        field = self.computed_fields[username_field_name]
-        email_field_name = model.get_email_field_name()
-        result_value = self.username_from_email_or_names(username_field_name, email_field_name)
-        self.initial[username_field_name] = field.initial = result_value
-        return field
 
     def _clean_computed_fields(self):
         """ Mimics _clean_fields for computed_fields. Calls compute_<fieldname> and clean_<fieldname> if present. """
