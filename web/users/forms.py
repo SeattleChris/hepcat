@@ -1,12 +1,20 @@
+from django import forms
 from django.utils.translation import gettext as _
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django_registration.forms import RegistrationForm
+from django_registration import validators
 from pprint import pprint  # TODO: Remove after debug.USERNAME_FLAG_FIELD
 from .models import UserHC
 from .mixins import PersonFormMixIn, ExtractFieldsMixIn
 
 
 class CustomRegistrationForm(PersonFormMixIn, ExtractFieldsMixIn, RegistrationForm):
+
+    tos = forms.BooleanField(
+        widget=forms.CheckboxInput,
+        label=_("I have read and agree to the Terms of Service"),
+        error_messages={"required": validators.TOS_REQUIRED}, )
+    tos_required = False
 
     class Meta(RegistrationForm.Meta):
         model = UserHC
@@ -22,6 +30,8 @@ class CustomRegistrationForm(PersonFormMixIn, ExtractFieldsMixIn, RegistrationFo
 
     def __init__(self, *args, **kwargs):
         print("================================== CustomRegistrationForm.__init__ =====================")
+        if self.tos_required:
+            self.base_fields['tos'] = self.tos
         kwargs['computed_fields'] = self.Meta.computed_fields
         kwargs['strict_email'] = self.Meta.strict_email
         kwargs['strict_username'] = self.Meta.strict_username

@@ -345,25 +345,7 @@ class OptionalUserNameMixIn(ExtractFieldsMixIn):
 
 class FormOverrideMixIn:
 
-    tos = forms.BooleanField(
-        widget=forms.CheckboxInput,
-        label=_("I have read and agree to the Terms of Service"),
-        error_messages={"required": validators.TOS_REQUIRED}, )
-    tos_required = False
-
-    alt_country_text = {
-        'billing_country_area': {
-            'label': _("Territory, or Province"),
-            'help_text': '',
-            'initial': '',
-            'default': '', },
-        'billing_postcode':  {
-            'label': _("Postal Code"),
-            'help_text': ''},
-        'billing_country_code':  {
-            # 'label': _(""),
-            'help_text': _("Here is your country field!"),
-            'default': '', }, }
+    alt_field_info = {}
     formfield_attrs_overrides = {
         '_default_': {'size': 15, },
         'email': {'maxlength': 191, 'size': 20, },
@@ -372,24 +354,11 @@ class FormOverrideMixIn:
         }
 
     def __init__(self, *args, **kwargs):
-        print("======================= INIT =================================")
-        if self.tos_required:
-            self.base_fields['tos'] = self.tos
+        print("======================= FormOverrideMixIn.__init__ =================================")
         super().__init__(*args, **kwargs)
         fields = self.prep_fields()
         print(fields == self.fields)
-        print("--------------------- FINISH INIT --------------------")
-
-    def clean_other_country(self):
-        print("================== Clean Other Country ================================")
-        other_country = self.cleaned_data.get('other_country')
-        if other_country:
-            field = self.fields.get(self.country_field_name, None)
-            pprint(self.country_field_name)
-            pprint(field.initial)
-            pprint(self.data.get(self.country_field_name, None))
-            raise forms.ValidationError("You can input your address. ")
-        return other_country
+        print("--------------------- FINISH FormOverrideMixIn.__init__ --------------------")
 
     def full_clean(self):
         print("=================== PersonFormMixIn == FULL CLEAN ========================== ")
@@ -429,16 +398,25 @@ class FormOverrideMixIn:
             data._mutable = False
             self.data = data
 
+    def get_alt_field_info(self):
+        """ Checks conditions for each key in alt_field_info. Returns a dict of field names and attribute overrides. """
+        initial_field_info = getattr(self, 'alt_field_info', None)
+        if not initial_field_info:
+            return {}
+        result = {}
+        for key, field_info in initial_field_info.items():
+            method_name = 'condition' + key
+            is_condition = getattr(self, method_name)() if hasattr(self, method_name) else False
+            if is_condition:
+                result.update(field_info)
+        return result
+
     def prep_fields(self):
         """ Returns a copy after it modifies self.fields according to overrides, country switch, and maxlength. """
-        alt_country = False
-        if self.other_country_switch:
-            alt_country = self.data.get('other_country', False)
-            if not alt_country:
-                self.fields.pop(self.country_field_name, None)
         fields = self.fields
         overrides = getattr(self, 'formfield_attrs_overrides', {})
         DEFAULT = overrides.get('_default_', {})
+        alt_field_info = self.get_alt_field_info()
 
         new_data = {}
         for name, field in fields.items():
@@ -455,8 +433,8 @@ class FormOverrideMixIn:
                     # field.widget.attrs['size'] = str(int(min(float(display_size), float(input_size))))
                     value = str(min(possible_size))
                     field.widget.attrs['size'] = value
-            if alt_country and name in self.alt_country_text:
-                for prop, value in self.alt_country_text[name].items():
+            if name in alt_field_info:
+                for prop, value in alt_field_info[name].items():
                     if prop == 'initial' or prop == 'default':
                         new_data[name] = (field, value, )
                         # self.set_alt_data(name, field, value)
@@ -483,6 +461,22 @@ class OptionalCountryMixIn(FormOverrideMixIn):
     other_country_switch = True
     country_field_name = 'billing_country_code'
     flat_fields = True
+    alt_field_info = {
+        'alt_country': {
+            'billing_country_area': {
+                    'label': _("Territory, or Province"),
+                    'help_text': '',
+                    'initial': '',
+                    'default': '', },
+            'billing_postcode': {
+                    'label': _("Postal Code"),
+                    'help_text': '', },
+            'billing_country_code': {
+                    # 'label': _(""),
+                    'help_text': _("Here is your country field!"),
+                    'default': '', },
+            },
+        }
 
     def __init__(self, *args, **kwargs):
         name = self.country_field_name
@@ -525,6 +519,15 @@ class OptionalCountryMixIn(FormOverrideMixIn):
             opts, field_rows, fields, *args = self.prep_country_fields(None, None, self.fields, flat_fields=True)
             self.fields = fields
 
+    def condition_alt_country(self):
+        """ Returns a boolean if the alt_field_info['alt_country'] field info should be applied. """
+        alt_country = False
+        if self.other_country_switch:
+            alt_country = self.data.get('other_country', False)
+            if not alt_country:
+                self.fields.pop(self.country_field_name, None)
+        return bool(alt_country)
+
     def prep_country_fields(self, opts, field_rows, unassigned_fields, *args, **kwargs):
         """ Used in _make_fieldsets for a row that has the country field (if present) and the country switch. """
         if not self.other_country_switch:
@@ -552,8 +555,16 @@ class OptionalCountryMixIn(FormOverrideMixIn):
             opts['fields'].append(attempted_field_names)
         return (opts, field_rows, unassigned_fields, *args, kwargs)
 
-
-# end class OptionalCountryMixIn
+    def clean_other_country(self):
+        print("================== Clean Other Country ================================")
+        other_country = self.cleaned_data.get('other_country')
+        if other_country:
+            field = self.fields.get(self.country_field_name, None)
+            pprint(self.country_field_name)
+            pprint(field.initial)
+            pprint(self.data.get(self.country_field_name, None))
+            raise forms.ValidationError("You can input your address. ")
+        return other_country
 
 
 class FormSetMixIn:
