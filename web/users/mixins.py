@@ -664,12 +664,12 @@ class FormSetMixIn:
         fieldsets.append(('summary', summary, ))
         return fieldsets
 
-    def determine_label_width(self, opts):
+    def determine_label_width(self, field_rows):
         """ Returns a attr_dict and list of names of fields whose labels should apply these attributes. """
         max_width = 12
         include_widgets = (Input, Textarea, )  # Base classes for the field.widgets we want.
         exclude_widgets = (CheckboxInput, HiddenInput)  # classes for the field.widgets we do NOT want.
-        single_field_rows = [row for row in opts['rows'] if len(row) == 1]
+        single_field_rows = [row for row in field_rows if len(row) == 1]
         visual_group, styled_labels, label_attrs_dict = [], [], {}
         if len(single_field_rows) > 1:
             for field_dict in single_field_rows:
@@ -689,9 +689,9 @@ class FormSetMixIn:
             styled_labels = [name for name, field in visual_group]
         return label_attrs_dict, styled_labels
 
-    def _html_tag(self, tag, data, attr_string=''):
-        """ Wraps 'data' in an HTML element with an open and closed 'tag', applying the 'attr_string' attributes. """
-        return '<' + tag + attr_string + '>' + data + '</' + tag + '>'
+    def _html_tag(self, tag, contents, attr_string=''):
+        """Wraps 'contents' in an HTML element with an open and closed 'tag', applying the 'attr_string' attributes. """
+        return '<' + tag + attr_string + '>' + contents + '</' + tag + '>'
 
     def column_formats(self, col_head_tag, col_tag, single_col_tag, col_head_data, col_data):
         """ Returns multi-column and single-column string formatters with head and nested tags as needed. """
@@ -790,7 +790,7 @@ class FormSetMixIn:
             if as_type == 'table':
                 label_width_attrs_dict, width_labels = {}, []
             else:
-                label_width_attrs_dict, width_labels = self.determine_label_width(opts)
+                label_width_attrs_dict, width_labels = self.determine_label_width(opts['rows'])
             col_count = opts['column_count'] if fieldset_label else form_col_count
             row_data = []
             for row in opts['rows']:
@@ -953,4 +953,16 @@ class FormSetMixIn:
 class PersonFormMixIn(FocusMixMin, OptionalUserNameMixIn, OptionalCountryMixIn, FormSetMixIn):
     """ Using fieldsets, optional country & username (with override and computed fields) and focus. """
     # TODO: Determine correct import order
-    
+
+    def as_test(self):
+        """ Prepares and calls different 'as_<variation>' method variations. """
+        container = 'ul'  # table, ul, p, fieldset, ...
+        func = getattr(self, 'as_' + container)
+        display_data = func()
+        if container not in ('p', 'fieldset', ):
+            display_data = self._html_tag(container, display_data)
+        return mark_safe(display_data)
+
+    def _html_tag(self, tag, contents, attr_string=''):
+        """Wraps 'contents' in an HTML element with an open and closed 'tag', applying the 'attr_string' attributes. """
+        return '<' + tag + attr_string + '>' + contents + '</' + tag + '>'
