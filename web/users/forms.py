@@ -5,10 +5,10 @@ from django_registration.forms import RegistrationForm
 from django_registration import validators
 from pprint import pprint  # TODO: Remove after debug.USERNAME_FLAG_FIELD
 from .models import UserHC
-from .mixins import PersonFormMixIn, ExtractFieldsMixIn
+from .mixins import PersonFormMixIn
 
 
-class CustomRegistrationForm(PersonFormMixIn, ExtractFieldsMixIn, RegistrationForm):
+class CustomRegistrationForm(PersonFormMixIn, RegistrationForm):
 
     tos = forms.BooleanField(
         widget=forms.CheckboxInput,

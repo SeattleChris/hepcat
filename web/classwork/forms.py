@@ -1,6 +1,6 @@
 from django import forms
 from .models import Student, Payment, Registration, Notify  # , Staff, Session, ClassOffer
-from users.mixins import PersonFormMixIn, ExtractFieldsMixIn
+from users.mixins import PersonFormMixIn
 from django.utils.translation import gettext_lazy as _
 # from django.urls import reverse_lazy
 # from django.shortcuts import render
@@ -10,7 +10,7 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 
-class RegisterForm(PersonFormMixIn, ExtractFieldsMixIn, forms.ModelForm):
+class RegisterForm(PersonFormMixIn, forms.ModelForm):
     """ This is where existing and even new users/students can sign up for a ClassOffer """
     # TODO: Lookup formsets. See if we can make a form combining fields from User and from Payment models.
     # TODO: Create the workflow for when (if) the user wants to fill out the registration form for someone else.
@@ -67,12 +67,14 @@ class RegisterForm(PersonFormMixIn, ExtractFieldsMixIn, forms.ModelForm):
     # 3) Form.clean() where we can deal with cross-field validations.
 
     def clean_first_name(self):
+        print('======== RegisterForm._clean_first_name =========')
         first_name = self.cleaned_data.get('first_name')
         if first_name is None:
             raise forms.ValidationError("First Name is required")
         return first_name.capitalize()
 
     def clean_last_name(self):
+        print('======== RegisterForm._clean_last_name =========')
         value = self.cleaned_data.get('last_name')
         if value is None:
             raise forms.ValidationError("Last Name is required")
