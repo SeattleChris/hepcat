@@ -21,6 +21,9 @@ class FocusMixMin:
         named_focus = kwargs.pop('named_focus', None)
         fields_focus = kwargs.pop('fields_focus', None)
         super().__init__(*args, **kwargs)
+        if isinstance(self.data, tuple):
+            print("Someone Messed Up Data! ")
+        pprint(self.data)
         named_focus = kwargs.pop('named_focus', named_focus)
         fields_focus = kwargs.pop('fields_focus', fields_focus)
         self.assign_focus_field(name=named_focus, fields=fields_focus)
@@ -57,6 +60,9 @@ class ComputedFieldsMixIn:
         strict_username = kwargs.pop('strict_username', getattr(self, 'strict_username', None))
         computed_fields = kwargs.pop('computed_fields', getattr(self, 'computed_fields', []))
         super().__init__(*args, **kwargs)
+        if isinstance(self.data, tuple):
+            print("Someone Messed Up Data! ")
+        pprint(self.data)
         self.attach_critical_validators(strict_email, strict_username)
         keep_keys = set(self.data.keys())
         if computed_fields:
@@ -182,9 +188,13 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
         }
 
     def __init__(self, *args, **kwargs):
+        print("======================= OptionalUserNameMixIn =================================")
         model = getattr(self._meta, 'model', None)
+        print(f"The model is {model} ")
         required_attributes = ('USERNAME_FIELD', 'get_email_field_name', 'is_active')
         if not model or not all(hasattr(model, ea) for ea in required_attributes):
+            for ea in required_attributes:
+                print(f"{ea}: {hasattr(model, ea)}")
             err = "Missing features for user model. Try subclassing Django's AbstractBaseUser, AbstractUser, or User. "
             raise ImproperlyConfigured(_(err))
         if hasattr(self, 'assign_focus_field'):
@@ -193,6 +203,10 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
                 email_field_name = self._meta.model.get_email_field_name()
                 kwargs['named_focus'] = email_field_name
         super().__init__(*args, **kwargs)
+        if isinstance(self.data, tuple):
+            print("Someone Messed Up Data! ")
+        pprint(self.data)
+        print("--------------------- FINISH OptionalUserNameMixIn --------------------")
 
     def username_from_email_or_names(self, username_field_name=None, email_field_name=None):
         """ Initial username field value. Must be evaluated after dependent fields populate cleaned_data. """
@@ -355,15 +369,29 @@ class FormOverrideMixIn:
 
     def __init__(self, *args, **kwargs):
         print("======================= FormOverrideMixIn.__init__ =================================")
+        pprint(args)
+        pprint(kwargs)
+
         super().__init__(*args, **kwargs)
+        if isinstance(self.data, tuple):
+            print("Someone Messed Up Data! ")
+        pprint(self.data)
+        print("--------------------------- CRITICAL -----------------------------------------------")
+        # pprint(dir(self))
+        # pprint(type(self.data))
+        # pprint(self._bound_field_cache)
+        pprint(self.Meta)
+        pprint(self.__dict__)
+        print("--------------------------- END CRITICAL --------------------------------------------")
         fields = self.prep_fields()
-        print(fields == self.fields)
+        if fields != self.fields:
+            print("Fields do NOT match. ")
         print("--------------------- FINISH FormOverrideMixIn.__init__ --------------------")
 
     def full_clean(self):
-        print("=================== PersonFormMixIn == FULL CLEAN ========================== ")
-        if 'other_country' in self.data and 'other_country' not in self.fields:
-            print("***** MISSING OTHER COUNTRY! *****")
+        print("=================== FormOverrideMixIn == FULL CLEAN ========================== ")
+        # if 'other_country' in self.data and 'other_country' not in self.fields:
+            # print("***** MISSING OTHER COUNTRY! *****")
         # name = 'billing_address_1'
         # field = self.fields.get(name)
         # data = self.data.get(name)
@@ -380,6 +408,7 @@ class FormOverrideMixIn:
 
     def set_alt_data(self, data=None, name='', field=None, value=None):
         """ Modify the form submitted value if it matches a no longer accurate default value. """
+        pprint("======================== set_alt_data ==================================")
         if not data:
             data = {name: (field, value, )}
         new_data = {}
@@ -479,6 +508,7 @@ class OptionalCountryMixIn(FormOverrideMixIn):
         }
 
     def __init__(self, *args, **kwargs):
+        print("======================= OptionalCountryMixIn.__init__ =================================")
         name = self.country_field_name
         field = self.base_fields.get(name, None)
         default = settings.DEFAULT_COUNTRY
@@ -503,22 +533,15 @@ class OptionalCountryMixIn(FormOverrideMixIn):
                 log = f"Displayed {display}, country value {val}, with default {default}. "
                 log += "Checked foreign country. " if other_country else "Not choosing foreign. "
                 print(log)
-            pprint(data)
+            # pprint(data)
             print("-------------------------------------------------------------")
         # else: Either this form does not have an address, or they don't what the switch functionality.
-        if field:
-            # pprint(dir(field.widget))
-            w = field.widget
-            # print("-------------------------------------------------------------")
-            print(w.__dict__)
-            # val = w.value_from_datadict(field.form.data, field.form.files, self.country_field_name)
-            print(val)
-            # print(w.attrs)
         super().__init__(*args, **kwargs)
         if not hasattr(self, 'fieldsets') or getattr(self, 'flat_fields', False):
             print("Not fieldsets, or flat fields. ")
             opts, field_rows, fields, *args = self.prep_country_fields(None, None, self.fields, flat_fields=True)
             self.fields = fields
+        print("--------------------- FINISH OptionalCountryMixIn.__init__ --------------------")
 
     def condition_alt_country(self):
         """ Returns a boolean if the alt_field_info['alt_country'] field info should be applied. """
@@ -530,7 +553,8 @@ class OptionalCountryMixIn(FormOverrideMixIn):
         return bool(alt_country)
 
     def prep_country_fields(self, opts, field_rows, unassigned_fields, *args, **kwargs):
-        """ Used in _make_fieldsets for a row that has the country field (if present) and the country switch. """
+        """ Used in make_fieldsets for a row that has the country field (if present) and the country switch. """
+        print("==================== OptionalCountryMixIn.prep_country_fields ==========================")
         if not self.other_country_switch:
             return (opts, field_rows, unassigned_fields, *args, kwargs)
         if field_rows is None:
@@ -549,10 +573,13 @@ class OptionalCountryMixIn(FormOverrideMixIn):
         result.update({'other_country': other_country_field})
         attempted_field_names = ('other_country', self.country_field_name, )
         if result:
+            print("Got results. ")
             field_rows.append(result)
         if kwargs.get('flat_fields', None) is True:
+            print("Handle Flat Fields. ")
             unassigned_fields.update(result)
         else:
+            print("Not Flat Fields, append opts['fields]. ")
             opts['fields'].append(attempted_field_names)
         return (opts, field_rows, unassigned_fields, *args, kwargs)
 
@@ -597,6 +624,7 @@ class FormSetMixIn:
         print("======================= FormSetMixIn.__init__ =================================")
         super().__init__(*args, **kwargs)
         self._fieldsets = self.make_fieldsets()
+        print("--------------------- FINISH FormSetMixIn.__init__ --------------------")
 
     def handle_modifiers(self, opts, *args, **kwargs):
         """ The parameters are passed to methods whose names are in a list assigned to modifiers for this fieldset. """
@@ -605,18 +633,33 @@ class FormSetMixIn:
             opts, *args, kwargs = mod(opts, *args, **kwargs)
         return (opts, *args, kwargs)
 
-    def _make_fieldsets(self, *fs_args, **kwargs):
+    def make_fieldsets(self, *fs_args, **kwargs):
         """ Updates the dictionaries of each fieldset with 'rows' of field dicts, and a flattend 'field_names' list. """
+        print("======================= FormSetMixIn.make_fieldsets =================================")
+        if isinstance(self.data, tuple):
+            print("Someone Messed Up Data! ")
         unassigned_fields = self.fields.copy()
-        fieldsets = list(getattr(self, 'fieldsets', ((None, {'fields': [], 'position': None}), )))
-        top_error_attr = getattr(self, 'non_field_errors', [])  # Errors that should be displayed above all fields.
-        top_errors = top_error_attr().copy() if callable(top_error_attr) else top_error_attr.copy()
+        print("-------------------------- Unassigned Fields ----------------------------------------------")
+        pprint(unassigned_fields)
+        if isinstance(self.data, tuple):
+            print("Someone Messed Up Data! ")
+        fieldsets = list(getattr(self, '_fieldsets', ((None, {'fields': [], 'position': None}), )))
+        print("-------------------------- Initial Fieldsets ----------------------------------------------")
+        pprint(fieldsets)
+        if isinstance(self.data, tuple):
+            print("Someone Messed Up Data! ")
+        print("--------------------------- Data ----------------------------------------------------------")
+        pprint(self.data)
+        if isinstance(self.data, tuple):
+            print("Someone Messed Up Data! ")
+        print("-------------------- THIS IS GOING TO BE AN ERROR I SEE -----------------------------------")
+        top_errors = self.non_field_errors().copy()
         max_position, form_column_count, hidden_fields, remove_idx = 0, 0, [], []
         for index, fieldset in enumerate(fieldsets):
             fieldset_label, opts = fieldset
             if 'fields' not in opts or 'position' not in opts:
                 raise ImproperlyConfigured(_("There must be 'fields' and 'position' in each fieldset. "))
-            field_rows, = []
+            field_rows = []
             for ea in opts['fields']:
                 row = [ea] if isinstance(ea, str) else ea
                 existing_fields = {}
@@ -681,7 +724,7 @@ class FormSetMixIn:
                 if issubclass(klass, include_widgets) and not issubclass(klass, exclude_widgets):
                     visual_group.append((name, field, ))
         if len(visual_group) > 1:
-            max_label_length = max(len(field.label) for name, field in visual_group)
+            max_label_length = max(len(field.label) for name, field in visual_group if hasattr(field, 'label'))
             width = (max_label_length + 1) // 2  # * 0.85 ch
             if width > max_width:
                 max_word_length = max(len(w) for name, field in visual_group for w in field.label.split())
@@ -759,15 +802,6 @@ class FormSetMixIn:
                 output.extend(row_data)
         return output
 
-    def as_test(self):
-        """ Prepares and calls different 'as_<variation>' method variations. """
-        container = 'fieldset'  # table, ul, p, fieldset, ...
-        func = getattr(self, 'as_' + container)
-        data = func()
-        if container not in ('p', 'fieldset', ):
-            data = self._html_tag(container, data)
-        return mark_safe(data)
-
     def _html_output(self, row_tag, col_head_tag, col_tag, single_col_tag, col_head_data, col_data,
                      help_text_br, errors_on_separate_row, as_type=None, strict_columns=False):
         """ Overriding BaseForm._html_output. Output HTML. Used by as_table(), as_ul(), as_p(), etc. """
@@ -778,8 +812,8 @@ class FormSetMixIn:
         # ignored_base_widgets = ['ChoiceWidget', 'MultiWidget', 'SelectDateWidget', ]
         # 'ChoiceWidget' is the base for 'RadioSelect', 'Select', and variations.
         col_html, single_col_html = self.column_formats(col_head_tag, col_tag, single_col_tag, col_head_data, col_data)
-        fieldsets = getattr(self, '_fieldsets', None) or self._make_fieldsets()
-        assert fieldsets[-1][0] == 'summary', "The final row from _make_fieldsets is reserved for form summary data. "
+        fieldsets = getattr(self, '_fieldsets', None) or self.make_fieldsets()
+        assert fieldsets[-1][0] == 'summary', "The final row from make_fieldsets is reserved for form summary data. "
         summary = fieldsets.pop()[1]
         data_labels = ('top_errors', 'hidden_fields', 'columns')
         assert isinstance(summary, dict) and all(ea in summary for ea in data_labels), "Malformed fieldsets summary. "
@@ -952,7 +986,7 @@ class FormSetMixIn:
         )
 
 
-class PersonFormMixIn(FocusMixMin, OptionalUserNameMixIn, OptionalCountryMixIn, FormSetMixIn):
+class PersonFormMixIn(FocusMixMin, FormSetMixIn, OptionalCountryMixIn):  # FormSetMixIn,
     """ Using fieldsets, optional country & username (with override and computed fields) and focus. """
     # TODO: Determine correct import order
 
