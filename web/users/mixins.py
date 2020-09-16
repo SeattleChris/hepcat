@@ -515,7 +515,8 @@ class OptionalCountryMixIn(FormOverrideMixIn):
             print(val)
             # print(w.attrs)
         super().__init__(*args, **kwargs)
-        if not self.fieldsets and self.flat_fields:
+        if not hasattr(self, 'fieldsets') or getattr(self, 'flat_fields', False):
+            print("Not fieldsets, or flat fields. ")
             opts, field_rows, fields, *args = self.prep_country_fields(None, None, self.fields, flat_fields=True)
             self.fields = fields
 
@@ -570,7 +571,7 @@ class OptionalCountryMixIn(FormOverrideMixIn):
 class FormSetMixIn:
     """ Forms can be defined with multiple fields within the same row. Allows fieldsets in all as_<type> methods. """
 
-    flat_fields = False
+    # flat_fields = False
     fieldsets = (
         (None, {
             'position': 1,
@@ -593,7 +594,8 @@ class FormSetMixIn:
         }), )
 
     def __init__(self, *args, **kwargs):
-        super().__init__(args, kwargs)
+        print("======================= FormSetMixIn.__init__ =================================")
+        super().__init__(*args, **kwargs)
         self._fieldsets = self.make_fieldsets()
 
     def handle_modifiers(self, opts, *args, **kwargs):
