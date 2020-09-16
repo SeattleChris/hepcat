@@ -21,9 +21,6 @@ class FocusMixMin:
         named_focus = kwargs.pop('named_focus', None)
         fields_focus = kwargs.pop('fields_focus', None)
         super().__init__(*args, **kwargs)
-        if isinstance(self.data, tuple):
-            print("Someone Messed Up Data! ")
-        pprint(self.data)
         named_focus = kwargs.pop('named_focus', named_focus)
         fields_focus = kwargs.pop('fields_focus', fields_focus)
         self.assign_focus_field(name=named_focus, fields=fields_focus)
@@ -60,9 +57,6 @@ class ComputedFieldsMixIn:
         strict_username = kwargs.pop('strict_username', getattr(self, 'strict_username', None))
         computed_fields = kwargs.pop('computed_fields', getattr(self, 'computed_fields', []))
         super().__init__(*args, **kwargs)
-        if isinstance(self.data, tuple):
-            print("Someone Messed Up Data! ")
-        pprint(self.data)
         self.attach_critical_validators(strict_email, strict_username)
         keep_keys = set(self.data.keys())
         if computed_fields:
@@ -203,9 +197,6 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
                 email_field_name = self._meta.model.get_email_field_name()
                 kwargs['named_focus'] = email_field_name
         super().__init__(*args, **kwargs)
-        if isinstance(self.data, tuple):
-            print("Someone Messed Up Data! ")
-        pprint(self.data)
         print("--------------------- FINISH OptionalUserNameMixIn --------------------")
 
     def username_from_email_or_names(self, username_field_name=None, email_field_name=None):
@@ -373,9 +364,6 @@ class FormOverrideMixIn:
         pprint(kwargs)
 
         super().__init__(*args, **kwargs)
-        if isinstance(self.data, tuple):
-            print("Someone Messed Up Data! ")
-        pprint(self.data)
         print("--------------------------- CRITICAL -----------------------------------------------")
         # pprint(dir(self))
         # pprint(type(self.data))
@@ -474,7 +462,6 @@ class FormOverrideMixIn:
 
     def test_field_order(self, data):
         """ Deprecated. Log printing the dict, array, or tuple in the order they are currently stored. """
-        from pprint import pprint
         log_lines = [(key, value) for key, value in data.items()] if isinstance(data, dict) else data
         for line in log_lines:
             pprint(line)
@@ -628,7 +615,7 @@ class FormSetMixIn:
 
     def handle_modifiers(self, opts, *args, **kwargs):
         """ The parameters are passed to methods whose names are in a list assigned to modifiers for this fieldset. """
-        modifiers = [self.mod for mod in opts.get('modifiers', []) if hasattr(self, mod)]
+        modifiers = [getattr(self, mod) for mod in opts.get('modifiers', []) if hasattr(self, mod)]
         for mod in modifiers:
             opts, *args, kwargs = mod(opts, *args, **kwargs)
         return (opts, *args, kwargs)
@@ -636,23 +623,15 @@ class FormSetMixIn:
     def make_fieldsets(self, *fs_args, **kwargs):
         """ Updates the dictionaries of each fieldset with 'rows' of field dicts, and a flattend 'field_names' list. """
         print("======================= FormSetMixIn.make_fieldsets =================================")
-        if isinstance(self.data, tuple):
-            print("Someone Messed Up Data! ")
         unassigned_fields = self.fields.copy()
         print("-------------------------- Unassigned Fields ----------------------------------------------")
         pprint(unassigned_fields)
-        if isinstance(self.data, tuple):
-            print("Someone Messed Up Data! ")
-        fieldsets = list(getattr(self, '_fieldsets', ((None, {'fields': [], 'position': None}), )))
+        fieldsets = list(getattr(self, 'fieldsets', ((None, {'fields': [], 'position': None}), )))
         print("-------------------------- Initial Fieldsets ----------------------------------------------")
         pprint(fieldsets)
-        if isinstance(self.data, tuple):
-            print("Someone Messed Up Data! ")
         print("--------------------------- Data ----------------------------------------------------------")
         pprint(self.data)
-        if isinstance(self.data, tuple):
-            print("Someone Messed Up Data! ")
-        print("-------------------- THIS IS GOING TO BE AN ERROR I SEE -----------------------------------")
+        print("-------------------------------------------------------------------------------------------")
         top_errors = self.non_field_errors().copy()
         max_position, form_column_count, hidden_fields, remove_idx = 0, 0, [], []
         for index, fieldset in enumerate(fieldsets):
@@ -721,10 +700,12 @@ class FormSetMixIn:
                 name = list(field_dict.keys())[0]
                 field = list(field_dict.values())[0]
                 klass = field.widget.__class__
-                if issubclass(klass, include_widgets) and not issubclass(klass, exclude_widgets):
+                if issubclass(klass, include_widgets) and \
+                   not issubclass(klass, exclude_widgets) and \
+                   getattr(field, 'label', None):
                     visual_group.append((name, field, ))
         if len(visual_group) > 1:
-            max_label_length = max(len(field.label) for name, field in visual_group if hasattr(field, 'label'))
+            max_label_length = max(len(field.label) for name, field in visual_group)
             width = (max_label_length + 1) // 2  # * 0.85 ch
             if width > max_width:
                 max_word_length = max(len(w) for name, field in visual_group for w in field.label.split())
