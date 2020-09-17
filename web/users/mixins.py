@@ -641,7 +641,7 @@ class FormSetMixIn:
         unassigned_field_names = [name for name in remaining_fields if name not in assigned_field_names]
         pprint(unassigned_field_names)
         opts = {'modifiers': 'prep_remaining', 'position': 'remaining', 'fields': unassigned_field_names}
-        fieldsets.append((None, opts))
+        fieldsets.append((None, opts))  # Problem is that any other added removed fields will not be tracked.
         print("-------------------------- Initial Fieldsets ----------------------------------------------")
         pprint(fieldsets)
         print("--------------------------- Data ----------------------------------------------------------")
@@ -659,6 +659,8 @@ class FormSetMixIn:
                 existing_fields = {}
                 for name in row:
                     if name not in remaining_fields:
+                        # So okay when a fieldset defines field names not present in current form.
+                        # so if a field name is in remaining fieldset, but already used, skip it.
                         continue
                     field = remaining_fields.pop(name)
                     bf = self[name]
@@ -689,13 +691,9 @@ class FormSetMixIn:
         for index in reversed(remove_idx):
             fieldsets.pop(index)
         max_position += 1
-        field_rows = [{name: value} for name, value in remaining_fields.items()]
-        fields = list(remaining_fields.keys())
-        pprint(fields)
-        # opts = {'position': max_position + 1, 'fields': fields, 'field_names': fields, 'rows': field_rows, }
-        # opts['column_count'] = 1
-        # fieldsets.append((None, opts))
-
+        if len(remaining_fields):
+            pprint(remaining_fields)
+            raise ImproperlyConfigured(_("Should not add fields during make_fieldset, they are unassigned. "))
         lookup = {'end': max_position + 2, 'remaining': max_position + 1, None: max_position}
         fieldsets = [(k, v) for k, v in sorted(fieldsets,
                      key=lambda ea: lookup.get(ea[1]['position'], ea[1]['position']))
