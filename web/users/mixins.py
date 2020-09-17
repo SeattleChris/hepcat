@@ -428,7 +428,7 @@ class FormOverrideMixIn:
             return {}
         result = {}
         for key, field_info in initial_field_info.items():
-            method_name = 'condition' + key
+            method_name = 'condition_' + key  # calls methods like condition_alt_country, etc.
             is_condition = getattr(self, method_name)() if hasattr(self, method_name) else False
             if is_condition:
                 result.update(field_info)
@@ -458,7 +458,7 @@ class FormOverrideMixIn:
             opts, _skipped, fields, *prep_args, kwargs = self.handle_modifiers(*args, **kwargs)
         overrides = getattr(self, 'formfield_attrs_overrides', {})
         DEFAULT = overrides.get('_default_', {})
-        alt_field_info = self.get_alt_field_info()
+        alt_field_info = self.get_alt_field_info()  # condition_<label> methods may modify self.fields
         new_data = {}
         for name, field in fields.items():
             if name in overrides:
@@ -514,7 +514,7 @@ class OptionalCountryMixIn(FormOverrideMixIn):
         name = self.country_field_name
         field = self.base_fields.get(name, None)
         default = settings.DEFAULT_COUNTRY
-        val = ''
+        display_ver = 'local'
         if self.other_country_switch and field:
             data = kwargs.get('data', {})
             if not data:  # Unbound form - initial display of the form.
@@ -527,7 +527,8 @@ class OptionalCountryMixIn(FormOverrideMixIn):
                 other_country = data.get('other_country', None)
                 val = data.get(name, None)
                 if display == 'local' and other_country:  # self.country_display.initial
-                    data['country_display'] = 'foreign'
+                    display_ver = 'foreign'
+                    data['country_display'] = display_ver
                     if val == default:
                         data[name] = ''
                 data._mutable = True
@@ -535,9 +536,9 @@ class OptionalCountryMixIn(FormOverrideMixIn):
                 log = f"Displayed {display}, country value {val}, with default {default}. "
                 log += "Checked foreign country. " if other_country else "Not choosing foreign. "
                 print(log)
-            # pprint(data)
             print("-------------------------------------------------------------")
         # else: Either this form does not have an address, or they don't what the switch functionality.
+        print(display_ver)
         super().__init__(*args, **kwargs)
         print("------------- FINISH OptionalCountryMixIn(FormOverrideMixIn).__init__ FINISH ------------------")
 
