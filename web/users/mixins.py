@@ -365,13 +365,13 @@ class FormOverrideMixIn:
         pprint(kwargs)
 
         super().__init__(*args, **kwargs)
-        print("--------------------------- CRITICAL -----------------------------------------------")
+        # print("--------------------------- CRITICAL -----------------------------------------------")
         # pprint(dir(self))
         # pprint(type(self.data))
         # pprint(self._bound_field_cache)
-        pprint(self.Meta)
-        pprint(self.__dict__)
-        print("--------------------------- END CRITICAL --------------------------------------------")
+        # pprint(self.Meta)
+        # pprint(self.__dict__)
+        # print("--------------------------- END CRITICAL --------------------------------------------")
         fields = self.prep_fields()
         if fields is not self.fields:
             print("**************************** Fields do NOT match. ***************************")
@@ -436,9 +436,17 @@ class FormOverrideMixIn:
         return result
 
     def get_flat_fields_setting(self):
-        flat_fields = not hasattr(self, 'fieldsets')
+        flat_fields = getattr(self, 'flat_fields', True)
+        flat_fields = False if hasattr(self, 'fieldsets') or hasattr(self, '_fieldsets') else flat_fields
         self.flat_fields = flat_fields
         return flat_fields
+
+    def handle_modifiers(self, opts, *args, **kwargs):
+        """ The parameters are passed to methods whose names are in a list assigned to modifiers for this fieldset. """
+        modifiers = [getattr(self, mod) for mod in opts.get('modifiers', []) if hasattr(self, mod)]
+        for mod in modifiers:
+            opts, *args, kwargs = mod(opts, *args, **kwargs)
+        return (opts, *args, kwargs)
 
     def prep_fields(self, *prep_args, **kwargs):
         """ Returns a copy after it modifies self.fields according to overrides, country switch, and maxlength. """
@@ -475,13 +483,6 @@ class FormOverrideMixIn:
         if new_data:
             self.set_alt_data(new_data)
         return fields.copy()
-
-    def handle_modifiers(self, opts, *args, **kwargs):
-        """ The parameters are passed to methods whose names are in a list assigned to modifiers for this fieldset. """
-        modifiers = [getattr(self, mod) for mod in opts.get('modifiers', []) if hasattr(self, mod)]
-        for mod in modifiers:
-            opts, *args, kwargs = mod(opts, *args, **kwargs)
-        return (opts, *args, kwargs)
 
 
 class OptionalCountryMixIn(FormOverrideMixIn):
