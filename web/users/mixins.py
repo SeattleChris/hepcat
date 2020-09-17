@@ -350,6 +350,7 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
 
 class FormOverrideMixIn:
 
+    prep_modifiers = None
     alt_field_info = {}
     formfield_attrs_overrides = {
         '_default_': {'size': 15, },
@@ -431,10 +432,15 @@ class FormOverrideMixIn:
     def prep_fields(self):
         """ Returns a copy after it modifies self.fields according to overrides, country switch, and maxlength. """
         fields = self.fields
+        if self.get_flat_fields_setting():  # collect and apply all prep methods
+            print("Not fieldsets. ")
+            opts = {'modifiers': getattr(self, 'prep_modifiers', None) or []}
+            args = [opts, None, fields, prep_args]
+            kwargs.update(flat_fields=True)
+            opts, _skipped, fields, *prep_args, kwargs = self.handle_modifiers(*args, **kwargs)
         overrides = getattr(self, 'formfield_attrs_overrides', {})
         DEFAULT = overrides.get('_default_', {})
         alt_field_info = self.get_alt_field_info()
-
         new_data = {}
         for name, field in fields.items():
             if name in overrides:
@@ -460,12 +466,12 @@ class FormOverrideMixIn:
             self.set_alt_data(new_data)
         return fields.copy()
 
-    def test_field_order(self, data):
-        """ Deprecated. Log printing the dict, array, or tuple in the order they are currently stored. """
-        log_lines = [(key, value) for key, value in data.items()] if isinstance(data, dict) else data
-        for line in log_lines:
-            pprint(line)
-        # end test_field_order
+    def handle_modifiers(self, opts, *args, **kwargs):
+        """ The parameters are passed to methods whose names are in a list assigned to modifiers for this fieldset. """
+        modifiers = [getattr(self, mod) for mod in opts.get('modifiers', []) if hasattr(self, mod)]
+        for mod in modifiers:
+            opts, *args, kwargs = mod(opts, *args, **kwargs)
+        return (opts, *args, kwargs)
 
 
 class OptionalCountryMixIn(FormOverrideMixIn):
@@ -474,9 +480,9 @@ class OptionalCountryMixIn(FormOverrideMixIn):
     other_country = forms.BooleanField(
         label=_("Not a {} address. ".format(settings.DEFAULT_COUNTRY)),
         required=False, )
+    prep_modifiers = ['prep_country_fields']
     other_country_switch = True
     country_field_name = 'billing_country_code'
-    flat_fields = True
     alt_field_info = {
         'alt_country': {
             'billing_country_area': {
@@ -612,13 +618,6 @@ class FormSetMixIn:
         super().__init__(*args, **kwargs)
         self._fieldsets = self.make_fieldsets()
         print("--------------------- FINISH FormSetMixIn.__init__ --------------------")
-
-    def handle_modifiers(self, opts, *args, **kwargs):
-        """ The parameters are passed to methods whose names are in a list assigned to modifiers for this fieldset. """
-        modifiers = [getattr(self, mod) for mod in opts.get('modifiers', []) if hasattr(self, mod)]
-        for mod in modifiers:
-            opts, *args, kwargs = mod(opts, *args, **kwargs)
-        return (opts, *args, kwargs)
 
     def make_fieldsets(self, *fs_args, **kwargs):
         """ Updates the dictionaries of each fieldset with 'rows' of field dicts, and a flattend 'field_names' list. """
@@ -979,6 +978,13 @@ class PersonFormMixIn(FocusMixMin, FormSetMixIn, OptionalCountryMixIn):  # FormS
         if container not in ('p', 'fieldset', ):
             display_data = self._html_tag(container, display_data)
         return mark_safe(display_data)
+
+    def test_field_order(self, data):
+        """ Deprecated. Log printing the dict, array, or tuple in the order they are currently stored. """
+        log_lines = [(key, value) for key, value in data.items()] if isinstance(data, dict) else data
+        for line in log_lines:
+            pprint(line)
+        # end test_field_order
 
     def _html_tag(self, tag, contents, attr_string=''):
         """Wraps 'contents' in an HTML element with an open and closed 'tag', applying the 'attr_string' attributes. """
