@@ -462,7 +462,6 @@ class OptionalCountryMixIn(FormOverrideMixIn):
         required=False, )
     country_field_name = 'billing_country_code'
     other_country_switch = True
-
     prep_modifiers = ['prep_country_fields']
     alt_field_info = {
         'alt_country': {
@@ -494,17 +493,17 @@ class OptionalCountryMixIn(FormOverrideMixIn):
                 self.base_fields['other_country'] = self.other_country
                 # print("Put 'country_display' and 'other_country' into base fields. ")
             else:  # The form has been submitted.
-                data = data.copy()
                 display = data.get('country_display', 'DISPLAY NOT FOUND')
                 other_country = data.get('other_country', None)
                 val = data.get(name, None)
                 if display == 'local' and other_country:  # self.country_display.initial
                     display_ver = 'foreign'
+                    data = data.copy()
                     data['country_display'] = display_ver
                     if val == default:
                         data[name] = ''
-                data._mutable = True
-                kwargs['data'] = data
+                    data._mutable = False
+                    kwargs['data'] = data
                 log = f"Displayed {display}, country value {val}, with default {default}. "
                 log += "Checked foreign country. " if other_country else "Not choosing foreign. "
                 print(log)
