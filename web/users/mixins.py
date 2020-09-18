@@ -566,6 +566,12 @@ class FormFieldSetMixIn:
         It will take advantage of handle_modifiers if FormOverrideMixIn is present, otherwise modifiers are ignored.
     """
 
+    max_label_width = 12
+    adjust_label_width = False
+    label_width_widgets = (Input, Textarea, )  # Base classes for the field.widgets we want.
+    label_exclude_widgets = (CheckboxInput, HiddenInput)  # classes for the field.widgets we do NOT want.
+    # ignored_base_widgets: ChoiceWidget, MultiWidget, SelectDateWidget
+    # ChoiceWidget is the base for RadioSelect, Select, and variations.
     fieldsets = (
         (None, {
             'position': 1,
@@ -586,11 +592,6 @@ class FormFieldSetMixIn:
                 ('billing_city', 'billing_country_area', 'billing_postcode', )
                 ],
         }), )
-    max_label_width = 12
-    label_width_widgets = (Input, Textarea, )  # Base classes for the field.widgets we want.
-    label_exclude_widgets = (CheckboxInput, HiddenInput)  # classes for the field.widgets we do NOT want.
-    # ignored_base_widgets = ['ChoiceWidget', 'MultiWidget', 'SelectDateWidget', ]
-    # 'ChoiceWidget' is the base for 'RadioSelect', 'Select', and variations.
 
     def __init__(self, *args, **kwargs):
         print("======================= FormFieldSetMixIn.__init__ =================================")
@@ -602,6 +603,34 @@ class FormFieldSetMixIn:
         """ This can be updated for any additional processing of fields not in any other fieldsets. """
         print("========================= FormFieldSetMixIn.prep_remaining ==================================")
         return (opts, field_rows, remaining_fields, *args, kwargs)
+
+    def determine_label_width(self, field_rows):
+        """ Returns a attr_dict and list of names of fields whose labels should apply these attributes. """
+        if isinstance(field_rows, dict):  # such as self.fields
+            single_field_rows = [{name: field} for name, field in field_rows]
+        else:
+            single_field_rows = [row for row in field_rows if len(row) == 1]
+        visual_group, styled_labels, label_attrs_dict = [], [], {}
+        if len(single_field_rows) < 2 or not getattr(self, 'adjust_label_width', True):
+            return label_attrs_dict, styled_labels
+        for field_dict in single_field_rows:
+            name = list(field_dict.keys())[0]
+            field = list(field_dict.values())[0]
+            klass = field.widget.__class__
+            if issubclass(klass, self.label_width_widgets) and \
+               not issubclass(klass, getattr(self, 'label_exclude_widgets', [])):
+                visual_group.append((name, field, ))
+        if len(visual_group) > 1:
+            max_label_length = max(len(field.label) for name, field in visual_group)
+            width = (max_label_length + 1) // 2  # * 0.85 ch
+            if width > self.max_label_width:
+                max_word_length = max(len(w) for name, field in visual_group for w in field.label.split())
+                width = max_word_length // 2
+                # TODO: if width > self.max_label_width -- overflow hidden or allow field to be too big?
+            style_text = 'width: {}rem; display: inline-block'.format(width)
+            label_attrs_dict = {'style': style_text}
+            styled_labels = [name for name, field in visual_group]
+        return label_attrs_dict, styled_labels
 
     def make_fieldsets(self, *fs_args, **kwargs):
         """ Updates the dictionaries of each fieldset with 'rows' of field dicts, and a flattend 'field_names' list. """
@@ -669,32 +698,6 @@ class FormFieldSetMixIn:
         self._fs_summary = summary
         fieldsets.append(('summary', summary, ))
         return fieldsets
-
-    def determine_label_width(self, field_rows):
-        """ Returns a attr_dict and list of names of fields whose labels should apply these attributes. """
-        visual_group, styled_labels, label_attrs_dict = [], [], {}
-        if len(self.label_width_widgets) < 1:
-            return label_attrs_dict, styled_labels
-        single_field_rows = [row for row in field_rows if len(row) == 1]
-        if len(single_field_rows) > 1:
-            for field_dict in single_field_rows:
-                name = list(field_dict.keys())[0]
-                field = list(field_dict.values())[0]
-                klass = field.widget.__class__
-                if issubclass(klass, self.label_width_widgets) and \
-                   not issubclass(klass, getattr(self, 'label_exclude_widgets', [])) and \
-                   getattr(field, 'label', None):
-                    visual_group.append((name, field, ))
-        if len(visual_group) > 1:
-            max_label_length = max(len(field.label) for name, field in visual_group)
-            width = (max_label_length + 1) // 2  # * 0.85 ch
-            if width > self.max_label_width:
-                max_word_length = max(len(w) for name, field in visual_group for w in field.label.split())
-                width = max_word_length // 2
-            style_text = 'width: {}rem; display: inline-block'.format(width)
-            label_attrs_dict = {'style': style_text}
-            styled_labels = [name for name, field in visual_group]
-        return label_attrs_dict, styled_labels
 
     def _html_tag(self, tag, contents, attr_string=''):
         """Wraps 'contents' in an HTML element with an open and closed 'tag', applying the 'attr_string' attributes. """
