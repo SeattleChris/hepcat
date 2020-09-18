@@ -45,7 +45,7 @@ class FocusMixMin:
 
 
 class ComputedFieldsMixIn:
-    """ Allows for computed fields with optional user overrides triggered by validation checks. Should be last MixIn."""
+    """A computed field is initially removed, but if failing desired validation conditions, included for user input. """
     computed_fields = []
     reserved_names_replace = False
     # reserved_names = []
@@ -187,7 +187,7 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
         }
 
     def __init__(self, *args, **kwargs):
-        print("======================= OptionalUserNameMixIn =================================")
+        print("======================= OptionalUserNameMixIn(ComputedFieldsMixIn).__init__ ==========================")
         model = getattr(self._meta, 'model', None)
         required_attributes = ('USERNAME_FIELD', 'get_email_field_name', 'is_active')
         if not model or not all(hasattr(model, ea) for ea in required_attributes):
@@ -205,7 +205,7 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
                 email_field_name = self._meta.model.get_email_field_name()
                 kwargs['named_focus'] = email_field_name
         super().__init__(*args, **kwargs)
-        print("--------------------- FINISH OptionalUserNameMixIn --------------------")
+        print("--------------------- FINISH OptionalUserNameMixIn(ComputedFieldsMixIn).__init__ --------------------")
 
     def username_from_email_or_names(self, username_field_name=None, email_field_name=None):
         """ Initial username field value. Must be evaluated after dependent fields populate cleaned_data. """
@@ -357,6 +357,7 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
 
 
 class FormOverrideMixIn:
+    """ Conditionally override formfield attributes and field properties. """
 
     prep_modifiers = None
     alt_field_info = {}
@@ -385,7 +386,7 @@ class FormOverrideMixIn:
             data_name = self.add_prefix(name)
             data_val = field.widget.value_from_datadict(self.data, self.files, data_name)
             if not field.has_changed(initial, data_val):
-                self.initial[name] = value  # TODO: Won't work since initial determined earlier.
+                self.initial[name] = value  # Only useful if current method called before self.initial used in __init__
                 new_data[data_name] = value
         if new_data:
             data = self.data.copy()
@@ -413,14 +414,14 @@ class FormOverrideMixIn:
         return flat_fields
 
     def handle_modifiers(self, opts, *args, **kwargs):
-        """ The parameters are passed to methods whose names are in a list assigned to modifiers for this fieldset. """
+        """ The parameters are passed to methods named opts['modifiers'] for this set of fields. """
         modifiers = (getattr(self, mod) for mod in opts.get('modifiers', []) if hasattr(self, mod))
         for mod in modifiers:
             opts, *args, kwargs = mod(opts, *args, **kwargs)
         return (opts, *args, kwargs)
 
     def prep_fields(self, *prep_args, **kwargs):
-        """ Returns a copy after it modifies self.fields according to overrides, country switch, and maxlength. """
+        """ Modifies self.fields and possibly self.data according to overrides, maxlength, and get_alt_field_info. """
         fields = self.fields
         if self.get_flat_fields_setting():  # collect and apply all prep methods
             print("Not fieldsets. ")
@@ -560,8 +561,10 @@ class OptionalCountryMixIn(FormOverrideMixIn):
         return other_country
 
 
-class FormFieldSetMixIn(FormOverrideMixIn):
-    """ Forms can be defined with multiple fields within the same row. Allows fieldsets in all as_<type> methods. """
+class FormFieldSetMixIn:
+    """ Forms can be defined with multiple fields within the same row. Allows fieldsets in all as_<type> methods.
+        It will take advantage of handle_modifiers if FormOverrideMixIn is present, otherwise modifiers are ignored.
+    """
 
     fieldsets = (
         (None, {
@@ -592,7 +595,7 @@ class FormFieldSetMixIn(FormOverrideMixIn):
     def __init__(self, *args, **kwargs):
         print("======================= FormFieldSetMixIn.__init__ =================================")
         super().__init__(*args, **kwargs)
-        self._fieldsets = self.make_fieldsets()
+        # self._fieldsets = self.make_fieldsets()
         print("--------------------- FINISH FormFieldSetMixIn.__init__ --------------------")
 
     def prep_remaining(self, opts, field_rows, remaining_fields, *args, **kwargs):
@@ -639,8 +642,9 @@ class FormFieldSetMixIn(FormOverrideMixIn):
                 if existing_fields:  # only adding non-empty rows. May be empty if these fields are not in current form.
                     field_rows.append(existing_fields)
             if field_rows:
-                args = [opts, field_rows, remaining_fields, *fs_args]
-                opts, field_rows, remaining_fields, *fs_args, kwargs = self.handle_modifiers(*args, **kwargs)
+                if hasattr(self, 'handle_modifiers'):  # from FormOverrideMixIn
+                    args = [opts, field_rows, remaining_fields, *fs_args]
+                    opts, field_rows, remaining_fields, *fs_args, kwargs = self.handle_modifiers(*args, **kwargs)
                 fs_column_count = max(len(row) for row in field_rows)
                 opts['field_names'] = flatten(opts['fields'])
                 opts['rows'] = field_rows
@@ -764,7 +768,7 @@ class FormFieldSetMixIn(FormOverrideMixIn):
         """ Overriding BaseForm._html_output. Output HTML. Used by as_table(), as_ul(), as_p(), etc. """
         help_tag = 'span'
         allow_colspan = not strict_columns and as_type == 'table'
-        adjust_label_width = getattr(self, 'adjust_label_width', True)
+        adjust_label_width = getattr(self, 'adjust_label_width', True) and hasattr(self, 'determine_label_width')
         if as_type == 'table':
             label_width_attrs_dict, width_labels = {}, []
             adjust_label_width = False
@@ -774,6 +778,7 @@ class FormFieldSetMixIn(FormOverrideMixIn):
         fieldsets = getattr(self, '_fieldsets', None) or self.make_fieldsets()
         summary = getattr(self, '_fs_summary', None)
         if fieldsets[-1][0] == 'summary':
+            print("******** JUST MADE FIELDSETS ********")
             summary = fieldsets.pop()[1]
         data_labels = ('top_errors', 'hidden_fields', 'columns')
         assert isinstance(summary, dict) and all(ea in summary for ea in data_labels), "Malformed fieldsets summary. "
