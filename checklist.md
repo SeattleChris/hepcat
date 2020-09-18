@@ -365,13 +365,13 @@ Current Status:
 - [x] Name input: First and Last default to same line if screen size allows.
 - [x] Address input: City, State, Zip default to same line if screen size allows.
 - [x] Address input: Address1 and Address2 on separate lines with explanation of continued input.
-- [ ] Default settings for local-country settings for Address inputs.
-- [ ] Non-local-country settings for Address inputs.
-- [ ] Form validation triggers next form for non-local-country if checked on first submit.
+- [x] Default settings for local-country settings for Address inputs.
+- [x] Non-local-country settings for Address inputs.
+- [x] Form validation triggers next form for non-local-country if checked on first submit.
 - [x] The local vs. non-local country form input is optional.
-- [ ] Label and Input box line up across different rows
-  - [ ] ? Using table layout?
-  - [ ] ? Using non-table layout?
+- [x] Label and Input box line up across different rows
+  - [x] ? Using table layout?
+  - [x] ? Using non-table layout?
 - [ ] CSS Style of save/submit button
 - [ ] Field boxes all line up, field names on left with align right
 - [ ] Field 'help_text' adjusted in CSS
