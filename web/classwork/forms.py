@@ -82,8 +82,7 @@ class RegisterForm(PersonFormMixIn, forms.ModelForm):
         if value is None:
             raise forms.ValidationError("Last Name is required")
         if value.isupper() or value.islower():
-            # If they gave all caps, or all lower, assume this is not desired.
-            return value.capitalize()
+            return value.capitalize()  # Assume unintended if it was all caps, or all lowercase.
         # However, some names have capitols in the middle, so leave unmodified.
         return value
 
