@@ -1,4 +1,6 @@
 from django import forms
+from django.core.exceptions import ValidationError  # NON_FIELD_ERRORS,
+from django.forms.fields import FileField  # Field,
 from .models import Student, Payment, Registration, Notify  # , Staff, Session, ClassOffer
 from users.mixins import PersonFormMixIn
 from django.utils.translation import gettext_lazy as _
@@ -51,11 +53,12 @@ class RegisterForm(PersonFormMixIn, forms.ModelForm):
     field_order = [*new_fields, *Meta.fields]
 
     def __init__(self, *args, **kwargs):
-        class_choices = kwargs.pop('class_choices', None)
         print("======================= classwork.RegisterForm.__init__ =================================")
+        class_choices = kwargs.pop('class_choices', None)
+        class_selected_field = getattr(self, 'base_fields', {}).get('class_selected', None)
+        if class_selected_field:
+            self.base_fields['class_selected'].queryset = class_choices
         super(RegisterForm, self).__init__(*args, **kwargs)
-        self.fields['class_selected'].queryset = class_choices
-        # self.assign_focus_field(kwargs.get('named_focus', None))
         print("--------------------- FINISH RegisterForm.__init__ --------------------")
 
     # Cleaning data is done by:
@@ -67,14 +70,14 @@ class RegisterForm(PersonFormMixIn, forms.ModelForm):
     # 3) Form.clean() where we can deal with cross-field validations.
 
     def clean_first_name(self):
-        print('======== RegisterForm._clean_first_name =========')
+        print('======== RegisterForm.clean_first_name =========')
         first_name = self.cleaned_data.get('first_name')
         if first_name is None:
             raise forms.ValidationError("First Name is required")
         return first_name.capitalize()
 
     def clean_last_name(self):
-        print('======== RegisterForm._clean_last_name =========')
+        print('======== RegisterForm.clean_last_name =========')
         value = self.cleaned_data.get('last_name')
         if value is None:
             raise forms.ValidationError("Last Name is required")
@@ -83,18 +86,6 @@ class RegisterForm(PersonFormMixIn, forms.ModelForm):
             return value.capitalize()
         # However, some names have capitols in the middle, so leave unmodified.
         return value
-
-    def _clean_fields(self):
-        print('======== RegisterForm._clean_fields =========')
-        super()._clean_fields()
-
-    def _clean_form(self):
-        print('======== RegisterForm._clean_form =========')
-        super()._clean_form()
-
-    def full_clean(self):
-        print('======== RegisterForm.full_clean =========')
-        super().full_clean()
 
     def clean_email(self):
         print('======== RegisterForm.clean_email =========')
@@ -107,6 +98,41 @@ class RegisterForm(PersonFormMixIn, forms.ModelForm):
         # We are deciding to force all emails to lowercase (using casefold).
         # Which could be an error if a user does in fact require uppercase.
         return email.casefold()
+
+    # def _clean_fields(self):
+    #     print('======== RegisterForm._clean_fields =========')
+    #     super()._clean_fields()
+
+    def _clean_fields(self):
+        print('======== Duplicate code as normal: RegisterForm._clean_fields =========')
+        for name, field in self.fields.items():
+            # value_from_datadict() gets the data from the data dictionaries.
+            # Each widget type knows how to retrieve its own data, because some
+            # widgets split data over several HTML fields.
+            if field.disabled:
+                value = self.get_initial_for_field(field, name)
+            else:
+                value = field.widget.value_from_datadict(self.data, self.files, self.add_prefix(name))
+            try:
+                if isinstance(field, FileField):
+                    initial = self.get_initial_for_field(field, name)
+                    value = field.clean(value, initial)
+                else:
+                    value = field.clean(value)
+                self.cleaned_data[name] = value
+                if hasattr(self, 'clean_%s' % name):
+                    value = getattr(self, 'clean_%s' % name)()
+                    self.cleaned_data[name] = value
+            except ValidationError as e:
+                self.add_error(name, e)
+
+    def _clean_form(self):
+        print('======== RegisterForm._clean_form =========')
+        super()._clean_form()
+
+    def full_clean(self):
+        print('======== RegisterForm.full_clean =========')
+        super().full_clean()
 
     def clean(self):
         print('======== RegisterForm.clean =========')

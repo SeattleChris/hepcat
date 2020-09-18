@@ -9,6 +9,7 @@ from django.utils.html import conditional_escape, format_html
 from django.utils.safestring import mark_safe
 from django.urls import reverse
 from django_registration import validators
+# from . import validators
 from .models import UserHC
 from pprint import pprint
 
@@ -361,8 +362,10 @@ class FormOverrideMixIn:
 
     def __init__(self, *args, **kwargs):
         print("======================= FormOverrideMixIn.__init__ =================================")
-        pprint(args)
-        pprint(kwargs)
+        # pprint(args)
+        # pprint(kwargs)
+        # pprint(getattr(self, 'base_fields', "No Base Fields"))
+        # pprint(getattr(self, 'declared_fields', "No Declared Fields"))
         super().__init__(*args, **kwargs)
         # print("--------------------------- CRITICAL -----------------------------------------------")
         # pprint(dir(self))
@@ -584,7 +587,7 @@ class OptionalCountryMixIn(FormOverrideMixIn):
 
     def clean_other_country(self):
         print("================== Clean Other Country ================================")
-        other_country = self.cleaned_data.get('other_country')
+        other_country = self.cleaned_data.get('other_country', None)  # TODO: appropriate default?
         if other_country:
             field = self.fields.get(self.country_field_name, None)
             pprint(self.country_field_name)
