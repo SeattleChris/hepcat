@@ -567,7 +567,7 @@ class FormFieldSetMixIn:
     """
 
     max_label_width = 12
-    adjust_label_width = False
+    adjust_label_width = True
     label_width_widgets = (Input, Textarea, )  # Base classes for the field.widgets we want.
     label_exclude_widgets = (CheckboxInput, HiddenInput)  # classes for the field.widgets we do NOT want.
     # ignored_base_widgets: ChoiceWidget, MultiWidget, SelectDateWidget
@@ -773,7 +773,6 @@ class FormFieldSetMixIn:
         allow_colspan = not strict_columns and as_type == 'table'
         adjust_label_width = getattr(self, 'adjust_label_width', True) and hasattr(self, 'determine_label_width')
         if as_type == 'table':
-            label_width_attrs_dict, width_labels = {}, []
             adjust_label_width = False
         all_fieldsets = True if as_type == 'fieldset' else False
         html_args = [row_tag, col_head_tag, col_tag, single_col_tag, as_type, all_fieldsets]
@@ -789,6 +788,7 @@ class FormFieldSetMixIn:
         col_double = col_head_tag and as_type == 'table'
 
         for fieldset_label, opts in fieldsets:
+            label_width_attrs_dict, width_labels = {}, []
             if adjust_label_width:
                 label_width_attrs_dict, width_labels = self.determine_label_width(opts['rows'])
             col_count = opts['column_count'] if fieldset_label else form_col_count
