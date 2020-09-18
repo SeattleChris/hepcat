@@ -47,61 +47,62 @@ class FocusMixMin:
 class ComputedFieldsMixIn:
     """ Allows for computed fields with optional user overrides triggered by validation checks. Should be last MixIn."""
     computed_fields = []
-    strict_username = True  # case_insensitive
-    strict_email = False  # unique_email and case_insensitive
     reserved_names_replace = False
     # reserved_names = []
 
     def __init__(self, *args, **kwargs):
         print("======================= ComputedFieldsMixIn.__init__ =================================")
-        strict_email = kwargs.pop('strict_email', getattr(self, 'strict_email', None))
-        strict_username = kwargs.pop('strict_username', getattr(self, 'strict_username', None))
+        validator_kwargs = kwargs.pop('validator_kwargs', {})
+        self.attach_critical_validators(**validator_kwargs)
         computed_fields = kwargs.pop('computed_fields', getattr(self, 'computed_fields', []))
         super().__init__(*args, **kwargs)
-        self.attach_critical_validators(strict_email, strict_username)
         keep_keys = set(self.data.keys())
         if computed_fields:
             extracted_fields = {key: self.fields.pop(key, None) for key in set(computed_fields) - keep_keys}
             self.computed_fields = extracted_fields
         print("--------------------- FINISH ComputedFieldsMixIn.__init --------------------")
 
-    def attach_critical_validators(self, strict_email=None, strict_username=None):
+    def attach_critical_validators(self, **kwargs):
         """Before setting computed_fields, assign validators to the email and username fields. """
-        email_name = getattr(self._meta.model, 'get_email_field_name', None)
-        email_name = email_name() if callable(email_name) else email_name
-        if email_name and email_name in self.fields:
-            email_validators = [
-                validators.HTML5EmailValidator(),
-                validators.validate_confusables_email
-            ]
-            if strict_email:
-                email_validators.append(
-                    validators.CaseInsensitiveUnique(
-                        self._meta.model, email_name, validators.DUPLICATE_EMAIL
-                    )
-                )
-            email_field = self.fields[email_name]
-            email_field.validators.extend(email_validators)
-            email_field.required = True
+        fields = getattr(self, 'base_fields', None) if not hasattr(self, 'fields') else self.fields
+        if not fields:
+            raise ImproperlyConfigured(_("Any ComputedFieldsMixIn depends on access to base_fields or fields. "))
+        if getattr(self, 'reserved_names_replace', False):
+            reserved_names = getattr(self, 'reserved_names', validators.DEFAULT_RESERVED_NAMES)
+        else:
+            reserved_names = getattr(self, 'reserved_names', []) + validators.DEFAULT_RESERVED_NAMES
 
         username = getattr(self._meta.model, 'USERNAME_FIELD', None)
-        if username and username in self.fields:
-            if getattr(self, 'reserved_names_replace', False):
-                reserved_names = getattr(self, 'reserved_names', validators.DEFAULT_RESERVED_NAMES)
-            else:
-                reserved_names = getattr(self, 'reserved_names', []) + validators.DEFAULT_RESERVED_NAMES
+        if username and username in fields:
             username_validators = [
                 validators.ReservedNameValidator(reserved_names),
                 validators.validate_confusables,
             ]
-            if strict_username:
+            if kwargs.get('strict_username', None):
                 username_validators.append(
                     validators.CaseInsensitiveUnique(
                         self._meta.model, username, validators.DUPLICATE_USERNAME
                     )
                 )
-            username_field = self.fields[username]
+            username_field = fields[username]
             username_field.validators.extend(username_validators)
+
+        email_name = getattr(self._meta.model, 'get_email_field_name', None)
+        email_name = email_name() if callable(email_name) else email_name
+        if email_name and email_name in fields:
+            email_validators = [
+                validators.HTML5EmailValidator(),
+                validators.validate_confusables_email
+            ]
+            if kwargs.get('strict_email', None):
+                email_validators.append(
+                    validators.CaseInsensitiveUnique(
+                        self._meta.model, email_name, validators.DUPLICATE_EMAIL
+                    )
+                )
+            email_field = fields[email_name]
+            email_field.validators.extend(email_validators)
+            email_field.required = True
 
     def field_computed_from_fields(self, field_names=None, joiner='_', normalize=None):
         """ Must be evaluated after cleaned_data has the named field values populated. """
@@ -170,13 +171,16 @@ class ComputedFieldsMixIn:
 class OptionalUserNameMixIn(ComputedFieldsMixIn):
     """If possible, creates a username according to rules (defaults to email then to name), otherwise set manually. """
 
+    strict_username = True  # case_insensitive
+    strict_email = False  # unique_email and case_insensitive
+
     class Meta:
         model = UserHC
         USERNAME_FLAG_FIELD = 'username_not_email'
         fields = ('first_name', 'last_name', model.get_email_field_name(), USERNAME_FLAG_FIELD, model.USERNAME_FIELD, )
         computed_fields = (model.USERNAME_FIELD, USERNAME_FLAG_FIELD, )
-        strict_username = True  # case_insensitive
-        strict_email = False  # unique_email and case_insensitive
+        # strict_username = True  # case_insensitive
+        # strict_email = False  # unique_email and case_insensitive
         help_texts = {
             model.USERNAME_FIELD: _("Without a unique email, a username is needed. Use suggested or create one. "),
             model.get_email_field_name(): _("Used for confirmation and typically for login"),
@@ -191,6 +195,10 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
                 print(f"{ea}: {hasattr(model, ea)}")
             err = "Missing features for user model. Try subclassing Django's AbstractBaseUser, AbstractUser, or User. "
             raise ImproperlyConfigured(_(err))
+        strict_email = kwargs.pop('strict_email', getattr(self, 'strict_email', None))
+        strict_username = kwargs.pop('strict_username', getattr(self, 'strict_username', None))
+        validator_kwargs ={'strict_email': strict_email, 'strict_username': strict_username}
+        kwargs['validator_kwargs'] = validator_kwargs
         if hasattr(self, 'assign_focus_field'):
             username_field_name = self._meta.model.USERNAME_FIELD
             if username_field_name in kwargs.get('data', {}):
