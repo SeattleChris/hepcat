@@ -367,6 +367,23 @@ class FormOverrideMixIn:
         'billing_country_area': {'maxlength': 2, 'size': 2, },
         'billing_postcode': {'maxlength': 5, 'size': 5, },
         }
+    autocomplete = {  # https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/autocomplete
+        'first_name': 'given-name',
+        'middle_name': 'additional-name',
+        'last_name': 'family-name',
+        'full_name': 'name',
+        'email': 'email',
+        'username': 'username',
+        'new_password': 'new-password',
+        'password': 'current-password',
+        'billing_address_1': 'address-line1',
+        'billing_address_2': 'address-line2',
+        'billing_city': 'address-level2',
+        'billing_country_area': 'address-level1',
+        'billing_postcode': 'postal-code',
+        'billing_country_code': 'country',
+        # '': 'country-name',
+        }
 
     def __init__(self, *args, **kwargs):
         print("======================= FormOverrideMixIn.__init__ =================================")
@@ -393,6 +410,25 @@ class FormOverrideMixIn:
             data.update(new_data)
             data._mutable = False
             self.data = data
+
+    def good_practice_attrs(self):
+        """ Unless overridden by formfield_attrs_overrides, these good or best practices attrs should be applied. """
+        attrs = {}
+        mobile_lowercase = {'autocapitalize': 'none'}
+        auto_fill = getattr(self, 'autocomplete', {}).copy()
+        email_name = getattr(self._meta.model, 'get_email_field_name', None)
+        email_name = email_name() if callable(email_name) else email_name
+        if email_name and email_name in self.fields:
+            temp = {email_name: auto_fill.pop('email', '')}
+            temp.update(mobile_lowercase)
+            attrs[email_name] = temp
+        username = getattr(self._meta.model, 'USERNAME_FIELD', None)
+        if username and username in self.fields:
+            temp = {username: auto_fill.pop('username', '')}
+            temp.update(mobile_lowercase)
+            attrs[username] = temp
+        attrs.update(auto_fill)
+        return attrs
 
     def get_alt_field_info(self):
         """ Checks conditions for each key in alt_field_info. Returns a dict of field names and attribute overrides. """
@@ -429,7 +465,8 @@ class FormOverrideMixIn:
             args = [opts, None, fields, prep_args]
             kwargs.update(flat_fields=True)
             opts, _skipped, fields, *prep_args, kwargs = self.handle_modifiers(*args, **kwargs)
-        overrides = getattr(self, 'formfield_attrs_overrides', {})
+        overrides = self.good_practice_attrs()
+        overrides.update(getattr(self, 'formfield_attrs_overrides', {}))
         DEFAULT = overrides.get('_default_', {})
         alt_field_info = self.get_alt_field_info()  # condition_<label> methods may modify self.fields
         new_data = {}
