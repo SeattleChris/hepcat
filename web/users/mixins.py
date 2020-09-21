@@ -424,17 +424,22 @@ class FormOverrideMixIn:
             attrs[email_name] = temp
         username = getattr(self._meta.model, 'USERNAME_FIELD', None)
         if username and username in self.fields:
-            temp = {username: auto_fill.pop('username', '')}
+            temp = {'autocomplete': auto_fill.pop('username', '')}
             temp.update(mobile_lowercase)
             attrs[username] = temp
         attrs.update(auto_fill)
         return attrs
 
+    def get_overrides(self):
+        """ Combines good_practice_attrs and any formfield_attrs_overrides into a dict based on field names. """
+        initial = self.good_practice_attrs()
+        overrides = getattr(self, 'formfield_attrs_overrides', {})
+        overrides = {name: {**initial[name], **overrides.get(name, {})} for name in initial}
+        return overrides
+
     def get_alt_field_info(self):
         """ Checks conditions for each key in alt_field_info. Returns a dict of field names and attribute overrides. """
-        initial_field_info = getattr(self, 'alt_field_info', None)
-        if not initial_field_info:
-            return {}
+        initial_field_info = getattr(self, 'alt_field_info', {})
         result = {}
         for key, field_info in initial_field_info.items():
             method_name = 'condition_' + key  # calls methods like condition_alt_country, etc.
@@ -465,8 +470,7 @@ class FormOverrideMixIn:
             args = [opts, None, fields, prep_args]
             kwargs.update(flat_fields=True)
             opts, _skipped, fields, *prep_args, kwargs = self.handle_modifiers(*args, **kwargs)
-        overrides = self.good_practice_attrs()
-        overrides.update(getattr(self, 'formfield_attrs_overrides', {}))
+        overrides = self.get_overrides()  # may have some key names not in self.fields, which will later be ignored.
         DEFAULT = overrides.get('_default_', {})
         alt_field_info = self.get_alt_field_info()  # condition_<label> methods may modify self.fields
         new_data = {}
