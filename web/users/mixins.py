@@ -11,6 +11,7 @@ from django.urls import reverse
 from django_registration import validators
 # from . import validators
 from .models import UserHC
+from copy import deepcopy
 from pprint import pprint
 
 
@@ -43,53 +44,69 @@ class FocusMixMin:
             found.widget.attrs['autofocus'] = True
         return found
 
+    def as_test(self):
+        """ Prepares and calls different 'as_<variation>' method variations. """
+        container = 'ul'  # table, ul, p, fieldset, ...
+        func = getattr(self, 'as_' + container)
+        display_data = func()
+        if container not in ('p', 'fieldset', ):
+            display_data = self._html_tag(container, display_data)
+        return mark_safe(display_data)
+
+    def test_field_order(self, data):
+        """ Deprecated. Log printing the dict, array, or tuple in the order they are currently stored. """
+        log_lines = [(key, value) for key, value in data.items()] if isinstance(data, dict) else data
+        for line in log_lines:
+            pprint(line)
+
+    def _html_tag(self, tag, contents, attr_string=''):
+        """Wraps 'contents' in an HTML element with an open and closed 'tag', applying the 'attr_string' attributes. """
+        return '<' + tag + attr_string + '>' + contents + '</' + tag + '>'
+
 
 class ComputedFieldsMixIn:
-    """ Allows for computed fields with optional user overrides triggered by validation checks. Should be last MixIn."""
+    """A computed field is initially removed, but if failing desired validation conditions, included for user input. """
+    # TODO: Consider how this should work for non-User models that reference the User model or User model like fields.
     computed_fields = []
-    strict_username = True  # case_insensitive
-    strict_email = False  # unique_email and case_insensitive
     reserved_names_replace = False
     # reserved_names = []
 
     def __init__(self, *args, **kwargs):
         print("======================= ComputedFieldsMixIn.__init__ =================================")
-        strict_email = kwargs.pop('strict_email', getattr(self, 'strict_email', None))
-        strict_username = kwargs.pop('strict_username', getattr(self, 'strict_username', None))
+        validator_kwargs = kwargs.pop('validator_kwargs', {})
+        pprint(self.base_fields)
+        print("-------------------------------------------------------------------------")
+        pprint(validator_kwargs)
+        print("-------------------------------------------------------------------------")
+        pprint(getattr(self, 'fields', 'NO FIELDS YET'))
+        self.attach_critical_validators(**validator_kwargs)
         computed_fields = kwargs.pop('computed_fields', getattr(self, 'computed_fields', []))
         super().__init__(*args, **kwargs)
-        self.attach_critical_validators(strict_email, strict_username)
         keep_keys = set(self.data.keys())
         if computed_fields:
             extracted_fields = {key: self.fields.pop(key, None) for key in set(computed_fields) - keep_keys}
             self.computed_fields = extracted_fields
         print("--------------------- FINISH ComputedFieldsMixIn.__init --------------------")
 
-    def attach_critical_validators(self, strict_email=None, strict_username=None):
+    def attach_critical_validators(self, **kwargs):
         """Before setting computed_fields, assign validators to the email and username fields. """
-        email_name = getattr(self._meta.model, 'get_email_field_name', None)
-        email_name = email_name() if callable(email_name) else email_name
-        if email_name and email_name in self.fields:
-            email_validators = [
-                validators.HTML5EmailValidator(),
-                validators.validate_confusables_email
-            ]
-            if strict_email:
-                email_validators.append(
-                    validators.CaseInsensitiveUnique(
-                        self._meta.model, email_name, validators.DUPLICATE_EMAIL
-                    )
-                )
-            email_field = self.fields[email_name]
-            email_field.validators.extend(email_validators)
-            email_field.required = True
+        strict_username = kwargs.get('strict_username', getattr(self._meta, 'strict_username', None))
+        strict_username = strict_username or getattr(self, 'strict_username', None)
+        strict_email = kwargs.get('strict_email', getattr(self._meta, 'strict_email', None))
+        strict_email = strict_email or getattr(self, 'strict_email', None)
+        fields = getattr(self, 'fields', None)
+        if not isinstance(fields, dict):
+            print("------------- Critical Validators attached to base_fields. ------------------")
+            fields = getattr(self, 'base_fields', None)
+        if not fields:
+            raise ImproperlyConfigured(_("Any ComputedFieldsMixIn depends on access to base_fields or fields. "))
+        if getattr(self, 'reserved_names_replace', False):
+            reserved_names = getattr(self, 'reserved_names', validators.DEFAULT_RESERVED_NAMES)
+        else:
+            reserved_names = getattr(self, 'reserved_names', []) + validators.DEFAULT_RESERVED_NAMES
 
         username = getattr(self._meta.model, 'USERNAME_FIELD', None)
-        if username and username in self.fields:
-            if getattr(self, 'reserved_names_replace', False):
-                reserved_names = getattr(self, 'reserved_names', validators.DEFAULT_RESERVED_NAMES)
-            else:
-                reserved_names = getattr(self, 'reserved_names', []) + validators.DEFAULT_RESERVED_NAMES
+        if username and username in fields:
             username_validators = [
                 validators.ReservedNameValidator(reserved_names),
                 validators.validate_confusables,
@@ -100,8 +117,25 @@ class ComputedFieldsMixIn:
                         self._meta.model, username, validators.DUPLICATE_USERNAME
                     )
                 )
-            username_field = self.fields[username]
+            username_field = fields[username]
             username_field.validators.extend(username_validators)
+
+        email_name = getattr(self._meta.model, 'get_email_field_name', None)
+        email_name = email_name() if callable(email_name) else email_name
+        if email_name and email_name in fields:
+            email_validators = [
+                validators.HTML5EmailValidator(),
+                validators.validate_confusables_email
+            ]
+            if strict_email:
+                email_validators.append(
+                    validators.CaseInsensitiveUnique(
+                        self._meta.model, email_name, validators.DUPLICATE_EMAIL
+                    )
+                )
+            email_field = fields[email_name]
+            email_field.validators.extend(email_validators)
+            email_field.required = True
 
     def field_computed_from_fields(self, field_names=None, joiner='_', normalize=None):
         """ Must be evaluated after cleaned_data has the named field values populated. """
@@ -170,34 +204,51 @@ class ComputedFieldsMixIn:
 class OptionalUserNameMixIn(ComputedFieldsMixIn):
     """If possible, creates a username according to rules (defaults to email then to name), otherwise set manually. """
 
-    class Meta:
-        model = UserHC
-        USERNAME_FLAG_FIELD = 'username_not_email'
-        fields = ('first_name', 'last_name', model.get_email_field_name(), USERNAME_FLAG_FIELD, model.USERNAME_FIELD, )
-        computed_fields = (model.USERNAME_FIELD, USERNAME_FLAG_FIELD, )
-        strict_username = True  # case_insensitive
-        strict_email = False  # unique_email and case_insensitive
-        help_texts = {
-            model.USERNAME_FIELD: _("Without a unique email, a username is needed. Use suggested or create one. "),
-            model.get_email_field_name(): _("Used for confirmation and typically for login"),
-        }
+    user_model = UserHC
+    strict_username = True  # case_insensitive
+    strict_email = False  # unique_email and case_insensitive
+    USERNAME_FLAG_FIELD = 'username_not_email'
+    fields = ('first_name', 'last_name', user_model.get_email_field_name(), USERNAME_FLAG_FIELD, user_model.USERNAME_FIELD, )
+    computed_fields = (user_model.USERNAME_FIELD, USERNAME_FLAG_FIELD, )
+    help_texts = {
+        user_model.USERNAME_FIELD: _("Without a unique email, a username is needed. Use suggested or create one. "),
+        user_model.get_email_field_name(): _("Used for confirmation and typically for login"),
+    }
+
+    # class Meta:
+    #     model = UserHC
+    #     USERNAME_FLAG_FIELD = 'username_not_email'
+    #     fields = ('first_name', 'last_name', model.get_email_field_name(), USERNAME_FLAG_FIELD, model.USERNAME_FIELD, )
+    #     computed_fields = (model.USERNAME_FIELD, USERNAME_FLAG_FIELD, )
+    #     # strict_username = True  # case_insensitive
+    #     # strict_email = False  # unique_email and case_insensitive
+    #     help_texts = {
+    #         model.USERNAME_FIELD: _("Without a unique email, a username is needed. Use suggested or create one. "),
+    #         model.get_email_field_name(): _("Used for confirmation and typically for login"),
+    #     }
 
     def __init__(self, *args, **kwargs):
-        print("======================= OptionalUserNameMixIn =================================")
-        model = getattr(self._meta, 'model', None)
+        print("======================= OptionalUserNameMixIn(ComputedFieldsMixIn).__init__ ==========================")
+        model = getattr(self._meta, 'user_model', None) or getattr(self, 'user_model', None)
+        model = model or getattr(self._meta, 'model', None) or getattr(self, 'model', None)
+        print(f"Model is: {model} ")
         required_attributes = ('USERNAME_FIELD', 'get_email_field_name', 'is_active')
         if not model or not all(hasattr(model, ea) for ea in required_attributes):
             for ea in required_attributes:
                 print(f"{ea}: {hasattr(model, ea)}")
             err = "Missing features for user model. Try subclassing Django's AbstractBaseUser, AbstractUser, or User. "
             raise ImproperlyConfigured(_(err))
+        strict_email = kwargs.pop('strict_email', getattr(self, 'strict_email', None))
+        strict_username = kwargs.pop('strict_username', getattr(self, 'strict_username', None))
+        validator_kwargs ={'strict_email': strict_email, 'strict_username': strict_username}
+        kwargs['validator_kwargs'] = validator_kwargs
         if hasattr(self, 'assign_focus_field'):
-            username_field_name = self._meta.model.USERNAME_FIELD
+            username_field_name = model.USERNAME_FIELD
             if username_field_name in kwargs.get('data', {}):
-                email_field_name = self._meta.model.get_email_field_name()
+                email_field_name = model.get_email_field_name()
                 kwargs['named_focus'] = email_field_name
         super().__init__(*args, **kwargs)
-        print("--------------------- FINISH OptionalUserNameMixIn --------------------")
+        print("--------------------- FINISH OptionalUserNameMixIn(ComputedFieldsMixIn).__init__ --------------------")
 
     def username_from_email_or_names(self, username_field_name=None, email_field_name=None):
         """ Initial username field value. Must be evaluated after dependent fields populate cleaned_data. """
@@ -234,7 +285,7 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
         email_field_name = email_field_name or self._meta.model.get_email_field_name()
         email_field = self.fields.pop(email_field_name, None) or self.computed_fields.pop(email_field_name, None)
         email_field.initial = self.cleaned_data.get(email_field_name, email_field.initial)
-        flag_name = self.Meta.USERNAME_FLAG_FIELD
+        flag_name = self.USERNAME_FLAG_FIELD  # self.Meta.USERNAME_FLAG_FIELD
         flag_field = self.computed_fields.pop(flag_name, None) or self.fields.pop(flag_name, None)
         if flag_field:
             flag_field.initial = 'False'
@@ -286,7 +337,7 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
 
     def handle_flag_field(self, email_field_name, user_field_name):
         """ If the user gave a non-shared email, we expect flag is False, and no username value. """
-        flag_name = self.Meta.USERNAME_FLAG_FIELD
+        flag_name = self.USERNAME_FLAG_FIELD  # self.Meta.USERNAME_FLAG_FIELD
         flag_field = self.fields.get(flag_name, None) or self.computed_fields.get(flag_name, None)
         print("==================== handle_flag_field =====================================")
         if not flag_field:
@@ -349,6 +400,7 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
 
 
 class FormOverrideMixIn:
+    """ Conditionally override formfield attributes and field properties. """
 
     prep_modifiers = None
     alt_field_info = {}
@@ -357,6 +409,25 @@ class FormOverrideMixIn:
         'email': {'maxlength': 191, 'size': 20, },
         'billing_country_area': {'maxlength': 2, 'size': 2, },
         'billing_postcode': {'maxlength': 5, 'size': 5, },
+        }
+    autocomplete = {  # https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/autocomplete
+        'first_name': 'given-name',
+        'middle_name': 'additional-name',
+        'last_name': 'family-name',
+        'full_name': 'name',
+        'email': 'email',
+        'username': 'username',
+        'new_password': 'new-password',
+        'password1': 'new-password',
+        'password2': 'new-password',
+        'password': 'current-password',
+        'billing_address_1': 'address-line1',
+        'billing_address_2': 'address-line2',
+        'billing_city': 'address-level2',
+        'billing_country_area': 'address-level1',
+        'billing_postcode': 'postal-code',
+        'billing_country_code': 'country',
+        # '': 'country-name',
         }
 
     def __init__(self, *args, **kwargs):
@@ -377,7 +448,7 @@ class FormOverrideMixIn:
             data_name = self.add_prefix(name)
             data_val = field.widget.value_from_datadict(self.data, self.files, data_name)
             if not field.has_changed(initial, data_val):
-                self.initial[name] = value  # TODO: Won't work since initial determined earlier.
+                self.initial[name] = value  # Only useful if current method called before self.initial used in __init__
                 new_data[data_name] = value
         if new_data:
             data = self.data.copy()
@@ -385,11 +456,38 @@ class FormOverrideMixIn:
             data._mutable = False
             self.data = data
 
+    def good_practice_attrs(self):
+        """ Unless overridden by formfield_attrs_overrides, these good or best practices attrs should be applied. """
+        attrs = {}
+        mobile_lowercase = {'autocapitalize': 'none'}
+        auto_fill = getattr(self, 'autocomplete', {}).copy()
+        email_name = getattr(self._meta.model, 'get_email_field_name', None)
+        email_name = email_name() if callable(email_name) else email_name
+        if email_name and email_name in self.fields:
+            temp = {'autocomplete': auto_fill.pop('email', '')}
+            temp.update(mobile_lowercase)
+            attrs[email_name] = temp
+        username = getattr(self._meta.model, 'USERNAME_FIELD', None)
+        if username and username in self.fields:
+            temp = {'autocomplete': auto_fill.pop('username', '')}
+            temp.update(mobile_lowercase)
+            attrs[username] = temp
+        attrs.update({name: {'autocomplete': value} for name, value in auto_fill.items()})
+        return attrs
+
+    def get_overrides(self):
+        """ Combines good_practice_attrs and any formfield_attrs_overrides into a dict based on field names. """
+        overrides = self.good_practice_attrs()
+        for name, attrs in getattr(self, 'formfield_attrs_overrides', {}).items():
+            if name in overrides:
+                overrides[name].update(attrs)
+            else:
+                overrides[name] = attrs
+        return overrides
+
     def get_alt_field_info(self):
         """ Checks conditions for each key in alt_field_info. Returns a dict of field names and attribute overrides. """
-        initial_field_info = getattr(self, 'alt_field_info', None)
-        if not initial_field_info:
-            return {}
+        initial_field_info = getattr(self, 'alt_field_info', {})
         result = {}
         for key, field_info in initial_field_info.items():
             method_name = 'condition_' + key  # calls methods like condition_alt_country, etc.
@@ -405,14 +503,14 @@ class FormOverrideMixIn:
         return flat_fields
 
     def handle_modifiers(self, opts, *args, **kwargs):
-        """ The parameters are passed to methods whose names are in a list assigned to modifiers for this fieldset. """
+        """ The parameters are passed to methods named opts['modifiers'] for this set of fields. """
         modifiers = (getattr(self, mod) for mod in opts.get('modifiers', []) if hasattr(self, mod))
         for mod in modifiers:
             opts, *args, kwargs = mod(opts, *args, **kwargs)
         return (opts, *args, kwargs)
 
     def prep_fields(self, *prep_args, **kwargs):
-        """ Returns a copy after it modifies self.fields according to overrides, country switch, and maxlength. """
+        """ Modifies self.fields and possibly self.data according to overrides, maxlength, and get_alt_field_info. """
         fields = self.fields
         if self.get_flat_fields_setting():  # collect and apply all prep methods
             print("Not fieldsets. ")
@@ -420,7 +518,7 @@ class FormOverrideMixIn:
             args = [opts, None, fields, prep_args]
             kwargs.update(flat_fields=True)
             opts, _skipped, fields, *prep_args, kwargs = self.handle_modifiers(*args, **kwargs)
-        overrides = getattr(self, 'formfield_attrs_overrides', {})
+        overrides = self.get_overrides()  # may have some key names not in self.fields, which will later be ignored.
         DEFAULT = overrides.get('_default_', {})
         alt_field_info = self.get_alt_field_info()  # condition_<label> methods may modify self.fields
         new_data = {}
@@ -454,7 +552,6 @@ class OptionalCountryMixIn(FormOverrideMixIn):
         required=False, )
     country_field_name = 'billing_country_code'
     other_country_switch = True
-
     prep_modifiers = ['prep_country_fields']
     alt_field_info = {
         'alt_country': {
@@ -486,17 +583,17 @@ class OptionalCountryMixIn(FormOverrideMixIn):
                 self.base_fields['other_country'] = self.other_country
                 # print("Put 'country_display' and 'other_country' into base fields. ")
             else:  # The form has been submitted.
-                data = data.copy()
                 display = data.get('country_display', 'DISPLAY NOT FOUND')
                 other_country = data.get('other_country', None)
                 val = data.get(name, None)
                 if display == 'local' and other_country:  # self.country_display.initial
                     display_ver = 'foreign'
+                    data = data.copy()
                     data['country_display'] = display_ver
                     if val == default:
                         data[name] = ''
-                data._mutable = True
-                kwargs['data'] = data
+                    data._mutable = False
+                    kwargs['data'] = data
                 log = f"Displayed {display}, country value {val}, with default {default}. "
                 log += "Checked foreign country. " if other_country else "Not choosing foreign. "
                 print(log)
@@ -526,7 +623,7 @@ class OptionalCountryMixIn(FormOverrideMixIn):
         result = {field_name: field} if field else {}
         other_country_field = remaining_fields.pop('other_country', None)
         if not other_country_field:
-            other_country_field = self.base_fields['other_country'].copy()
+            other_country_field = deepcopy(self.base_fields['other_country'])
             # country_name = settings.DEFAULT_COUNTRY
             # label = "Not a {} address. ".format(country_name)
             # other_country_field = forms.BooleanField(label=_(label), required=False, )
@@ -553,9 +650,17 @@ class OptionalCountryMixIn(FormOverrideMixIn):
         return other_country
 
 
-class FormFieldSetMixIn(FormOverrideMixIn):
-    """ Forms can be defined with multiple fields within the same row. Allows fieldsets in all as_<type> methods. """
+class FormFieldSetMixIn:
+    """ Forms can be defined with multiple fields within the same row. Allows fieldsets in all as_<type> methods.
+        It will take advantage of handle_modifiers if FormOverrideMixIn is present, otherwise modifiers are ignored.
+    """
 
+    max_label_width = 12
+    adjust_label_width = True
+    label_width_widgets = (Input, Textarea, )  # Base classes for the field.widgets we want.
+    label_exclude_widgets = (CheckboxInput, HiddenInput)  # classes for the field.widgets we do NOT want.
+    # ignored_base_widgets: ChoiceWidget, MultiWidget, SelectDateWidget
+    # ChoiceWidget is the base for RadioSelect, Select, and variations.
     fieldsets = (
         (None, {
             'position': 1,
@@ -576,22 +681,45 @@ class FormFieldSetMixIn(FormOverrideMixIn):
                 ('billing_city', 'billing_country_area', 'billing_postcode', )
                 ],
         }), )
-    max_label_width = 12
-    label_width_widgets = (Input, Textarea, )  # Base classes for the field.widgets we want.
-    label_exclude_widgets = (CheckboxInput, HiddenInput)  # classes for the field.widgets we do NOT want.
-    # ignored_base_widgets = ['ChoiceWidget', 'MultiWidget', 'SelectDateWidget', ]
-    # 'ChoiceWidget' is the base for 'RadioSelect', 'Select', and variations.
 
     def __init__(self, *args, **kwargs):
         print("======================= FormFieldSetMixIn.__init__ =================================")
         super().__init__(*args, **kwargs)
-        self._fieldsets = self.make_fieldsets()
+        # self._fieldsets = self.make_fieldsets()
         print("--------------------- FINISH FormFieldSetMixIn.__init__ --------------------")
 
     def prep_remaining(self, opts, field_rows, remaining_fields, *args, **kwargs):
         """ This can be updated for any additional processing of fields not in any other fieldsets. """
         print("========================= FormFieldSetMixIn.prep_remaining ==================================")
         return (opts, field_rows, remaining_fields, *args, kwargs)
+
+    def determine_label_width(self, field_rows):
+        """ Returns a attr_dict and list of names of fields whose labels should apply these attributes. """
+        if isinstance(field_rows, dict):  # such as self.fields
+            single_field_rows = [{name: field} for name, field in field_rows]
+        else:
+            single_field_rows = [row for row in field_rows if len(row) == 1]
+        visual_group, styled_labels, label_attrs_dict = [], [], {}
+        if len(single_field_rows) < 2 or not getattr(self, 'adjust_label_width', True):
+            return label_attrs_dict, styled_labels
+        for field_dict in single_field_rows:
+            name = list(field_dict.keys())[0]
+            field = list(field_dict.values())[0]
+            klass = field.widget.__class__
+            if issubclass(klass, self.label_width_widgets) and \
+               not issubclass(klass, getattr(self, 'label_exclude_widgets', [])):
+                visual_group.append((name, field, ))
+        if len(visual_group) > 1:
+            max_label_length = max(len(field.label) for name, field in visual_group)
+            width = (max_label_length + 1) // 2  # * 0.85 ch
+            if width > self.max_label_width:
+                max_word_length = max(len(w) for name, field in visual_group for w in field.label.split())
+                width = max_word_length // 2
+                # TODO: if width > self.max_label_width -- overflow hidden or allow field to be too big?
+            style_text = 'width: {}rem; display: inline-block'.format(width)
+            label_attrs_dict = {'style': style_text}
+            styled_labels = [name for name, field in visual_group]
+        return label_attrs_dict, styled_labels
 
     def make_fieldsets(self, *fs_args, **kwargs):
         """ Updates the dictionaries of each fieldset with 'rows' of field dicts, and a flattend 'field_names' list. """
@@ -632,8 +760,9 @@ class FormFieldSetMixIn(FormOverrideMixIn):
                 if existing_fields:  # only adding non-empty rows. May be empty if these fields are not in current form.
                     field_rows.append(existing_fields)
             if field_rows:
-                args = [opts, field_rows, remaining_fields, *fs_args]
-                opts, field_rows, remaining_fields, *fs_args, kwargs = self.handle_modifiers(*args, **kwargs)
+                if hasattr(self, 'handle_modifiers'):  # from FormOverrideMixIn
+                    args = [opts, field_rows, remaining_fields, *fs_args]
+                    opts, field_rows, remaining_fields, *fs_args, kwargs = self.handle_modifiers(*args, **kwargs)
                 fs_column_count = max(len(row) for row in field_rows)
                 opts['field_names'] = flatten(opts['fields'])
                 opts['rows'] = field_rows
@@ -658,32 +787,6 @@ class FormFieldSetMixIn(FormOverrideMixIn):
         self._fs_summary = summary
         fieldsets.append(('summary', summary, ))
         return fieldsets
-
-    def determine_label_width(self, field_rows):
-        """ Returns a attr_dict and list of names of fields whose labels should apply these attributes. """
-        visual_group, styled_labels, label_attrs_dict = [], [], {}
-        if len(self.label_width_widgets) < 1:
-            return label_attrs_dict, styled_labels
-        single_field_rows = [row for row in field_rows if len(row) == 1]
-        if len(single_field_rows) > 1:
-            for field_dict in single_field_rows:
-                name = list(field_dict.keys())[0]
-                field = list(field_dict.values())[0]
-                klass = field.widget.__class__
-                if issubclass(klass, self.label_width_widgets) and \
-                   not issubclass(klass, getattr(self, 'label_exclude_widgets', [])) and \
-                   getattr(field, 'label', None):
-                    visual_group.append((name, field, ))
-        if len(visual_group) > 1:
-            max_label_length = max(len(field.label) for name, field in visual_group)
-            width = (max_label_length + 1) // 2  # * 0.85 ch
-            if width > self.max_label_width:
-                max_word_length = max(len(w) for name, field in visual_group for w in field.label.split())
-                width = max_word_length // 2
-            style_text = 'width: {}rem; display: inline-block'.format(width)
-            label_attrs_dict = {'style': style_text}
-            styled_labels = [name for name, field in visual_group]
-        return label_attrs_dict, styled_labels
 
     def _html_tag(self, tag, contents, attr_string=''):
         """Wraps 'contents' in an HTML element with an open and closed 'tag', applying the 'attr_string' attributes. """
@@ -757,9 +860,8 @@ class FormFieldSetMixIn(FormOverrideMixIn):
         """ Overriding BaseForm._html_output. Output HTML. Used by as_table(), as_ul(), as_p(), etc. """
         help_tag = 'span'
         allow_colspan = not strict_columns and as_type == 'table'
-        adjust_label_width = getattr(self, 'adjust_label_width', True)
+        adjust_label_width = getattr(self, 'adjust_label_width', True) and hasattr(self, 'determine_label_width')
         if as_type == 'table':
-            label_width_attrs_dict, width_labels = {}, []
             adjust_label_width = False
         all_fieldsets = True if as_type == 'fieldset' else False
         html_args = [row_tag, col_head_tag, col_tag, single_col_tag, as_type, all_fieldsets]
@@ -767,6 +869,7 @@ class FormFieldSetMixIn(FormOverrideMixIn):
         fieldsets = getattr(self, '_fieldsets', None) or self.make_fieldsets()
         summary = getattr(self, '_fs_summary', None)
         if fieldsets[-1][0] == 'summary':
+            print("******** JUST MADE FIELDSETS ********")
             summary = fieldsets.pop()[1]
         data_labels = ('top_errors', 'hidden_fields', 'columns')
         assert isinstance(summary, dict) and all(ea in summary for ea in data_labels), "Malformed fieldsets summary. "
@@ -774,6 +877,7 @@ class FormFieldSetMixIn(FormOverrideMixIn):
         col_double = col_head_tag and as_type == 'table'
 
         for fieldset_label, opts in fieldsets:
+            label_width_attrs_dict, width_labels = {}, []
             if adjust_label_width:
                 label_width_attrs_dict, width_labels = self.determine_label_width(opts['rows'])
             col_count = opts['column_count'] if fieldset_label else form_col_count
@@ -937,25 +1041,30 @@ class FormFieldSetMixIn(FormOverrideMixIn):
         )
 
 
-class PersonFormMixIn(FocusMixMin, FormFieldSetMixIn, OptionalCountryMixIn):  # FormFieldSetMixIn,
-    """ Using fieldsets, optional country & username (with override and computed fields) and focus. """
+class FieldSetOverrideMixIn(FocusMixMin, FormFieldSetMixIn, FormOverrideMixIn):
+    """ Using fieldsets, overrides, and focus. Similar to AddressMixIn without extensions from OptionalCountryMixIn. """
+
+
+class FieldSetOverrideComputedMixIn(FocusMixMin, FormFieldSetMixIn, ComputedFieldsMixIn, FormOverrideMixIn):
+    """ Using fieldsets, overrides, computed, and focus. Using all base versions, none of the optional extensions. """
+
+
+class FieldSetOverrideOptionalUsernameMixIn(FocusMixMin, FormFieldSetMixIn, OptionalUserNameMixIn, FormOverrideMixIn):
+    """ Using fieldsets, overrides (not country), computed with optional username, and focus. """
+
+
+class FieldSetOptionalCountryComputedMixIn(FocusMixMin, FormFieldSetMixIn, ComputedFieldsMixIn, OptionalCountryMixIn):
+    """ Using fieldsets, overrides with optional country, computed (not username), and focus. """
+
+
+class AddressOptionalUsernameMixIn(FocusMixMin, FormFieldSetMixIn, OptionalUserNameMixIn, OptionalCountryMixIn):
+    """ Using fieldsets, overrides with optional country, computed with optional username, and focus. """
     # TODO: Determine correct import order
 
-    def as_test(self):
-        """ Prepares and calls different 'as_<variation>' method variations. """
-        container = 'ul'  # table, ul, p, fieldset, ...
-        func = getattr(self, 'as_' + container)
-        display_data = func()
-        if container not in ('p', 'fieldset', ):
-            display_data = self._html_tag(container, display_data)
-        return mark_safe(display_data)
 
-    def test_field_order(self, data):
-        """ Deprecated. Log printing the dict, array, or tuple in the order they are currently stored. """
-        log_lines = [(key, value) for key, value in data.items()] if isinstance(data, dict) else data
-        for line in log_lines:
-            pprint(line)
+class AddressMixIn(FocusMixMin, FormFieldSetMixIn, OptionalCountryMixIn):  # FormFieldSetMixIn,
+    """ Using fieldsets, overrides with optional country, and focus. No computed features. """
 
-    def _html_tag(self, tag, contents, attr_string=''):
-        """Wraps 'contents' in an HTML element with an open and closed 'tag', applying the 'attr_string' attributes. """
-        return '<' + tag + attr_string + '>' + contents + '</' + tag + '>'
+
+# class PersonFormMixIn(FocusMixMin, FormFieldSetMixIn, OptionalCountryMixIn):
+#     """ Using fieldsets, optional country & username (with override and computed fields) and focus. """
