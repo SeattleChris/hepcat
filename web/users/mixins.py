@@ -375,6 +375,8 @@ class FormOverrideMixIn:
         'email': 'email',
         'username': 'username',
         'new_password': 'new-password',
+        'password1': 'new-password',
+        'password2': 'new-password',
         'password': 'current-password',
         'billing_address_1': 'address-line1',
         'billing_address_2': 'address-line2',
@@ -419,7 +421,7 @@ class FormOverrideMixIn:
         email_name = getattr(self._meta.model, 'get_email_field_name', None)
         email_name = email_name() if callable(email_name) else email_name
         if email_name and email_name in self.fields:
-            temp = {email_name: auto_fill.pop('email', '')}
+            temp = {'autocomplete': auto_fill.pop('email', '')}
             temp.update(mobile_lowercase)
             attrs[email_name] = temp
         username = getattr(self._meta.model, 'USERNAME_FIELD', None)
@@ -427,14 +429,17 @@ class FormOverrideMixIn:
             temp = {'autocomplete': auto_fill.pop('username', '')}
             temp.update(mobile_lowercase)
             attrs[username] = temp
-        attrs.update(auto_fill)
+        attrs.update({name: {'autocomplete': value} for name, value in auto_fill.items()})
         return attrs
 
     def get_overrides(self):
         """ Combines good_practice_attrs and any formfield_attrs_overrides into a dict based on field names. """
-        initial = self.good_practice_attrs()
-        overrides = getattr(self, 'formfield_attrs_overrides', {})
-        overrides = {name: {**initial[name], **overrides.get(name, {})} for name in initial}
+        overrides = self.good_practice_attrs()
+        for name, attrs in getattr(self, 'formfield_attrs_overrides', {}).items():
+            if name in overrides:
+                overrides[name].update(attrs)
+            else:
+                overrides[name] = attrs
         return overrides
 
     def get_alt_field_info(self):
