@@ -11,6 +11,7 @@ from django.urls import reverse
 from django_registration import validators
 # from . import validators
 from .models import UserHC
+from copy import deepcopy
 from pprint import pprint
 
 
@@ -43,9 +44,29 @@ class FocusMixMin:
             found.widget.attrs['autofocus'] = True
         return found
 
+    def as_test(self):
+        """ Prepares and calls different 'as_<variation>' method variations. """
+        container = 'ul'  # table, ul, p, fieldset, ...
+        func = getattr(self, 'as_' + container)
+        display_data = func()
+        if container not in ('p', 'fieldset', ):
+            display_data = self._html_tag(container, display_data)
+        return mark_safe(display_data)
+
+    def test_field_order(self, data):
+        """ Deprecated. Log printing the dict, array, or tuple in the order they are currently stored. """
+        log_lines = [(key, value) for key, value in data.items()] if isinstance(data, dict) else data
+        for line in log_lines:
+            pprint(line)
+
+    def _html_tag(self, tag, contents, attr_string=''):
+        """Wraps 'contents' in an HTML element with an open and closed 'tag', applying the 'attr_string' attributes. """
+        return '<' + tag + attr_string + '>' + contents + '</' + tag + '>'
+
 
 class ComputedFieldsMixIn:
     """A computed field is initially removed, but if failing desired validation conditions, included for user input. """
+    # TODO: Consider how this should work for non-User models that reference the User model or User model like fields.
     computed_fields = []
     reserved_names_replace = False
     # reserved_names = []
@@ -53,6 +74,11 @@ class ComputedFieldsMixIn:
     def __init__(self, *args, **kwargs):
         print("======================= ComputedFieldsMixIn.__init__ =================================")
         validator_kwargs = kwargs.pop('validator_kwargs', {})
+        pprint(self.base_fields)
+        print("-------------------------------------------------------------------------")
+        pprint(validator_kwargs)
+        print("-------------------------------------------------------------------------")
+        pprint(getattr(self, 'fields', 'NO FIELDS YET'))
         self.attach_critical_validators(**validator_kwargs)
         computed_fields = kwargs.pop('computed_fields', getattr(self, 'computed_fields', []))
         super().__init__(*args, **kwargs)
@@ -64,7 +90,14 @@ class ComputedFieldsMixIn:
 
     def attach_critical_validators(self, **kwargs):
         """Before setting computed_fields, assign validators to the email and username fields. """
-        fields = getattr(self, 'base_fields', None) if not hasattr(self, 'fields') else self.fields
+        strict_username = kwargs.get('strict_username', getattr(self._meta, 'strict_username', None))
+        strict_username = strict_username or getattr(self, 'strict_username', None)
+        strict_email = kwargs.get('strict_email', getattr(self._meta, 'strict_email', None))
+        strict_email = strict_email or getattr(self, 'strict_email', None)
+        fields = getattr(self, 'fields', None)
+        if not isinstance(fields, dict):
+            print("------------- Critical Validators attached to base_fields. ------------------")
+            fields = getattr(self, 'base_fields', None)
         if not fields:
             raise ImproperlyConfigured(_("Any ComputedFieldsMixIn depends on access to base_fields or fields. "))
         if getattr(self, 'reserved_names_replace', False):
@@ -78,7 +111,7 @@ class ComputedFieldsMixIn:
                 validators.ReservedNameValidator(reserved_names),
                 validators.validate_confusables,
             ]
-            if kwargs.get('strict_username', None):
+            if strict_username:
                 username_validators.append(
                     validators.CaseInsensitiveUnique(
                         self._meta.model, username, validators.DUPLICATE_USERNAME
@@ -94,7 +127,7 @@ class ComputedFieldsMixIn:
                 validators.HTML5EmailValidator(),
                 validators.validate_confusables_email
             ]
-            if kwargs.get('strict_email', None):
+            if strict_email:
                 email_validators.append(
                     validators.CaseInsensitiveUnique(
                         self._meta.model, email_name, validators.DUPLICATE_EMAIL
@@ -171,24 +204,34 @@ class ComputedFieldsMixIn:
 class OptionalUserNameMixIn(ComputedFieldsMixIn):
     """If possible, creates a username according to rules (defaults to email then to name), otherwise set manually. """
 
+    user_model = UserHC
     strict_username = True  # case_insensitive
     strict_email = False  # unique_email and case_insensitive
+    USERNAME_FLAG_FIELD = 'username_not_email'
+    fields = ('first_name', 'last_name', user_model.get_email_field_name(), USERNAME_FLAG_FIELD, user_model.USERNAME_FIELD, )
+    computed_fields = (user_model.USERNAME_FIELD, USERNAME_FLAG_FIELD, )
+    help_texts = {
+        user_model.USERNAME_FIELD: _("Without a unique email, a username is needed. Use suggested or create one. "),
+        user_model.get_email_field_name(): _("Used for confirmation and typically for login"),
+    }
 
-    class Meta:
-        model = UserHC
-        USERNAME_FLAG_FIELD = 'username_not_email'
-        fields = ('first_name', 'last_name', model.get_email_field_name(), USERNAME_FLAG_FIELD, model.USERNAME_FIELD, )
-        computed_fields = (model.USERNAME_FIELD, USERNAME_FLAG_FIELD, )
-        # strict_username = True  # case_insensitive
-        # strict_email = False  # unique_email and case_insensitive
-        help_texts = {
-            model.USERNAME_FIELD: _("Without a unique email, a username is needed. Use suggested or create one. "),
-            model.get_email_field_name(): _("Used for confirmation and typically for login"),
-        }
+    # class Meta:
+    #     model = UserHC
+    #     USERNAME_FLAG_FIELD = 'username_not_email'
+    #     fields = ('first_name', 'last_name', model.get_email_field_name(), USERNAME_FLAG_FIELD, model.USERNAME_FIELD, )
+    #     computed_fields = (model.USERNAME_FIELD, USERNAME_FLAG_FIELD, )
+    #     # strict_username = True  # case_insensitive
+    #     # strict_email = False  # unique_email and case_insensitive
+    #     help_texts = {
+    #         model.USERNAME_FIELD: _("Without a unique email, a username is needed. Use suggested or create one. "),
+    #         model.get_email_field_name(): _("Used for confirmation and typically for login"),
+    #     }
 
     def __init__(self, *args, **kwargs):
         print("======================= OptionalUserNameMixIn(ComputedFieldsMixIn).__init__ ==========================")
-        model = getattr(self._meta, 'model', None)
+        model = getattr(self._meta, 'user_model', None) or getattr(self, 'user_model', None)
+        model = model or getattr(self._meta, 'model', None) or getattr(self, 'model', None)
+        print(f"Model is: {model} ")
         required_attributes = ('USERNAME_FIELD', 'get_email_field_name', 'is_active')
         if not model or not all(hasattr(model, ea) for ea in required_attributes):
             for ea in required_attributes:
@@ -200,9 +243,9 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
         validator_kwargs ={'strict_email': strict_email, 'strict_username': strict_username}
         kwargs['validator_kwargs'] = validator_kwargs
         if hasattr(self, 'assign_focus_field'):
-            username_field_name = self._meta.model.USERNAME_FIELD
+            username_field_name = model.USERNAME_FIELD
             if username_field_name in kwargs.get('data', {}):
-                email_field_name = self._meta.model.get_email_field_name()
+                email_field_name = model.get_email_field_name()
                 kwargs['named_focus'] = email_field_name
         super().__init__(*args, **kwargs)
         print("--------------------- FINISH OptionalUserNameMixIn(ComputedFieldsMixIn).__init__ --------------------")
@@ -242,7 +285,7 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
         email_field_name = email_field_name or self._meta.model.get_email_field_name()
         email_field = self.fields.pop(email_field_name, None) or self.computed_fields.pop(email_field_name, None)
         email_field.initial = self.cleaned_data.get(email_field_name, email_field.initial)
-        flag_name = self.Meta.USERNAME_FLAG_FIELD
+        flag_name = self.USERNAME_FLAG_FIELD  # self.Meta.USERNAME_FLAG_FIELD
         flag_field = self.computed_fields.pop(flag_name, None) or self.fields.pop(flag_name, None)
         if flag_field:
             flag_field.initial = 'False'
@@ -294,7 +337,7 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
 
     def handle_flag_field(self, email_field_name, user_field_name):
         """ If the user gave a non-shared email, we expect flag is False, and no username value. """
-        flag_name = self.Meta.USERNAME_FLAG_FIELD
+        flag_name = self.USERNAME_FLAG_FIELD  # self.Meta.USERNAME_FLAG_FIELD
         flag_field = self.fields.get(flag_name, None) or self.computed_fields.get(flag_name, None)
         print("==================== handle_flag_field =====================================")
         if not flag_field:
@@ -580,7 +623,7 @@ class OptionalCountryMixIn(FormOverrideMixIn):
         result = {field_name: field} if field else {}
         other_country_field = remaining_fields.pop('other_country', None)
         if not other_country_field:
-            other_country_field = self.base_fields['other_country'].copy()
+            other_country_field = deepcopy(self.base_fields['other_country'])
             # country_name = settings.DEFAULT_COUNTRY
             # label = "Not a {} address. ".format(country_name)
             # other_country_field = forms.BooleanField(label=_(label), required=False, )
@@ -998,25 +1041,30 @@ class FormFieldSetMixIn:
         )
 
 
-class PersonFormMixIn(FocusMixMin, FormFieldSetMixIn, OptionalCountryMixIn):  # FormFieldSetMixIn,
-    """ Using fieldsets, optional country & username (with override and computed fields) and focus. """
+class FieldSetOverrideMixIn(FocusMixMin, FormFieldSetMixIn, FormOverrideMixIn):
+    """ Using fieldsets, overrides, and focus. Similar to AddressMixIn without extensions from OptionalCountryMixIn. """
+
+
+class FieldSetOverrideComputedMixIn(FocusMixMin, FormFieldSetMixIn, ComputedFieldsMixIn, FormOverrideMixIn):
+    """ Using fieldsets, overrides, computed, and focus. Using all base versions, none of the optional extensions. """
+
+
+class FieldSetOverrideOptionalUsernameMixIn(FocusMixMin, FormFieldSetMixIn, OptionalUserNameMixIn, FormOverrideMixIn):
+    """ Using fieldsets, overrides (not country), computed with optional username, and focus. """
+
+
+class FieldSetOptionalCountryComputedMixIn(FocusMixMin, FormFieldSetMixIn, ComputedFieldsMixIn, OptionalCountryMixIn):
+    """ Using fieldsets, overrides with optional country, computed (not username), and focus. """
+
+
+class AddressOptionalUsernameMixIn(FocusMixMin, FormFieldSetMixIn, OptionalUserNameMixIn, OptionalCountryMixIn):
+    """ Using fieldsets, overrides with optional country, computed with optional username, and focus. """
     # TODO: Determine correct import order
 
-    def as_test(self):
-        """ Prepares and calls different 'as_<variation>' method variations. """
-        container = 'ul'  # table, ul, p, fieldset, ...
-        func = getattr(self, 'as_' + container)
-        display_data = func()
-        if container not in ('p', 'fieldset', ):
-            display_data = self._html_tag(container, display_data)
-        return mark_safe(display_data)
 
-    def test_field_order(self, data):
-        """ Deprecated. Log printing the dict, array, or tuple in the order they are currently stored. """
-        log_lines = [(key, value) for key, value in data.items()] if isinstance(data, dict) else data
-        for line in log_lines:
-            pprint(line)
+class AddressMixIn(FocusMixMin, FormFieldSetMixIn, OptionalCountryMixIn):  # FormFieldSetMixIn,
+    """ Using fieldsets, overrides with optional country, and focus. No computed features. """
 
-    def _html_tag(self, tag, contents, attr_string=''):
-        """Wraps 'contents' in an HTML element with an open and closed 'tag', applying the 'attr_string' attributes. """
-        return '<' + tag + attr_string + '>' + contents + '</' + tag + '>'
+
+# class PersonFormMixIn(FocusMixMin, FormFieldSetMixIn, OptionalCountryMixIn):
+#     """ Using fieldsets, optional country & username (with override and computed fields) and focus. """
