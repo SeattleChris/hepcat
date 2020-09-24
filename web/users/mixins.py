@@ -92,9 +92,8 @@ class ComputedFieldsMixIn:
         computed_fields = kwargs.pop('computed_fields', getattr(self, 'computed_fields', []))
         super().__init__(*args, **kwargs)
         keep_keys = set(self.data.keys())
-        if computed_fields:
-            extracted_fields = {key: self.fields.pop(key, None) for key in set(computed_fields) - keep_keys}
-            self.computed_fields = extracted_fields
+        extracted_fields = {key: self.fields.pop(key, None) for key in set(computed_fields) - keep_keys}
+        self.computed_fields = extracted_fields
         print("--------------------- FINISH ComputedFieldsMixIn.__init --------------------")
 
     def names_for_critical(self, kwargs):
@@ -144,7 +143,7 @@ class ComputedFieldsMixIn:
             if strict_username:
                 username_validators.append(
                     validators.CaseInsensitiveUnique(
-                        self._meta.model, username, validators.DUPLICATE_USERNAME
+                        self.user_model, username, validators.DUPLICATE_USERNAME
                     )
                 )
             username_field = fields[username]
@@ -160,7 +159,7 @@ class ComputedFieldsMixIn:
             if strict_email:
                 email_validators.append(
                     validators.CaseInsensitiveUnique(
-                        self._meta.model, email_name, validators.DUPLICATE_EMAIL
+                        self.user_model, email_name, validators.DUPLICATE_EMAIL
                     )
                 )
             email_field = fields[email_name]
@@ -234,15 +233,14 @@ class ComputedFieldsMixIn:
 class OptionalUserNameMixIn(ComputedFieldsMixIn):
     """If possible, creates a username according to rules (defaults to email then to name), otherwise set manually. """
 
-    user_model = UserHC
     strict_username = True  # case_insensitive
     strict_email = False  # unique_email and case_insensitive
     USERNAME_FLAG_FIELD = 'username_not_email'
     # fields = ('first_name', 'last_name', user_model.get_email_field_name(), USERNAME_FLAG_FIELD, user_model.USERNAME_FIELD, )
     # computed_fields = (user_model.USERNAME_FIELD, USERNAME_FLAG_FIELD, )
     help_texts = {
-        user_model.USERNAME_FIELD: _("Without a unique email, a username is needed. Use suggested or create one. "),
-        user_model.get_email_field_name(): _("Used for confirmation and typically for login"),
+        'username': _("Without a unique email, a username is needed. Use suggested or create one. "),
+        'email': _("Used for confirmation and typically for login"),
     }
 
     # class Meta:
@@ -259,37 +257,26 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
 
     def __init__(self, *args, **kwargs):
         print("======================= OptionalUserNameMixIn(ComputedFieldsMixIn).__init__ ==========================")
-        model = getattr(self._meta, 'user_model', None) or getattr(self, 'user_model', None)
-        model = model or getattr(self._meta, 'model', None) or getattr(self, 'model', None)
-        print(f"Model is: {model} ")
-        required_attributes = ('USERNAME_FIELD', 'get_email_field_name', 'is_active')
-        if not model or not all(hasattr(model, ea) for ea in required_attributes):
-            for ea in required_attributes:
-                print(f"{ea}: {hasattr(model, ea)}")
-            err = "Missing features for user model. Try subclassing Django's AbstractBaseUser, AbstractUser, or User. "
-            raise ImproperlyConfigured(_(err))
         strict_email = kwargs.pop('strict_email', getattr(self, 'strict_email', None))
         strict_username = kwargs.pop('strict_username', getattr(self, 'strict_username', None))
         validator_kwargs ={'strict_email': strict_email, 'strict_username': strict_username}
         kwargs['validator_kwargs'] = validator_kwargs
         if hasattr(self, 'assign_focus_field'):
-            username_field_name = model.USERNAME_FIELD
-            if username_field_name in kwargs.get('data', {}):
-                email_field_name = model.get_email_field_name()
-                kwargs['named_focus'] = email_field_name
+            if self.name_for_user in kwargs.get('data', {}):
+                kwargs['named_focus'] = self.name_for_email
         super().__init__(*args, **kwargs)
         print("--------------------- FINISH OptionalUserNameMixIn(ComputedFieldsMixIn).__init__ --------------------")
 
     def username_from_email_or_names(self, username_field_name=None, email_field_name=None):
         """ Initial username field value. Must be evaluated after dependent fields populate cleaned_data. """
         name_fields = ('first_name', 'last_name', )
-        email_field_name = email_field_name or self._meta.model.get_email_field_name()
-        username_field_name = username_field_name or self._meta.model.USERNAME_FIELD
-        normalize = self._meta.model.normalize_username
+        email_field_name = email_field_name or self.name_for_email
+        username_field_name = username_field_name or self.name_for_user
+        normalize = self.user_model.normalize_username
         result_value = self.field_computed_from_fields(field_names=(email_field_name, ), normalize=normalize)
         lookup = {"{}__iexact".format(username_field_name): result_value}
         try:
-            if not result_value or self._meta.model._default_manager.filter(**lookup).exists():
+            if not result_value or self.user_model._default_manager.filter(**lookup).exists():
                 result_value = self.field_computed_from_fields(field_names=name_fields, normalize=normalize)
         except Exception as e:
             print("Unable to query to lookup if this username exists. ")
@@ -299,20 +286,19 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
     def compute_username(self):
         """ Determine a str value or callable returning one and set this in self.initial dict. """
         # print("=================== CustomRegistrationForm.compute_username ===========================")
-        model = self._meta.model
-        username_field_name = model.USERNAME_FIELD
+        username_field_name = self.name_for_user
         field = self.computed_fields[username_field_name]
-        email_field_name = model.get_email_field_name()
+        email_field_name = self.name_for_email
         result_value = self.username_from_email_or_names(username_field_name, email_field_name)
         self.initial[username_field_name] = field.initial = result_value
         return field
 
     def configure_username_confirmation(self, username_field_name=None, email_field_name=None):
         """ Since the username is using the alternative computation, prepare form for user confirmation. """
-        username_field_name = username_field_name or self._meta.model.USERNAME_FIELD
+        username_field_name = username_field_name or self.name_for_user
         field = self.computed_fields.pop(username_field_name, None) or self.fields.pop(username_field_name, None)
         field.initial = self.cleaned_data.get(username_field_name, field.initial)
-        email_field_name = email_field_name or self._meta.model.get_email_field_name()
+        email_field_name = email_field_name or self.name_for_email
         email_field = self.fields.pop(email_field_name, None) or self.computed_fields.pop(email_field_name, None)
         email_field.initial = self.cleaned_data.get(email_field_name, email_field.initial)
         flag_name = self.USERNAME_FLAG_FIELD  # self.Meta.USERNAME_FLAG_FIELD
@@ -394,7 +380,7 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
         if not flag_value:
             lookup = {"{}__iexact".format(user_field_name): email_value}
             try:
-                if not email_changed or self._meta.model._default_manager.filter(**lookup).exists():
+                if not email_changed or self.user_model._default_manager.filter(**lookup).exists():
                     message = "You must give a unique email not shared with other users (or create a username). "
                     error_collected[email_field_name] = _(message)
             except Exception as e:
@@ -408,11 +394,9 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
 
     def clean(self):
         cleaned_data = super().clean()  # compute fields, return self.cleaned_data, sets unique validation boolean.
-        username_field_name = self._meta.model.USERNAME_FIELD
-        username_value = self.cleaned_data.get(username_field_name, '')
-        email_field_name = self._meta.model.get_email_field_name()
-        email_value = self.cleaned_data.get(email_field_name, None)
-        if username_field_name not in self.data and username_value != email_value:
+        username_value = self.cleaned_data.get(self.name_for_user, '')
+        email_value = self.cleaned_data.get(self.name_for_email, None)
+        if self.name_for_user not in self.data and username_value != email_value:
             print("- - - - - - - - - Confirmation Required - - - - - - - - - - - - - - -")
             marked_safe_translatable_html = self.configure_username_confirmation()
             # print("---------------------- Form Data --------------------------------------")
@@ -422,7 +406,7 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
         else:
             # print(" Computed Fields had no problems! ")
             self.fields.update(self.computed_fields)
-        error_dict = self.handle_flag_field(email_field_name, username_field_name)
+        error_dict = self.handle_flag_field(self.name_for_email, self.name_for_user)
         if error_dict:
             print("We had an error processing the flag. ")
             raise ValidationError(error_dict)
@@ -491,17 +475,15 @@ class FormOverrideMixIn:
         attrs = {}
         mobile_lowercase = {'autocapitalize': 'none'}
         auto_fill = getattr(self, 'autocomplete', {}).copy()
-        email_name = getattr(self._meta.model, 'get_email_field_name', None)
-        email_name = email_name() if callable(email_name) else email_name
-        if email_name and email_name in self.fields:
+        # TODO: set self.name_for_email nad self.name_for_user
+        if self.name_for_email in self.fields:
             temp = {'autocomplete': auto_fill.pop('email', '')}
             temp.update(mobile_lowercase)
-            attrs[email_name] = temp
-        username = getattr(self._meta.model, 'USERNAME_FIELD', None)
-        if username and username in self.fields:
+            attrs[self.name_for_email] = temp
+        if self.name_for_user in self.fields:
             temp = {'autocomplete': auto_fill.pop('username', '')}
             temp.update(mobile_lowercase)
-            attrs[username] = temp
+            attrs[self.name_for_user] = temp
         attrs.update({name: {'autocomplete': value} for name, value in auto_fill.items()})
         return attrs
 
