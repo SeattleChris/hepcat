@@ -2,7 +2,7 @@ from django import forms
 from django.core.exceptions import ValidationError  # NON_FIELD_ERRORS,
 from django.forms.fields import FileField  # Field,
 from .models import Student, Payment, Registration, Notify  # , Staff, Session, ClassOffer
-from users.mixins import AddressOptionalUsernameMixIn  # AddressMixIn, 
+from users.mixins import AddressOptionalUsernameMixIn  # AddressMixIn,
 from django.utils.translation import gettext_lazy as _
 # from django.urls import reverse_lazy
 # from django.shortcuts import render
@@ -98,11 +98,9 @@ class RegisterForm(AddressOptionalUsernameMixIn, forms.ModelForm):
         # Which could be an error if a user does in fact require uppercase.
         return email.casefold()
 
-    # def _clean_fields(self):
-    #     print('======== RegisterForm._clean_fields =========')
-    #     super()._clean_fields()
-
     def _clean_fields(self):
+        # print('======== RegisterForm._clean_fields =========')
+        # super()._clean_fields()
         print('======== Duplicate code as normal: RegisterForm._clean_fields =========')
         for name, field in self.fields.items():
             # value_from_datadict() gets the data from the data dictionaries.
