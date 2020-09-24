@@ -476,14 +476,17 @@ class FormOverrideMixIn:
         mobile_lowercase = {'autocapitalize': 'none'}
         auto_fill = getattr(self, 'autocomplete', {}).copy()
         # TODO: set self.name_for_email nad self.name_for_user
-        if self.name_for_email in self.fields:
+        name_for_email = getattr(self, 'name_for_email', None)
+        name_for_user = getattr(self, 'name_for_user', None)
+
+        if name_for_email in self.fields:
             temp = {'autocomplete': auto_fill.pop('email', '')}
             temp.update(mobile_lowercase)
-            attrs[self.name_for_email] = temp
-        if self.name_for_user in self.fields:
+            attrs[name_for_email] = temp
+        if name_for_user in self.fields:
             temp = {'autocomplete': auto_fill.pop('username', '')}
             temp.update(mobile_lowercase)
-            attrs[self.name_for_user] = temp
+            attrs[name_for_user] = temp
         attrs.update({name: {'autocomplete': value} for name, value in auto_fill.items()})
         return attrs
 
