@@ -2,6 +2,7 @@ from django import forms
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.contrib.admin.utils import flatten
+from django.contrib.auth import get_user_model
 from django.forms.widgets import Input, CheckboxInput, HiddenInput, Textarea
 from django.forms.utils import ErrorDict  # , ErrorList
 from django.utils.translation import gettext as _
@@ -67,18 +68,26 @@ class FocusMixMin:
 class ComputedFieldsMixIn:
     """A computed field is initially removed, but if failing desired validation conditions, included for user input. """
     # TODO: Consider how this should work for non-User models that reference the User model or User model like fields.
+    name_for_user = None
+    name_for_email = None
+    user_model = None
     computed_fields = []
     reserved_names_replace = False
     # reserved_names = []
 
     def __init__(self, *args, **kwargs):
         print("======================= ComputedFieldsMixIn.__init__ =================================")
+        # pprint(self.base_fields)
+        self.names_for_critical(kwargs)
+        pprint(dir(self._meta))
+        print("-------------------------------------------------------------------------")
+        pprint(self._meta.model)
+        pprint(self._meta.field_classes)
+        print("-------------------------------------------------------------------------")
+        pprint(self._meta.fields)
+        pprint(self._meta.widgets)
+        print("-------------------------------------------------------------------------")
         validator_kwargs = kwargs.pop('validator_kwargs', {})
-        pprint(self.base_fields)
-        print("-------------------------------------------------------------------------")
-        pprint(validator_kwargs)
-        print("-------------------------------------------------------------------------")
-        pprint(getattr(self, 'fields', 'NO FIELDS YET'))
         self.attach_critical_validators(**validator_kwargs)
         computed_fields = kwargs.pop('computed_fields', getattr(self, 'computed_fields', []))
         super().__init__(*args, **kwargs)
@@ -88,12 +97,33 @@ class ComputedFieldsMixIn:
             self.computed_fields = extracted_fields
         print("--------------------- FINISH ComputedFieldsMixIn.__init --------------------")
 
+    def names_for_critical(self, kwargs):
+        self.name_for_user = kwargs.pop('name_for_user', getattr(self, 'name_for_user', None))
+        self.name_for_email = kwargs.pop('name_for_email', getattr(self, 'name_for_email', None))
+        self.user_model = kwargs.pop('user_model', getattr(self, 'user_model', None))
+        if self.name_for_user and self.name_for_email:
+            self.user_model = self.user_model or getattr(self._meta, 'model', None)
+            return self.name_for_user, self.name_for_email
+        user = kwargs.get('initial', {}).get('user', None) or kwargs.get('instance', None)
+        if user and hasattr(user, '_meta'):
+            user_model = getattr(user._meta, 'model', None)
+        elif user and getattr(user, 'is_anonymous', None):
+            user_model = get_user_model()
+        else:
+            user_model = None
+        form_model = getattr(self, 'model', getattr(self._meta, 'model', None))
+        required_attributes = ('USERNAME_FIELD', 'get_email_field_name', 'is_active')
+        models = [model for model in (user_model, form_model) if all(hasattr(model, ea) for ea in required_attributes)]
+        if models:
+            self.user_model = models[-1]
+            self.name_for_user = self.user_model.USERNAME_FIELD
+            self.name_for_email = self.user_model.get_email_field_name()
+        return self.name_for_user, self.name_for_email
+
     def attach_critical_validators(self, **kwargs):
         """Before setting computed_fields, assign validators to the email and username fields. """
-        strict_username = kwargs.get('strict_username', getattr(self._meta, 'strict_username', None))
-        strict_username = strict_username or getattr(self, 'strict_username', None)
-        strict_email = kwargs.get('strict_email', getattr(self._meta, 'strict_email', None))
-        strict_email = strict_email or getattr(self, 'strict_email', None)
+        strict_username = kwargs.get('strict_username', getattr(self, 'strict_username', None))
+        strict_email = kwargs.get('strict_email', getattr(self, 'strict_email', None))
         fields = getattr(self, 'fields', None)
         if not isinstance(fields, dict):
             print("------------- Critical Validators attached to base_fields. ------------------")
@@ -105,7 +135,7 @@ class ComputedFieldsMixIn:
         else:
             reserved_names = getattr(self, 'reserved_names', []) + validators.DEFAULT_RESERVED_NAMES
 
-        username = getattr(self._meta.model, 'USERNAME_FIELD', None)
+        username = self.name_for_user
         if username and username in fields:
             username_validators = [
                 validators.ReservedNameValidator(reserved_names),
@@ -120,7 +150,7 @@ class ComputedFieldsMixIn:
             username_field = fields[username]
             username_field.validators.extend(username_validators)
 
-        email_name = getattr(self._meta.model, 'get_email_field_name', None)
+        email_name = self.name_for_email
         email_name = email_name() if callable(email_name) else email_name
         if email_name and email_name in fields:
             email_validators = [
@@ -208,8 +238,8 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
     strict_username = True  # case_insensitive
     strict_email = False  # unique_email and case_insensitive
     USERNAME_FLAG_FIELD = 'username_not_email'
-    fields = ('first_name', 'last_name', user_model.get_email_field_name(), USERNAME_FLAG_FIELD, user_model.USERNAME_FIELD, )
-    computed_fields = (user_model.USERNAME_FIELD, USERNAME_FLAG_FIELD, )
+    # fields = ('first_name', 'last_name', user_model.get_email_field_name(), USERNAME_FLAG_FIELD, user_model.USERNAME_FIELD, )
+    # computed_fields = (user_model.USERNAME_FIELD, USERNAME_FLAG_FIELD, )
     help_texts = {
         user_model.USERNAME_FIELD: _("Without a unique email, a username is needed. Use suggested or create one. "),
         user_model.get_email_field_name(): _("Used for confirmation and typically for login"),
