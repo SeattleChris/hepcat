@@ -71,9 +71,9 @@ class ComputedFieldsMixIn:
     name_for_user = None
     name_for_email = None
     user_model = None
-    computed_fields = []
     reserved_names_replace = False
     # reserved_names = []
+    # computed_fields = {}
 
     def __init__(self, *args, **kwargs):
         print("======================= ComputedFieldsMixIn.__init__ =================================")
@@ -89,12 +89,22 @@ class ComputedFieldsMixIn:
         print("-------------------------------------------------------------------------")
         validator_kwargs = kwargs.pop('validator_kwargs', {})
         self.attach_critical_validators(**validator_kwargs)
-        computed_fields = kwargs.pop('computed_fields', getattr(self, 'computed_fields', []))
+        computed_field_names = kwargs.pop('computed_fields', getattr(self, 'computed_fields', []))
         super().__init__(*args, **kwargs)
-        keep_keys = set(self.data.keys())
-        extracted_fields = {key: self.fields.pop(key, None) for key in set(computed_fields) - keep_keys}
-        self.computed_fields = extracted_fields
+        self.computed_fields = self.get_computed_fields(computed_field_names)
         print("--------------------- FINISH ComputedFieldsMixIn.__init --------------------")
+
+    def get_computed_fields(self, computed_field_names):
+        computed_field_names = set(computed_field_names)
+        if hasattr(self, 'USERNAME_FLAG_FIELD'):
+            if self.name_for_user in self.fields:
+                computed_field_names.add(self.name_for_user)
+            if self.USERNAME_FLAG_FIELD in self.fields:
+                computed_field_names.add(self.USERNAME_FLAG_FIELD)
+        if hasattr(self, 'data'):
+            computed_field_names = computed_field_names - set(self.data.keys())
+        computed_fields = {key: self.fields.pop(key, None) for key in computed_field_names}
+        return computed_fields
 
     def names_for_critical(self, kwargs):
         self.name_for_user = kwargs.pop('name_for_user', getattr(self, 'name_for_user', None))
@@ -242,18 +252,6 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
         'username': _("Without a unique email, a username is needed. Use suggested or create one. "),
         'email': _("Used for confirmation and typically for login"),
     }
-
-    # class Meta:
-    #     model = UserHC
-    #     USERNAME_FLAG_FIELD = 'username_not_email'
-    #     fields = ('first_name', 'last_name', model.get_email_field_name(), USERNAME_FLAG_FIELD, model.USERNAME_FIELD, )
-    #     computed_fields = (model.USERNAME_FIELD, USERNAME_FLAG_FIELD, )
-    #     # strict_username = True  # case_insensitive
-    #     # strict_email = False  # unique_email and case_insensitive
-    #     help_texts = {
-    #         model.USERNAME_FIELD: _("Without a unique email, a username is needed. Use suggested or create one. "),
-    #         model.get_email_field_name(): _("Used for confirmation and typically for login"),
-    #     }
 
     def __init__(self, *args, **kwargs):
         print("======================= OptionalUserNameMixIn(ComputedFieldsMixIn).__init__ ==========================")
