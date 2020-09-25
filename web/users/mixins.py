@@ -3,6 +3,7 @@ from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.contrib.admin.utils import flatten
 from django.contrib.auth import get_user_model
+from django.contrib.auth.forms import UsernameField
 from django.forms.widgets import Input, CheckboxInput, HiddenInput, Textarea
 from django.forms.utils import ErrorDict  # , ErrorList
 from django.utils.translation import gettext as _
@@ -11,7 +12,7 @@ from django.utils.safestring import mark_safe
 from django.urls import reverse
 from django_registration import validators
 # from . import validators
-from .models import UserHC
+# from .models import UserHC
 from copy import deepcopy
 from pprint import pprint
 
@@ -77,9 +78,12 @@ class ComputedFieldsMixIn:
 
     def __init__(self, *args, **kwargs):
         print("======================= ComputedFieldsMixIn.__init__ =================================")
-        # pprint(self.base_fields)
+        pprint(self.base_fields)
         self.names_for_critical(kwargs)
-        pprint(dir(self._meta))
+        print("------------------------ first base, then declared -----------------------------------")
+        pprint(self.declared_fields)
+        # pprint(dir(self))
+        # pprint(dir(self._meta))
         print("-------------------------------------------------------------------------")
         pprint(self._meta.model)
         pprint(self._meta.field_classes)
@@ -96,10 +100,12 @@ class ComputedFieldsMixIn:
         print("--------------------- FINISH ComputedFieldsMixIn.__init --------------------")
 
     def get_computed_fields(self, computed_field_names):
+        """Must be called after self.fields constructed. Removes desired fields from self.fields. """
         computed_field_names = set(computed_field_names)
         if hasattr(self, 'USERNAME_FLAG_FIELD'):
             if self.name_for_user in self.fields:
                 computed_field_names.add(self.name_for_user)
+
             if self.USERNAME_FLAG_FIELD in self.fields:
                 computed_field_names.add(self.USERNAME_FLAG_FIELD)
         if hasattr(self, 'data'):
@@ -265,9 +271,11 @@ class ComputedFieldsMixIn:
 class OptionalUserNameMixIn(ComputedFieldsMixIn):
     """If possible, creates a username according to rules (defaults to email then to name), otherwise set manually. """
 
+    username = UsernameField()
+    username_flag = forms.BooleanField(required=False)
+    USERNAME_FLAG_FIELD = 'username_not_email'
     strict_username = True  # case_insensitive
     strict_email = False  # unique_email and case_insensitive
-    USERNAME_FLAG_FIELD = 'username_not_email'
     # fields = ('first_name', 'last_name', user_model.get_email_field_name(), USERNAME_FLAG_FIELD, user_model.USERNAME_FIELD, )
     # computed_fields = (user_model.USERNAME_FIELD, USERNAME_FLAG_FIELD, )
     help_texts = {
