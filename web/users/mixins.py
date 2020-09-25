@@ -4,6 +4,7 @@ from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.contrib.admin.utils import flatten
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UsernameField
+from django.forms.fields import Field
 from django.forms.widgets import Input, CheckboxInput, HiddenInput, Textarea
 from django.forms.utils import ErrorDict  # , ErrorList
 from django.utils.translation import gettext as _
@@ -93,7 +94,7 @@ class ComputedFieldsMixIn:
         print("-------------------------------------------------------------------------")
         validator_kwargs = kwargs.pop('validator_kwargs', {})
         self.attach_critical_validators(**validator_kwargs)
-        computed_field_names = kwargs.pop('computed_fields', getattr(self, 'computed_fields', []))
+        computed_field_names = kwargs.pop('computed_fields', [])
         super().__init__(*args, **kwargs)
         computed_field_names.extend(kwargs.pop('computed_fields', []))
         self.computed_fields = self.get_computed_fields(computed_field_names)
@@ -101,17 +102,34 @@ class ComputedFieldsMixIn:
 
     def get_computed_fields(self, computed_field_names):
         """Must be called after self.fields constructed. Removes desired fields from self.fields. """
+        computed_fields = getattr(self, 'computed_fields', [])
+        if isinstance(computed_fields, (list, tuple)):
+            computed_field_names.extend(computed_fields)
+        elif isinstance(computed_fields, dict):
+            computed_field_names.extend(computed_fields.keys())
         computed_field_names = set(computed_field_names)
         if hasattr(self, 'USERNAME_FLAG_FIELD'):
-            if self.name_for_user in self.fields:
-                computed_field_names.add(self.name_for_user)
-
-            if self.USERNAME_FLAG_FIELD in self.fields:
-                computed_field_names.add(self.USERNAME_FLAG_FIELD)
+            if self.name_for_user not in self.fields:
+                field = self.make_computed_field('username', self.name_for_user)
+                self.fields[self.name_for_user] = field
+            computed_field_names.add(self.name_for_user)
+            if self.USERNAME_FLAG_FIELD not in self.fields:
+                field = self.make_computed_field('username_flag', self.USERNAME_FLAG_FIELD)
+                self.fields[self.USERNAME_FLAG_FIELD] = field
+            computed_field_names.add(self.USERNAME_FLAG_FIELD)
         if hasattr(self, 'data'):
             computed_field_names = computed_field_names - set(self.data.keys())
         computed_fields = {key: self.fields.pop(key, None) for key in computed_field_names}
         return computed_fields
+
+    def make_computed_field(self, name, name_for_field=None):
+        field = getattr(self, name, None)
+        if not isinstance(field, Field):
+            name_for_field = name_for_field or name
+            field = getattr(self._meta.model, name_for_field, None)
+        if not field:
+            raise ImproperlyConfigured(_("Unable to find a '{}' field to include in fields. ".format(name)))
+        return field
 
     def names_for_critical(self, kwargs):
         self.name_for_user = kwargs.pop('name_for_user', getattr(self, 'name_for_user', None))
