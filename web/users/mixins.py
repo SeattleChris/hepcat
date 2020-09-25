@@ -586,14 +586,32 @@ class FormOverrideMixIn:
             if name in overrides:
                 field.widget.attrs.update(overrides[name])
             if not overrides.get(name, {}).get('no_size_override', False):
-                # TODO: Correct size attributes for all form controls: textarea, others?
-                default = DEFAULT.get('size', None)  # Cannot use float("inf") as an int.
-                display_size = field.widget.attrs.get('size', None)
+                textarea_cols = field.widget.attrs.get('cols', None)
+                if field.widget.attrs.get('type', '') in ('email', 'password', 'tel', 'text'):
+                    # 'size' is only valid for input types: email, password, tel, text
+                    width_attr_name = 'size'
+                    default = DEFAULT.get('size', None)  # Cannot use float("inf") as an int.
+                    display_size = field.widget.attrs.get('size', None)
+                elif textarea_cols:
+                    # if widget is a textarea, then the width is 'cols' and Django sets it to by default.
+                    width_attr_name = 'cols'
+                    display_size = textarea_cols
+                    default = DEFAULT.get('cols', None)
+                    if 'rows' in DEFAULT:
+                        height = field.widget.attrs.get('rows', None)
+                        height = min((DEFAULT['rows'], int(height))) if height else DEFAULT['rows']
+                        field.widget.attrs['rows'] = str(height)
+                    if default:
+                        display_size = min((display_size, default))
+                else:  # This field does not have a size setting.
+                    width_attr_name = None
+                    display_size = None
+                    default = None
                 input_size = field.widget.attrs.get('maxlength', None)
-                if input_size:
-                    possible_size = [int(ea) for ea in (display_size or default, input_size) if ea]
-                    # field.widget.attrs['size'] = str(int(min(float(display_size), float(input_size))))
-                    field.widget.attrs['size'] = str(min(possible_size))
+                possible_size = [int(ea) for ea in (display_size or default, input_size) if ea]
+                # field.widget.attrs['size'] = str(int(min(float(display_size), float(input_size))))
+                if possible_size and width_attr_name:
+                    field.widget.attrs[width_attr_name] = str(min(possible_size))
             if name in alt_field_info:
                 for prop, value in alt_field_info[name].items():
                     if prop == 'initial' or prop == 'default':
