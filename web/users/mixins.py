@@ -129,52 +129,73 @@ class ComputedFieldsMixIn:
             self.name_for_email = self.user_model.get_email_field_name()
         return self.name_for_user, self.name_for_email
 
+    def username_validators(self, field, **kwargs):
+        opts = kwargs.get('username', {})
+        name_for_user = opts.get('name', getattr(self, 'name_for_user', 'username'))
+        strict_username = opts.get('strict', getattr(self, 'strict_username', None))
+        reserved_names = kwargs.get('reserved_name', [])
+        username_validators = [
+            validators.ReservedNameValidator(reserved_names),
+            validators.validate_confusables,
+        ]
+        if strict_username:
+            username_validators.append(
+                validators.CaseInsensitiveUnique(
+                    self.user_model, name_for_user, validators.DUPLICATE_USERNAME
+                )
+            )
+        field.validators.extend(username_validators)
+        return True
+
+    def email_validators(self, field, **kwargs):
+        opts = kwargs.get('email', {})
+        name_for_email = opts.get('name', getattr(self, 'name_for_email', 'email'))
+        strict_email = opts.get('strict', getattr(self, 'strict_email', None))
+        email_validators = [
+            validators.HTML5EmailValidator(),
+            validators.validate_confusables_email
+        ]
+        if strict_email:
+            email_validators.append(
+                validators.CaseInsensitiveUnique(
+                    self.user_model, name_for_email, validators.DUPLICATE_EMAIL
+                )
+            )
+        field.validators.extend(email_validators)
+        field.required = True
+        return True
+
     def attach_critical_validators(self, **kwargs):
-        """Before setting computed_fields, assign validators to the email and username fields. """
-        strict_username = kwargs.get('strict_username', getattr(self, 'strict_username', None))
-        strict_email = kwargs.get('strict_email', getattr(self, 'strict_email', None))
+        """Before other field modifications, assign validators to critical fields (i.e. username and email). """
         fields = getattr(self, 'fields', None)
         if not isinstance(fields, dict):
             print("------------- Critical Validators attached to base_fields. ------------------")
             fields = getattr(self, 'base_fields', None)
         if not fields:
             raise ImproperlyConfigured(_("Any ComputedFieldsMixIn depends on access to base_fields or fields. "))
-        if getattr(self, 'reserved_names_replace', False):
-            reserved_names = getattr(self, 'reserved_names', validators.DEFAULT_RESERVED_NAMES)
-        else:
-            reserved_names = getattr(self, 'reserved_names', []) + validators.DEFAULT_RESERVED_NAMES
+        reserved_names = kwargs.get('reserved_names', getattr(self, 'reserved_names', []))
+        if not kwargs.get('reserved_names_replace', getattr(self, 'reserved_names_replace', False)):
+            reserved_names += validators.DEFAULT_RESERVED_NAMES
+        kwargs['reserved_names'] = reserved_names
 
-        username = self.name_for_user
-        if username and username in fields:
-            username_validators = [
-                validators.ReservedNameValidator(reserved_names),
-                validators.validate_confusables,
-            ]
-            if strict_username:
-                username_validators.append(
-                    validators.CaseInsensitiveUnique(
-                        self.user_model, username, validators.DUPLICATE_USERNAME
-                    )
-                )
-            username_field = fields[username]
-            username_field.validators.extend(username_validators)
+        validator_names = [name for name in fields if hasattr(self, '%s_validators' % name)]
 
-        email_name = self.name_for_email
-        email_name = email_name() if callable(email_name) else email_name
-        if email_name and email_name in fields:
-            email_validators = [
-                validators.HTML5EmailValidator(),
-                validators.validate_confusables_email
-            ]
-            if strict_email:
-                email_validators.append(
-                    validators.CaseInsensitiveUnique(
-                        self.user_model, email_name, validators.DUPLICATE_EMAIL
-                    )
-                )
-            email_field = fields[email_name]
-            email_field.validators.extend(email_validators)
-            email_field.required = True
+        crit_fields = {'username': 'name_for_user', 'email': 'name_for_email'}
+        for name, name_for_field in crit_fields.items():
+            name_for_field = kwargs.get(name_for_field, getattr(self, name_for_field, name))
+            opts = {'name': name_for_field}
+            if name_for_field in kwargs:
+                opts.update(kwargs[name_for_field])
+            if name_for_field != name and name in kwargs:
+                opts.update(kwargs[name])  # likely passing 'strict' setting.
+            kwargs[name] = opts
+            if name_for_field != name and name_for_field in fields:
+                validator_names.append(name)
+
+        for name in validator_names:
+            func = getattr(self, '%s_validators' % name)
+            func(fields[name], **kwargs)
+        return True
 
     def field_computed_from_fields(self, field_names=None, joiner='_', normalize=None):
         """ Must be evaluated after cleaned_data has the named field values populated. """
@@ -257,7 +278,7 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
         print("======================= OptionalUserNameMixIn(ComputedFieldsMixIn).__init__ ==========================")
         strict_email = kwargs.pop('strict_email', getattr(self, 'strict_email', None))
         strict_username = kwargs.pop('strict_username', getattr(self, 'strict_username', None))
-        validator_kwargs ={'strict_email': strict_email, 'strict_username': strict_username}
+        validator_kwargs ={'email': {'strict': strict_email}, 'username': {'strict': strict_username}}
         kwargs['validator_kwargs'] = validator_kwargs
         if hasattr(self, 'assign_focus_field'):
             if self.name_for_user in kwargs.get('data', {}):
