@@ -586,16 +586,9 @@ class FormOverrideMixIn:
             if name in overrides:
                 field.widget.attrs.update(overrides[name])
             if not overrides.get(name, {}).get('no_size_override', False):
-                textarea_cols = field.widget.attrs.get('cols', None)
-                if field.widget.attrs.get('type', '') in ('email', 'password', 'tel', 'text'):
-                    # 'size' is only valid for input types: email, password, tel, text
-                    width_attr_name = 'size'
-                    default = DEFAULT.get('size', None)  # Cannot use float("inf") as an int.
-                    display_size = field.widget.attrs.get('size', None)
-                elif textarea_cols:
-                    # if widget is a textarea, then the width is 'cols' and Django sets it to by default.
+                display_size = field.widget.attrs.get('cols', None)
+                if display_size:  # if widget is a textarea, then the width is 'cols' and Django sets it to by default.
                     width_attr_name = 'cols'
-                    display_size = textarea_cols
                     default = DEFAULT.get('cols', None)
                     if 'rows' in DEFAULT:
                         height = field.widget.attrs.get('rows', None)
@@ -603,10 +596,14 @@ class FormOverrideMixIn:
                         field.widget.attrs['rows'] = str(height)
                     if default:
                         display_size = min((display_size, default))
+                elif field.widget.attrs.get('type', '') in ('email', 'password', 'tel', 'text'):
+                    width_attr_name = 'size'  # 'size' is only valid for input types: email, password, tel, text
+                    default = DEFAULT.get('size', None)  # Cannot use float("inf") as an int.
+                    display_size = field.widget.attrs.get('size', None)
                 else:  # This field does not have a size setting.
                     width_attr_name = None
-                    display_size = None
                     default = None
+                    display_size = None
                 input_size = field.widget.attrs.get('maxlength', None)
                 possible_size = [int(ea) for ea in (display_size or default, input_size) if ea]
                 # field.widget.attrs['size'] = str(int(min(float(display_size), float(input_size))))
