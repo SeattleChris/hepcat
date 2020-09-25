@@ -640,12 +640,12 @@ class OptionalCountryMixIn(FormOverrideMixIn):
         default = settings.DEFAULT_COUNTRY
         display_ver = 'local'
         if self.other_country_switch and field:
-            data = kwargs.get('data', {})
-            if not data:  # Unbound form - initial display of the form.
+            if 'country_display' not in self.base_fields:
                 self.base_fields['country_display'] = self.country_display
+            if 'other_country' not in self.base_fields:
                 self.base_fields['other_country'] = self.other_country
-                # print("Put 'country_display' and 'other_country' into base fields. ")
-            else:  # The form has been submitted.
+            data = kwargs.get('data', {})
+            if data:  # The form has been submitted.
                 display = data.get('country_display', 'DISPLAY NOT FOUND')
                 other_country = data.get('other_country', None)
                 val = data.get(name, None)
