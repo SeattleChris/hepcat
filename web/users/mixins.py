@@ -91,6 +91,7 @@ class ComputedFieldsMixIn:
         self.attach_critical_validators(**validator_kwargs)
         computed_field_names = kwargs.pop('computed_fields', getattr(self, 'computed_fields', []))
         super().__init__(*args, **kwargs)
+        computed_field_names.extend(kwargs.pop('computed_fields', []))
         self.computed_fields = self.get_computed_fields(computed_field_names)
         print("--------------------- FINISH ComputedFieldsMixIn.__init --------------------")
 
