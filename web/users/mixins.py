@@ -261,7 +261,7 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
         kwargs['validator_kwargs'] = validator_kwargs
         if hasattr(self, 'assign_focus_field'):
             if self.name_for_user in kwargs.get('data', {}):
-                kwargs['named_focus'] = self.name_for_email
+                kwargs['named_focus'] = self.name_for_email  # TODO: change to a callable to get eventual value?
         super().__init__(*args, **kwargs)
         print("--------------------- FINISH OptionalUserNameMixIn(ComputedFieldsMixIn).__init__ --------------------")
 
@@ -291,41 +291,41 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
         self.initial[username_field_name] = field.initial = result_value
         return field
 
-    def configure_username_confirmation(self, username_field_name=None, email_field_name=None):
+    def configure_username_confirmation(self, name_for_user=None, name_for_email=None):
         """ Since the username is using the alternative computation, prepare form for user confirmation. """
-        username_field_name = username_field_name or self.name_for_user
-        field = self.computed_fields.pop(username_field_name, None) or self.fields.pop(username_field_name, None)
-        field.initial = self.cleaned_data.get(username_field_name, field.initial)
-        email_field_name = email_field_name or self.name_for_email
-        email_field = self.fields.pop(email_field_name, None) or self.computed_fields.pop(email_field_name, None)
-        email_field.initial = self.cleaned_data.get(email_field_name, email_field.initial)
+        name_for_user = name_for_user or self.name_for_user
+        field = self.computed_fields.pop(name_for_user, None) or self.fields.pop(name_for_user, None)
+        field.initial = self.cleaned_data.get(name_for_user, field.initial)
+        name_for_email = name_for_email or self.name_for_email
+        email_field = self.fields.pop(name_for_email, None) or self.computed_fields.pop(name_for_email, None)
+        email_field.initial = self.cleaned_data.get(name_for_email, email_field.initial)
         flag_name = self.USERNAME_FLAG_FIELD  # self.Meta.USERNAME_FLAG_FIELD
         flag_field = self.computed_fields.pop(flag_name, None) or self.fields.pop(flag_name, None)
         if flag_field:
             flag_field.initial = 'False'
 
         data = self.data.copy()  # QueryDict datastructure, the copy is mutable. Has getlist and appendlist methods.
-        data.appendlist(email_field_name, email_field.initial)
+        data.appendlist(name_for_email, email_field.initial)
         if flag_field:
             data.appendlist(flag_name, flag_field.initial)
-        data.appendlist(username_field_name, field.initial)
+        data.appendlist(name_for_user, field.initial)
         data._mutable = False
         self.data = data
 
-        self.fields[email_field_name] = email_field
+        self.fields[name_for_email] = email_field
         self.fields[flag_name] = flag_field
-        self.fields[username_field_name] = field
+        self.fields[name_for_user] = field
         self.fields['password1'] = self.fields.pop('password1', None)
         self.fields['password2'] = self.fields.pop('password2', None)
-        self.assign_focus_field(name=email_field_name)  # TODO: How do we want to organize interconnected features.
+        self.assign_focus_field(name=name_for_email)  # TODO: How do we want to organize interconnected features.
         self.attach_critical_validators()
 
         login_link = self.get_login_message(link_text='login to existing account', link_only=True)
         text = "Use a non-shared email, or set a username below, or {}. ".format(login_link)
-        self.add_error(email_field_name, mark_safe(_(text)))
+        self.add_error(name_for_email, mark_safe(_(text)))
         e_note = "Typically people have their own unique email address, which you can update. "
         e_note += "If you share an email with another user, then you will need to create a username for your login. "
-        self.add_error(email_field_name, (_(e_note)))
+        self.add_error(name_for_email, (_(e_note)))
         title = "Login with existing account, change to a non-shared email, or create a username. "
         message = "Did you already make an account, or have one because you've had classes with us before? "
         message = format_html(
