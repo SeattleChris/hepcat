@@ -79,25 +79,28 @@ class ComputedFieldsMixIn:
 
     def __init__(self, *args, **kwargs):
         print("======================= ComputedFieldsMixIn.__init__ =================================")
-        pprint(self.base_fields)
+        # pprint(self.base_fields)
         self.names_for_critical(kwargs)
         print("------------------------ first base, then declared -----------------------------------")
-        pprint(self.declared_fields)
         # pprint(dir(self))
         # pprint(dir(self._meta))
-        print("-------------------------------------------------------------------------")
+        # print("-------------------------------------------------------------------------")
         pprint(self._meta.model)
         pprint(self._meta.field_classes)
         print("-------------------------------------------------------------------------")
-        pprint(self._meta.fields)
-        pprint(self._meta.widgets)
-        print("-------------------------------------------------------------------------")
+        # pprint(self._meta.fields)
+        # pprint(self._meta.widgets)
+        # print("-------------------------------------------------------------------------")
         validator_kwargs = kwargs.pop('validator_kwargs', {})
         self.attach_critical_validators(**validator_kwargs)
         computed_field_names = kwargs.pop('computed_fields', [])
         super().__init__(*args, **kwargs)
         computed_field_names.extend(kwargs.pop('computed_fields', []))
         self.computed_fields = self.get_computed_fields(computed_field_names)
+        print("---------------------- End of ComputedFieldsMixIn - self.fields ----------------------------------")
+        pprint(self.fields)
+        print("---------------------- End of ComputedFieldsMixIn - self.computed_fields -------------------------")
+        pprint(self.computed_fields)
         print("--------------------- FINISH ComputedFieldsMixIn.__init --------------------")
 
     def get_computed_fields(self, computed_field_names):
@@ -347,7 +350,7 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
         name_for_email = name_for_email or self.name_for_email
         email_field = self.fields.pop(name_for_email, None) or self.computed_fields.pop(name_for_email, None)
         email_field.initial = self.cleaned_data.get(name_for_email, email_field.initial)
-        flag_name = self.USERNAME_FLAG_FIELD  # self.Meta.USERNAME_FLAG_FIELD
+        flag_name = self.USERNAME_FLAG_FIELD
         flag_field = self.computed_fields.pop(flag_name, None) or self.fields.pop(flag_name, None)
         if flag_field:
             flag_field.initial = 'False'
@@ -363,9 +366,8 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
         self.fields[name_for_email] = email_field
         self.fields[flag_name] = flag_field
         self.fields[name_for_user] = field
-        self.fields['password1'] = self.fields.pop('password1', None)
-        self.fields['password2'] = self.fields.pop('password2', None)
-        self.assign_focus_field(name=name_for_email)  # TODO: How do we want to organize interconnected features.
+        if hasattr(self, 'assign_focus_field'):
+            self.assign_focus_field(name=name_for_email)
         self.attach_critical_validators()
 
         login_link = self.get_login_message(link_text='login to existing account', link_only=True)
