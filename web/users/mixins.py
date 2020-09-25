@@ -13,7 +13,6 @@ from django.utils.safestring import mark_safe
 from django.urls import reverse
 from django_registration import validators
 # from . import validators
-# from .models import UserHC
 from copy import deepcopy
 from pprint import pprint
 
@@ -69,7 +68,6 @@ class FocusMixMin:
 
 class ComputedFieldsMixIn:
     """A computed field is initially removed, but if failing desired validation conditions, included for user input. """
-    # TODO: Consider how this should work for non-User models that reference the User model or User model like fields.
     name_for_user = None
     name_for_email = None
     user_model = None
@@ -79,21 +77,14 @@ class ComputedFieldsMixIn:
 
     def __init__(self, *args, **kwargs):
         print("======================= ComputedFieldsMixIn.__init__ =================================")
-        # pprint(self.base_fields)
         self.names_for_critical(kwargs)
-        print("------------------------ first base, then declared -----------------------------------")
-        # pprint(dir(self))
-        # pprint(dir(self._meta))
-        # print("-------------------------------------------------------------------------")
         pprint(self._meta.model)
         pprint(self._meta.field_classes)
         print("-------------------------------------------------------------------------")
-        # pprint(self._meta.fields)
-        # pprint(self._meta.widgets)
-        # print("-------------------------------------------------------------------------")
+        computed_field_names = kwargs.pop('computed_fields', [])
+        computed_field_names = self.setup_computed_fields(computed_field_names, self.base_fields)
         validator_kwargs = kwargs.pop('validator_kwargs', {})
         self.attach_critical_validators(**validator_kwargs)
-        computed_field_names = kwargs.pop('computed_fields', [])
         super().__init__(*args, **kwargs)
         computed_field_names.extend(kwargs.pop('computed_fields', []))
         self.computed_fields = self.get_computed_fields(computed_field_names)
@@ -103,25 +94,30 @@ class ComputedFieldsMixIn:
         pprint(self.computed_fields)
         print("--------------------- FINISH ComputedFieldsMixIn.__init --------------------")
 
-    def get_computed_fields(self, computed_field_names):
-        """Must be called after self.fields constructed. Removes desired fields from self.fields. """
+    def setup_computed_fields(self, computed_field_names, fields):
+        """Modify fields by adding expected fields. Return an updated computed_field_names list. """
         computed_fields = getattr(self, 'computed_fields', [])
         if isinstance(computed_fields, (list, tuple)):
             computed_field_names.extend(computed_fields)
         elif isinstance(computed_fields, dict):
             computed_field_names.extend(computed_fields.keys())
+        crit_fields = {}
+        if getattr(self, 'USERNAME_FLAG_FIELD', None):
+            crit_fields = {self.name_for_user: 'username_field', self.USERNAME_FLAG_FIELD: 'username_flag'}
+            computed_field_names.extend(crit_fields.keys())
         computed_field_names = set(computed_field_names)
-        if hasattr(self, 'USERNAME_FLAG_FIELD'):
-            if self.name_for_user not in self.fields:
-                field = self.make_computed_field('username', self.name_for_user)
-                self.fields[self.name_for_user] = field
-            computed_field_names.add(self.name_for_user)
-            if self.USERNAME_FLAG_FIELD not in self.fields:
-                field = self.make_computed_field('username_flag', self.USERNAME_FLAG_FIELD)
-                self.fields[self.USERNAME_FLAG_FIELD] = field
-            computed_field_names.add(self.USERNAME_FLAG_FIELD)
+        for name_for_field in computed_field_names:
+            if name_for_field not in fields:
+                name = crit_fields.get(name_for_field, name_for_field)
+                field = self.make_computed_field(name, name_for_field)
+                fields[name_for_field] = field
+        return list(computed_field_names)
+
+    def get_computed_fields(self, computed_field_names):
+        """Must be called after self.fields constructed. Removes desired fields from self.fields. """
+        computed_field_names = self.setup_computed_fields(computed_field_names, self.fields)
         if hasattr(self, 'data'):
-            computed_field_names = computed_field_names - set(self.data.keys())
+            computed_field_names = set(computed_field_names) - set(self.data.keys())
         computed_fields = {key: self.fields.pop(key, None) for key in computed_field_names}
         return computed_fields
 
@@ -129,9 +125,10 @@ class ComputedFieldsMixIn:
         field = getattr(self, name, None)
         if not isinstance(field, Field):
             name_for_field = name_for_field or name
-            field = getattr(self._meta.model, name_for_field, None)
+            field = getattr(self._meta.model, name_for_field, None)  # TODO: Change to a formfield, not a model field.
         if not field:
-            raise ImproperlyConfigured(_("Unable to find a '{}' field to include in fields. ".format(name)))
+            err = "Unable to find a '{}' or '{}' field to include in fields. ".format(name, name_for_field)
+            raise ImproperlyConfigured(_(err))
         return field
 
     def names_for_critical(self, kwargs):
@@ -292,7 +289,7 @@ class ComputedFieldsMixIn:
 class OptionalUserNameMixIn(ComputedFieldsMixIn):
     """If possible, creates a username according to rules (defaults to email then to name), otherwise set manually. """
 
-    username = UsernameField()
+    username_field = UsernameField()
     username_flag = forms.BooleanField(required=False)
     USERNAME_FLAG_FIELD = 'username_not_email'
     strict_username = True  # case_insensitive
