@@ -461,6 +461,7 @@ class FormOverrideMixIn:
     """ Conditionally override formfield attributes and field properties. """
 
     prep_modifiers = None
+    # flat_fields = True
     alt_field_info = {}
     formfield_attrs_overrides = {
         '_default_': {'size': 15, 'cols': 20, 'rows': 4, },
@@ -562,6 +563,21 @@ class FormOverrideMixIn:
             opts, *args, kwargs = mod(opts, *args, **kwargs)
         return (opts, *args, kwargs)
 
+    def handle_removals(self, fields):
+        """ Manages field removals. Only used when a 'ComputedFieldsMixIn' variant is not present. """
+        if not hasattr(self, 'remove_field_names'):
+            return fields
+        assert not issubclass(self.__class__, ComputedFieldsMixIn), "When Computed, do not use remove_field_names. "
+        self.removed_fields = getattr(self, 'removed_fields', {})
+        data = set(getattr(self, 'data', {}).keys())
+        needed_names = data - set(fields.keys())
+        remove_names = set(self.remove_field_names) - data
+        add_fields = {name: field for name, field in self.removed_fields.items() if name in needed_names}
+        removed_fields = {name: fields.pop(name) for name in remove_names if name in fields}
+        fields.update(add_fields)
+        self.removed_fields.update(removed_fields)
+        return fields
+
     def prep_fields(self, *prep_args, **kwargs):
         """ Modifies self.fields and possibly self.data according to overrides, maxlength, and get_alt_field_info. """
         fields = self.fields
@@ -570,6 +586,9 @@ class FormOverrideMixIn:
             args = [opts, None, fields, prep_args]
             kwargs.update(flat_fields=True)
             opts, _ignored, fields, *prep_args, kwargs = self.handle_modifiers(*args, **kwargs)
+        # TODO: HERE!
+        if hasattr(self, 'remove_field_names'):
+            fields = self.handle_removals(fields)
         overrides = self.get_overrides()  # may have some key names not in self.fields, which will later be ignored.
         DEFAULT = overrides.get('_default_', {})
         alt_field_info = self.get_alt_field_info()  # condition_<label> methods may modify self.fields
@@ -668,7 +687,6 @@ class OptionalCountryMixIn(FormOverrideMixIn):
                 if field:
                     self.base_fields[name] = field
             if has_computed and computed_field_names:
-                computed_field_names = [country_name]
                 computed_fields = getattr(self, 'computed_fields', [])
                 if isinstance(computed_fields, (list, tuple)):
                     computed_field_names.extend(computed_fields)
@@ -677,12 +695,12 @@ class OptionalCountryMixIn(FormOverrideMixIn):
                     if country_name not in computed_fields:
                         self.computed_fields[country_name] = country_field
                     computed_field_names.extend(computed_fields.keys())
+                computed_field_names.extend(kwargs.get('computed_fields', []))
                 kwargs['computed_fields'] = computed_field_names
             elif computed_field_names:
                 self.remove_field_names = computed_field_names
             print("-------------------------------------------------------------")
         # else: Either this form does not have an address, or they don't what the switch functionality.
-        # print(display_ver)
         super().__init__(*args, **kwargs)
         print("------------- FINISH OptionalCountryMixIn(FormOverrideMixIn).__init__ FINISH ------------------")
 
@@ -702,7 +720,6 @@ class OptionalCountryMixIn(FormOverrideMixIn):
             return (opts, field_rows, remaining_fields, *args, kwargs)
         field_rows = field_rows or []
         field_name = self.country_field_name
-        # TODO: HERE!
         field = remaining_fields.pop(field_name, None)
         result = {field_name: field} if field else {}
         other_country_field = remaining_fields.pop('other_country', None)
