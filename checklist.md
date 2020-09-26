@@ -410,6 +410,15 @@ Current Status:
 - [x] Allow FieldSets as a form element.
 - [x] Have an as_fieldset format.
 - [x] MixIn features are designed for independent and cross-MixIn usage.
+- [x] Adding of fields by any MixIn should be done before calling super().__init__.
+  - [x] FocusMixMin: does not add or remove fields.
+  - [x] ComputedFieldsMixIn: designed accordingly & handles all fields to computed_fields.
+  - [x] OptionalUserNameMixIn: is based on ComputedFieldsMixIn, so likely designed accordingly.
+  - [x] FormOverrideMixIn: designed differently
+  - [x] OptionalCountryMixIn: based on FormOverrideMixIn ...
+  - [x] FormFieldSetMixIn: independent of Computed ...
+- [ ] Moving computed_fields into fields should be done WHEN?
+- [ ] After validation trigger, moving computed_fields to fields done by WHEN?
 - [x] All MixIn features work for as_table, as_ul, as_p, and as_fieldset.
 - [x] All MixIn features work if developer calls _html_output.
 - [x] All MixIn features can be used even if the template does not utilize _html_output (they must call make_fieldsets).

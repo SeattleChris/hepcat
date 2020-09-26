@@ -53,6 +53,18 @@ class FocusMixMin:
         display_data = func()
         if container not in ('p', 'fieldset', ):
             display_data = self._html_tag(container, display_data)
+        print("==================== Final Stage!=================================")
+        data = getattr(self, 'data', {"NO DATA PRESENT": None})
+        pprint(data)
+        print("----------------------- self.fields ------------------------------")
+        pprint(self.fields)
+        print("--------------------- computed fields ----------------------------")
+        pprint(self.computed_fields)
+        print("------------------------------------------------------------------")
+        check = 'billing_country_code'
+        if check in self.fields:
+            print(data.get(check, 'NOT FOUND'))
+            pprint(dir(self.fields[check]))
         return mark_safe(display_data)
 
     def test_field_order(self, data):
@@ -80,9 +92,12 @@ class ComputedFieldsMixIn:
         self.names_for_critical(kwargs)
         pprint(self._meta.model)
         pprint(self._meta.field_classes)
-        print("-------------------------------------------------------------------------")
+        print("------------------------------ computed_field_names -------------------------------------------")
         computed_field_names = kwargs.pop('computed_fields', [])
+        pprint(computed_field_names)
         computed_field_names = self.setup_computed_fields(computed_field_names, self.base_fields)
+        print("------------------------------ computed_field_names again -------------------------------------")
+        pprint(computed_field_names)
         validator_kwargs = kwargs.pop('validator_kwargs', {})
         self.attach_critical_validators(**validator_kwargs)
         super().__init__(*args, **kwargs)
@@ -624,31 +639,46 @@ class OptionalCountryMixIn(FormOverrideMixIn):
 
     def __init__(self, *args, **kwargs):
         print("================= OptionalCountryMixIn(FormOverrideMixIn).__init__ ============================")
-        name = self.country_field_name
-        field = self.base_fields.get(name, None)
+        country_name = self.country_field_name
+        country_field = self.base_fields.get(country_name, None)
         default = settings.DEFAULT_COUNTRY
         display_ver = 'local'
-        if self.other_country_switch and field:
-            if 'country_display' not in self.base_fields:
-                self.base_fields['country_display'] = self.country_display
-            if 'other_country' not in self.base_fields:
-                self.base_fields['other_country'] = self.other_country
+        if self.other_country_switch and country_field:
+            critical_names = [nf for nf in ('country_display', 'other_country') if nf not in self.base_fields]
             data = kwargs.get('data', {})
+            has_computed = issubclass(self.__class__, ComputedFieldsMixIn)
             if data:  # The form has been submitted.
                 display = data.get('country_display', 'DISPLAY NOT FOUND')
                 other_country = data.get('other_country', None)
-                val = data.get(name, None)
+                val = data.get(country_name, None)
                 if display == 'local' and other_country:  # self.country_display.initial
                     display_ver = 'foreign'
                     data = data.copy()
                     data['country_display'] = display_ver
                     if val == default:
-                        data[name] = ''
+                        data[country_name] = ''
                     data._mutable = False
                     kwargs['data'] = data
                 log = f"Displayed {display}, country value {val}, with default {default}. "
                 log += "Checked foreign country. " if other_country else "Not choosing foreign. "
                 print(log)
+            print("----------------- Do we have computed? -----------------------")
+            print(has_computed)
+            for name in critical_names:
+                field = self.make_computed_field(name) if has_computed else getattr(self, name, None)
+                if field:
+                    self.base_fields[name] = field
+            if has_computed:
+                computed_field_names = [country_name]
+                computed_fields = getattr(self, 'computed_fields', [])
+                if isinstance(computed_fields, (list, tuple)):
+                    computed_field_names.extend(computed_fields)
+                elif isinstance(computed_fields, dict):
+                    country_field = self.fields.pop(country_name, country_field.copy())
+                    if country_name not in computed_fields:
+                        self.computed_fields[country_name] = country_field
+                    computed_field_names.extend(computed_fields.keys())
+                kwargs['computed_fields'] = computed_field_names
             print("-------------------------------------------------------------")
         # else: Either this form does not have an address, or they don't what the switch functionality.
         print(display_ver)
@@ -660,8 +690,8 @@ class OptionalCountryMixIn(FormOverrideMixIn):
         alt_country = False
         if self.other_country_switch:
             alt_country = self.data.get('other_country', False)
-            if not alt_country:  # Remove the country field since it is not needed.
-                self.fields.pop(self.country_field_name, None)
+            if not alt_country:  # TODO: COMPUTED Remove the country field since it is not needed.
+                self.fields.pop(self.country_field_name, None)  # May not be present if handled by ComputedFieldsMixIn
         return bool(alt_country)
 
     def prep_country_fields(self, opts, field_rows, remaining_fields, *args, **kwargs):
@@ -675,13 +705,13 @@ class OptionalCountryMixIn(FormOverrideMixIn):
         result = {field_name: field} if field else {}
         other_country_field = remaining_fields.pop('other_country', None)
         if not other_country_field:
-            other_country_field = deepcopy(self.base_fields['other_country'])
+            other_country_field = deepcopy(self.base_fields['other_country'])  # computed: adding field
         result.update({'other_country': other_country_field})
         attempted_field_names = ('other_country', self.country_field_name, )
         if result:
-            field_rows.append(result)
+            field_rows.append(result)  # the extracted/created fields can be used in a fieldset
         if kwargs.get('flat_fields', None) is True:
-            remaining_fields.update(result)
+            remaining_fields.update(result)  # No fieldsets feature, fields placed in with all fields.
         else:
             opts['fields'].append(attempted_field_names)
         return (opts, field_rows, remaining_fields, *args, kwargs)
@@ -690,7 +720,7 @@ class OptionalCountryMixIn(FormOverrideMixIn):
         print("================== Clean Other Country ================================")
         other_country = self.cleaned_data.get('other_country', None)  # TODO: appropriate default?
         if other_country:
-            field = self.fields.get(self.country_field_name, None)
+            field = self.fields.get(self.country_field_name, None) or self.computed_fields.get(self.country_field_name)
             print(self.country_field_name)
             print(field.initial)
             print(self.data.get(self.country_field_name, None))
@@ -1101,7 +1131,7 @@ class FieldSetOptionalCountryComputedMixIn(FocusMixMin, FormFieldSetMixIn, Compu
     """ Using fieldsets, overrides with optional country, computed (not username), and focus. """
 
 
-class AddressOptionalUsernameMixIn(FocusMixMin, FormFieldSetMixIn, OptionalUserNameMixIn, OptionalCountryMixIn):
+class AddressOptionalUsernameMixIn(FocusMixMin, FormFieldSetMixIn, OptionalCountryMixIn, OptionalUserNameMixIn):
     """ Using fieldsets, overrides with optional country, computed with optional username, and focus. """
 
 
