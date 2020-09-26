@@ -10,8 +10,6 @@ admin_group, created_admin = Group.objects.get_or_create(name='admin')
 staff_group, created_staff = Group.objects.get_or_create(name='staff')
 groups_from_role = {'is_teacher': teacher_group, 'is_admin': admin_group, 'is_staff': staff_group}
 
-# Create your models (and managers) here.
-
 
 class UserManagerHC(UserManager):
     """ Adding & Modifying some features to the default UserManager.
@@ -167,8 +165,6 @@ class UserManagerHC(UserManager):
         # TODO: Should there be some kind of confirmation page if friend found?
         return friend if friend else self.create_user(self, **kwargs)  # original call should have email in kwargs.
 
-    # end class UserManagerHC
-
 
 class UserHC(AbstractUser):
     """ This will be the custom Users model for the site.
@@ -206,6 +202,7 @@ class UserHC(AbstractUser):
         super().__init__(*args, **kwargs)
         username = self.USERNAME_FIELD
         email = self.get_email_field_name()
+        # TODO: Determine which of these actually works as expected.
         self._meta.get_field(email).max_length = 191
         self._meta.get_field(email).help_text = _("Used for confirmation and typically for login. ")
         self._meta.get_field(username).help_text = _("Only needed if user does not have a unique email. ")
@@ -231,8 +228,8 @@ class UserHC(AbstractUser):
         # TODO: Confirm our final username is not in use.
         if self.username_not_email is False:
             return self.email.casefold()
-        user_name_gen = (getattr(self, key).strip() for key in ('first_name', 'last_name') if hasattr(self, key))
-        username = '_'.join(user_name_gen).casefold()
+        name_gen = (getattr(self, key).strip() for key in ('first_name', 'last_name') if getattr(self, key, None))
+        username = '_'.join(name_gen).casefold()
         return self.normalize_username(username)
 
     def save(self, *args, **kwargs):
@@ -252,8 +249,6 @@ class UserHC(AbstractUser):
 
     def __repr__(self):
         return '<UserHC: {} >'.format(self.full_name)
-
-    # end class UserHC
 
 
 class StaffUser(UserHC):

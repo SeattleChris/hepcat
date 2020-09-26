@@ -37,6 +37,7 @@ class SiteContent(models.Model):
 
 class Location(models.Model):
     """ This stores information about each location where ClassOffers may be held. """
+    # TODO: Should we add a publish flag in the DB for each location?
     # id = auto-created
     name = models.CharField(max_length=120, )
     code = models.CharField(max_length=120, )

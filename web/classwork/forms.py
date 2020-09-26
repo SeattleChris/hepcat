@@ -1,21 +1,20 @@
 from django import forms
 from django.core.exceptions import ValidationError  # NON_FIELD_ERRORS,
+from django.contrib.auth import get_user_model
 from django.forms.fields import FileField  # Field,
 from .models import Student, Payment, Registration, Notify  # , Staff, Session, ClassOffer
-from users.mixins import AddressOptionalUsernameMixIn  # AddressMixIn,
+from users.mixins import FocusMixMin, AddressOptionalUsernameMixIn  # AddressMixIn,
 from django.utils.translation import gettext_lazy as _
 # from django.urls import reverse_lazy
 # from django.shortcuts import render
 # TODO: should we be using datetime.datetime or datetime.today ?
-from collections import abc
-from django.contrib.auth import get_user_model
+# from collections import abc
 User = get_user_model()
 
 
 class RegisterForm(AddressOptionalUsernameMixIn, forms.ModelForm):
     """ This is where existing and even new users/students can sign up for a ClassOffer """
     # TODO: Lookup formsets. See if we can make a form combining fields from User and from Payment models.
-    # TODO: Create the workflow for when (if) the user wants to fill out the registration form for someone else.
 
     user_answers = (('', _('Please Select an Answer')),
                     ('T', _('This is my first')),
@@ -61,14 +60,6 @@ class RegisterForm(AddressOptionalUsernameMixIn, forms.ModelForm):
         super(RegisterForm, self).__init__(*args, **kwargs)
         print("--------------------- FINISH RegisterForm.__init__ --------------------")
 
-    # Cleaning data is done by:
-    # 1) Field.clean() which will populate cleaned_data, and has 3 parts:
-    #     a) to_python() to coerce datatype or raise ValidationError if impossible
-    #     b) validate() field-specific validation that is not suitable for a validator
-    #     c) run_validators() runs all validators and aggregates into single ValidationError
-    # 2) clean_<fieldname>() Takes no params, must return the cleaned value even if unchanged
-    # 3) Form.clean() where we can deal with cross-field validations.
-
     def clean_first_name(self):
         print('======== RegisterForm.clean_first_name =========')
         first_name = self.cleaned_data.get('first_name')
@@ -81,9 +72,8 @@ class RegisterForm(AddressOptionalUsernameMixIn, forms.ModelForm):
         value = self.cleaned_data.get('last_name')
         if value is None:
             raise forms.ValidationError("Last Name is required")
-        if value.isupper() or value.islower():
+        if value.isupper() or value.islower():  # Some names have mid-capitols, so assume mixed capitals are intended.
             return value.capitalize()  # Assume unintended if it was all caps, or all lowercase.
-        # However, some names have capitols in the middle, so leave unmodified.
         return value
 
     def clean_email(self):
@@ -103,9 +93,7 @@ class RegisterForm(AddressOptionalUsernameMixIn, forms.ModelForm):
         # super()._clean_fields()
         print('======== Duplicate code as normal: RegisterForm._clean_fields =========')
         for name, field in self.fields.items():
-            # value_from_datadict() gets the data from the data dictionaries.
-            # Each widget type knows how to retrieve its own data, because some
-            # widgets split data over several HTML fields.
+            # The widget.value_from_datadict() can handle if it's data is split across several fields in self.data.
             if field.disabled:
                 value = self.get_initial_for_field(field, name)
             else:
@@ -129,6 +117,13 @@ class RegisterForm(AddressOptionalUsernameMixIn, forms.ModelForm):
 
     def full_clean(self):
         print('======== RegisterForm.full_clean =========')
+        # Cleaning data is done by:
+        # 1) _clean_fields(): for each self.fields, calls field.clean() which will populate cleaned_data, in 3 stages:
+        #     a) to_python() to coerce datatype or raise ValidationError if impossible
+        #     b) validate() field-specific validation that is not suitable for a validator
+        #     c) run_validators() runs all validators and aggregates into single ValidationError
+        # 2) clean_<fieldname>() Takes no params, must return the cleaned value even if unchanged
+        # 3) Form.clean() where we can deal with cross-field validations.
         super().full_clean()
 
     def clean(self):
@@ -271,10 +266,8 @@ class RegisterForm(AddressOptionalUsernameMixIn, forms.ModelForm):
             print('-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-')
         return payment
 
-    # end class RegisterForm
 
-
-class PaymentForm(forms.ModelForm):
+class PaymentForm(FocusMixMin, forms.ModelForm):
     """ This is where a user inputs their payment data and it is processed. """
 
     class Meta:
@@ -288,20 +281,3 @@ class PaymentForm(forms.ModelForm):
             'billing_country_area',
             'billing_postcode',
             ]
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.focus_first_usable_field(self.fields.values())
-
-    def focus_first_usable_field(self, fields):
-        """ Gives autofocus to the first non-hidden, non-disabled form field from the given iterable of form fields. """
-        if not isinstance(fields, (list, tuple, abc.ValuesView)):
-            raise TypeError(_("Expected an iterable of form fields. "))
-        field_gen = (ea for ea in fields)
-        first_field = next(field_gen)
-        while first_field.disabled or (hasattr(first_field, 'is_hidden') and first_field.is_hidden):
-            if 'autofocus' in first_field.widget.attrs:
-                first_field.widget.attrs['autofocus'] = False
-            first_field = next(field_gen)
-        first_field.widget.attrs['autofocus'] = True
-        return first_field

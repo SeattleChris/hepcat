@@ -145,6 +145,7 @@ class ComputedFieldsMixIn:
         return computed_fields
 
     def make_computed_field(self, name, name_for_field=None):
+        """Returns a field defined on the form model (likely by a MixIn) or on the model via _meta.  """
         field = getattr(self, name, None)
         if not isinstance(field, Field):
             name_for_field = name_for_field or name
