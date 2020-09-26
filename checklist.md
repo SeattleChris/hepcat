@@ -406,6 +406,10 @@ Current Status:
   - [x] All help text is referenced by appropriate aria tag for describedby.
   - [ ] All styling choices avoid risk of impeding expected form control behavior (tab, enter, visual indications, etc)
   - [ ] Confirm practices and run-through with assistive technologies.
+- [x] Override MixIn can set a default size for a form field.
+  - [x] Only applies size attribute to appropriate input types.
+  - [x] Applies width and height for text area.
+  - [x] Does not apply width to form elements that have no attribute for size.
 - [ ] Confirm extra HTML containers are minimized.
 - [x] Allow FieldSets as a form element.
 - [x] Have an as_fieldset format.
