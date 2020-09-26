@@ -41,6 +41,8 @@
 |                    | User Views: Contact Us (including contact form), Info - general site resources, sub-pages   |
 |                    | User Views: General site clean up before first launch                                       |
 |                    | User Views: Social Justice Call                                                             |
+| :heavy_check_mark: | Forms: MixIn to handle non-US address - adding country field & modifying field labels       |
+| :heavy_check_mark: | Forms: Create User initially no username input, then can change email, modify username      |
 |                    | **Soft Launch**                                                                             |
 |                    | **Milestone 4 Completion**                                                                  |
 | :heavy_check_mark: | Tests: Models for classwork, users, and associated data                                     |
@@ -87,7 +89,7 @@
 - [s] Stretch Goal. Not for current feature plan.
 
 Current Status:
-2020-09-04 19:48:38
+2020-09-25 17:59:08
 <!-- Ctrl-Shift-I to generate timestamp -->
 
 ### Bug Fixes
@@ -373,15 +375,44 @@ Current Status:
   - [x] ? Using table layout?
   - [x] ? Using non-table layout?
 - [ ] CSS Style of save/submit button
-- [ ] Field boxes all line up, field names on left with align right
+- [x] Field boxes all line up, field names on left with align right
 - [ ] Field 'help_text' adjusted in CSS
   - [ ] less prominent text (smaller? lighter font?)
   - [ ] placed under the input box?
 - [ ] Improve Class Sign Up - Registration form.
   - [ ] Update instructions and method for "If you want to register a different person then ..."
   - [ ] Move returning student question lower in form
+  - [ ] Handle if duplicate email found:
+    - [ ] If they are the same person, direct to login or allow pay & sign-up without login?
+    - [x] If their name does not match other email: instructions to change email or select username (or login).
+    - [x] They can choose their own username, or accept the default [first_name]_[last_name]
+  - [ ] The foreign address switch does not require a submission, modify the live page view.
   - [x] Registration Form should have initial values for user that is logged in.
   - [x] Registration Form should have initial value for state based on the User model default.
+- [x] Usable across many forms - Handle foreign address:
+  - [x] Initially display no country field and assume local language for naming fields.
+  - [x] Provide a checkbox to indicate they need a non-US address format.
+  - [x] If non-US indicated, redisplay form with Country field & non-US labels for fields.
+- [x] MixIn allowing for computed fields: user only gets the input field if initial form failed certain conditions.
+- [x] MixIn allowing defining multiple fields on a single row (like admin allows via FieldSets).
+- [x] MixIn to facilitate overriding form field attributes and field settings.
+- [x] MixIn to apply autofocus to desired form control and/or first empty one.
+- [x] Design towards extra HTML containers are minimized.
+- [ ] All form controls follow best/good practices for accessibility. Opinionated features are optional.
+  - [x] html attribute: autocomplete set to values hinting the type of data for the input
+  - [x] Turn off capitalization for desired fields (affects mobile only).
+  - [x] ? For mobile: capitalization settings for name fields ?
+  - [x] All form fields have appropriate labels associated with them.
+  - [x] All help text is referenced by appropriate aria tag for describedby.
+  - [ ] All styling choices avoid risk of impeding expected form control behavior (tab, enter, visual indications, etc)
+  - [ ] Confirm practices and run-through with assistive technologies.
+- [ ] Confirm extra HTML containers are minimized.
+- [x] Allow FieldSets as a form element.
+- [x] Have an as_fieldset format.
+- [x] MixIn features are designed for independent and cross-MixIn usage.
+- [x] All MixIn features work for as_table, as_ul, as_p, and as_fieldset.
+- [x] All MixIn features work if developer calls _html_output.
+- [x] All MixIn features can be used even if the template does not utilize _html_output (they must call make_fieldsets).
 
 ### Profile and Resource Views
 
