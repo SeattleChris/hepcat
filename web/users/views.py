@@ -8,8 +8,6 @@ from django_registration.backends.one_step.views import RegistrationView
 from .forms import CustomRegistrationForm, CustomUserCreationForm, CustomUserChangeForm
 from pprint import pprint  # TODO: Remove after debug
 
-# Create your views here.
-
 
 @method_decorator(csrf_protect, name='dispatch')
 class CustomRegistrationView(RegistrationView):
@@ -30,6 +28,7 @@ class SignUp(generic.CreateView):
     template_name = 'signup.html'
 
 
+@method_decorator(csrf_protect, name='dispatch')
 class Modify(generic.UpdateView):
     model = UserHC
     form_class = CustomUserChangeForm

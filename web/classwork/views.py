@@ -14,8 +14,6 @@ from .models import (SiteContent, Resource, Location, ClassOffer, Subject,  # ? 
 from datetime import datetime as dt
 User = get_user_model()
 
-# TODO: Clean out excessive print lines telling us where we are.
-
 
 def decide_session(sess=None, display_date=None):
     """ Typically we want to see the current session (default values), sometimes we want to see different session(s).
@@ -82,11 +80,9 @@ class AboutUsListView(ListView):
         context['business_about'] = getattr(about, 'text', None) if about else ''
         return context
 
-    # end AboutUs
-
 
 class SubjectProgressView(ListView):
-    """ More in-depth description of how the Organization expects students to progress through classoffers. """
+    """Not yet implemented. More in-depth description of how students are expected to progress through classoffers. """
     template_name = ''
     model = Subject
     context_object_name = 'levels'
@@ -95,7 +91,6 @@ class SubjectProgressView(ListView):
 class LocationListView(ListView):
     """ Display all the Locations that we have stored """
     # TODO: Should we only list them if a published ClassOffer has them listed?
-    # TODO: Should we add a publish flag in the DB for each location?
     template_name = 'classwork/location_list.html'
     model = Location
     context_object_name = 'locations'
@@ -124,7 +119,7 @@ class ClassOfferListView(ListView):
     context_object_name = 'classoffers'
     display_session = None  # 'all' or <start_month>_<year> as stored in DB Session.name
     display_date = None     # <year>-<month>-<day>
-    query_order_by = ('session__key_day_date', '_num_level', )
+    query_order_by = ('session__key_day_date', '_num_level', )  # TODO: ? Refactor to Meta: ordering(...) ?
 
     def get_queryset(self):
         """ We can limit the classes list by session, what is published on a given date, or currently published. """
@@ -154,7 +149,7 @@ class Checkin(ViewOnlyForTeacherOrAdminMixin, ListView):
     template_name = 'classwork/checkin.html'
     context_object_name = 'class_list'
     display_session = None  # 'all' or <start_month>_<year> as stored in DB Session.name
-    query_order_by = ('-class_day', 'start_time', )
+    query_order_by = ('-class_day', 'start_time', )  # TODO: ? Refactor to Meta: ordering(...) ?
 
     def get_queryset(self):
         """ List all the students from all the classes sorted according to the class property query_order_by.
@@ -305,7 +300,6 @@ class RegisterView(CreateView):
     def get_form_kwargs(self):
         # print('================ RegisterView.get_form_kwargs =================')
         kwargs = super(RegisterView, self).get_form_kwargs()
-        # print(kwargs)
         sess = self.kwargs.get('display_session', None)
         display_date = self.kwargs.get('display_date', None)
         class_choices = ClassOffer.objects.filter(session__in=decide_session(sess=sess, display_date=display_date))
