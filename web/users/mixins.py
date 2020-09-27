@@ -110,7 +110,7 @@ class ComputedFieldsMixIn:
         """Set model properties for 'critical_names' in kwargs, 'user_model', and expected name_for_<variable>s. """
         default_names = ('user_model', 'name_for_user', 'name_for_email', )
         critical_names = kwargs.pop('critical_names', [])
-        critical_names = set(critical_names).update(default_names)
+        critical_names = set(critical_names).union(default_names)
 
         def set_available_values(needed_names):
             missing_names = []
@@ -133,12 +133,14 @@ class ComputedFieldsMixIn:
             form_model = getattr(self, 'model', getattr(self._meta, 'model', None))
             form_model = None if form_model == user_model else form_model
             req_features = ('USERNAME_FIELD', 'get_email_field_name', 'is_active')
-            models = [model for model in (user_model, form_model) if all(hasattr(model, ea) for ea in req_features)]
+            models = [model for model in (user_model, form_model) if model]
+            models = [model for model in models if all(hasattr(model, ea) for ea in req_features)]
             user_model = models[-1] if models else None  # Has req_features, prioritize form_model over user_model.
             if not user_model:
                 raise ImproperlyConfigured(_("Unable to discover a User or User like model for ComputedFieldsMixIn. "))
-            self.name_for_user = self.name_for_user or self.user_model.USERNAME_FIELD
-            self.name_for_email = self.name_for_email or self.user_model.get_email_field_name()
+            self.user_model = user_model
+            self.name_for_user = self.name_for_user or user_model.USERNAME_FIELD
+            self.name_for_email = self.name_for_email or user_model.get_email_field_name()
             missing_names = set_available_values(missing_names)
         return missing_names
 
