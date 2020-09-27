@@ -248,7 +248,7 @@ class ComputedFieldsMixIn:
         field.required = True
         return True
 
-    def field_computed_from_fields(self, field_names=None, joiner='_', normalize=None):
+    def normalized_value_from_values(self, field_names=None, joiner='_', normalize=None):
         """ Must be evaluated after cleaned_data has the named field values populated. """
         if not field_names:
             raise ImproperlyConfigured(_("There must me one or more field names to compute a value. "))
@@ -333,11 +333,11 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
         email_field_name = email_field_name or self.name_for_email
         username_field_name = username_field_name or self.name_for_user
         normalize = self.user_model.normalize_username
-        result_value = self.field_computed_from_fields(field_names=(email_field_name, ), normalize=normalize)
+        result_value = self.normalized_value_from_values(field_names=(email_field_name, ), normalize=normalize)
         lookup = {"{}__iexact".format(username_field_name): result_value}
         try:
             if not result_value or self.user_model._default_manager.filter(**lookup).exists():
-                result_value = self.field_computed_from_fields(field_names=name_fields, normalize=normalize)
+                result_value = self.normalized_value_from_values(field_names=name_fields, normalize=normalize)
         except Exception as e:
             print("Unable to query to lookup if this username exists. ")
             print(e)
