@@ -91,12 +91,10 @@ class ComputedFieldsMixIn:
         print("======================= ComputedFieldsMixIn.__init__ =================================")
         self.names_for_critical(kwargs)
         pprint(self._meta.model)
-        print("------------------------------ computed_field_names -------------------------------------------")
+        # print("------------------------------ computed_field_names -------------------------------------------")
         computed_field_names = kwargs.pop('computed_fields', [])
-        pprint(computed_field_names)
         computed_field_names = self.setup_computed_fields(computed_field_names, self.base_fields)
-        print("------------------------------ computed_field_names again -------------------------------------")
-        pprint(computed_field_names)
+        # pprint(computed_field_names)
         validator_kwargs = kwargs.pop('validator_kwargs', {})
         self.attach_critical_validators(**validator_kwargs)
         super().__init__(*args, **kwargs)
@@ -172,12 +170,12 @@ class ComputedFieldsMixIn:
         return computed_fields
 
     def make_computed_field(self, name, name_for_field=None):
-        """Returns a field defined on the form model (likely by a MixIn) or on the model via _meta.  """
+        """Returns a form field already created (possibly in a MixIn). Future: may create based on a model. """
         field = getattr(self, name, None)
         if not isinstance(field, Field):
-            name_for_field = name_for_field or name
-            field = getattr(self._meta.model, name_for_field, None)  # TODO: Change to a formfield, not a model field.
-        if not field:
+            field = getattr(self, name_for_field or name, None)
+            # sources = (self.user_model, self._meta.model)  # TODO: Create a form field based on a model field?
+        if not isinstance(field, Field):
             err = "Unable to find a '{}' or '{}' field to include in fields. ".format(name, name_for_field)
             raise ImproperlyConfigured(_(err))
         return field
@@ -262,7 +260,6 @@ class ComputedFieldsMixIn:
             err = "This initial value can only be evaluated after fields it depends on have been cleaned. "
             err += "The field order must have the computed field after fields used for its value. "
             raise ImproperlyConfigured(_(err))
-
         names = (self.cleaned_data[key].strip() for key in field_names if key in self.cleaned_data)
         result_value = joiner.join(names).casefold()
         if callable(normalize):
@@ -314,7 +311,7 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
     strict_username = True  # case_insensitive
     strict_email = False  # unique_email and case_insensitive
     help_texts = {
-        'username': _("Without a unique email, a username is needed. Use suggested or create one. "),
+        'username': _("Without a unique email, a username is needed. Use suggested or create one."),
         'email': _("Used for confirmation and typically for login"),
     }
 
