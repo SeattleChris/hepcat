@@ -421,7 +421,7 @@ Current Status:
   - [x] FormOverrideMixIn: designed differently
   - [x] OptionalCountryMixIn: based on FormOverrideMixIn ...
   - [x] FormFieldSetMixIn: independent of Computed ...
-- [ ] Moving computed_fields into fields should be done WHEN?
+- [x] Moving computed_fields into fields should be done by all MixIns before needed.
 - [ ] After validation trigger, moving computed_fields to fields done by WHEN?
 - [x] All MixIn features work for as_table, as_ul, as_p, and as_fieldset.
 - [x] All MixIn features work if developer calls _html_output.
