@@ -14,13 +14,13 @@ class CustomRegistrationForm(AddressOptionalUsernameMixIn, RegistrationForm):
         label=_("I have read and agree to the Terms of Service"),
         error_messages={"required": validators.TOS_REQUIRED}, )
     tos_required = False
+    USERNAME_FLAG_FIELD = 'username_not_email'
 
     class Meta(RegistrationForm.Meta):
         model = UserHC
-        USERNAME_FLAG_FIELD = 'username_not_email'
         # email_name = model.get_email_field_name()
         # user_name = model.USERNAME_FIELD
-        fields = ('first_name', 'last_name', model.get_email_field_name(), model.USERNAME_FIELD, USERNAME_FLAG_FIELD, )
+        fields = ('first_name', 'last_name', model.get_email_field_name(), model.USERNAME_FIELD, )
         # computed_fields = (model.USERNAME_FIELD, USERNAME_FLAG_FIELD, )
         help_texts = {
             model.USERNAME_FIELD: _("Without a unique email, a username is needed. Use suggested or create one. "),
