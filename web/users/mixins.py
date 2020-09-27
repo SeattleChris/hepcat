@@ -91,13 +91,10 @@ class ComputedFieldsMixIn:
         print("======================= ComputedFieldsMixIn.__init__ =================================")
         self.names_for_critical(kwargs)
         pprint(self._meta.model)
-        pprint(self._meta.field_classes)
-        print("------------------------------ computed_field_names -------------------------------------------")
+        # print("------------------------------ computed_field_names -------------------------------------------")
         computed_field_names = kwargs.pop('computed_fields', [])
-        pprint(computed_field_names)
         computed_field_names = self.setup_computed_fields(computed_field_names, self.base_fields)
-        print("------------------------------ computed_field_names again -------------------------------------")
-        pprint(computed_field_names)
+        # pprint(computed_field_names)
         validator_kwargs = kwargs.pop('validator_kwargs', {})
         self.attach_critical_validators(**validator_kwargs)
         super().__init__(*args, **kwargs)
@@ -110,27 +107,42 @@ class ComputedFieldsMixIn:
         print("--------------------- FINISH ComputedFieldsMixIn.__init --------------------")
 
     def names_for_critical(self, kwargs):
-        self.name_for_user = kwargs.pop('name_for_user', getattr(self, 'name_for_user', None))
-        self.name_for_email = kwargs.pop('name_for_email', getattr(self, 'name_for_email', None))
-        self.user_model = kwargs.pop('user_model', getattr(self, 'user_model', None))
-        if self.name_for_user and self.name_for_email:
-            self.user_model = self.user_model or getattr(self._meta, 'model', None)
-            return self.name_for_user, self.name_for_email
-        user = kwargs.get('initial', {}).get('user', None) or kwargs.get('instance', None)
-        if user and hasattr(user, '_meta'):
-            user_model = getattr(user._meta, 'model', None)
-        elif user and getattr(user, 'is_anonymous', None):
-            user_model = get_user_model()
-        else:
+        """Set model properties for 'critical_names' in kwargs, 'user_model', and expected name_for_<variable>s. """
+        default_names = ('user_model', 'name_for_user', 'name_for_email', )
+        critical_names = kwargs.pop('critical_names', [])
+        critical_names = set(critical_names).union(default_names)
+
+        def set_available_values(needed_names):
+            missing_names = []
+            for name in needed_names:
+                value = kwargs.pop(name, getattr(self, name, None))
+                setattr(self, name, value)
+                if value is None:
+                    missing_names.append(name)
+            return missing_names
+
+        missing_names = set_available_values(critical_names)
+        if not missing_names:
+            return list(critical_names)
+        if 'user_model' in missing_names:
+            user = kwargs.get('initial', {}).get('user', None) or kwargs.get('instance', None)
             user_model = None
-        form_model = getattr(self, 'model', getattr(self._meta, 'model', None))
-        required_attributes = ('USERNAME_FIELD', 'get_email_field_name', 'is_active')
-        models = [model for model in (user_model, form_model) if all(hasattr(model, ea) for ea in required_attributes)]
-        if models:
-            self.user_model = models[-1]
-            self.name_for_user = self.user_model.USERNAME_FIELD
-            self.name_for_email = self.user_model.get_email_field_name()
-        return self.name_for_user, self.name_for_email
+            if user and not getattr(user, 'is_anonymous', None) and hasattr(user, '_meta'):
+                user_model = getattr(user._meta, 'model', None)
+            user_model = user_model or get_user_model()
+            form_model = getattr(self, 'model', getattr(self._meta, 'model', None))
+            form_model = None if form_model == user_model else form_model
+            req_features = ('USERNAME_FIELD', 'get_email_field_name', 'is_active')
+            models = [model for model in (user_model, form_model) if model]
+            models = [model for model in models if all(hasattr(model, ea) for ea in req_features)]
+            user_model = models[-1] if models else None  # Has req_features, prioritize form_model over user_model.
+            if not user_model:
+                raise ImproperlyConfigured(_("Unable to discover a User or User like model for ComputedFieldsMixIn. "))
+            self.user_model = user_model
+            self.name_for_user = self.name_for_user or user_model.USERNAME_FIELD
+            self.name_for_email = self.name_for_email or user_model.get_email_field_name()
+            missing_names = set_available_values(missing_names)
+        return missing_names
 
     def setup_computed_fields(self, computed_field_names, fields):
         """Modify fields by adding expected fields. Return an updated computed_field_names list. """
@@ -160,12 +172,12 @@ class ComputedFieldsMixIn:
         return computed_fields
 
     def make_computed_field(self, name, name_for_field=None):
-        """Returns a field defined on the form model (likely by a MixIn) or on the model via _meta.  """
+        """Returns a form field already created (possibly in a MixIn). Future: may create based on a model. """
         field = getattr(self, name, None)
         if not isinstance(field, Field):
-            name_for_field = name_for_field or name
-            field = getattr(self._meta.model, name_for_field, None)  # TODO: Change to a formfield, not a model field.
-        if not field:
+            field = getattr(self, name_for_field or name, None)
+            # sources = (self.user_model, self._meta.model)  # TODO: Create a form field based on a model field?
+        if not isinstance(field, Field):
             err = "Unable to find a '{}' or '{}' field to include in fields. ".format(name, name_for_field)
             raise ImproperlyConfigured(_(err))
         return field
@@ -238,7 +250,7 @@ class ComputedFieldsMixIn:
         field.required = True
         return True
 
-    def field_computed_from_fields(self, field_names=None, joiner='_', normalize=None):
+    def normalized_value_from_values(self, field_names=None, joiner='_', normalize=None):
         """ Must be evaluated after cleaned_data has the named field values populated. """
         if not field_names:
             raise ImproperlyConfigured(_("There must me one or more field names to compute a value. "))
@@ -250,7 +262,6 @@ class ComputedFieldsMixIn:
             err = "This initial value can only be evaluated after fields it depends on have been cleaned. "
             err += "The field order must have the computed field after fields used for its value. "
             raise ImproperlyConfigured(_(err))
-
         names = (self.cleaned_data[key].strip() for key in field_names if key in self.cleaned_data)
         result_value = joiner.join(names).casefold()
         if callable(normalize):
@@ -299,10 +310,11 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
     username_field = UsernameField()
     username_flag = forms.BooleanField(required=False)
     USERNAME_FLAG_FIELD = 'username_not_email'
+    constructor_fields = ('first_name', 'last_name', )
     strict_username = True  # case_insensitive
     strict_email = False  # unique_email and case_insensitive
     help_texts = {
-        'username': _("Without a unique email, a username is needed. Use suggested or create one. "),
+        'username': _("Without a unique email, a username is needed. Use suggested or create one."),
         'email': _("Used for confirmation and typically for login"),
     }
 
@@ -316,19 +328,30 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
             if self.name_for_user in kwargs.get('data', {}):
                 kwargs['named_focus'] = self.name_for_email  # TODO: change to a callable to get eventual value?
         super().__init__(*args, **kwargs)
+        self.confirm_required_fields()
         print("--------------------- FINISH OptionalUserNameMixIn(ComputedFieldsMixIn).__init__ --------------------")
+
+    def confirm_required_fields(self):
+        """The form must have the email field and any fields that may be used to construct the username. """
+        required_fields = [*self.constructor_fields, self.name_for_email, self.name_for_user]
+        if self.USERNAME_FLAG_FIELD:
+            required_fields.append(self.USERNAME_FLAG_FIELD)
+        missing_fields = [name for name in required_fields if name not in self.base_fields]
+        if missing_fields or not self.constructor_fields:
+            raise ImproperlyConfigured(_("The fields for email, username, and constructor must be set in fields. "))
+        return True
 
     def username_from_email_or_names(self, username_field_name=None, email_field_name=None):
         """ Initial username field value. Must be evaluated after dependent fields populate cleaned_data. """
-        name_fields = ('first_name', 'last_name', )
+        name_fields = self.constructor_fields
         email_field_name = email_field_name or self.name_for_email
         username_field_name = username_field_name or self.name_for_user
         normalize = self.user_model.normalize_username
-        result_value = self.field_computed_from_fields(field_names=(email_field_name, ), normalize=normalize)
+        result_value = self.normalized_value_from_values(field_names=(email_field_name, ), normalize=normalize)
         lookup = {"{}__iexact".format(username_field_name): result_value}
         try:
             if not result_value or self.user_model._default_manager.filter(**lookup).exists():
-                result_value = self.field_computed_from_fields(field_names=name_fields, normalize=normalize)
+                result_value = self.normalized_value_from_values(field_names=name_fields, normalize=normalize)
         except Exception as e:
             print("Unable to query to lookup if this username exists. ")
             print(e)
@@ -446,7 +469,7 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
         username_value = self.cleaned_data.get(self.name_for_user, '')
         email_value = self.cleaned_data.get(self.name_for_email, None)
         if self.name_for_user not in self.data and username_value != email_value:
-            print("- - - - - - - - - Confirmation Required - - - - - - - - - - - - - - -")
+            # print("- - - - - - - - - Confirmation Required - - - - - - - - - - - - - - -")
             marked_safe_translatable_html = self.configure_username_confirmation()
             raise ValidationError(marked_safe_translatable_html)
         else:  # computed fields had no problems.
@@ -462,6 +485,7 @@ class FormOverrideMixIn:
     """ Conditionally override formfield attributes and field properties. """
 
     prep_modifiers = None
+    # flat_fields = True
     alt_field_info = {}
     formfield_attrs_overrides = {
         '_default_': {'size': 15, 'cols': 20, 'rows': 4, },
@@ -563,6 +587,21 @@ class FormOverrideMixIn:
             opts, *args, kwargs = mod(opts, *args, **kwargs)
         return (opts, *args, kwargs)
 
+    def handle_removals(self, fields):
+        """ Manages field removals. Only used when a 'ComputedFieldsMixIn' variant is not present. """
+        if not hasattr(self, 'remove_field_names'):
+            return fields
+        assert not issubclass(self.__class__, ComputedFieldsMixIn), "When Computed, do not use remove_field_names. "
+        self.removed_fields = getattr(self, 'removed_fields', {})
+        data = set(getattr(self, 'data', {}).keys())
+        needed_names = data - set(fields.keys())
+        remove_names = set(self.remove_field_names) - data
+        add_fields = {name: field for name, field in self.removed_fields.items() if name in needed_names}
+        removed_fields = {name: fields.pop(name) for name in remove_names if name in fields}
+        fields.update(add_fields)
+        self.removed_fields.update(removed_fields)
+        return fields
+
     def prep_fields(self, *prep_args, **kwargs):
         """ Modifies self.fields and possibly self.data according to overrides, maxlength, and get_alt_field_info. """
         fields = self.fields
@@ -571,6 +610,9 @@ class FormOverrideMixIn:
             args = [opts, None, fields, prep_args]
             kwargs.update(flat_fields=True)
             opts, _ignored, fields, *prep_args, kwargs = self.handle_modifiers(*args, **kwargs)
+        # TODO: HERE!
+        if hasattr(self, 'remove_field_names'):
+            fields = self.handle_removals(fields)
         overrides = self.get_overrides()  # may have some key names not in self.fields, which will later be ignored.
         DEFAULT = overrides.get('_default_', {})
         alt_field_info = self.get_alt_field_info()  # condition_<label> methods may modify self.fields
@@ -589,7 +631,7 @@ class FormOverrideMixIn:
                         field.widget.attrs['rows'] = str(height)
                     if default:
                         display_size = min((display_size, default))
-                elif field.widget.attrs.get('type', '') in ('email', 'password', 'tel', 'text'):
+                elif field.widget.attrs.get('type', '') in ('email', 'password', 'tel', 'text'):  # TODO: Does not see type attr.
                     width_attr_name = 'size'  # 'size' is only valid for input types: email, password, tel, text
                     default = DEFAULT.get('size', None)  # Cannot use float("inf") as an int.
                     display_size = field.widget.attrs.get('size', None)
@@ -632,7 +674,7 @@ class OptionalCountryMixIn(FormOverrideMixIn):
                     'label': _("Postal Code"),
                     'help_text': '', },
             'billing_country_code': {
-                    'help_text': _("Use the country abbreviation code. "),
+                    'help_text': _("Country abbreviation"),
                     'default': '', },
             },
         }
@@ -645,14 +687,15 @@ class OptionalCountryMixIn(FormOverrideMixIn):
         display_ver = 'local'
         if self.other_country_switch and country_field:
             critical_names = [nf for nf in ('country_display', 'other_country') if nf not in self.base_fields]
+            computed_field_names = [country_name]
             data = kwargs.get('data', {})
-            has_computed = issubclass(self.__class__, ComputedFieldsMixIn)
             if data:  # The form has been submitted.
                 display = data.get('country_display', 'DISPLAY NOT FOUND')
                 other_country = data.get('other_country', None)
                 val = data.get(country_name, None)
                 if display == 'local' and other_country:  # self.country_display.initial
                     display_ver = 'foreign'
+                    computed_field_names = []
                     data = data.copy()
                     data['country_display'] = display_ver
                     if val == default:
@@ -662,14 +705,12 @@ class OptionalCountryMixIn(FormOverrideMixIn):
                 log = f"Displayed {display}, country value {val}, with default {default}. "
                 log += "Checked foreign country. " if other_country else "Not choosing foreign. "
                 print(log)
-            print("----------------- Do we have computed? -----------------------")
-            print(has_computed)
+            has_computed = issubclass(self.__class__, ComputedFieldsMixIn)
             for name in critical_names:
                 field = self.make_computed_field(name) if has_computed else getattr(self, name, None)
                 if field:
                     self.base_fields[name] = field
-            if has_computed:
-                computed_field_names = [country_name]
+            if has_computed and computed_field_names:
                 computed_fields = getattr(self, 'computed_fields', [])
                 if isinstance(computed_fields, (list, tuple)):
                     computed_field_names.extend(computed_fields)
@@ -678,10 +719,12 @@ class OptionalCountryMixIn(FormOverrideMixIn):
                     if country_name not in computed_fields:
                         self.computed_fields[country_name] = country_field
                     computed_field_names.extend(computed_fields.keys())
+                computed_field_names.extend(kwargs.get('computed_fields', []))
                 kwargs['computed_fields'] = computed_field_names
+            elif computed_field_names:
+                self.remove_field_names = computed_field_names
             print("-------------------------------------------------------------")
         # else: Either this form does not have an address, or they don't what the switch functionality.
-        print(display_ver)
         super().__init__(*args, **kwargs)
         print("------------- FINISH OptionalCountryMixIn(FormOverrideMixIn).__init__ FINISH ------------------")
 
@@ -690,12 +733,12 @@ class OptionalCountryMixIn(FormOverrideMixIn):
         alt_country = False
         if self.other_country_switch:
             alt_country = self.data.get('other_country', False)
-            if not alt_country:  # TODO: COMPUTED Remove the country field since it is not needed.
-                self.fields.pop(self.country_field_name, None)  # May not be present if handled by ComputedFieldsMixIn
+            # if not alt_country:  # TODO: COMPUTED Remove the country field since it is not needed.
+            #     self.fields.pop(self.country_field_name, None)  # May not be present if handled by ComputedFieldsMixIn
         return bool(alt_country)
 
     def prep_country_fields(self, opts, field_rows, remaining_fields, *args, **kwargs):
-        """ Used in make_fieldsets for a row that has the country field (if present) and the country switch. """
+        """Used either in prep_fields or make_fieldsets for row containing country switch and field (if present). """
         print("==================== OptionalCountryMixIn.prep_country_fields ==========================")
         if not self.other_country_switch:
             return (opts, field_rows, remaining_fields, *args, kwargs)
