@@ -17,7 +17,10 @@ class CustomRegistrationForm(AddressOptionalUsernameMixIn, RegistrationForm):
 
     class Meta(RegistrationForm.Meta):
         model = UserHC
-        # fields = ('first_name', 'last_name', model.get_email_field_name(), USERNAME_FLAG_FIELD, model.USERNAME_FIELD,)
+        USERNAME_FLAG_FIELD = 'username_not_email'
+        # email_name = model.get_email_field_name()
+        # user_name = model.USERNAME_FIELD
+        fields = ('first_name', 'last_name', model.get_email_field_name(), model.USERNAME_FIELD, USERNAME_FLAG_FIELD, )
         # computed_fields = (model.USERNAME_FIELD, USERNAME_FLAG_FIELD, )
         help_texts = {
             model.USERNAME_FIELD: _("Without a unique email, a username is needed. Use suggested or create one. "),

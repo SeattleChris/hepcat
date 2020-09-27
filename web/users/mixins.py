@@ -310,6 +310,7 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
     username_field = UsernameField()
     username_flag = forms.BooleanField(required=False)
     USERNAME_FLAG_FIELD = 'username_not_email'
+    constructor_fields = ('first_name', 'last_name', )
     strict_username = True  # case_insensitive
     strict_email = False  # unique_email and case_insensitive
     help_texts = {
@@ -327,11 +328,22 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
             if self.name_for_user in kwargs.get('data', {}):
                 kwargs['named_focus'] = self.name_for_email  # TODO: change to a callable to get eventual value?
         super().__init__(*args, **kwargs)
+        self.confirm_required_fields()
         print("--------------------- FINISH OptionalUserNameMixIn(ComputedFieldsMixIn).__init__ --------------------")
+
+    def confirm_required_fields(self):
+        """The form must have the email field and any fields that may be used to construct the username. """
+        required_fields = [*self.constructor_fields, self.name_for_email, self.name_for_user]
+        if self.USERNAME_FLAG_FIELD:
+            required_fields.append(self.USERNAME_FLAG_FIELD)
+        missing_fields = [name for name in required_fields if name not in self.base_fields]
+        if missing_fields or not self.constructor_fields:
+            raise ImproperlyConfigured(_("The fields for email, username, and constructor must be set in fields. "))
+        return True
 
     def username_from_email_or_names(self, username_field_name=None, email_field_name=None):
         """ Initial username field value. Must be evaluated after dependent fields populate cleaned_data. """
-        name_fields = ('first_name', 'last_name', )
+        name_fields = self.constructor_fields
         email_field_name = email_field_name or self.name_for_email
         username_field_name = username_field_name or self.name_for_user
         normalize = self.user_model.normalize_username
