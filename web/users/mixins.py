@@ -309,10 +309,10 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
 
     username_field = UsernameField()
     username_flag = forms.BooleanField(required=False)
-    USERNAME_FLAG_FIELD = 'username_not_email'
     constructor_fields = ('first_name', 'last_name', )
     strict_username = True  # case_insensitive
     strict_email = False  # unique_email and case_insensitive
+    # USERNAME_FLAG_FIELD = 'username_not_email'  # Should be set in parent model Meta
     help_texts = {
         'username': _("Without a unique email, a username is needed. Use suggested or create one."),
         'email': _("Used for confirmation and typically for login"),
