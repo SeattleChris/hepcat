@@ -275,7 +275,7 @@ class ComputedFieldsMixIn:
         compute_errors = ErrorDict()
         # print("=================== CustomRegistrationForm._clean_computed_fields ============================")
         for name, field in self.computed_fields.items():
-            if hasattr(self, 'compute_%s' % name):
+            if hasattr(self, 'compute_%s' % name):  # calls methods like compute_username
                 field = getattr(self, 'compute_%s' % name)()
             self.computed_fields[name] = field  # self.fields[name] = field
             value = self.get_initial_for_field(field, name)  # TODO: ? or check if it has a value set?
@@ -793,7 +793,17 @@ class FormFieldSetMixIn:
         (_('username'), {
             'classes': ('noline', ),
             'position': None,
-            'fields': ['username'],
+            'fields': [
+                ('email', 'username_not_email', ),
+                'username',
+                ],
+        }),
+        (None, {
+            'position': None,
+            'modifiers': ['password_display', ],
+            'fields': [
+                ('password1', 'password2', ),
+            ]
         }),
         (_('address'), {
             'classes': ('collapse', 'address', ),
@@ -858,6 +868,7 @@ class FormFieldSetMixIn:
             fieldset_label, opts = fieldset
             if 'fields' not in opts or 'position' not in opts:
                 raise ImproperlyConfigured(_("There must be 'fields' and 'position' in each fieldset. "))
+            # TODO: Handle opts['classes'] for this fieldset.
             field_rows = []
             for ea in opts['fields']:
                 row = [ea] if isinstance(ea, str) else ea
