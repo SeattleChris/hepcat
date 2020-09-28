@@ -244,14 +244,14 @@ class RegisterForm(AddressOptionalUsernameMixIn, forms.ModelForm):
                     email=input_email,
                     username_not_email=username_not_email,
                     is_student=True,
-                    possible_users=possible_friends
+                    possible_users=possible_friends,
                     )
                 # if that user needed to be created, a decorator will create the profile
             else:
                 print('friend found without using find_or_create_by_name')
             user = friend
         print(f'user as used for student profile {user}')
-        cleaned_data['student'] = Student.objects.get(user=user)
+        cleaned_data['student'] = Student.objects.get(user=user)  # TODO: ? instead use user.student
         print(f"student profile: {cleaned_data['student']}")
         print(f"class selected: {cleaned_data['class_selected']}")
         return cleaned_data
@@ -273,16 +273,22 @@ class RegisterForm(AddressOptionalUsernameMixIn, forms.ModelForm):
             print(f"Email was sent for register of {student} paid by {paid_by}")
         else:
             print(f"Email ERROR for registering {student}")
+        billing_info = {
+            'billing_address_1': self.cleaned_data['billing_address_1'],
+            'billing_address_2': self.cleaned_data['billing_address_2'],
+            'billing_city': self.cleaned_data['billing_city'],
+            'billing_country_area': self.cleaned_data['billing_country_area'],
+            'billing_postcode': self.cleaned_data['billing_postcode'],
+            # TODO: Need billing_country_code ?
+            }
+        # Save billing_info to user
+
         # Create payment for all, then a Registration for each class they selected.
         payment = Payment.objects.classRegister(
             register=class_selected,
             student=student,
             paid_by=paid_by,
-            billing_address_1=self.cleaned_data['billing_address_1'],
-            billing_address_2=self.cleaned_data['billing_address_2'],
-            billing_city=self.cleaned_data['billing_city'],
-            billing_country_area=self.cleaned_data['billing_country_area'],
-            billing_postcode=self.cleaned_data['billing_postcode'],
+            **billing_info
             )
         # We can not use objects.bulk_create due to Many-to-Many relationships
         for each in class_selected:
