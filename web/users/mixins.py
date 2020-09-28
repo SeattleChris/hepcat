@@ -307,8 +307,8 @@ class ComputedFieldsMixIn:
 class OptionalUserNameMixIn(ComputedFieldsMixIn):
     """If possible, creates a username according to rules (defaults to email then to name), otherwise set manually. """
 
-    username_field = UsernameField(label=_("Username if not using email as username. "))
-    username_flag = forms.BooleanField(required=False)
+    username_field = UsernameField(label=_("Username for login"))
+    username_flag = forms.BooleanField(label=_("Login with non-email username"), required=False)
     constructor_fields = ('first_name', 'last_name', )
     strict_username = True  # case_insensitive
     strict_email = False  # unique_email and case_insensitive
@@ -770,6 +770,7 @@ class FormFieldSetMixIn:
         It will take advantage of handle_modifiers if FormOverrideMixIn is present, otherwise modifiers are ignored.
     """
 
+    untitled_fieldset_class = 'noline'
     max_label_width = 12
     adjust_label_width = True
     label_width_widgets = (Input, Textarea, )  # Base classes for the field.widgets we want.
@@ -782,10 +783,10 @@ class FormFieldSetMixIn:
             'fields': [('first_name', 'last_name', )],
         }),
         (_('username'), {
-            'classes': ('noline', ),
+            'classes': (untitled_fieldset_class, ),
             'position': None,
             'fields': [
-                ('email', 'username_not_email', ),
+                ('email', '_USERNAME_FLAG_FIELD', ),
                 'username',
                 ],
         }),
