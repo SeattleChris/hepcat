@@ -958,17 +958,17 @@ class FormFieldSetMixIn:
         for fieldset_label, opts in fieldsets:
             row_data = opts['row_data']
             if all_fieldsets or fieldset_label is not None:
-                container_attr = f' class="fieldset_{as_type}""'
+                # TODO: Handle opts['classes'] for this fieldset.
+                fieldset_classes = opts.get('classes', [])
+                if not fieldset_label:
+                    fieldset_classes = list(fieldset_classes).append(self.untitled_fieldset_class)
+                fieldset_attr = ' class="%s"' % ' '.join(fieldset_classes) if fieldset_classes else ''
                 container = None if as_type in ('p', 'fieldset') else as_type
                 data = '\n'.join(row_data)
                 if container:
+                    container_attr = f' class="fieldset_{as_type}"'
                     data = self._html_tag(container, data, container_attr) + '\n'
-                if fieldset_label:
-                    legend = self._html_tag('legend', fieldset_label) + '\n'
-                    fieldset_attr = ''
-                else:
-                    legend = ''
-                    fieldset_attr = ' class="noline"'
+                legend = self._html_tag('legend', fieldset_label) + '\n' if fieldset_label else ''
                 fieldset_el = self._html_tag('fieldset', legend + data, fieldset_attr)
                 if container:
                     col_attr = ''
