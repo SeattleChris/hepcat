@@ -320,6 +320,9 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
 
     def __init__(self, *args, **kwargs):
         print("======================= OptionalUserNameMixIn(ComputedFieldsMixIn).__init__ ==========================")
+        computed_field_names = kwargs.get('computed_fields', [])
+        computed_field_names.append(self.USERNAME_FLAG_FIELD)
+        kwargs['computed_fields'] = computed_field_names
         strict_email = kwargs.pop('strict_email', getattr(self, 'strict_email', None))
         strict_username = kwargs.pop('strict_username', getattr(self, 'strict_username', None))
         validator_kwargs ={'email': {'strict': strict_email}, 'username': {'strict': strict_username}}
