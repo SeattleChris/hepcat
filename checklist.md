@@ -394,7 +394,7 @@ Current Status:
   - [x] Provide a checkbox to indicate they need a non-US address format.
   - [x] If non-US indicated, redisplay form with Country field & non-US labels for fields.
 - [x] MixIn allowing for computed fields: user only gets the input field if initial form failed certain conditions.
-- [x] MixIn allowing defining multiple fields on a single row (like admin allows via FieldSets).
+- [x] MixIn allowing defining multiple fields on a single row (like admin allows via fieldsets).
 - [x] MixIn to facilitate overriding form field attributes and field settings.
 - [x] MixIn to apply autofocus to desired form control and/or first empty one.
 - [x] Design towards extra HTML containers are minimized.
@@ -411,16 +411,16 @@ Current Status:
   - [x] Applies width and height for text area.
   - [x] Does not apply width to form elements that have no attribute for size.
 - [ ] Confirm extra HTML containers are minimized.
-- [x] Allow FieldSets as a form element.
+- [x] Allow Fieldsets as a form element.
 - [x] Have an as_fieldset format.
 - [x] MixIn features are designed for independent and cross-MixIn usage.
 - [x] Adding of fields by any MixIn should be done before calling super().__init__.
-  - [x] FocusMixMin: does not add or remove fields.
+  - [x] FocusMixIn: does not add or remove fields.
   - [x] ComputedFieldsMixIn: designed accordingly & handles all fields to computed_fields.
-  - [x] OptionalUserNameMixIn: is based on ComputedFieldsMixIn, so likely designed accordingly.
+  - [x] ComputedUsernameMixIn: is based on ComputedFieldsMixIn, so likely designed accordingly.
   - [x] FormOverrideMixIn: designed differently
-  - [x] OptionalCountryMixIn: based on FormOverrideMixIn ...
-  - [x] FormFieldSetMixIn: independent of Computed ...
+  - [x] OverrideCountryMixIn: based on FormOverrideMixIn ...
+  - [x] FormFieldsetMixIn: independent of Computed ...
 - [x] Moving computed_fields into fields should be done by all MixIns before needed.
 - [ ] After validation trigger, moving computed_fields to fields done by WHEN?
 - [x] All MixIn features work for as_table, as_ul, as_p, and as_fieldset.

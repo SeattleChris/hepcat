@@ -16,7 +16,7 @@ from django_registration import validators
 from pprint import pprint
 
 
-class FocusMixMin:
+class FocusMixIn:
     """ Autofocus given to a field not hidden or disabled. Can limit to a fields subset, and prioritize a named one. """
 
     def __init__(self, *args, **kwargs):
@@ -297,7 +297,7 @@ class ComputedFieldsMixIn:
         return cleaned_data
 
 
-class OptionalUserNameMixIn(ComputedFieldsMixIn):
+class ComputedUsernameMixIn(ComputedFieldsMixIn):
     """If possible, creates a username according to rules (defaults to email then to name), otherwise set manually. """
 
     username_field = UsernameField(label=_("Username for login"))
@@ -312,7 +312,7 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
     }
 
     def __init__(self, *args, **kwargs):
-        print("======================= OptionalUserNameMixIn(ComputedFieldsMixIn).__init__ ==========================")
+        print("======================= ComputedUsernameMixIn(ComputedFieldsMixIn).__init__ ==========================")
         computed_field_names = kwargs.get('computed_fields', [])
         computed_field_names.append(self.USERNAME_FLAG_FIELD)
         kwargs['computed_fields'] = computed_field_names
@@ -325,7 +325,7 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
             if self.name_for_user in self.data:  # TODO: Confirm this works as expected.
                 kwargs['named_focus'] = self.name_for_email
         self.confirm_required_fields()
-        print("--------------------- FINISH OptionalUserNameMixIn(ComputedFieldsMixIn).__init__ --------------------")
+        print("--------------------- FINISH ComputedUsernameMixIn(ComputedFieldsMixIn).__init__ --------------------")
 
     def confirm_required_fields(self):
         """The form must have the email field and any fields that may be used to construct the username. """
@@ -651,7 +651,7 @@ class FormOverrideMixIn:
         return fields
 
 
-class OptionalCountryMixIn(FormOverrideMixIn):
+class OverrideCountryMixIn(FormOverrideMixIn):
 
     country_display = forms.CharField(widget=forms.HiddenInput(), initial='local', )
     country_flag = forms.BooleanField(
@@ -677,7 +677,7 @@ class OptionalCountryMixIn(FormOverrideMixIn):
         }
 
     def __init__(self, *args, **kwargs):
-        print("================= OptionalCountryMixIn(FormOverrideMixIn).__init__ ============================")
+        print("================= OverrideCountryMixIn(FormOverrideMixIn).__init__ ============================")
         country_name = self.country_field_name
         country_field = self.base_fields.get(country_name, None)
         default = settings.DEFAULT_COUNTRY
@@ -702,7 +702,7 @@ class OptionalCountryMixIn(FormOverrideMixIn):
                 log = f"Displayed {display}, country value {val}, with default {default}. "
                 log += "Checked foreign country. " if country_flag else "Not choosing foreign. "
                 print(log)
-            has_computed = issubclass(self.__class__, ComputedFieldsMixIn)
+            has_computed = issubclass(self.OverrideCountryMixIn, ComputedFieldsMixIn)
             for name in critical_names:
                 field = self.make_computed_field(name) if has_computed else getattr(self, name, None)
                 if field:
@@ -715,7 +715,7 @@ class OptionalCountryMixIn(FormOverrideMixIn):
             print("-------------------------------------------------------------")
         # else: Either this form does not have an address, or they don't what the switch functionality.
         super().__init__(*args, **kwargs)
-        print("------------- FINISH OptionalCountryMixIn(FormOverrideMixIn).__init__ FINISH ------------------")
+        print("------------- FINISH OverrideCountryMixIn(FormOverrideMixIn).__init__ FINISH ------------------")
 
     def condition_alt_country(self):
         """ Returns a boolean if the alt_field_info['alt_country'] field info should be applied. """
@@ -728,7 +728,7 @@ class OptionalCountryMixIn(FormOverrideMixIn):
 
     def prep_country_fields(self, opts, field_rows, remaining_fields, *args, **kwargs):
         """Used either in prep_fields or make_fieldsets for row containing country switch and field (if present). """
-        print("==================== OptionalCountryMixIn.prep_country_fields ==========================")
+        print("==================== OverrideCountryMixIn.prep_country_fields ==========================")
         if not self.country_optional:
             return (opts, field_rows, remaining_fields, *args, kwargs)
         field_rows = field_rows or []
@@ -759,7 +759,7 @@ class OptionalCountryMixIn(FormOverrideMixIn):
         return country_flag
 
 
-class FormFieldSetMixIn:
+class FormFieldsetMixIn:
     """ Forms can be defined with multiple fields within the same row. Allows fieldsets in all as_<type> methods.
         It will take advantage of handle_modifiers if FormOverrideMixIn is present, otherwise modifiers are ignored.
     """
@@ -803,9 +803,9 @@ class FormFieldSetMixIn:
         }), )
 
     def __init__(self, *args, **kwargs):
-        print("======================= FormFieldSetMixIn.__init__ =================================")
+        print("======================= FormFieldsetMixIn.__init__ =================================")
         super().__init__(*args, **kwargs)
-        print("--------------------- FINISH FormFieldSetMixIn.__init__ --------------------")
+        print("--------------------- FINISH FormFieldsetMixIn.__init__ --------------------")
 
     def prep_remaining(self, opts, field_rows, remaining_fields, *args, **kwargs):
         """ This can be updated for any additional processing of fields not in any other fieldsets. """
@@ -841,7 +841,7 @@ class FormFieldSetMixIn:
 
     def make_fieldsets(self, *fs_args, **kwargs):
         """ Updates the dictionaries of each fieldset with 'rows' of field dicts, and a flattend 'field_names' list. """
-        print("======================= FormFieldSetMixIn.make_fieldsets =================================")
+        print("======================= FormFieldsetMixIn.make_fieldsets =================================")
         remaining_fields = self.fields.copy()
         fieldsets = list(getattr(self, 'fieldsets', ((None, {'fields': [], 'position': None}), )))
         assigned_field_names = flatten([flatten(opts['fields']) for fieldset_label, opts in fieldsets])
@@ -1158,25 +1158,25 @@ class FormFieldSetMixIn:
         )
 
 
-class FieldSetOverrideMixIn(FocusMixMin, FormFieldSetMixIn, FormOverrideMixIn):
-    """ Using fieldsets, overrides, and focus. Similar to AddressMixIn without extensions from OptionalCountryMixIn. """
+class FieldsetOverrideMixIn(FocusMixIn, FormFieldsetMixIn, FormOverrideMixIn):
+    """ Using fieldsets, overrides, and focus. Similar to AddressMixIn but basic overrides not OverrideCountryMixIn. """
 
 
-class FieldSetOverrideComputedMixIn(FocusMixMin, FormFieldSetMixIn, ComputedFieldsMixIn, FormOverrideMixIn):
+class FieldsetOverrideComputedMixIn(FocusMixIn, FormFieldsetMixIn, ComputedFieldsMixIn, FormOverrideMixIn):
     """ Using fieldsets, overrides, computed, and focus. Using all base versions, none of the optional extensions. """
 
 
-class FieldSetOverrideOptionalUsernameMixIn(FocusMixMin, FormFieldSetMixIn, OptionalUserNameMixIn, FormOverrideMixIn):
+class FieldsetOverrideUsernameMixIn(FocusMixIn, FormFieldsetMixIn, ComputedUsernameMixIn, FormOverrideMixIn):
     """ Using fieldsets, overrides (not country), computed with optional username, and focus. """
 
 
-class FieldSetOptionalCountryComputedMixIn(FocusMixMin, FormFieldSetMixIn, ComputedFieldsMixIn, OptionalCountryMixIn):
+class FieldsetOverrideCountryComputedMixIn(FocusMixIn, FormFieldsetMixIn, ComputedFieldsMixIn, OverrideCountryMixIn):
     """ Using fieldsets, overrides with optional country, computed (not username), and focus. """
 
 
-class AddressOptionalUsernameMixIn(FocusMixMin, FormFieldSetMixIn, OptionalCountryMixIn, OptionalUserNameMixIn):
+class AddressUsernameMixIn(FocusMixIn, FormFieldsetMixIn, OverrideCountryMixIn, ComputedUsernameMixIn):
     """ Using fieldsets, overrides with optional country, computed with optional username, and focus. """
 
 
-class AddressMixIn(FocusMixMin, FormFieldSetMixIn, OptionalCountryMixIn):  # FormFieldSetMixIn,
+class AddressMixIn(FocusMixIn, FormFieldsetMixIn, OverrideCountryMixIn):
     """ Using fieldsets, overrides with optional country, and focus. No computed features. """

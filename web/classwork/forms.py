@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError  # NON_FIELD_ERRORS,
 from django.contrib.auth import get_user_model
 from django.forms.fields import FileField  # Field,
 from .models import Student, Payment, Registration, Notify  # , Staff, Session, ClassOffer
-from users.mixins import FocusMixMin, AddressOptionalUsernameMixIn  # AddressMixIn,
+from users.mixins import FocusMixIn, AddressUsernameMixIn  # AddressMixIn,
 from django.utils.translation import gettext_lazy as _
 # from django.urls import reverse_lazy
 # from django.shortcuts import render
@@ -11,7 +11,7 @@ from django.utils.translation import gettext_lazy as _
 User = get_user_model()
 
 
-class RegisterForm(AddressOptionalUsernameMixIn, forms.ModelForm):
+class RegisterForm(AddressUsernameMixIn, forms.ModelForm):
     """ This is where existing and even new users/students can sign up for a ClassOffer """
     # TODO: Lookup formsets. See if we can make a form combining fields from User and from Payment models.
 
@@ -293,7 +293,7 @@ class RegisterForm(AddressOptionalUsernameMixIn, forms.ModelForm):
         return payment
 
 
-class PaymentForm(FocusMixMin, forms.ModelForm):
+class PaymentForm(FocusMixIn, forms.ModelForm):
     """ This is where a user inputs their payment data and it is processed. """
 
     class Meta:

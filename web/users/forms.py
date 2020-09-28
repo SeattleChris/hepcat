@@ -4,10 +4,10 @@ from django.utils.translation import gettext as _
 from django_registration.forms import RegistrationForm
 from django_registration import validators
 from .models import UserHC
-from .mixins import AddressMixIn, AddressOptionalUsernameMixIn
+from .mixins import AddressMixIn, AddressUsernameMixIn
 
 
-class CustomRegistrationForm(AddressOptionalUsernameMixIn, RegistrationForm):
+class CustomRegistrationForm(AddressUsernameMixIn, RegistrationForm):
 
     tos = forms.BooleanField(
         widget=forms.CheckboxInput,
