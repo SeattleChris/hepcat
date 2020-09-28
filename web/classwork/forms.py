@@ -281,10 +281,9 @@ class RegisterForm(AddressOptionalUsernameMixIn, forms.ModelForm):
             'billing_city': self.cleaned_data['billing_city'],
             'billing_country_area': self.cleaned_data['billing_country_area'],
             'billing_postcode': self.cleaned_data['billing_postcode'],
-            # TODO: Need billing_country_code ?
             }
-        # Save billing_info to user
-
+        if 'billing_country_code' in self.cleaned_data:
+            billing_info['billing_country_code'] = self.cleaned_data['billing_country_code']
         # Create payment for all, then a Registration for each class they selected.
         payment = Payment.objects.classRegister(
             register=class_selected,
