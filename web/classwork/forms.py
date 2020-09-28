@@ -24,7 +24,8 @@ class RegisterForm(AddressOptionalUsernameMixIn, forms.ModelForm):
     new_user = forms.ChoiceField(label=_('Have you had classes with us before?'), choices=(user_answers))
     first_name = forms.CharField(label=_('First Name'), max_length=User._meta.get_field('first_name').max_length)
     last_name = forms.CharField(label=_('Last Name'), max_length=User._meta.get_field('last_name').max_length)
-    email = forms.CharField(max_length=User._meta.get_field('email').max_length, widget=forms.EmailInput())
+    email = forms.CharField(label=_('Email'), max_length=User._meta.get_field('email').max_length,
+                            widget=forms.EmailInput())
     # TODO: Change to CheckboxSelectMultiple and make sure it works
     class_selected = forms.ModelMultipleChoiceField(label=_('Choose your class(es)'), queryset=None)
     paid_by_other = forms.BooleanField(label=_('paid by a different person'), required=False)

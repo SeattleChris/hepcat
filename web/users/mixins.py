@@ -307,7 +307,7 @@ class ComputedFieldsMixIn:
 class OptionalUserNameMixIn(ComputedFieldsMixIn):
     """If possible, creates a username according to rules (defaults to email then to name), otherwise set manually. """
 
-    username_field = UsernameField()
+    username_field = UsernameField(label=_("Username if not using email as username. "))
     username_flag = forms.BooleanField(required=False)
     constructor_fields = ('first_name', 'last_name', )
     strict_username = True  # case_insensitive
