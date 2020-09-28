@@ -13,7 +13,6 @@ from django.utils.safestring import mark_safe
 from django.urls import reverse
 from django_registration import validators
 # from . import validators
-from copy import deepcopy
 from pprint import pprint
 
 
@@ -61,10 +60,6 @@ class FocusMixMin:
         print("--------------------- computed fields ----------------------------")
         pprint(self.computed_fields)
         print("------------------------------------------------------------------")
-        check = 'billing_country_code'
-        if check in self.fields:
-            print(data.get(check, 'NOT FOUND'))
-            pprint(dir(self.fields[check]))
         return mark_safe(display_data)
 
     def test_field_order(self, data):
@@ -402,7 +397,7 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
         self.add_error(name_for_email, mark_safe(_(text)))
         e_note = "Typically people have their own unique email address, which you can update. "
         e_note += "If you share an email with another user, then you will need to create a username for your login. "
-        self.add_error(name_for_email, (_(e_note)))
+        self.add_error(name_for_user, (_(e_note)))
         title = "Login with existing account, change to a non-shared email, or create a username. "
         message = "Did you already make an account, or have one because you've had classes with us before? "
         message = format_html(
@@ -738,19 +733,14 @@ class OptionalCountryMixIn(FormOverrideMixIn):
         if not self.other_country_switch:
             return (opts, field_rows, remaining_fields, *args, kwargs)
         field_rows = field_rows or []
-        field_name = self.country_field_name
-        field = remaining_fields.pop(field_name, None)
-        result = {field_name: field} if field else {}
-        other_country_field = remaining_fields.pop('other_country', None)
-        if other_country_field:
-            result.update({'other_country': other_country_field})
-        attempted_field_names = ('other_country', self.country_field_name, )
+        field_names = ('other_country', self.country_field_name, )
+        result = {name: remaining_fields.pop(name) for name in field_names if name in remaining_fields}
         if result:
             field_rows.append(result)  # the extracted/created fields can be used in a fieldset
         if kwargs.get('flat_fields', None) is True:
             remaining_fields.update(result)  # No fieldsets feature, fields placed in with all fields.
         else:
-            opts['fields'].append(attempted_field_names)
+            opts['fields'].append(field_names)
         return (opts, field_rows, remaining_fields, *args, kwargs)
 
     def clean_other_country(self):
@@ -781,11 +771,11 @@ class FormFieldSetMixIn:
             'position': 1,
             'fields': [('first_name', 'last_name', )],
         }),
-        (_('username'), {
-            'classes': (untitled_fieldset_class, ),
-            'position': None,
+        (None, {
+            'position': 2,
             'fields': [
-                ('email', '_USERNAME_FLAG_FIELD', ),
+                'email',
+                '_USERNAME_FLAG_FIELD',
                 'username',
                 ],
         }),
