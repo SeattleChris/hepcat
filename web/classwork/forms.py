@@ -163,60 +163,63 @@ class RegisterForm(AddressOptionalUsernameMixIn, forms.ModelForm):
             if username_expected and username:
                 data_new_user.update(username=username, username_not_email=True,)
                 user = self.create_form_user(data_new_user)
-
-        if user.is_anonymous:
-            if new_user:  # They say they are new, but check to avoid collisions
-                # Look by email
-                same_email = User.objects.filter(email__iexact=input_email)
-                if same_email.count():
-                    # print('That email is already assigned to a user')
-                    found = same_email.filter(first_name__iexact=first_name, last_name__iexact=last_name).count()
-                    if found:
-                        message = 'We found a user account with your name and email. '
-                        # print(message)
-                        message += 'Try the login link, or resubmit the form and select you are a returning student'
-                        raise forms.ValidationError(_(message))
-                        # If user was found, then we should have them login
-                        # TODO: send user to login credentials, keep track of data they have given
-                    # TODO: Create a system to deal with matches
-                    # TODO: Either pass above queries to that function, or use .count() above.
-                else:
-                    print('No other user has that email')
-                # Look by name
-                same_name = User.objects.filter(first_name=first_name, last_name=last_name)
-                if same_name.count():
-                    print('We found user(s) with that same name')
-                    message = "Are you sure you have not had classes with us? "
-                    message += "We have someone with that name already in our records. "
-                    message += "If this is you, either login or select you are a returning student. "
-                    message += "If this is not you, please resubmit with either a variation of your name or include an "
-                    # TODO: Create a system to deal with matching names, but are unique people
-                    message += "extra symbol (such as '.' or '+') at the end of your name to confirm your input"
+        if user.is_anonymous and new_user:  # They say they are new, but check to avoid collisions
+            # Look by email
+            same_email = User.objects.filter(email__iexact=input_email)
+            if same_email.count():
+                # print('That email is already assigned to a user')
+                found = same_email.filter(first_name__iexact=first_name, last_name__iexact=last_name).count()
+                if found:
+                    message = 'We found a user account with your name and email. '
+                    # print(message)
+                    message += 'Try the login link, or resubmit the form and select you are a returning student'
                     raise forms.ValidationError(_(message))
-                else:
-                    print('No user with that name yet')
-                # We can create this user
-                user = self.create_form_user(data_new_user)
-            else:  # if user.is_anonymous:  # new_user is False; User says they have an account, we should use that account.
-                print('User says they are returning. They should login!')
-                query_user = User.objects.filter(
-                    email__iexact=input_email,
-                    first_name__iexact=first_name,
-                    last_name__iexact=last_name,
-                    )
-                user_count = query_user.count()
-                if user_count > 1:
-                    print('MULTIPLE users with that email & name. We are using the first one.')
-                # TODO: Create Logic when more than one user has the same email, for now using first match.
-                user = query_user.first() if user_count > 0 else None  # TODO: refactor to use get_one_or_none ?
-                # TODO: Above allows anyone to add the user to the class. Perhaps we should force a login.
-                if not user:
-                    message = "We did not find your user account with your name and email address. "
-                    message += "Try the login link. "
-                    message += "If that does not work, select that you are a new student and we can fix it later. "
-                    raise forms.ValidationError(_(message))
+                    # If user was found, then we should have them login
+                    # TODO: send user to login credentials, keep track of data they have given
+                # TODO: Create a system to deal with matches
+                # TODO: Either pass above queries to that function, or use .count() above.
+            else:
+                print('No other user has that email')
+            # Look by name
+            same_name = User.objects.filter(first_name=first_name, last_name=last_name)
+            if same_name.count():
+                print('We found user(s) with that same name')
+                message = "Are you sure you have not had classes with us? "
+                message += "We have someone with that name already in our records. "
+                message += "If this is you, either login or select you are a returning student. "
+                message += "If this is not you, please resubmit with either a variation of your name or include an "
+                # TODO: Create a system to deal with matching names, but are unique people
+                message += "extra symbol (such as '.' or '+') at the end of your name to confirm your input"
+                raise forms.ValidationError(_(message))
+            else:
+                print('No user with that name yet')
+            # We can create this user
+            user = self.create_form_user(data_new_user)
+        elif user.is_anonymous:  # new_user is False; User says they have an account, we should use that account.
+            print('User says they are returning. They should login!')
+            query_user = User.objects.filter(
+                email__iexact=input_email,
+                first_name__iexact=first_name,
+                last_name__iexact=last_name,
+                )
+            user_count = query_user.count()
+            if user_count > 1:
+                print('MULTIPLE users with that email & name. We are using the first one.')
+            # TODO: Create Logic when more than one user has the same email, for now using first match.
+            user = query_user.first() if user_count > 0 else None  # TODO: refactor to use get_one_or_none ?
+            # TODO: Anyone is allowed to add a user to classoffers (but no address update). Should login be required?
+            if not user:
+                message = "We did not find your user account with your name and email address. "
+                message += "Try the login link. "
+                message += "If that does not work, select that you are a new student and we can fix it later. "
+                raise forms.ValidationError(_(message))
             # user = User.objects.find_or_create_for_anon(email=input_email, first_name=first_name, last_name=last_name)
             # TODO: What if a non-user is paying for a friend (established or new user)
+        else:  # Existing users can update their billing address if they are logged in.
+            for key, value in billing_info.items():
+                if value:
+                    setattr(user, key, value)
+            user.save()
         print(f'user before paid_by_other check {user}')
         if cleaned_data.get('paid_by_other'):
             # We need to now get the billing info for user who is paying
