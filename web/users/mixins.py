@@ -654,11 +654,11 @@ class FormOverrideMixIn:
 class OptionalCountryMixIn(FormOverrideMixIn):
 
     country_display = forms.CharField(widget=forms.HiddenInput(), initial='local', )
-    other_country = forms.BooleanField(
+    country_flag = forms.BooleanField(
         label=_("Not a {} address. ".format(settings.DEFAULT_COUNTRY)),
         required=False, )
     country_field_name = 'billing_country_code'
-    other_country_switch = True
+    country_optional = True
     prep_modifiers = ['prep_country_fields']
     alt_field_info = {
         'alt_country': {
@@ -682,25 +682,25 @@ class OptionalCountryMixIn(FormOverrideMixIn):
         country_field = self.base_fields.get(country_name, None)
         default = settings.DEFAULT_COUNTRY
         display_ver = 'local'
-        if self.other_country_switch and country_field:
-            critical_names = [nf for nf in ('country_display', 'other_country') if nf not in self.base_fields]
+        if self.country_optional and country_field:
+            critical_names = [nf for nf in ('country_display', 'country_flag') if nf not in self.base_fields]
             computed_field_names = [country_name]
             data = kwargs.get('data', {})
             if data:  # The form has been submitted.
                 display = data.get('country_display', 'DISPLAY NOT FOUND')
-                other_country = data.get('other_country', None)
+                country_flag = data.get('country_flag', None)
                 val = data.get(country_name, None)
-                if display == 'local' and other_country:  # self.country_display.initial
+                if display == 'local' and country_flag:  # self.country_display.initial
                     display_ver = 'foreign'
                     computed_field_names = []
-                    data = data.copy()
+                    data = data.copy()  # TODO: Perhaps we only need to change the field value, not data value.
                     data['country_display'] = display_ver
                     if val == default:
                         data[country_name] = ''
                     data._mutable = False
                     kwargs['data'] = data
                 log = f"Displayed {display}, country value {val}, with default {default}. "
-                log += "Checked foreign country. " if other_country else "Not choosing foreign. "
+                log += "Checked foreign country. " if country_flag else "Not choosing foreign. "
                 print(log)
             has_computed = issubclass(self.__class__, ComputedFieldsMixIn)
             for name in critical_names:
@@ -720,8 +720,8 @@ class OptionalCountryMixIn(FormOverrideMixIn):
     def condition_alt_country(self):
         """ Returns a boolean if the alt_field_info['alt_country'] field info should be applied. """
         alt_country = False
-        if self.other_country_switch:
-            alt_country = self.data.get('other_country', False)
+        if self.country_optional:
+            alt_country = self.data.get('country_flag', False)
             # if not alt_country:  # TODO: COMPUTED Remove the country field since it is not needed.
             #     self.fields.pop(self.country_field_name, None)  # May not be present if handled by ComputedFieldsMixIn
         return bool(alt_country)
@@ -729,10 +729,10 @@ class OptionalCountryMixIn(FormOverrideMixIn):
     def prep_country_fields(self, opts, field_rows, remaining_fields, *args, **kwargs):
         """Used either in prep_fields or make_fieldsets for row containing country switch and field (if present). """
         print("==================== OptionalCountryMixIn.prep_country_fields ==========================")
-        if not self.other_country_switch:
+        if not self.country_optional:
             return (opts, field_rows, remaining_fields, *args, kwargs)
         field_rows = field_rows or []
-        field_names = ('other_country', self.country_field_name, )
+        field_names = ('country_flag', self.country_field_name, )
         result = {name: remaining_fields.pop(name) for name in field_names if name in remaining_fields}
         if result:
             field_rows.append(result)  # the extracted/created fields can be used in a fieldset
@@ -742,15 +742,21 @@ class OptionalCountryMixIn(FormOverrideMixIn):
             opts['fields'].append(field_names)
         return (opts, field_rows, remaining_fields, *args, kwargs)
 
-    def clean_other_country(self):
+    def clean_country_flag(self):
         print("================== Clean Other Country ================================")
-        other_country = self.cleaned_data.get('other_country', None)
-        if other_country:
+        country_flag = self.cleaned_data.get('country_flag', None)
+        if country_flag:
             # default = settings.DEFAULT_COUNTRY
             field = self.fields.get(self.country_field_name, None) or self.computed_fields.get(self.country_field_name)
+            print("Country Flag, Initial Field value, Cleaned Data value: ")
+            print(country_flag)
+            print(field.initial)
+            value = self.cleaned_data.get(self.country_field_name, None)
+            pprint(value)
+            print("---------------------------------------------------------------")
             if field.initial == self.cleaned_data.get(self.country_field_name, None):
                 raise forms.ValidationError("You can input your address. ")
-        return other_country
+        return country_flag
 
 
 class FormFieldSetMixIn:
