@@ -312,7 +312,7 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
     constructor_fields = ('first_name', 'last_name', )
     strict_username = True  # case_insensitive
     strict_email = False  # unique_email and case_insensitive
-    # USERNAME_FLAG_FIELD = 'username_not_email'  # Should be set in parent model Meta
+    USERNAME_FLAG_FIELD = 'username_flag'  # Expected to be overwritten by parent model Meta
     help_texts = {
         'username': _("Without a unique email, a username is needed. Use suggested or create one."),
         'email': _("Used for confirmation and typically for login"),
@@ -333,9 +333,9 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
 
     def confirm_required_fields(self):
         """The form must have the email field and any fields that may be used to construct the username. """
-        required_fields = [*self.constructor_fields, self.name_for_email, self.name_for_user]
-        if self.USERNAME_FLAG_FIELD:
-            required_fields.append(self.USERNAME_FLAG_FIELD)
+        required_fields = [*self.constructor_fields, self.name_for_email, self.name_for_user, self.USERNAME_FLAG_FIELD]
+        # if hasattr(self, 'USERNAME_FLAG_FIELD'):
+        #     required_fields.append(self.USERNAME_FLAG_FIELD)
         missing_fields = [name for name in required_fields if name not in self.base_fields]
         if missing_fields or not self.constructor_fields:
             raise ImproperlyConfigured(_("The fields for email, username, and constructor must be set in fields. "))
@@ -388,7 +388,7 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
         self.data = data
 
         self.fields[name_for_email] = email_field
-        self.fields[flag_name] = flag_field
+        self.fields[flag_name] = flag_field  # TODO: What if flag_field is None?
         self.fields[name_for_user] = field
         if hasattr(self, 'assign_focus_field'):
             self.assign_focus_field(name=name_for_email)
