@@ -157,8 +157,15 @@ class RegisterForm(AddressOptionalUsernameMixIn, forms.ModelForm):
         data_new_user.update(billing_info)
         # there is no user inside the cleaned_data under any conditions
         user = self.initial['user']  # TODO: Test when user login changes after form load
-        if user.is_anonymous:  # direct to login or create a new user account
-            if new_user:  # They say they are new, but we should check so we don't have collisions
+        if new_user and hasattr(self, 'name_for_user') and hasattr(self, 'USERNAME_FLAG_FIELD'):  # OptionalUserName
+            username_expected = cleaned_data.get(self.USERNAME_FLAG_FIELD, False)
+            username = cleaned_data.get(self.name_for_user)
+            if username_expected and username:
+                data_new_user.update(username=username, username_not_email=True,)
+                user = self.create_form_user(data_new_user)
+
+        if user.is_anonymous:
+            if new_user:  # They say they are new, but check to avoid collisions
                 # Look by email
                 same_email = User.objects.filter(email__iexact=input_email)
                 if same_email.count():
@@ -188,12 +195,9 @@ class RegisterForm(AddressOptionalUsernameMixIn, forms.ModelForm):
                     raise forms.ValidationError(_(message))
                 else:
                     print('No user with that name yet')
-                user = User.objects.create_user(
-                    email=input_email,
-                    first_name=first_name,
-                    last_name=last_name,
-                    )
-            else:  # new_user is False; User says they have an account, we should use that account.
+                # We can create this user
+                user = self.create_form_user(data_new_user)
+            else:  # if user.is_anonymous:  # new_user is False; User says they have an account, we should use that account.
                 print('User says they are returning. They should login!')
                 query_user = User.objects.filter(email__iexact=input_email, first_name=first_name, last_name=last_name)
                 user_count = query_user.count()
