@@ -327,10 +327,10 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
         strict_username = kwargs.pop('strict_username', getattr(self, 'strict_username', None))
         validator_kwargs ={'email': {'strict': strict_email}, 'username': {'strict': strict_username}}
         kwargs['validator_kwargs'] = validator_kwargs
-        if hasattr(self, 'assign_focus_field'):
-            if self.name_for_user in kwargs.get('data', {}):
-                kwargs['named_focus'] = self.name_for_email  # TODO: change to a callable to get eventual value?
         super().__init__(*args, **kwargs)
+        if hasattr(self, 'assign_focus_field'):
+            if self.name_for_user in self.data:  # TODO: Confirm this works as expected.
+                kwargs['named_focus'] = self.name_for_email
         self.confirm_required_fields()
         print("--------------------- FINISH OptionalUserNameMixIn(ComputedFieldsMixIn).__init__ --------------------")
 
