@@ -127,6 +127,14 @@ class RegisterForm(AddressOptionalUsernameMixIn, forms.ModelForm):
         # 3) Form.clean() where we can deal with cross-field validations.
         super().full_clean()
 
+    def create_form_user(self, **kwargs):
+        """New user accounts can be created when submitting this form. """
+        user = User.objects.create_user(
+            **kwargs
+            )
+
+        return user
+
     def clean(self):
         print('======== RegisterForm.clean =========')
         cleaned_data = super().clean()
@@ -135,6 +143,18 @@ class RegisterForm(AddressOptionalUsernameMixIn, forms.ModelForm):
         last_name = cleaned_data.get('last_name')
         new_user = cleaned_data.get('new_user') == 'T'
         print(f'new user: {new_user}')
+        billing_info = {
+            'billing_address_1': cleaned_data['billing_address_1'],
+            'billing_address_2': cleaned_data['billing_address_2'],
+            'billing_city': cleaned_data['billing_city'],
+            'billing_country_area': cleaned_data['billing_country_area'],
+            'billing_postcode': cleaned_data['billing_postcode'],
+            # TODO: Need billing_country_code ?
+            }
+        if 'billing_country_code' in cleaned_data:
+            billing_info['billing_country_code'] = cleaned_data['billing_country_code']
+        data_new_user = {'first_name': first_name, 'last_name': last_name, 'email': input_email}
+        data_new_user.update(billing_info)
         # there is no user inside the cleaned_data under any conditions
         user = self.initial['user']  # TODO: Test when user login changes after form load
         if user.is_anonymous:  # direct to login or create a new user account
