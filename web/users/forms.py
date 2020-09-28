@@ -18,10 +18,8 @@ class CustomRegistrationForm(AddressOptionalUsernameMixIn, RegistrationForm):
 
     class Meta(RegistrationForm.Meta):
         model = UserHC
-        # email_name = model.get_email_field_name()
-        # user_name = model.USERNAME_FIELD
         fields = ('first_name', 'last_name', model.get_email_field_name(), model.USERNAME_FIELD, )
-        # computed_fields = (model.USERNAME_FIELD, USERNAME_FLAG_FIELD, )
+        # computed_fields = []  # The computed fields needed for username and address will be added.
         help_texts = {
             model.USERNAME_FIELD: _("Without a unique email, a username is needed. Use suggested or create one. "),
             model.get_email_field_name(): _("Used for confirmation and typically for login"),
@@ -54,8 +52,3 @@ class CustomUserChangeForm(AddressMixIn, UserChangeForm):
             'billing_city', 'billing_country_area', 'billing_postcode',
             'billing_country_code',
             )
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # TODO: Integrate focus_correct_field method as a MixIn
-        self.fields['billing_address_1'].widget.attrs['autofocus'] = True

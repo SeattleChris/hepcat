@@ -81,11 +81,8 @@ class RegisterForm(AddressOptionalUsernameMixIn, forms.ModelForm):
         email = self.cleaned_data.get('email')
         # if email is None:
         #     raise forms.ValidationError("Email is required")
-        # TODO: We could/should use an external email validator that uses our
-        # desired casefold method. Technically capitols are allowed in emails,
-        # but in practice almost everywhere makes them case-insensitive.
-        # We are deciding to force all emails to lowercase (using casefold).
-        # Which could be an error if a user does in fact require uppercase.
+        # While technically capitals are allowed in emails, it is common practice to use lowercase.
+        # We are using casefold() to lowercase, which may technically be incorrect for the user's email system.
         return email.casefold()
 
     def _clean_fields(self):
@@ -148,7 +145,6 @@ class RegisterForm(AddressOptionalUsernameMixIn, forms.ModelForm):
             'billing_city': cleaned_data['billing_city'],
             'billing_country_area': cleaned_data['billing_country_area'],
             'billing_postcode': cleaned_data['billing_postcode'],
-            # TODO: Need billing_country_code ?
             }
         if 'billing_country_code' in cleaned_data:
             billing_info['billing_country_code'] = cleaned_data['billing_country_code']
@@ -223,7 +219,7 @@ class RegisterForm(AddressOptionalUsernameMixIn, forms.ModelForm):
         if cleaned_data.get('paid_by_other'):
             # We need to now get the billing info for user who is paying
             # Assign the logged in user name & email to paid_by
-            paid_by = Student.objects.filter(user=user).first()
+            paid_by = Student.objects.filter(user=user).first()  # TODO: ? instead use user.student
             cleaned_data['paid_by'] = paid_by
             # paid_by may have given the same email for friend user:
             #   - maybe friend is an existing user (who has a diff email)
@@ -260,12 +256,6 @@ class RegisterForm(AddressOptionalUsernameMixIn, forms.ModelForm):
 
     def save(self, commit=True):
         print('======== Inside RegisterForm.save ===========')
-        # TODO: If billing address info added to user Profile, let
-        # Payment.objects.classRegister get that info from student (profile)
-        # TODO: we could create a new dict with items starting with 'billing'
-        # then pass that instead of each billing item below.
-        # however neither approach needed if we put billing info
-        # into the user Profile.
         class_selected = self.cleaned_data.get('class_selected')
         student = self.cleaned_data.get('student')  # Profile for the User taking the ClassOffer
         paid_by = self.cleaned_data.get('paid_by')  # Profile for the User paying for the ClassOffer

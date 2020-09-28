@@ -278,7 +278,7 @@ class ComputedFieldsMixIn:
             if hasattr(self, 'compute_%s' % name):  # calls methods like compute_username
                 field = getattr(self, 'compute_%s' % name)()
             self.computed_fields[name] = field  # self.fields[name] = field
-            value = self.get_initial_for_field(field, name)  # TODO: ? or check if it has a value set?
+            value = self.get_initial_for_field(field, name)
             try:
                 value = field.clean(value)
                 self.cleaned_data[name] = value
@@ -586,7 +586,7 @@ class FormOverrideMixIn:
     def handle_modifiers(self, opts, *args, **kwargs):
         """ Returns the passed parameters after methods in opts['modifiers'] sequentially called to update them. """
         modifiers = (getattr(self, mod) for mod in opts.get('modifiers', []) if hasattr(self, mod))
-        for mod in modifiers:
+        for mod in modifiers:  # calls methods like prep_country_fields or others set in fieldsets or prep_modifiers
             opts, *args, kwargs = mod(opts, *args, **kwargs)
         return (opts, *args, kwargs)
 
@@ -676,9 +676,9 @@ class OptionalCountryMixIn(FormOverrideMixIn):
             'billing_postcode': {
                     'label': _("Postal Code"),
                     'help_text': '', },
-            'billing_country_code': {
-                    'help_text': _("Country abbreviation"),
-                    'default': '', },
+            # 'billing_country_code': {
+            #         'help_text': _("Country abbreviation"),
+            #         'default': '', },
             },
         }
 
@@ -714,14 +714,6 @@ class OptionalCountryMixIn(FormOverrideMixIn):
                 if field:
                     self.base_fields[name] = field
             if has_computed and computed_field_names:
-                computed_fields = getattr(self, 'computed_fields', [])
-                if isinstance(computed_fields, (list, tuple)):
-                    computed_field_names.extend(computed_fields)
-                elif isinstance(computed_fields, dict):
-                    country_field = self.fields.pop(country_name, country_field.copy())
-                    if country_name not in computed_fields:
-                        self.computed_fields[country_name] = country_field
-                    computed_field_names.extend(computed_fields.keys())
                 computed_field_names.extend(kwargs.get('computed_fields', []))
                 kwargs['computed_fields'] = computed_field_names
             elif computed_field_names:
@@ -750,8 +742,8 @@ class OptionalCountryMixIn(FormOverrideMixIn):
         field = remaining_fields.pop(field_name, None)
         result = {field_name: field} if field else {}
         other_country_field = remaining_fields.pop('other_country', None)
-        if not other_country_field:
-            other_country_field = deepcopy(self.base_fields['other_country'])  # computed: adding field
+        # if not other_country_field:
+        #     other_country_field = deepcopy(self.base_fields['other_country'])  # TODO: computed: adding field
         result.update({'other_country': other_country_field})
         attempted_field_names = ('other_country', self.country_field_name, )
         if result:
@@ -764,13 +756,12 @@ class OptionalCountryMixIn(FormOverrideMixIn):
 
     def clean_other_country(self):
         print("================== Clean Other Country ================================")
-        other_country = self.cleaned_data.get('other_country', None)  # TODO: appropriate default?
+        other_country = self.cleaned_data.get('other_country', None)
         if other_country:
+            # default = settings.DEFAULT_COUNTRY
             field = self.fields.get(self.country_field_name, None) or self.computed_fields.get(self.country_field_name)
-            print(self.country_field_name)
-            print(field.initial)
-            print(self.data.get(self.country_field_name, None))
-            raise forms.ValidationError("You can input your address. ")
+            if field.initial == self.cleaned_data.get(self.country_field_name, None):
+                raise forms.ValidationError("You can input your address. ")
         return other_country
 
 
@@ -861,7 +852,7 @@ class FormFieldSetMixIn:
         assigned_field_names = flatten([flatten(opts['fields']) for fieldset_label, opts in fieldsets])
         unassigned_field_names = [name for name in remaining_fields if name not in assigned_field_names]
         opts = {'modifiers': 'prep_remaining', 'position': 'remaining', 'fields': unassigned_field_names}
-        fieldsets.append((None, opts))  # TODO: Check for issues tracking if any other added or removed fields.
+        fieldsets.append((None, opts))  # TODO: Avoid adding or removing fields - check modifiers methods.
         top_errors = self.non_field_errors().copy()
         max_position, form_column_count, hidden_fields, remove_idx = 0, 0, [], []
         for index, fieldset in enumerate(fieldsets):
@@ -1039,7 +1030,7 @@ class FormFieldSetMixIn:
                         attrs = label_width_attrs_dict if name in width_labels else {}
                         label = conditional_escape(bf.label)
                         label = bf.label_tag(label, attrs) or ''
-                    else:  # TODO: Check bf.label always exists?
+                    else:
                         raise ImproperlyConfigured(_("Visible Bound Fields must have a non-empty label. "))
                     if field.help_text:
                         help_text = '<br />' if help_text_br else ''

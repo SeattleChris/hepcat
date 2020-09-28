@@ -168,7 +168,6 @@ The following routes have been made or scaffolded (mostly in classwork app):
 | /user/reset/<uidb64>/<token>/ | ['password_reset_confirm']  |-| /django_registration/ ? |
 | /user/reset/done/             | ['password_reset_complete'] |-| /django_registration/ ? |
 
-<!-- TODO: Update the payment url and view -->
 <!-- /user/register/         django_registration one_step.urls -->
 <!-- /user/                  django.contrib.auth.urls -->
 

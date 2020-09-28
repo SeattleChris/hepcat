@@ -170,7 +170,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # CUSTOM Additional Settings for this Project
 
 # Django Registration and email
-LOGIN_URL = 'login'  # TODO: Confirm or Update.
+LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = '/profile/'
 LOGOUT_REDIRECT_URL = 'home'
 ACCOUNT_ACTIVATION_DAYS = 1
