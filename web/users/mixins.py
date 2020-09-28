@@ -379,19 +379,19 @@ class OptionalUserNameMixIn(ComputedFieldsMixIn):
         email_field.initial = self.cleaned_data.get(name_for_email, email_field.initial)
         flag_name = self.USERNAME_FLAG_FIELD
         flag_field = self.computed_fields.pop(flag_name, None) or self.fields.pop(flag_name, None)
-        if flag_field:
-            flag_field.initial = 'False'
+        if not flag_field:
+            raise ImproperlyConfigured(_("Expected flag_field from either the main Form or from MixIn. "))
+        flag_field.initial = 'False'
 
         data = self.data.copy()  # QueryDict datastructure, the copy is mutable. Has getlist and appendlist methods.
         data.appendlist(name_for_email, email_field.initial)
-        if flag_field:
-            data.appendlist(flag_name, flag_field.initial)
+        data.appendlist(flag_name, flag_field.initial)
         data.appendlist(name_for_user, field.initial)
         data._mutable = False
         self.data = data
 
         self.fields[name_for_email] = email_field
-        self.fields[flag_name] = flag_field  # TODO: What if flag_field is None?
+        self.fields[flag_name] = flag_field
         self.fields[name_for_user] = field
         if hasattr(self, 'assign_focus_field'):
             self.assign_focus_field(name=name_for_email)
