@@ -859,16 +859,16 @@ class FormFieldSetMixIn:
             fieldset_label, opts = fieldset
             if 'fields' not in opts or 'position' not in opts:
                 raise ImproperlyConfigured(_("There must be 'fields' and 'position' in each fieldset. "))
-            # TODO: Handle opts['classes'] for this fieldset.
             field_rows = []
             for ea in opts['fields']:
                 row = [ea] if isinstance(ea, str) else ea
                 existing_fields = {}
                 for name in row:
+                    # It may be a specially coded input
+                    if name.startswith('_') and hasattr(self, name[1:]):
+                        name = getattr(self, name[1:], '')
                     if name not in remaining_fields:
-                        # Okay when a fieldset defines field names not present in current form.
-                        # so if a field name is in remaining fieldset, but already used, skip it.
-                        continue
+                        continue  # Skip it if a field name is not in fields, or already used.
                     field = remaining_fields.pop(name)
                     bf = self[name]
                     bf_errors = self.error_class(bf.errors)
