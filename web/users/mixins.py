@@ -117,9 +117,7 @@ class ComputedFieldsMixIn:
             return missing_names
 
         missing_names = set_available_values(critical_names)
-        if not missing_names:
-            return list(critical_names)
-        if 'user_model' in missing_names:
+        if missing_names and 'user_model' in missing_names:
             user = kwargs.get('initial', {}).get('user', None) or kwargs.get('instance', None)
             user_model = None
             if user and not getattr(user, 'is_anonymous', None) and hasattr(user, '_meta'):
@@ -586,16 +584,18 @@ class FormOverrideMixIn:
         return (opts, *args, kwargs)
 
     def handle_removals(self, fields):
-        """ Manages field removals. Only used when a 'ComputedFieldsMixIn' variant is not present. """
+        """Manages field removals (including adding). Only used when a 'ComputedFieldsMixIn' variant is not present. """
         if not hasattr(self, 'remove_field_names'):
             return fields
         assert not issubclass(self.__class__, ComputedFieldsMixIn), "When Computed, do not use remove_field_names. "
         self.removed_fields = getattr(self, 'removed_fields', {})
         data = set(getattr(self, 'data', {}).keys())
         needed_names = data - set(fields.keys())
+        add_fields = {name: self.removed_fields.pop(name) for name in self.removed_fields if name in needed_names}
         remove_names = set(self.remove_field_names) - data
-        add_fields = {name: field for name, field in self.removed_fields.items() if name in needed_names}
         removed_fields = {name: fields.pop(name) for name in remove_names if name in fields}
+        self.remove_field_names = [name for name in self.remove_field_names if name not in removed_fields]
+
         fields.update(add_fields)
         self.removed_fields.update(removed_fields)
         return fields
@@ -608,8 +608,7 @@ class FormOverrideMixIn:
             args = [opts, None, fields, prep_args]
             kwargs.update(flat_fields=True)
             opts, _ignored, fields, *prep_args, kwargs = self.handle_modifiers(*args, **kwargs)
-        # TODO: HERE!
-        if hasattr(self, 'remove_field_names'):
+        if hasattr(self, 'remove_field_names'):  # TODO: Confirm this works and/or use computed_fields names & technique
             fields = self.handle_removals(fields)
         overrides = self.get_overrides()  # may have some key names not in self.fields, which will later be ignored.
         DEFAULT = overrides.get('_default_', {})
