@@ -732,7 +732,7 @@ class OptionalCountryMixIn(FormOverrideMixIn):
         if not self.country_optional:
             return (opts, field_rows, remaining_fields, *args, kwargs)
         field_rows = field_rows or []
-        field_names = ('country_flag', self.country_field_name, )
+        field_names = (self.country_field_name, 'country_flag', )
         result = {name: remaining_fields.pop(name) for name in field_names if name in remaining_fields}
         if result:
             field_rows.append(result)  # the extracted/created fields can be used in a fieldset
