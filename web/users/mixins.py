@@ -742,9 +742,8 @@ class OptionalCountryMixIn(FormOverrideMixIn):
         field = remaining_fields.pop(field_name, None)
         result = {field_name: field} if field else {}
         other_country_field = remaining_fields.pop('other_country', None)
-        # if not other_country_field:
-        #     other_country_field = deepcopy(self.base_fields['other_country'])  # TODO: computed: adding field
-        result.update({'other_country': other_country_field})
+        if other_country_field:
+            result.update({'other_country': other_country_field})
         attempted_field_names = ('other_country', self.country_field_name, )
         if result:
             field_rows.append(result)  # the extracted/created fields can be used in a fieldset
