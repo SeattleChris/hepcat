@@ -199,7 +199,11 @@ class RegisterForm(AddressOptionalUsernameMixIn, forms.ModelForm):
                 user = self.create_form_user(data_new_user)
             else:  # if user.is_anonymous:  # new_user is False; User says they have an account, we should use that account.
                 print('User says they are returning. They should login!')
-                query_user = User.objects.filter(email__iexact=input_email, first_name=first_name, last_name=last_name)
+                query_user = User.objects.filter(
+                    email__iexact=input_email,
+                    first_name__iexact=first_name,
+                    last_name__iexact=last_name,
+                    )
                 user_count = query_user.count()
                 if user_count > 1:
                     print('MULTIPLE users with that email & name. We are using the first one.')
