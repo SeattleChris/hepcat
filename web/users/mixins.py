@@ -710,12 +710,12 @@ class OverrideCountryMixIn(FormOverrideMixIn):
                     print(display)
                     print(display_ver)
                     pprint(field)
-                    data = data.copy()  # TODO: Perhaps we only need to change the field value, not data value.
-                    data['country_display'] = display_ver
-                    if val == default:
-                        data[country_name] = ''
-                    data._mutable = False
-                    kwargs['data'] = data
+                    # data = data.copy()  # TODO: Perhaps we only need to change the field value, not data value.
+                    # data['country_display'] = display_ver
+                    # if val == default:
+                    #     data[country_name] = ''
+                    # data._mutable = False
+                    # kwargs['data'] = data
                 log = f"Displayed {display}, country value {val}, with default {default}. "
                 log += "Checked foreign country. " if country_flag else "Not choosing foreign. "
                 print(log)
@@ -732,9 +732,9 @@ class OverrideCountryMixIn(FormOverrideMixIn):
             print("-------------------------------------------------------------")
         # else: Either this form does not have an address, or they don't what the switch functionality.
         super().__init__(*args, **kwargs)
-        # print("--------------- CountryMixIn back from Super ----------------------")
-        # print(display_ver)
-        # print(display)
+        print("--------------- CountryMixIn back from Super ----------------------")
+        print(display_ver)
+        print(display)
         # if display_ver != display:
         #     field = self.fields['country_display']
         #     field.initial = display_ver
