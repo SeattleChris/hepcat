@@ -836,7 +836,10 @@ class FormFieldsetMixIn:
             if width > self.max_label_width:
                 max_word_length = max(len(w) for name, field in visual_group for w in field.label.split())
                 width = max_word_length // 2
-                # TODO: if width > self.max_label_width -- overflow hidden or allow field to be too big?
+                if width > self.max_label_width:
+                    message = "The max_label_width of {} is not enough for the fields: {} ".format(
+                        self.max_label_width, visual_group.keys())
+                    raise ImproperlyConfigured(_(message))
             style_text = 'width: {}rem; display: inline-block'.format(width)
             label_attrs_dict = {'style': style_text}
             styled_labels = [name for name, field in visual_group]
