@@ -53,6 +53,8 @@ class FocusMixIn:
         if container not in ('p', 'fieldset', ):
             display_data = self._html_tag(container, display_data)
         print("==================== Final Stage!=================================")
+        pprint(self._meta.model)
+        print("----------------------- self.data ------------------------------")
         data = getattr(self, 'data', {"NO DATA PRESENT": None})
         pprint(data)
         print("----------------------- self.fields ------------------------------")
@@ -85,20 +87,13 @@ class ComputedFieldsMixIn:
     def __init__(self, *args, **kwargs):
         print("======================= ComputedFieldsMixIn.__init__ =================================")
         self.names_for_critical(kwargs)
-        pprint(self._meta.model)
-        # print("------------------------------ computed_field_names -------------------------------------------")
         computed_field_names = kwargs.pop('computed_fields', [])
         computed_field_names = self.setup_computed_fields(computed_field_names, self.base_fields)
-        # pprint(computed_field_names)
         validator_kwargs = kwargs.pop('validator_kwargs', {})
         self.attach_critical_validators(**validator_kwargs)
         super().__init__(*args, **kwargs)
         computed_field_names.extend(kwargs.pop('computed_fields', []))
         self.computed_fields = self.get_computed_fields(computed_field_names)
-        print("---------------------- End of ComputedFieldsMixIn - self.fields ----------------------------------")
-        pprint(self.fields)
-        print("---------------------- End of ComputedFieldsMixIn - self.computed_fields -------------------------")
-        pprint(self.computed_fields)
         print("--------------------- FINISH ComputedFieldsMixIn.__init --------------------")
 
     def names_for_critical(self, kwargs):
@@ -179,7 +174,6 @@ class ComputedFieldsMixIn:
         """Before other field modifications, assign validators to critical fields (i.e. username and email). """
         fields = getattr(self, 'fields', None)
         if not isinstance(fields, dict):
-            print("------------- Critical Validators attached to base_fields. ------------------")
             fields = getattr(self, 'base_fields', None)
         if not fields:
             raise ImproperlyConfigured(_("Any ComputedFieldsMixIn depends on access to base_fields or fields. "))
@@ -266,7 +260,7 @@ class ComputedFieldsMixIn:
     def _clean_computed_fields(self):
         """Mimics _clean_fields for computed_fields. Calls compute_<fieldname> and clean_<fieldname> if present. """
         compute_errors = ErrorDict()
-        # print("=================== CustomRegistrationForm._clean_computed_fields ============================")
+        # print("=================== ComputedFieldsMixIn._clean_computed_fields ============================")
         for name, field in self.computed_fields.items():
             if hasattr(self, 'compute_%s' % name):  # calls methods like compute_username
                 field = getattr(self, 'compute_%s' % name)()
@@ -284,7 +278,7 @@ class ComputedFieldsMixIn:
         return compute_errors
 
     def clean(self):
-        print("============================ CustomRegistrationForm.clean =========================")
+        print("============================ ComputedFieldsMixIn.clean =========================")
         compute_errors = self._clean_computed_fields()
         print("---------------- compute_errors -----------------------------------------")
         print(compute_errors)
@@ -330,8 +324,6 @@ class ComputedUsernameMixIn(ComputedFieldsMixIn):
     def confirm_required_fields(self):
         """The form must have the email field and any fields that may be used to construct the username. """
         required_fields = [*self.constructor_fields, self.name_for_email, self.name_for_user, self.USERNAME_FLAG_FIELD]
-        # if hasattr(self, 'USERNAME_FLAG_FIELD'):
-        #     required_fields.append(self.USERNAME_FLAG_FIELD)
         missing_fields = [name for name in required_fields if name not in self.base_fields]
         if missing_fields or not self.constructor_fields:
             raise ImproperlyConfigured(_("The fields for email, username, and constructor must be set in fields. "))
@@ -423,7 +415,7 @@ class ComputedUsernameMixIn(ComputedFieldsMixIn):
         """If the user gave a non-shared email, we expect flag is False, and no username value. """
         flag_name = self.USERNAME_FLAG_FIELD
         flag_field = self.fields.get(flag_name, None) or self.computed_fields.get(flag_name, None)
-        print("==================== handle_flag_field =====================================")
+        print("==================== ComputedUsernameMixIn.handle_flag_field =====================================")
         if not flag_field:
             print("No flag field")
             return
@@ -458,6 +450,7 @@ class ComputedUsernameMixIn(ComputedFieldsMixIn):
         elif email_changed:
             message = "Un-check the box, or leave empty, if you want to use this email address. "
             error_collected[flag_name] = _(message)
+        print("------------------------- END ComputedUsernameMixIn.handle_flag_field END ------------------------")
         return error_collected
 
     def clean(self):
@@ -658,8 +651,6 @@ class FormOverrideMixIn:
 class OverrideCountryMixIn(FormOverrideMixIn):
 
     country_display = forms.CharField(widget=forms.HiddenInput(), initial='local', )
-    # address_local = forms.CharField(widget=forms.HiddenInput(), initial='local', )
-    # address_foreign = forms.CharField(widget=forms.HiddenInput(), initial='foreign', )
     country_flag = forms.BooleanField(
         label=_("Not a {} address. ".format(settings.DEFAULT_COUNTRY)),
         required=False, )
@@ -676,13 +667,6 @@ class OverrideCountryMixIn(FormOverrideMixIn):
             'billing_postcode': {
                     'label': _("Postal Code"),
                     'help_text': '', },
-            # 'country_display': {
-            #     'initial': 'foreign',
-            #     'value': 'foreign',
-            #     'default': 'foreign', },
-            # 'billing_country_code': {
-            #         'help_text': _("Country abbreviation"),
-            #         'default': '', },
             },
         }
 
@@ -998,7 +982,6 @@ class FormFieldsetMixIn:
         fieldsets = getattr(self, '_fieldsets', None) or self.make_fieldsets()
         summary = getattr(self, '_fs_summary', None)
         if fieldsets[-1][0] == 'summary':
-            print("******** JUST MADE FIELDSETS ********")
             summary = fieldsets.pop()[1]
         data_labels = ('top_errors', 'hidden_fields', 'columns')
         assert isinstance(summary, dict) and all(ea in summary for ea in data_labels), "Malformed fieldsets summary. "
