@@ -12,7 +12,7 @@ User = get_user_model()
 
 
 class RegisterForm(AddressUsernameMixIn, forms.ModelForm):
-    """ This is where existing and even new users/students can sign up for a ClassOffer """
+    """This is where existing and even new users/students can sign up for a ClassOffer """
     # TODO: Lookup formsets. See if we can make a form combining fields from User and from Payment models.
 
     user_answers = (('', _('Please Select an Answer')),
@@ -294,7 +294,7 @@ class RegisterForm(AddressUsernameMixIn, forms.ModelForm):
 
 
 class PaymentForm(FocusMixIn, forms.ModelForm):
-    """ This is where a user inputs their payment data and it is processed. """
+    """This is where a user inputs their payment data and it is processed. """
 
     class Meta:
         model = Payment

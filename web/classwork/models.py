@@ -20,7 +20,7 @@ from datetime import date, timedelta, datetime as dt
 
 
 class SiteContent(models.Model):
-    """ Public content for different sections of the site. """
+    """Public content for different sections of the site. """
     # id = auto-created
     name = models.CharField(max_length=120, help_text=_('Descriptive name used to find this content'))
     text = models.TextField(blank=True, help_text=_('Text content used in page or email publication'))
@@ -36,7 +36,7 @@ class SiteContent(models.Model):
 
 
 class Location(models.Model):
-    """ This stores information about each location where ClassOffers may be held. """
+    """This stores information about each location where ClassOffers may be held. """
     # TODO: Should we add a publish flag in the DB for each location?
     # id = auto-created
     name = models.CharField(max_length=120, )
@@ -66,12 +66,12 @@ class ResourceManager(models.Manager):
         return super().get_queryset()
 
     def live(self, start=None, end=None, skips=0, type_user=0, **kwargs):
-        """ Will filter and annotate to return only currently published Resource for the given context. """
+        """Will filter and annotate to return only currently published Resource for the given context. """
         raise NotImplementedError
 
 
 class Resource(models.Model):
-    """ Subjects and ClassOffers can have various resources released to the students at
+    """Subjects and ClassOffers can have various resources released to the students at
         different times while attending a ClassOffer or after they have completed the session.
         Subjects and ClassOffers can have various resources available to the instructors
         to aid them in class preperation and presentation.
@@ -141,7 +141,7 @@ class Resource(models.Model):
 
 
 class Subject(models.Model):
-    """ A 'Subject' is the general information and teaching content intended to be covered. The details of what was
+    """A 'Subject' is the general information and teaching content intended to be covered. The details of what was
         actually covered are part of a 'ClassOffer', which also includes details of when, where, etc it occurs.
     """
     LEVEL_CHOICES = (
@@ -195,7 +195,7 @@ class Subject(models.Model):
     date_modified = models.DateField(auto_now=True, )
 
     def compute_level_num(self, level_value=None, set_self=True):
-        """ Translate and assign the number associated to the value in 'level' field, assigning 0 if not determined. """
+        """Translate and assign the number associated to the value in 'level' field, assigning 0 if not determined. """
         level_value = level_value if level_value is not None else self.level
         num = self.LEVEL_ORDER.get(level_value, 0)
         if set_self:
@@ -223,7 +223,7 @@ class Subject(models.Model):
 
 
 # class LevelGroup(models.Model):
-#     """ Sometimes there will be multiple Subjects (classes)
+#     """Sometimes there will be multiple Subjects (classes)
 #         that, as a group, are meant to be taken before
 #         a student has completed that Subject.
 #     """
@@ -240,7 +240,7 @@ def default_key_day(): return Session._default_date('key_day_date')
 
 
 class Session(models.Model):
-    """ Classes are offered and published according to which session they belong.
+    """Classes are offered and published according to which session they belong.
         Each session start date is computed based on 'key_day_date' and the earliest class day.
         - If 'max_day_shift' is zero or positive, the earliest day will be the 'key_day_date'.
         - If 'max_day_shift' is negative, then earliest day is that many days before 'key_day_date.
@@ -277,7 +277,7 @@ class Session(models.Model):
 
     @property
     def start_date(self):
-        """ Return the date for the earliest possible first class day, based on Session field values. """
+        """Return the date for the earliest possible first class day, based on Session field values. """
         first_date = self.key_day_date
         if self.max_day_shift < 0:
             first_date += timedelta(days=self.max_day_shift)
@@ -285,7 +285,7 @@ class Session(models.Model):
 
     @property
     def end_date(self):
-        """ Return the date for the last possible class day, based on Session field values. """
+        """Return the date for the last possible class day, based on Session field values. """
         last_date = self.key_day_date + timedelta(days=7*(self.num_weeks + self.skip_weeks - 1))
         if (self.max_day_shift < 0 and self.flip_last_day) or \
            (self.max_day_shift > 0 and not self.flip_last_day):
@@ -295,12 +295,12 @@ class Session(models.Model):
 
     @property
     def prev_session(self):
-        """ Return the Session that comes before the current Session, or 'None' if none exists. """
+        """Return the Session that comes before the current Session, or 'None' if none exists. """
         return self.last_session(since=self.key_day_date)
 
     @property
     def next_session(self):
-        """ Returns the Session that comes after the current Session, or 'None' if none exists. """
+        """Returns the Session that comes after the current Session, or 'None' if none exists. """
         key_day = self.key_day_date
         key_day = key_day() if callable(key_day) else key_day
         key_day = key_day.isoformat() if isinstance(key_day, (date, dt)) else key_day
@@ -314,7 +314,7 @@ class Session(models.Model):
 
     @classmethod
     def last_session(cls, since=None):
-        """ Returns the Session starting the latest, or latest prior to given 'since' date. Return None if none. """
+        """Returns the Session starting the latest, or latest prior to given 'since' date. Return None if none. """
         query = cls.objects
         if since:
             # TODO: Check isinstance an appropriate datetime obj
@@ -327,7 +327,7 @@ class Session(models.Model):
 
     @classmethod
     def _default_date(cls, field, since=None):
-        """ Compute a default value for 'key_day_date' or 'publish_date' field. """
+        """Compute a default value for 'key_day_date' or 'publish_date' field. """
         allowed_fields = ('key_day_date', 'publish_date')
         if field not in allowed_fields:
             raise ValueError(_("Not a valid field parameter: {} ".format(field)))
@@ -350,7 +350,7 @@ class Session(models.Model):
         return new_date or now
 
     def computed_expire_day(self, key_day=None):
-        """ Assumes unaffected by skipped weeks. Based on parameters from settings. """
+        """Assumes unaffected by skipped weeks. Based on parameters from settings. """
         minimum_session_weeks = settings.SESSION_LOW_WEEKS
         default_expire = settings.DEFAULT_SESSION_EXPIRE
         short_expire = settings.SHORT_SESSION_EXPIRE
@@ -362,7 +362,7 @@ class Session(models.Model):
         return expire
 
     def clean(self):
-        """ Modifies values for validity checks and if needed to avoid overlapping published Sessions.
+        """Modifies values for validity checks and if needed to avoid overlapping published Sessions.
             If avoiding overlaps, the publish_date and expire_date are overwritten by determined values.
             May modify a previous Session value for break_weeks, but not any other values.
         """
@@ -410,7 +410,7 @@ class Session(models.Model):
         return super().clean_fields(exclude=exclude)
 
     def save(self, *args, with_clean=False, **kwargs):
-        """ If given an 'update_fields' list of field names, directly saves if doing so won't break expire_date.
+        """If given an 'update_fields' list of field names, directly saves if doing so won't break expire_date.
             Otherwise, which clean methods are used depends on 'with_clean'.
             The 'expire_date' field will be determined if it is not set (recommend).
             If there is a next Session, it will have its publish_date modified to match this session's expire_date.
@@ -526,7 +526,7 @@ class CustomQuerySet(models.QuerySet):
         return (qs, start, end, skips, int(max_weeks), kwargs)
 
     def get_resources(self, live=False, **kwargs):
-        """ Returns a filtered & annotated queryset of Resources connected to the current ClassOffer queryset.
+        """Returns a filtered & annotated queryset of Resources connected to the current ClassOffer queryset.
             False: Unless over-ridden by later processing of this queryset, it will be ordered with most recent first.
             Filter these results by 'live=True' to get only currently published, and not expired, results.
             Distinct resources, across ClassOffers, requires '.values()' that does not include these annotations.
@@ -575,7 +575,7 @@ class CustomQuerySet(models.QuerySet):
         return res_qs
 
     def resources(self, **kwargs):
-        """ Return a queryset.values() of Resource objects that are alive and connected to the current queryset. """
+        """Return a queryset.values() of Resource objects that are alive and connected to the current queryset. """
         resource_fields = ('name', 'id', 'content_type', )  # , 'imagepath',
         kwargs['live'] = True  # Calling resources will always only return currently available resources.
         # kwargs.setdefault('live', True)  # unless set False in kwargs, will only return currently available resources.
@@ -588,7 +588,7 @@ class CustomQuerySet(models.QuerySet):
         return collected
 
     def most_recent_resource_per_classoffer(self):
-        """ This feature is not yet implemented correctly. """
+        """This feature is not yet implemented correctly. """
         # res = self.get_resources(
         #         start=OuterRef('start_date'),
         #         end=OuterRef('end_date'),
@@ -615,7 +615,7 @@ class ClassOfferManager(models.Manager):
 
 
 class ClassOffer(models.Model):
-    """ Different classes can be offered at different times and scheduled for later publication.
+    """Different classes can be offered at different times and scheduled for later publication.
         This model depends on the following models: Subject, Session, Staff (for teacher association), Location
         Various default values for this model are determined by values in the settings file.
     """
@@ -647,7 +647,7 @@ class ClassOffer(models.Model):
     objects = ClassOfferManager()
 
     def model_resources(self, live=False):
-        """ Include not only self.resources, but also self.subject.resources. """
+        """Include not only self.resources, but also self.subject.resources. """
         # # user = self.request.user
         # # user_val, user_roles = user.user_roles
         # # user_type = 3 if user_val >= 4 else user_val
@@ -662,17 +662,17 @@ class ClassOffer(models.Model):
 
     @property
     def full_price(self):
-        """ This is full, at-the-door, price """
+        """This is full, at-the-door, price """
         return Decimal(getattr(self.subject, 'full_price', settings.DEFAULT_CLASS_PRICE))
 
     @property
     def pre_discount(self):
-        """ Discount given if they sign up and pay in advanced. """
+        """Discount given if they sign up and pay in advanced. """
         return Decimal(getattr(self.subject, 'pre_pay_discount', settings.DEFAULT_PRE_DISCOUNT))
 
     @property
     def multi_discount(self):
-        """ Does this ClassOffer qualify as one that gets a multiple discount and what discount can it provide? """
+        """Does this ClassOffer qualify as one that gets a multiple discount and what discount can it provide? """
         if not self.subject.qualifies_as_multi_class_discount:
             return 0
         else:
@@ -680,7 +680,7 @@ class ClassOffer(models.Model):
 
     @property
     def pre_price(self):
-        """ This is the price if they pay in advance. """
+        """This is the price if they pay in advance. """
         price = self.full_price
         if self.pre_discount > 0:
             price -= self.pre_discount
@@ -688,7 +688,7 @@ class ClassOffer(models.Model):
 
     @property
     def skip_week_explain(self):
-        """ Most of the time there is not a missing week in the middle of session.
+        """Most of the time there is not a missing week in the middle of session.
             However, sometimes there are holidays that we can not otherwise schedule around.
             This returns some text explaining the skipped week. Generally this is included in class description details.
         """
@@ -698,14 +698,14 @@ class ClassOffer(models.Model):
 
     @property
     def end_time(self):
-        """ A time obj (date and timezone unaware) computed based on the start time and subject.num_minutes. """
+        """A time obj (date and timezone unaware) computed based on the start time and subject.num_minutes. """
         start = dt.combine(date(2009, 2, 13), self.start_time)  # arbitrary date on day of timestamp 1234567890.
         end = start + timedelta(minutes=self.subject.num_minutes)
         return end.time()
 
     @property
     def day(self):
-        """ Returns a string for the day of the week, plural if there are multiple weeks, for this ClassOffer. """
+        """Returns a string for the day of the week, plural if there are multiple weeks, for this ClassOffer. """
         day = self.DOW_CHOICES[self.class_day][1]
         day += 's' if self.subject.num_weeks > 1 else ''
         return day
@@ -718,7 +718,7 @@ class ClassOffer(models.Model):
 
     @property
     def num_level(self):
-        """ When we want a sortable level number. """
+        """When we want a sortable level number. """
         return self._num_level
 
     def set_num_level(self):
@@ -744,7 +744,7 @@ class ClassOffer(models.Model):
 
 
 class AbstractProfile(models.Model):
-    """ Extending user model to have profile fields as appropriate as either a student or a staff member. """
+    """Extending user model to have profile fields as appropriate as either a student or a staff member. """
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True,
                                 limit_choices_to={}, )
@@ -778,7 +778,7 @@ class AbstractProfile(models.Model):
 
 
 class Staff(AbstractProfile):
-    """ A profile model appropriate for Staff users. """
+    """A profile model appropriate for Staff users. """
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True,
                                 limit_choices_to={'is_staff': True}, )
@@ -799,7 +799,7 @@ class Staff(AbstractProfile):
 
 
 class Student(AbstractProfile):
-    """ A profile model appropriate for Student users. """
+    """A profile model appropriate for Student users. """
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True,
                                 limit_choices_to={'is_student': True})
@@ -819,7 +819,7 @@ class Student(AbstractProfile):
 
     @property
     def highest_subject(self):
-        """ We will want to know what is the student's class level which by default will be the highest
+        """We will want to know what is the student's class level which by default will be the highest
             class level they have taken. We also want to be able to override this from a teacher or
             admin input to deal with students who have had instruction or progress elsewhere.
         """
@@ -830,12 +830,12 @@ class Student(AbstractProfile):
 
     @property
     def taken_subjects(self):
-        """ Since all taken subjects are related through ClassOffer, we check taken to see the subject names. """
+        """Since all taken subjects are related through ClassOffer, we check taken to see the subject names. """
         return Subject.objects.filter(id__in=self.taken.values_list('subject', flat=True)).distinct()
 
     @property
     def beg(self):
-        """ Completed the two versions of Beginning. """
+        """Completed the two versions of Beginning. """
         # TODO: Allow this mapping logic to be created by admin or in settings.
         ver_map = {'A': ['A', 'C'], 'B': ['B', 'D']}
         goal, data, extra = self.subject_data(level=0, each_ver=1, ver_map=ver_map)
@@ -843,13 +843,13 @@ class Student(AbstractProfile):
 
     @property
     def l2(self):
-        """ Completed the four versions of level two. """
+        """Completed the four versions of level two. """
         goal, data, extra = self.subject_data(level=1, each_ver=1, exclude='N')
         return extra
 
     @property
     def l3(self):
-        """ Completed four versions of level three. """
+        """Completed four versions of level three. """
         goal, data, extra = self.subject_data(level=2, each_ver=1, exclude='N')
         return extra
 
@@ -988,7 +988,7 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
 class PaymentManager(models.Manager):
 
     def classRegister(self, register=None, student=None, paid_by=None, **extra_fields):
-        """ Used for students registering for classoffers, which is the most common usage of our payments """
+        """Used for students registering for classoffers, which is the most common usage of our payments """
         print("===== Payment.objects.classRegister (PaymentManager) ======")
         if not isinstance(student, Student):
             raise TypeError('We need a user Student profile passed here.')
@@ -1066,7 +1066,7 @@ class PaymentManager(models.Manager):
 
 
 class Payment(BasePayment):
-    """ Payment Processing """
+    """Payment Processing """
     objects = PaymentManager()
     student = models.ForeignKey(Student, on_delete=models.SET_NULL, null=True, related_name='payment', )
     paid_by = models.ForeignKey(Student, on_delete=models.SET_NULL, null=True, related_name='paid_for', )
@@ -1085,11 +1085,11 @@ class Payment(BasePayment):
 
     @property
     def full_total(self):
-        """ Amount owed if they do not pay before the pre-paid discount deadline """
+        """Amount owed if they do not pay before the pre-paid discount deadline """
         return self.full_price - self.multiple_purchase_discount - self.credit_applied
 
     def pre_total(self):
-        """ Computed total if they pay before the pre-paid deadline """
+        """Computed total if they pay before the pre-paid deadline """
         return self.full_total - self.pre_pay_discount
 
     #   fields needed:
@@ -1190,7 +1190,7 @@ class Payment(BasePayment):
 
 
 class Registration(models.Model):
-    """ This is an intermediary model between a user Student profile and the ClassOffers they are enrolled in.
+    """This is an intermediary model between a user Student profile and the ClassOffers they are enrolled in.
         Also used to create the class check-in view for the staff.
     """
     student = models.ForeignKey(Student, on_delete=models.SET_NULL, null=True, )
@@ -1200,7 +1200,7 @@ class Registration(models.Model):
 
     @property
     def owed(self):
-        """ How much is owed by this student currently in this classoffer. """
+        """How much is owed by this student currently in this classoffer. """
         if not self.payment:
             return 0
         owed = self.payment.total - self.payment.captured_amount
@@ -1282,11 +1282,11 @@ def resource_filepath(instance, filename):
 
 
 class Notify(EmailMessage):
-    """ Usually used for sending emails, or other communcation methods, to users. """
+    """Usually used for sending emails, or other communcation methods, to users. """
 
     @classmethod
     def register(cls, selected=None, student=None, paid_by=None, **kwargs):
-        """ This is for when a user is registered for a ClassOffer. """
+        """This is for when a user is registered for a ClassOffer. """
         from django.core.mail import send_mail
         from pprint import pprint
 

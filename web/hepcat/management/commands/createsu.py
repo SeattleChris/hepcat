@@ -7,7 +7,7 @@ User = get_user_model()
 
 
 class Command(BaseCommand):
-    """ Allows the creation of a superuser with a password set in the environment variables. """
+    """Allows the creation of a superuser with a password set in the environment variables. """
 
     def handle(self, *args, **options):
         # TODO: Determine the print command: self.stdout.write worked on AWS, printed but error on PythonAnywhere.

@@ -33,14 +33,14 @@ class TestFormLoginRequired:
     good_data = {}
 
     def test_call_view_deny_anonymous(self):
-        """ Login is required for either get or post. """
+        """Login is required for either get or post. """
         response = self.client.get(self.url, follow=True)
         self.assertRedirects(response, self.login_redirect)
         response = self.client.post(self.url, follow=True)
         self.assertRedirects(response, self.login_redirect)
 
     def test_call_view_load(self):
-        """ After login, can get the form. """
+        """After login, can get the form. """
         self.client.login(**self.login_cred)
         response = self.client.get(self.url)
         # self.assertContains()
@@ -48,7 +48,7 @@ class TestFormLoginRequired:
         self.assertTemplateUsed(response, self.expected_template)
 
     def test_call_view_fail_blank(self):
-        """ Submitting a blank form should get a form error. """
+        """Submitting a blank form should get a form error. """
         self.client.login(**self.login_cred)
         data = {}  # blank data dictionary (on purpose)
         response = self.client.post(self.url, data)
@@ -56,13 +56,13 @@ class TestFormLoginRequired:
         # etc. ...
 
     def test_call_view_fail_invalid(self):
-        """ Submitting an invalid form should get a form error. """
+        """Submitting an invalid form should get a form error. """
         self.client.login(**self.login_cred)
         response = self.client.post(self.url, self.bad_data)
         self.assertFormError(response, self.expected_form, self.expected_error_field, 'This field is required.')
 
     def test_call_view_success_invalid(self):
-        """ Submitting a valid form should give expected redirect. """
+        """Submitting a valid form should give expected redirect. """
         self.client.login(**self.login_cred)
         response = self.client.post(self.url, self.bad_data)
         self.assertRedirects(response, self.success_redirect)
@@ -94,13 +94,13 @@ class MimicAsView:
         return view
 
     def prep_http_method(self, method):
-        """ To emulate View.as_view() we could do this on EACH http method. Normally as_view is only made with one. """
+        """To emulate View.as_view() we could do this on EACH http method. Normally as_view is only made with one. """
         method.view_class = self.viewClass
         method.init_kwargs = self.kwargs
         return method
 
     def setup_three_sessions(self, sess_names=('old_sess', 'curr_sess', 'new_sess', )):
-        """ Each Session of ClassOffer models are ordered by Subject.LEVEL_ORDER then BY Subject.LEVEL_CHOICES. """
+        """Each Session of ClassOffer models are ordered by Subject.LEVEL_ORDER then BY Subject.LEVEL_CHOICES. """
         levels = list(Subject.LEVEL_ORDER.keys())
         levels += [lvl for lvl, display in Subject.LEVEL_CHOICES if lvl not in levels]
         levels = [lvl for lvl, display in Subject.LEVEL_CHOICES]

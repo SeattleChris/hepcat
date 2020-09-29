@@ -144,7 +144,7 @@ class CreateMany(
     MultipleObjectMixin,
     ProcessFormView
     ):
-    """ Sometimes we want to allow the creation of many records/objects.
+    """Sometimes we want to allow the creation of many records/objects.
         Sometimes we will want to edit mulitiple records/objects.
         Sometimes we will want to update or create if they do not exist.
         This is going to be a lot like the default Django UpdateView,

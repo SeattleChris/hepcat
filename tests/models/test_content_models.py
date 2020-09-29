@@ -47,7 +47,7 @@ class ResourceModelTests(SimpleModelTests, TransactionTestCase):
 
     @skip("Not Implemented")
     def test_publish_not_view_if_not_joined(self):
-        """ For a User NOT signed in a ClassOffer, determine they are NOT allowed to see an associated Resource. """
+        """For a User NOT signed in a ClassOffer, determine they are NOT allowed to see an associated Resource. """
         student = self.ProfileStudent.objects.first()
         classoffer = ClassOffer.objects.get(id=1)
         # classoffer settings - 'key_day_date': '2020-04-30', 'num_weeks': 5 ==> class ended already.
@@ -64,17 +64,17 @@ class ResourceModelTests(SimpleModelTests, TransactionTestCase):
 
     @skip("Not Implemented")
     def test_publish_can_view_avail_is_immediate(self):
-        """ For a User signed in a ClassOffer, determine they are allowed to see an associated immediate Resource. """
+        """For a User signed in a ClassOffer, determine they are allowed to see an associated immediate Resource. """
         pass
 
     @skip("Not Implemented")
     def test_publish_can_view_during_published(self):
-        """ For a User signed in a ClassOffer, determine they are allowed to see a currently published Resource. """
+        """For a User signed in a ClassOffer, determine they are allowed to see a currently published Resource. """
         pass
 
     @skip("Not Implemented")
     def test_publish_can_view_never_expired(self):
-        """ For a User signed in a ClassOffer, determine they can view an associated never expired Resource. """
+        """For a User signed in a ClassOffer, determine they can view an associated never expired Resource. """
         print("=========================== ResourceModelTests - Running Here ========================================")
         student = self.ProfileStudent.objects.first()
         classoffer = ClassOffer.objects.get(id=1)
@@ -92,12 +92,12 @@ class ResourceModelTests(SimpleModelTests, TransactionTestCase):
 
     @skip("Not Implemented")
     def test_publish_not_view_before_publish(self):
-        """ For a User signed in a ClassOffer, determine they do NOT see an associated Resource early. """
+        """For a User signed in a ClassOffer, determine they do NOT see an associated Resource early. """
         pass
 
     @skip("Not Implemented")
     def test_publish_not_view_after_expired(self):
-        """ For a User signed in a ClassOffer, they do NOT see an associated expired Resource. """
+        """For a User signed in a ClassOffer, they do NOT see an associated expired Resource. """
         pass
 
 

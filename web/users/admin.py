@@ -77,7 +77,7 @@ class CustomUserAdmin(UserAdmin):
         return form
 
     # def get_formsets_with_inlines(self, request, obj=None):
-    #     """ Return no inlines when obj is being created. Using super to use
+    #     """Return no inlines when obj is being created. Using super to use
     #         the default get_inline_instances, then filter so we return desired
     #         inline based on user type.
     #     """

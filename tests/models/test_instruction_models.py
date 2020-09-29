@@ -70,7 +70,7 @@ class ClassOfferModelTests(SimpleModelTests, TransactionTestCase):
         self.assertSetEqual(set(expected_names), set(actual_names))
 
     def test_manager_queryset_resources_various_expire(self):
-        """ Making many ClassOffers that today is the week 3 class with resources on all weeks with 0 <= expire < 3. """
+        """Making many ClassOffers that today is the week 3 class with resources on all weeks with 0 <= expire < 3. """
         user = UserHC.objects.create_user(email="fake@faker.com", password='test12', first_name='fa', last_name='la')
         user.save()
         student = user.student
@@ -799,7 +799,7 @@ class SessionCoverageTests(TransactionTestCase):
         self.assertEqual(repr_string, repr(session))
 
     def test_create_no_default_functions_no_shift(self):
-        """ Session.create works with defined 'key_day_date' and 'publish_date'. """
+        """Session.create works with defined 'key_day_date' and 'publish_date'. """
         key_day = date.today() - timedelta(days=1)
         day_adjust, duration = 0, 5
         publish = key_day - timedelta(days=7*(duration - 1)+1)
@@ -819,7 +819,7 @@ class SessionCoverageTests(TransactionTestCase):
         self.assertEqual(sess.end_date, key_day + timedelta(days=7*(duration - 1)))
 
     def test_session_defaults_on_creation(self):
-        """ Session.create works with the date default functions in the model. """
+        """Session.create works with the date default functions in the model. """
         day_adjust, duration = 0, 5
         first = Session.objects.first()
         key_day = first.key_day_date + timedelta(days=7*(first.num_weeks + first.skip_weeks))
@@ -841,7 +841,7 @@ class SessionCoverageTests(TransactionTestCase):
         self.assertLess(sess.prev_session.end_date, sess.start_date)
 
     def test_create_early_shift_no_skip(self):
-        """ Sessions with negative 'max_day_shift' correctly compute their dates. """
+        """Sessions with negative 'max_day_shift' correctly compute their dates. """
         first = Session.objects.first()
         day_adjust, duration = first.max_day_shift, first.num_weeks
         key_day = first.key_day_date + timedelta(days=7*duration)
@@ -864,7 +864,7 @@ class SessionCoverageTests(TransactionTestCase):
         self.assertLess(sess.prev_session.end_date, sess.start_date)
 
     def test_dates_late_shift_no_skip(self):
-        """ Sessions with positive 'max_day_shift' correctly compute their dates. """
+        """Sessions with positive 'max_day_shift' correctly compute their dates. """
         first = Session.objects.first()
         day_adjust, duration = 5, first.num_weeks
         key_day = first.key_day_date + timedelta(days=7*duration)

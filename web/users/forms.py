@@ -35,7 +35,7 @@ class CustomRegistrationForm(AddressUsernameMixIn, RegistrationForm):
 
 
 class CustomUserCreationForm(UserCreationForm):
-    """ Deprecated, prefer CustomRegistrationForm. This will be removed after feature and integration are confirmed. """
+    """Deprecated, prefer CustomRegistrationForm. This will be removed after feature and integration are confirmed. """
     class Meta(UserCreationForm.Meta):
         model = UserHC
         fields = ('first_name', 'last_name', 'email')  # 'username_not_email',

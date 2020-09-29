@@ -49,10 +49,10 @@ request.user = MockSuperUser()
 
 
 class AdminSetupTests(TestCase):
-    """ General expectations of the Admin. """
+    """General expectations of the Admin. """
 
     def test_admin_set_for_all_expected_models(self):
-        """ Make sure all models can be managed in the admin. """
+        """Make sure all models can be managed in the admin. """
         models = apps.get_models()
         registered_admins_dict = main_admin.site._registry
         registered_models = list(registered_admins_dict.keys())
@@ -68,7 +68,7 @@ class AdminSetupTests(TestCase):
 
     @skip("Not Implemented")
     def test_createsu_command(self):
-        """ Our custom command to create a Superuser as an initial admin """
+        """Our custom command to create a Superuser as an initial admin """
         # TODO: Write tests for when there is no superuser.
         # This seemed to not work when using this command on PythonAnywhere the first time
         pass
@@ -121,23 +121,23 @@ class AdminResourceTests(TestCase):
 
 
 class AdminSessionModelManagement(TestCase):
-    """ Tests for Session model create or modify in the Admin site. """
+    """Tests for Session model create or modify in the Admin site. """
 
     def test_admin_uses_correct_admin(self):
-        """ The admin site should use the SessiontAdmin for the Session model. """
+        """The admin site should use the SessiontAdmin for the Session model. """
         registered_admins_dict = main_admin.site._registry
         model_admin = registered_admins_dict.get(Session, None)
         self.assertIsInstance(model_admin, SessiontAdmin)
 
     def test_admin_uses_expected_form(self):
-        """ The admin SessiontAdmin utilizes the correct AdminSessionForm. """
+        """The admin SessiontAdmin utilizes the correct AdminSessionForm. """
         current_admin = SessiontAdmin(model=Session, admin_site=AdminSite())
         form = getattr(current_admin, 'form', None)
         form_class = AdminSessionForm
         self.assertEqual(form, form_class)
 
     def test_admin_has_all_model_fields(self):
-        """ The admin SessiontAdmin should use all the fields of the Session model. """
+        """The admin SessiontAdmin should use all the fields of the Session model. """
         current_admin = SessiontAdmin(model=Session, admin_site=AdminSite())
         admin_fields = []
         if current_admin.fields:
@@ -158,14 +158,14 @@ class AdminSessionModelManagement(TestCase):
         self.assertTupleEqual(admin_fields, model_fields)
 
     def get_login_kwargs(self):
-        """ If we need an admin login, this will be the needed dictionary to pass as kwargs. """
+        """If we need an admin login, this will be the needed dictionary to pass as kwargs. """
         password = environ.get('SUPERUSER_PASS', '')
         admin_user_email = environ.get('SUPERUSER_EMAIL', settings.ADMINS[0][1])
         User.objects.create_superuser(admin_user_email, admin_user_email, password)
         return {'username': admin_user_email, 'password': password}
 
     def response_after_login(self, url, client):
-        """ If the url requires a login, perform a login and follow the redirect. """
+        """If the url requires a login, perform a login and follow the redirect. """
         get_response = client.get(url)
         if 'url' in get_response:
             login_kwargs = self.get_login_kwargs()
@@ -174,7 +174,7 @@ class AdminSessionModelManagement(TestCase):
         return get_response
 
     def test_admin_can_create_first_session(self):
-        """ The first Session can be made, even though later Sessions get defaults from existing ones. """
+        """The first Session can be made, even though later Sessions get defaults from existing ones. """
         c = Client()
         add_url = '/admin/classwork/session/add/'
         login_kwargs = self.get_login_kwargs()
@@ -196,7 +196,7 @@ class AdminSessionModelManagement(TestCase):
         self.assertIsInstance(sess, Session)
 
     def test_auto_correct_on_date_conflict(self):
-        """ Expect a ValidationError when Sessions have overlapping dates. """
+        """Expect a ValidationError when Sessions have overlapping dates. """
         key_day, name = date.today(), 'first'
         publish = key_day - timedelta(days=7*3+1)
         first_sess = Session.objects.create(name=name, key_day_date=key_day, num_weeks=5, publish_date=publish)
@@ -398,7 +398,7 @@ class AdminClassDayListFilterTests(TestCase):
 
 
 class AdminUserHCTests:
-    """ Testing mix-in for proxy models of UserHC. Expect updates for: Model, ModelAdmin, Model_queryset. """
+    """Testing mix-in for proxy models of UserHC. Expect updates for: Model, ModelAdmin, Model_queryset. """
     Model = None
     ModelAdmin = None
     Model_queryset = None  # If left as None, will use the settings from model_specific_setups for given Model.
@@ -418,20 +418,20 @@ class AdminUserHCTests:
         return users, users_per_model
 
     def test_admin_uses_correct_admin(self):
-        """ The admin site should use what was set for ModelAdmin for the model set in Model. """
+        """The admin site should use what was set for ModelAdmin for the model set in Model. """
         registered_admins_dict = main_admin.site._registry
         user_admin = registered_admins_dict.get(self.Model, None)
         self.assertIsInstance(user_admin, self.ModelAdmin)
 
     def test_admin_uses_expected_form(self):
-        """ The admin set for ModelAdmin utilizes the correct form. """
+        """The admin set for ModelAdmin utilizes the correct form. """
         current_admin = self.ModelAdmin(model=self.Model, admin_site=AdminSite())
         form = getattr(current_admin, 'form', None)
         form_class = UserChangeForm
         self.assertEqual(form, form_class)
 
     def test_get_queryset(self):
-        """ Proxy models tend to be a subset of all models. This tests the queryset is as expected. """
+        """Proxy models tend to be a subset of all models. This tests the queryset is as expected. """
         current_admin = self.ModelAdmin(model=self.Model, admin_site=AdminSite())
         users, users_per_model = self.make_test_users()
         expected_qs = getattr(self, 'Model_queryset', None)
