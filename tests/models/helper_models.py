@@ -139,7 +139,7 @@ class SimpleModelTests:
 
 
 class AbstractProfileModelTests(SimpleModelTests):
-    """ Extends SimpleModelTests with common tests for models based on the AbstractProfile model.  """
+    """Extends SimpleModelTests with common tests for models based on the AbstractProfile model.  """
     detail_url_name = 'profile_user'
     repr_dict = {'Profile': 'full_name', 'User id': 'user_id', }
     str_list = ['full_name', ]
@@ -148,7 +148,7 @@ class AbstractProfileModelTests(SimpleModelTests):
     profile_attribute = 'profile'  # Expected to be overwritten by model using this mix-in.
 
     def setUp(self):
-        """ Create a User, then the create_profile method will modify (not create) the profile stored in instance. """
+        """Create a User, then the create_profile method will modify (not create) the profile stored in instance. """
         kwargs = self.defaults.copy()
         model_settings = self.model_specific_settings[self.Model]
         kwargs.update(model_settings)
@@ -183,7 +183,7 @@ class AbstractProfileModelTests(SimpleModelTests):
 
 
 # class ExampleTests(TestCase):
-#     """ The following are just examples. We normally don't have print, or test Django functionality itself. """
+#     """The following are just examples. We normally don't have print, or test Django functionality itself. """
 
 #     @classmethod
 #     def setUpTestData(cls):

@@ -4,10 +4,10 @@ from django.utils.translation import gettext as _
 from django_registration.forms import RegistrationForm
 from django_registration import validators
 from .models import UserHC
-from .mixins import AddressMixIn, AddressOptionalUsernameMixIn
+from .mixins import AddressMixIn, AddressUsernameMixIn
 
 
-class CustomRegistrationForm(AddressOptionalUsernameMixIn, RegistrationForm):
+class CustomRegistrationForm(AddressUsernameMixIn, RegistrationForm):
 
     tos = forms.BooleanField(
         widget=forms.CheckboxInput,
@@ -35,7 +35,7 @@ class CustomRegistrationForm(AddressOptionalUsernameMixIn, RegistrationForm):
 
 
 class CustomUserCreationForm(UserCreationForm):
-    """ Deprecated, prefer CustomRegistrationForm. This will be removed after feature and integration are confirmed. """
+    """Deprecated, prefer CustomRegistrationForm. This will be removed after feature and integration are confirmed. """
     class Meta(UserCreationForm.Meta):
         model = UserHC
         fields = ('first_name', 'last_name', 'email')  # 'username_not_email',

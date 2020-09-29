@@ -16,7 +16,7 @@ User = get_user_model()
 
 
 def decide_session(sess=None, display_date=None):
-    """ Typically we want to see the current session (default values), sometimes we want to see different session(s).
+    """Typically we want to see the current session (default values), sometimes we want to see different session(s).
         Used chiefly by ClassOfferListView, CheckIn, and RegisterView, but could be used elsewhere for session context.
         Returns a iterable of zero or more (typically one) Session instances. The iterable may be a Query.
     """
@@ -42,7 +42,7 @@ def decide_session(sess=None, display_date=None):
 
 
 class ViewOnlyForTeacherOrAdminMixin(UserPassesTestMixin):
-    """ Raises PermissionDenied for a User not in a required_group.
+    """Raises PermissionDenied for a User not in a required_group.
         raise_exception: As False (default) will login redirect AnonymousUser. As True, will raise PermissionDenied.
         permission_denied_message: May display in the 403 error page, depending on the template & view. Can be updated.
     """
@@ -52,7 +52,7 @@ class ViewOnlyForTeacherOrAdminMixin(UserPassesTestMixin):
     permission_denied_message = 'You scoundrel! You do not have access to that page. That page may not even exist!'
 
     def test_func(self):
-        """ Expected to return a boolean representing if the user is allowed access to this view. """
+        """Expected to return a boolean representing if the user is allowed access to this view. """
         if not self.request.user.is_authenticated:
             return False
         # user_groups = set([group for group in self.request.user.groups.values_list('name', flat=True)])
@@ -64,7 +64,7 @@ class ViewOnlyForTeacherOrAdminMixin(UserPassesTestMixin):
 
 
 class AboutUsListView(ListView):
-    """ Display details about Business and Staff """
+    """Display details about Business and Staff """
     template_name = 'classwork/aboutus.html'
     model = Staff
     context_object_name = 'profiles'
@@ -89,7 +89,7 @@ class SubjectProgressView(ListView):
 
 
 class LocationListView(ListView):
-    """ Display all the Locations that we have stored """
+    """Display all the Locations that we have stored """
     # TODO: Should we only list them if a published ClassOffer has them listed?
     template_name = 'classwork/location_list.html'
     model = Location
@@ -97,7 +97,7 @@ class LocationListView(ListView):
 
 
 class LocationDetailView(DetailView):
-    """ Display information for a location """
+    """Display information for a location """
     template_name = 'classwork/location_detail.html'
     model = Location
     context_object_name = 'location'
@@ -105,7 +105,7 @@ class LocationDetailView(DetailView):
 
 
 class ClassOfferDetailView(DetailView):
-    """ Sometimes we want to show more details for a given class offering """
+    """Sometimes we want to show more details for a given class offering """
     template_name = 'classwork/classoffer_detail.html'
     model = ClassOffer
     context_object_name = 'classoffer'
@@ -113,7 +113,7 @@ class ClassOfferDetailView(DetailView):
 
 
 class ClassOfferListView(ListView):
-    """ We will want to list the classes that are scheduled to be offered. """
+    """We will want to list the classes that are scheduled to be offered. """
     template_name = 'classwork/classoffer_list.html'
     model = ClassOffer
     context_object_name = 'classoffers'
@@ -122,7 +122,7 @@ class ClassOfferListView(ListView):
     query_order_by = ('session__key_day_date', '_num_level', )  # TODO: ? Refactor to Meta: ordering(...) ?
 
     def get_queryset(self):
-        """ We can limit the classes list by session, what is published on a given date, or currently published. """
+        """We can limit the classes list by session, what is published on a given date, or currently published. """
         display_session = self.kwargs.get('display_session', None)
         display_date = self.kwargs.get('display_date', None)
         sessions = decide_session(sess=display_session, display_date=display_date)
@@ -132,7 +132,7 @@ class ClassOfferListView(ListView):
         return q
 
     def get_context_data(self, **kwargs):
-        """ Get context of class list we are showing, typically currently published or modified by URL parameters """
+        """Get context of class list we are showing, typically currently published or modified by URL parameters """
         kwargs['object_list'] = kwargs.get('object_list', self.get_queryset())
         context = super().get_context_data(**kwargs)
         sessions = self.kwargs.pop('sessions', None)
@@ -143,7 +143,7 @@ class ClassOfferListView(ListView):
 
 
 class Checkin(ViewOnlyForTeacherOrAdminMixin, ListView):
-    """ This is a report for which students are in which classes. """
+    """This is a report for which students are in which classes. """
     group_required = ('teacher', 'admin', )
     model = Registration
     template_name = 'classwork/checkin.html'
@@ -152,7 +152,7 @@ class Checkin(ViewOnlyForTeacherOrAdminMixin, ListView):
     query_order_by = ('-class_day', 'start_time', )  # TODO: ? Refactor to Meta: ordering(...) ?
 
     def get_queryset(self):
-        """ List all the students from all the classes sorted according to the class property query_order_by.
+        """List all the students from all the classes sorted according to the class property query_order_by.
             Student list should be grouped in days, then in start_time order, and then alphabetical first name.
         """
         display_session = self.kwargs.get('display_session', None)
@@ -164,7 +164,7 @@ class Checkin(ViewOnlyForTeacherOrAdminMixin, ListView):
         return selected_classes
 
     def get_context_data(self, **kwargs):
-        """ Determine Session filter parameters. Reference to previous and next Session if feasible. """
+        """Determine Session filter parameters. Reference to previous and next Session if feasible. """
         context = super().get_context_data(**kwargs)
         sessions = self.kwargs.pop('sessions', [])
         context['sessions'] = ', '.join([ea.name for ea in sessions])
@@ -184,7 +184,7 @@ class Checkin(ViewOnlyForTeacherOrAdminMixin, ListView):
 
 
 class ResourceDetailView(DetailView):
-    """ Each Resource can be viewed if the user has permission """
+    """Each Resource can be viewed if the user has permission """
     model = Resource
     context_object_name = 'resource'
     pk_url_kwarg = 'id'
@@ -225,7 +225,7 @@ class ProfileView(DetailView):
         return {key: vals for (key, vals) in ct.items() if len(vals) > 0}
 
     def get_context_data(self, **kwargs):
-        """ Modify the context """
+        """Modify the context """
         context = super().get_context_data(**kwargs)
         co_connected = getattr(context['object'], 'taken' if self.profile_type == 'student' else 'taught', object)
         context['classoffers'] = co_connected.all()
@@ -235,7 +235,7 @@ class ProfileView(DetailView):
 
 
 class RegisterView(CreateView):
-    """ Allows a user/student to sign up for a ClassOffer.
+    """Allows a user/student to sign up for a ClassOffer.
         We also want to allow anonymousUser to sign up, creating a new user (and profile) as needed.
         Payment model is instantiated, student is added to the ClassOffer list.
     """
@@ -387,7 +387,7 @@ class RegisterView(CreateView):
 
 
 class PaymentProcessView(UpdateView):
-    """ Payment Processing.
+    """Payment Processing.
         The RegisterView is the create for a payment which sends an authorization request.
         Here, we receive the authorization request and handle the next steps.
         - Error: Something did not work in the Authorization request
@@ -445,7 +445,7 @@ class PaymentProcessView(UpdateView):
 
 
 def payment_details(self, id):
-    """ The route for this function is called by django-payments after a registration is submitted. """
+    """The route for this function is called by django-payments after a registration is submitted. """
     print('========== views function - payment_details ==============')
     payment = get_object_or_404(get_payment_model(), id=id)
     try:

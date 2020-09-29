@@ -48,7 +48,7 @@ class NoSkipToOneSkipSessionDates(TransactionTestCase):
         return obj
 
     def test_skip_key_date_early_shift(self):
-        """ Session with early shift and 1 skip week on the key day. """
+        """Session with early shift and 1 skip week on the key day. """
         day_adjust = -2
         last_sess = Session.last_session()
         key_day = last_sess.key_day_date + timedelta(days=7*self.duration)
@@ -74,7 +74,7 @@ class NoSkipToOneSkipSessionDates(TransactionTestCase):
         self.assertEqual(sess.prev_session.end_date, prev_end)
 
     def test_skip_key_date_late_shift(self):
-        """ Session with late shift and 1 skip week on the key day, flipping last class day. """
+        """Session with late shift and 1 skip week on the key day, flipping last class day. """
         day_adjust = 5
         # key_day = date.fromisoformat(INITIAL['key_day_date']) + timedelta(days=7*2*self.duration)
         last_sess = Session.last_session()
@@ -101,7 +101,7 @@ class NoSkipToOneSkipSessionDates(TransactionTestCase):
         self.assertEqual(sess.prev_session.end_date, prev_end)
 
     def test_skip_other_date_early_shift(self):
-        """ Session with early shift and 1 skip week NOT on the key day, flipping last class day. """
+        """Session with early shift and 1 skip week NOT on the key day, flipping last class day. """
         day_adjust = -2
         last_sess = Session.last_session()
         key_day = last_sess.key_day_date + timedelta(days=7*self.duration)
@@ -129,7 +129,7 @@ class NoSkipToOneSkipSessionDates(TransactionTestCase):
         self.assertEqual(sess.prev_session.end_date, prev_end)
 
     def test_skip_other_date_late_shift(self):
-        """ Session with late shift and 1 skip week NOT on the key_day. """
+        """Session with late shift and 1 skip week NOT on the key_day. """
         day_adjust = 5
         last_sess = Session.last_session()
         key_day = last_sess.key_day_date + timedelta(days=7*self.duration)
@@ -182,7 +182,7 @@ class OneOtherSkipEarlyToThreeSkip(NoSkipToOneSkipSessionDates):
 #         return obj
 
 #     def test_skip_key_date_early_shift(self):
-#         """ Session with early shift and 1 skip week on the key day. """
+#         """Session with early shift and 1 skip week on the key day. """
 #         day_adjust = -2
 #         key_day = date.fromisoformat(INITIAL['key_day_date']) + timedelta(days=7*2*self.duration)
 #         publish = date.fromisoformat(INITIAL['expire_date']) + timedelta(days=7*duration)
@@ -207,7 +207,7 @@ class OneOtherSkipEarlyToThreeSkip(NoSkipToOneSkipSessionDates):
 #         self.assertEqual(sess.prev_session.end_date, prev_end)
 
 #     def test_dates_skips_key_date_late_shift(self):
-#         """ Session with late shift and 1 skip week on the key day, flipping last class day. """
+#         """Session with late shift and 1 skip week on the key day, flipping last class day. """
 #         skips, day_adjust, duration = 1, 5, INITIAL['num_weeks']
 #         key_day = date.fromisoformat(INITIAL['key_day_date']) + timedelta(days=7*2*duration)
 #         publish = date.fromisoformat(INITIAL['expire_date']) + timedelta(days=7*duration)
@@ -232,7 +232,7 @@ class OneOtherSkipEarlyToThreeSkip(NoSkipToOneSkipSessionDates):
 #         self.assertEqual(sess.prev_session.end_date, prev_end)
 
 #     def test_dates_skips_other_date_early_shift(self):
-#         """ Session with early shift and 1 skip week NOT on the key day, flipping last class day. """
+#         """Session with early shift and 1 skip week NOT on the key day, flipping last class day. """
 #         skips, day_adjust, duration = 1, -2, INITIAL['num_weeks']
 #         key_day = date.fromisoformat(INITIAL['key_day_date']) + timedelta(days=7*2*duration)
 #         publish = date.fromisoformat(INITIAL['expire_date']) + timedelta(days=7*duration)
@@ -257,7 +257,7 @@ class OneOtherSkipEarlyToThreeSkip(NoSkipToOneSkipSessionDates):
 #         self.assertEqual(sess.prev_session.end_date, prev_end)
 
 #     def test_dates_skips_other_date_late_shift(self):
-#         """ Session with late shift and 1 skip week NOT on the key_day. """
+#         """Session with late shift and 1 skip week NOT on the key_day. """
 #         skips, day_adjust, duration = 1, 5, INITIAL['num_weeks']
 #         key_day = date.fromisoformat(INITIAL['key_day_date']) + timedelta(days=7*2*duration)
 #         publish = date.fromisoformat(INITIAL['expire_date']) + timedelta(days=7*duration)

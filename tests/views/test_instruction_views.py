@@ -19,7 +19,7 @@ class ClassOfferListViewTests(MimicAsView, TestCase):
         self.view = self.setup_view('get')
 
     def test_get_queryset(self, display_session=None, display_date=None):
-        """ Expect to only contain the Sessions returned by decide_session as requested (or default). """
+        """Expect to only contain the Sessions returned by decide_session as requested (or default). """
         display_session = display_session or self.view.kwargs.get('display_session', None)
         display_date = display_date or self.view.kwargs.get('display_date', None)
         self.view.kwargs['display_session'] = display_session
@@ -58,7 +58,7 @@ class ClassOfferListViewTests(MimicAsView, TestCase):
 
 
 class CheckinListViewTests(MimicAsView, TestCase):
-    """ Using MimicAsView, with three sessions and the viewClass created with a GET request. """
+    """Using MimicAsView, with three sessions and the viewClass created with a GET request. """
     url_name = 'checkin'
     viewClass = import_string('classwork.views.Checkin')
     query_order_by = viewClass.query_order_by
@@ -112,7 +112,7 @@ class CheckinListViewTests(MimicAsView, TestCase):
         self.test_get_context_data(display_session=display_session, display_date=display_date)
 
     def test_get_context_data_with_display_date_value(self, display_session=None):
-        """ Check that we still get a result even if all Sessions have expired. """
+        """Check that we still get a result even if all Sessions have expired. """
         from datetime import timedelta
         display_session = display_session or self.view.kwargs.get('display_session', None)
         last_sess_co = self.classoffers['new_sess']

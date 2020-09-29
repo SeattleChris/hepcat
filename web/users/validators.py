@@ -161,7 +161,7 @@ DEFAULT_RESERVED_NAMES = (
 
 @deconstructible
 class ReservedNameValidator:
-    """ Disallow reserved names from form field values. """
+    """Disallow reserved names from form field values. """
 
     def __init__(self, reserved_names=DEFAULT_RESERVED_NAMES):
         self.reserved_names = reserved_names
@@ -178,7 +178,7 @@ class ReservedNameValidator:
 
 @deconstructible
 class CaseInsensitiveUnique:
-    """ Check the value is unique, including ensuring it is case-insensitive unique. """
+    """Check the value is unique, including ensuring it is case-insensitive unique. """
 
     def __init__(self, model, field_name, error_message):
         self.model = model
@@ -206,13 +206,13 @@ class CaseInsensitiveUnique:
 
 @deconstructible
 class HTML5EmailValidator(RegexValidator):
-    """ Use the HTML5 email address rules. """
+    """Use the HTML5 email address rules. """
     message = EmailValidator.message
     regex = re.compile(HTML5_EMAIL_RE)
 
 
 def validate_confusables(value):
-    """ Avoid mixed-script containing one or more characters in Unicode Visually Confusable Characters file. """
+    """Avoid mixed-script containing one or more characters in Unicode Visually Confusable Characters file. """
     if not isinstance(value, str):
         return
     if confusables.is_dangerous(value):
@@ -220,7 +220,7 @@ def validate_confusables(value):
 
 
 def validate_confusables_email(value):
-    """ For emails, avoid mixed-script characters in the Unicode Visually Confusable Characters file. """
+    """For emails, avoid mixed-script characters in the Unicode Visually Confusable Characters file. """
     # The HTML5 specification states the RFC 5322 (governing email addresses) "defines
     # a syntax for e-mail addresses that is simultaneously too strict ... too vague
     # ...  and too lax ...  to be of practical use". Meanwhile, the HTML5 email validation

@@ -11,7 +11,7 @@ User = get_user_model()
 
 
 def date_with_day(obj, field=None, short=False, year=False):
-    """ Will format the obj.field datefield to include the day of the week. """
+    """Will format the obj.field datefield to include the day of the week. """
     date_day = getattr(obj, field, None)
     date_format = '%a' if short else '%A'
     date_format += ' %B %-d'  # django template language for date: 'l N j'
@@ -24,7 +24,7 @@ class ClassDayListFilter(admin.SimpleListFilter):
     parameter_name = 'class_day_filter'  # Parameter for the filter that will be used in the URL query.
 
     def lookups(self, request, model_admin):
-        """ Returns a list of tuples. The first tuple element is the coded value, second element is the label. """
+        """Returns a list of tuples. The first tuple element is the coded value, second element is the label. """
         qs = model_admin.get_queryset(request)
         field_key = 'class_day'
         if isinstance(model_admin, RegistrationAdmin):
@@ -34,7 +34,7 @@ class ClassDayListFilter(admin.SimpleListFilter):
                 yield (value, label)
 
     def queryset(self, request, queryset):
-        """ Returns the filtered queryset based on value provided in the query string, retrievable via self.value(). """
+        """Returns the filtered queryset based on value provided in the query string, retrievable via self.value(). """
         # Compare the requested value to decide how to filter the queryset.
         field_key = 'class_day'
         if queryset.model == Registration:
@@ -43,7 +43,7 @@ class ClassDayListFilter(admin.SimpleListFilter):
 
 
 class ResourceInline(admin.StackedInline):
-    """ Admin can add a Resource while on the Subject or ClassOffer add/change form. """
+    """Admin can add a Resource while on the Subject or ClassOffer add/change form. """
     model = Resource  # Will be overridden by the child class.
     extra = 1
     fieldsets = (
@@ -60,7 +60,7 @@ class ResourceInline(admin.StackedInline):
 
 
 class AssociateSubjectResource(admin.StackedInline):
-    """ Custom technique for managing which Subjects and ClassOffers are associated to a Resource. """
+    """Custom technique for managing which Subjects and ClassOffers are associated to a Resource. """
     model = Subject
     fields = (
         'level',
@@ -76,13 +76,13 @@ class ResourceClassOfferInline(ResourceInline):
 
 
 class StudentClassInline(admin.TabularInline):
-    """ Admin can attach a class Registration while on the Student profile add/change form. """
+    """Admin can attach a class Registration while on the Student profile add/change form. """
     model = Registration
     extra = 2
 
 
 # class UserInline(admin.TabularInline):
-#     """ Admin can create a User while creating a profile. . """
+#     """Admin can create a User while creating a profile. . """
 #     model = User
 #     # extra = 2
 
@@ -90,7 +90,7 @@ class StudentClassInline(admin.TabularInline):
 
 
 class ResourceAdmin(admin.ModelAdmin):
-    """ Create and manage assignment of Resource content. """
+    """Create and manage assignment of Resource content. """
     model = Resource
     list_display = ('__str__', 'content_type', 'assignment', 'user_type', 'avail', 'expire', )
     list_display_links = ('__str__', )
@@ -109,7 +109,7 @@ class ResourceAdmin(admin.ModelAdmin):
         return result
 
     def get_version_matrix(self):
-        """ Not Implemented. Scaffold hard-coded, this should reflect the class structure parameters set by admin. """
+        """Not Implemented. Scaffold hard-coded, this should reflect the class structure parameters set by admin. """
         num_main_versions = 4
         main = Subject.VERSION_CHOICES[:num_main_versions]
         versions = {}
@@ -125,7 +125,7 @@ class ResourceAdmin(admin.ModelAdmin):
 
 
 class SubjectAdmin(admin.ModelAdmin):
-    """ Admin change/add for Subjects. Has an inline for Resources. """
+    """Admin change/add for Subjects. Has an inline for Resources. """
     model = Subject
     list_display = ('__str__', 'name', 'level_num', 'level', 'version', )
     list_display_links = ('__str__', 'name', )
@@ -150,7 +150,7 @@ class SubjectAdmin(admin.ModelAdmin):
 
 
 class ClassOfferAdmin(admin.ModelAdmin):
-    """ Admin change/add for ClassOffers. Has an inline for Resources. """
+    """Admin change/add for ClassOffers. Has an inline for Resources. """
     model = ClassOffer
     list_display = ('__str__', 'subject', 'session', 'time', 'start_day', 'end_day', )
     list_select_related = ('subject', 'session', )
@@ -173,7 +173,7 @@ class ClassOfferAdmin(admin.ModelAdmin):
     )
 
     def time(self, obj):
-        """ Returns a string for the duration between the start and end time, or 'Not Set' if missing needed data.
+        """Returns a string for the duration between the start and end time, or 'Not Set' if missing needed data.
             Input: 'obj' -> ClassOffer instance.
             Output -> string:
                 "Not Set" if missing values for obj.start_time or obj.subject.num_minutes.
@@ -219,7 +219,7 @@ class AdminSessionForm(ModelForm):
         return data
 
     def full_clean(self):
-        """ Extended functionality with repopulating the form with data updated by the model's clean method. """
+        """Extended functionality with repopulating the form with data updated by the model's clean method. """
         full_clean = super().full_clean()
         if True:  # TODO: Is there a way to only run the following when appropriate?
             instance_after_model_clean = {name: getattr(self.instance, name, None) for name in self.fields}
@@ -231,7 +231,7 @@ class AdminSessionForm(ModelForm):
 
 
 class SessiontAdmin(admin.ModelAdmin):
-    """ Admin manage of Session models. New Sessions will populate initial values based on last Session. """
+    """Admin manage of Session models. New Sessions will populate initial values based on last Session. """
     model = Session
     form = AdminSessionForm
     list_display = ('name', 'start_day', 'end_day', 'skips', 'breaks', 'publish_day', 'expire_day', )
@@ -255,7 +255,7 @@ class SessiontAdmin(admin.ModelAdmin):
 
 
 class StaffAdmin(admin.ModelAdmin):
-    """ Admin can modify and view Staff user profiles. """
+    """Admin can modify and view Staff user profiles. """
     model = Staff
     list_display = ('username', '__str__', 'listing', 'bio_done', 'tax', )
     list_display_links = ('__str__', )
@@ -271,7 +271,7 @@ class StaffAdmin(admin.ModelAdmin):
 
 
 class StudentAdmin(admin.ModelAdmin):
-    """ Admin can modify and view Student user profiles. """
+    """Admin can modify and view Student user profiles. """
     model = Student
     list_display = ('username', '__str__', 'max_subject', 'max_level', 'level', 'beg_done', 'l2_done', 'l3_done', )
     list_display_links = ('__str__', )
@@ -297,7 +297,7 @@ class StudentAdmin(admin.ModelAdmin):
 
 
 class RegistrationAdmin(admin.ModelAdmin):
-    """ Admin change/add for Registrations, which are records of what students have signed up for. """
+    """Admin change/add for Registrations, which are records of what students have signed up for. """
     model = Registration
     list_display = ('first_name', 'last_name', 'credit', 'reg_class', 'paid', )
     list_display_links = ('first_name', 'last_name', )

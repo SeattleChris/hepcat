@@ -3,7 +3,7 @@ from django.db.models import F, Func
 
 
 class AddDate(Transform):
-    """ date1: Date, days: int -> Date. Returns a date that is number of days (+ or -) from given the initial date. """
+    """date1: Date, days: int -> Date. Returns a date that is number of days (+ or -) from given the initial date. """
     lookup_name = 'adddate'
     function = 'ADDDATE'
 
@@ -13,7 +13,7 @@ class AddDate(Transform):
 
 
 class DateDiff(Transform):
-    """ date1: Date, date2: Date -> int. Returns the number of days between two given dates. """
+    """date1: Date, date2: Date -> int. Returns the number of days between two given dates. """
     lookup_name = 'numday'
     function = 'DATEDIFF'
 
@@ -23,7 +23,7 @@ class DateDiff(Transform):
 
 
 class DayYear(Transform):
-    """ date1: Date -> int. Returns a number 1 to 366 as the day of the year for the given date or datetime input. """
+    """date1: Date -> int. Returns a number 1 to 366 as the day of the year for the given date or datetime input. """
     lookup_name = 'dayyear'
     function = 'DAYOFYEAR'
 
@@ -33,7 +33,7 @@ class DayYear(Transform):
 
 
 class NumDay(Transform):
-    """ date1: Date -> int. Returns number of days since 0 date ('0000-00-00') for the given date or datetime input. """
+    """date1: Date -> int. Returns number of days since 0 date ('0000-00-00') for the given date or datetime input. """
     lookup_name = 'numday'
     function = 'TO_DAYS'
 
@@ -43,7 +43,7 @@ class NumDay(Transform):
 
 
 class DateFromNum(Transform):
-    """ Given a number of days since 0 date ('0000-00-00'), returns a date. The opposite of 'numday'. """
+    """Given a number of days since 0 date ('0000-00-00'), returns a date. The opposite of 'numday'. """
     lookup_name = 'datefromnum'
     function = 'FROM_DAYS'
 
@@ -53,7 +53,7 @@ class DateFromNum(Transform):
 
 
 class MakeDate(Transform):
-    """ year: int, day: int -> Date. Returns a Date for the given 4-digit year and day integer (1 to 366). """
+    """year: int, day: int -> Date. Returns a Date for the given 4-digit year and day integer (1 to 366). """
     lookup_name = 'makedate'
     function = 'MAKEDATE'
 
@@ -63,7 +63,7 @@ class MakeDate(Transform):
 
 
 class DateToday(Transform):
-    """ Returns the date portion, without any information about the time, of the current day. """
+    """Returns the date portion, without any information about the time, of the current day. """
     lookup_name = 'today'
     function = 'CURDATE'
 

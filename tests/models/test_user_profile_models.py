@@ -614,7 +614,7 @@ class UserManagerTests(TestCase):
         self.assertNotIn(result, initial_users)
 
     def test_make_username_use_email(self):
-        """ Notice that switching to False for 'username_not_email' is not enough to modify the 'username'. """
+        """Notice that switching to False for 'username_not_email' is not enough to modify the 'username'. """
         kwargs = USER_DEFAULTS.copy()
         kwargs['username_not_email'] = True
         username = 'manual_username'

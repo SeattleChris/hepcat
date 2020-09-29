@@ -4,27 +4,27 @@ from datetime import date, timedelta
 
 
 class NewSiteDecideSession(TestCase):
-    """ No initial data in the database. """
+    """No initial data in the database. """
 
     def test_new_site_no_sessions(self):
-        """ Before the admin has put any Sessions in, the site and app should not break """
+        """Before the admin has put any Sessions in, the site and app should not break """
         result = decide_session()
         self.assertEqual(len(result), 0)
 
     def test_raise_error_if_double_filter(self):
-        """ Should raise an error if trying to filter by both session name and display date. """
+        """Should raise an error if trying to filter by both session name and display date. """
         kwargs = {'sess': 'some_name', 'display_date': date.today()}
         with self.assertRaises(SyntaxError):
             decide_session(**kwargs)
 
 
 class CurrentSessionSelection(TransactionTestCase):
-    """ Critical views of current classes and content depend on the decide_session function. """
+    """Critical views of current classes and content depend on the decide_session function. """
     fixtures = ['tests/fixtures/db_basic.json', 'tests/fixtures/db_hidden.json']
     # Should have a January_2020 session that has expired
 
     def test_only_current_published_session(self):
-        """ Returns only currently published session, and no expired sessions """
+        """Returns only currently published session, and no expired sessions """
         now = date.today()
         publish_date = now - timedelta(days=7*3)
         expire_date = now + timedelta(days=7*1)
@@ -36,7 +36,7 @@ class CurrentSessionSelection(TransactionTestCase):
         self.assertGreater(result[0].expire_date, now)
 
     def test_does_not_show_sessions_not_yet_published(self):
-        """ Doesn't show future unpublished sessions """
+        """Doesn't show future unpublished sessions """
         now = date.today()
         start = now + timedelta(days=7*5)
         publish_date = now + timedelta(days=7*2)
@@ -49,7 +49,7 @@ class CurrentSessionSelection(TransactionTestCase):
         self.assertLess(result[0].publish_date, now)
 
     def test_all_sessions_expired(self):
-        """ If all Sessions have expired, it should return the last expired session """
+        """If all Sessions have expired, it should return the last expired session """
         now = date.today()
         initial = Session.objects.first()
         sess = Session.objects.create(name='june')
@@ -61,7 +61,7 @@ class CurrentSessionSelection(TransactionTestCase):
         self.assertTrue(len(result) == 1)
 
     def test_requested_date(self):
-        """ The decide_session has a 'display_date' parameter to view sessions live on that date. """
+        """The decide_session has a 'display_date' parameter to view sessions live on that date. """
         initial = Session.objects.first()
         test_date = initial.publish_date + timedelta(days=2)
         result = decide_session(display_date=test_date)
@@ -71,7 +71,7 @@ class CurrentSessionSelection(TransactionTestCase):
         self.assertIn(initial, result)
 
     def test_returns_many_published_session(self):
-        """ When there are multiple, return all of the sessions published for a given date. """
+        """When there are multiple, return all of the sessions published for a given date. """
         initial = Session.objects.first()
         publish = initial.publish_date + timedelta(days=1)
         expire = initial.expire_date + timedelta(days=1)
@@ -88,7 +88,7 @@ class CurrentSessionSelection(TransactionTestCase):
         self.assertIn(overlap, result)
 
     def test_requested_session_name(self):
-        """ The decide_session has a 'sess' parameter that accepts a session name """
+        """The decide_session has a 'sess' parameter that accepts a session name """
         initial = Session.objects.first()
         name = initial.name
         result = decide_session(sess=name)
@@ -97,7 +97,7 @@ class CurrentSessionSelection(TransactionTestCase):
         self.assertTrue(len(result) == 1)
 
     def test_requested_session_name_not_existing(self):
-        """ Should be an empty list if there was no session matching given name(s) """
+        """Should be an empty list if there was no session matching given name(s) """
         name = 'fake_1998'
         empty = Session.objects.filter(name__in=[name]).first()
         result = decide_session(sess=name)
@@ -105,7 +105,7 @@ class CurrentSessionSelection(TransactionTestCase):
         self.assertIsNone(empty)
 
     def test_requested_all_sessions(self):
-        """ If the 'sess' parameter is set to 'all', then return all the sessions. """
+        """If the 'sess' parameter is set to 'all', then return all the sessions. """
         sess = Session.objects.create(name='defaults')
         all_sess = Session.objects.all()
         result = decide_session(sess='all')
@@ -116,7 +116,7 @@ class CurrentSessionSelection(TransactionTestCase):
         self.assertCountEqual(all_sess, result)
 
     def test_requested_multiple_session_names(self):
-        """ The 'sess' parameter can be a string of comma-seperated session names, return all of them """
+        """The 'sess' parameter can be a string of comma-seperated session names, return all of them """
         initial = Session.objects.first()
         names = ['defaults']
         sess = Session.objects.create(name=names[0])
@@ -129,7 +129,7 @@ class CurrentSessionSelection(TransactionTestCase):
         self.assertTrue(len(result) == 2)
 
     def test_raise_error_for_non_string_input(self):
-        """ The 'sess' (and 'display_date') parameters are expected to be strings. """
+        """The 'sess' (and 'display_date') parameters are expected to be strings. """
         with self.assertRaises(TypeError):
             decide_session(sess=['this', 'is', 'not', 'a', 'string'])
 

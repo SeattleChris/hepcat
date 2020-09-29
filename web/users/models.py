@@ -12,13 +12,13 @@ groups_from_role = {'is_teacher': teacher_group, 'is_admin': admin_group, 'is_st
 
 
 class UserManagerHC(UserManager):
-    """ Adding & Modifying some features to the default UserManager.
+    """Adding & Modifying some features to the default UserManager.
         Inherits from: UserManager, BaseUserManager, models.Manager, ...
     """
 
     @staticmethod
     def normalize_email(email):
-        """ While uppercase characters are technically allowed for the username
+        """While uppercase characters are technically allowed for the username
             portion of an email address, we are deciding to not allow uppercase
             characters with the understanding that many email systems do not
             respect uppercase as different from lowercase.
@@ -40,7 +40,7 @@ class UserManagerHC(UserManager):
         return email
 
     def set_user(self, username=None, email=None, password=None, **extra_fields):
-        """ Called for all user creation methods (create_user, create_superuser, etc).
+        """Called for all user creation methods (create_user, create_superuser, etc).
             Email addresses and login usernames are normalized, allowing no uppercase characters.
             A user must have a unique login username (usually their email address).
             Unless the 'username_not_email' was explicitly set to True, we will use the email as username.
@@ -83,7 +83,7 @@ class UserManagerHC(UserManager):
         return user
 
     def create_user(self, username=None, email=None, password=None, **extra_fields):
-        """ Create a non-superuser account. Defaults to student, but can be any combination of admin, teacher, student.
+        """Create a non-superuser account. Defaults to student, but can be any combination of admin, teacher, student.
             Required inputs: must have either email (preferred), username, or have first_name and/or last_name.
             If given an email, the other username techniques are ignored unless 'username_not_email' is set to True.
             If not using email, will try with username (if given), or create username from 'first_name' and 'last_name'.
@@ -99,7 +99,7 @@ class UserManagerHC(UserManager):
         return self.set_user(username, email, password, **extra_fields)
 
     def create_superuser(self, username, email, password, **extra_fields):
-        """ Create a superuser account, which will be staff, but could also be a teacher, admin and/or a student.
+        """Create a superuser account, which will be staff, but could also be a teacher, admin and/or a student.
             If the username is None, or other falsy values, then username will be email (default) or created from name.
         """
         # print('================== UserManagerHC.create_superuser ========================')
@@ -114,7 +114,7 @@ class UserManagerHC(UserManager):
         return self.set_user(username, email, password, **extra_fields)
 
     def find_or_create_for_anon(self, email=None, **kwargs):
-        """ This is called when someone registers when they are not logged in. If they are a new customer, we want
+        """This is called when someone registers when they are not logged in. If they are a new customer, we want
             no friction, just create a user account. If they might be an existing user, we need to get them logged in.
         """
         email = self.normalize_email(email) if email else None
@@ -135,11 +135,11 @@ class UserManagerHC(UserManager):
         # end find_or_create_for_anon
 
     def find_or_create_by_name(self, first_name=None, last_name=None, possible_users=None, **kwargs):
-        """ This is called when a user signs up someone else """
+        """This is called when a user signs up someone else """
         # print("======== UserHC.objects.find_or_create_by_name =====")
 
         def _get_single(q, **kwargs):
-            """ Helper to get if there is only one. """
+            """Helper to get if there is only one. """
             try:
                 obj = q.get(**kwargs)
             except UserHC.MultipleObjectsReturned:
@@ -167,7 +167,7 @@ class UserManagerHC(UserManager):
 
 
 class UserHC(AbstractUser):
-    """ This will be the custom Users model for the site.
+    """This will be the custom Users model for the site.
         Inherits from: AbstractUser, AbstractBaseUser, models.Model, ModelBase, ...
     """
     USERNAME_CHOICES = (
@@ -222,7 +222,7 @@ class UserHC(AbstractUser):
         return (user_val, typelist)
 
     def make_username(self):
-        """ Instead of user selecting a username, we will generate it from their info, using casefold()
+        """Instead of user selecting a username, we will generate it from their info, using casefold()
             instead of lower() since it is better for some international character sets.
         """
         # TODO: Confirm our final username is not in use.

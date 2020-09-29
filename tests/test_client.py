@@ -19,7 +19,7 @@ from os import environ
 
 
 class RouteTests(TestCase):
-    """ Routes to be checked. """
+    """Routes to be checked. """
 
     @classmethod
     def setUpClass(cls):
@@ -40,7 +40,7 @@ class RouteTests(TestCase):
 
 
 class SettingsTests(TestCase):
-    """ Checking different settings triggered by different environment situations. """
+    """Checking different settings triggered by different environment situations. """
 
     @skip("Not Implemented")
     @override_settings(HOSTED_PYTHONANYWHERE=True, LOCAL=False)

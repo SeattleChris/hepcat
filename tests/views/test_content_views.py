@@ -16,7 +16,7 @@ class AboutUsListTests(TestCase):
     view = viewClass()
 
     def get_staff_list(self, transform, is_ordered):
-        """ Used to get the transformed list of expected staff users. """
+        """Used to get the transformed list of expected staff users. """
         staff_query = self.ProfileStaff_query.filter(user__is_active=True)
         if is_ordered:
             ordering = self.view.get_ordering()
@@ -26,7 +26,7 @@ class AboutUsListTests(TestCase):
         return [transform(ea) for ea in staff_query.all()]
 
     def test_queryset_has_active_admin(self):
-        """ The queryset should have currently active admin staff members. """
+        """The queryset should have currently active admin staff members. """
         kwargs = USER_DEFAULTS.copy()
         kwargs['is_admin'] = True
         user = UserHC.objects.create_user(**kwargs)
@@ -43,7 +43,7 @@ class AboutUsListTests(TestCase):
         self.assertIn(staff, list(view_queryset.all()))
 
     def test_queryset_has_active_teachers(self):
-        """ The queryset should have currently active teacher staff members. """
+        """The queryset should have currently active teacher staff members. """
         kwargs = USER_DEFAULTS.copy()
         kwargs['is_teacher'] = True
         user = UserHC.objects.create_user(**kwargs)
@@ -60,7 +60,7 @@ class AboutUsListTests(TestCase):
         self.assertIn(staff, list(view_queryset.all()))
 
     def test_queryset_not_have_inactive_staff(self):
-        """ The queryset should not have inactive staff users. """
+        """The queryset should not have inactive staff users. """
         kwargs = USER_DEFAULTS.copy()
         kwargs['is_teacher'] = True
         kwargs['is_active'] = False
@@ -80,7 +80,7 @@ class AboutUsListTests(TestCase):
         self.assertIn(staff, self.ProfileStaff_query.filter(user__is_active=False))
 
     def test_queryset_not_have_students(self):
-        """ The queryset should not have student only users. """
+        """The queryset should not have student only users. """
         kwargs = USER_DEFAULTS.copy()
         kwargs['is_admin'] = False
         kwargs['is_teacher'] = False
@@ -105,7 +105,7 @@ class AboutUsListTests(TestCase):
         self.assertIn(student, list(student_query.all()))
 
     def test_queryset_has_expected_profile_order(self):
-        """ The queryset should have the correct order for active staff members. """
+        """The queryset should have the correct order for active staff members. """
         profiles = []
         for num in range(5):
             kwargs = {key: '_'.join((str(num), val)) for key, val in USER_DEFAULTS.items()}
@@ -123,7 +123,7 @@ class AboutUsListTests(TestCase):
         self.assertQuerysetEqual(view_queryset, [repr(ea) for ea in profiles], ordered=True)
 
     def test_get_context_data(self):
-        """ Testing site before and after having a 'business_about' SiteContent.  """
+        """Testing site before and after having a 'business_about' SiteContent.  """
         target_name = 'business_about'
         test_text = 'This is the about text we added. '
         initial_about = SiteContent.objects.filter(name=target_name).first()
