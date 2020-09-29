@@ -618,8 +618,7 @@ class FormOverrideMixIn:
             if name in overrides:
                 field.widget.attrs.update(overrides[name])
             if not overrides.get(name, {}).get('no_size_override', False):
-                # if issubclass(field.widget.__class__, TextInput):
-                if isinstance(field.widget, Textarea):  # Django sets default 'cols' and 'rows' for Textarea widgets.
+                if isinstance(field.widget, Textarea):
                     width_attr_name = 'cols'
                     default = DEFAULT.get('cols', None)
                     display_size = field.widget.attrs.get('cols', None)
@@ -630,13 +629,13 @@ class FormOverrideMixIn:
                     if default:
                         display_size = min((display_size, default))
                 elif issubclass(field.__class__, CharField):
-                    print("*-*-*-*-*-*-*-*-*-*-*-* TextInput *-*-*-*-*-*-*-*-*-*-*-*-")
-                    # TODO: Expect to work for type in ('email', 'password', 'tel', 'text')
+                    # print("*-*-*-*-*-*-*-*-*-*-*-* CharField *-*-*-*-*-*-*-*-*-*-*-*-")
+                    # Works for type: 'email', 'password', 'text', ... Unsure on 'tel'.
                     width_attr_name = 'size'  # 'size' is only valid for input types: email, password, tel, text
                     default = DEFAULT.get('size', None)  # Cannot use float("inf") as an int.
                     display_size = field.widget.attrs.get('size', None)
                 else:  # This field does not have a size setting.
-                    print(f"------------ Not TextInput: {name} ----------------------")
+                    # print(f"------------ Not CharField: {name} ----------------------")
                     width_attr_name = None
                     default = None
                     display_size = None
