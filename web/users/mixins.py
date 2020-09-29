@@ -4,8 +4,8 @@ from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.contrib.admin.utils import flatten
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UsernameField
-from django.forms.fields import Field
-from django.forms.widgets import Input, CheckboxInput, HiddenInput, Textarea
+from django.forms.fields import Field, CharField
+from django.forms.widgets import Input, CheckboxInput, HiddenInput, Textarea  # TextInput,
 from django.forms.utils import ErrorDict  # , ErrorList
 from django.utils.translation import gettext as _
 from django.utils.html import conditional_escape, format_html
@@ -318,7 +318,7 @@ class ComputedUsernameMixIn(ComputedFieldsMixIn):
         kwargs['computed_fields'] = computed_field_names
         strict_email = kwargs.pop('strict_email', getattr(self, 'strict_email', None))
         strict_username = kwargs.pop('strict_username', getattr(self, 'strict_username', None))
-        validator_kwargs ={'email': {'strict': strict_email}, 'username': {'strict': strict_username}}
+        validator_kwargs = {'email': {'strict': strict_email}, 'username': {'strict': strict_username}}
         kwargs['validator_kwargs'] = validator_kwargs
         super().__init__(*args, **kwargs)
         if hasattr(self, 'assign_focus_field'):
@@ -618,21 +618,25 @@ class FormOverrideMixIn:
             if name in overrides:
                 field.widget.attrs.update(overrides[name])
             if not overrides.get(name, {}).get('no_size_override', False):
-                display_size = field.widget.attrs.get('cols', None)
-                if display_size:  # if widget is a textarea, then the width is 'cols' and Django sets it to by default.
+                # if issubclass(field.widget.__class__, TextInput):
+                if isinstance(field.widget, Textarea):  # Django sets default 'cols' and 'rows' for Textarea widgets.
                     width_attr_name = 'cols'
                     default = DEFAULT.get('cols', None)
+                    display_size = field.widget.attrs.get('cols', None)
                     if 'rows' in DEFAULT:
                         height = field.widget.attrs.get('rows', None)
                         height = min((DEFAULT['rows'], int(height))) if height else DEFAULT['rows']
                         field.widget.attrs['rows'] = str(height)
                     if default:
                         display_size = min((display_size, default))
-                elif field.widget.attrs.get('type', '') in ('email', 'password', 'tel', 'text'):  # TODO: Does not see type attr.
+                elif issubclass(field.__class__, CharField):
+                    print("*-*-*-*-*-*-*-*-*-*-*-* TextInput *-*-*-*-*-*-*-*-*-*-*-*-")
+                    # TODO: Expect to work for type in ('email', 'password', 'tel', 'text')
                     width_attr_name = 'size'  # 'size' is only valid for input types: email, password, tel, text
                     default = DEFAULT.get('size', None)  # Cannot use float("inf") as an int.
                     display_size = field.widget.attrs.get('size', None)
                 else:  # This field does not have a size setting.
+                    print(f"------------ Not TextInput: {name} ----------------------")
                     width_attr_name = None
                     default = None
                     display_size = None
