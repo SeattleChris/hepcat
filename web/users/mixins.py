@@ -1160,24 +1160,32 @@ class FormFieldsetMixIn:
 
 
 class FieldsetOverrideMixIn(FocusMixIn, FormFieldsetMixIn, FormOverrideMixIn):
-    """Using fieldsets, overrides, and focus. Similar to AddressMixIn but basic overrides not OverrideCountryMixIn. """
+    """Using fieldsets, overrides (not country), and focus. No computed. Like Address, but no country feature. """
 
 
-class FieldsetOverrideComputedMixIn(FocusMixIn, FormFieldsetMixIn, ComputedFieldsMixIn, FormOverrideMixIn):
+class FieldsetOverrideComputedMixIn(FocusMixIn, FormFieldsetMixIn, FormOverrideMixIn, ComputedFieldsMixIn):
     """Using fieldsets, overrides, computed, and focus. Using all base versions, none of the optional extensions. """
 
 
-class FieldsetOverrideUsernameMixIn(FocusMixIn, FormFieldsetMixIn, ComputedUsernameMixIn, FormOverrideMixIn):
+class FieldsetOverrideUsernameMixIn(FocusMixIn, FormFieldsetMixIn, FormOverrideMixIn, ComputedUsernameMixIn):
     """Using fieldsets, overrides (not country), computed with optional username, and focus. """
-
-
-class FieldsetOverrideCountryComputedMixIn(FocusMixIn, FormFieldsetMixIn, ComputedFieldsMixIn, OverrideCountryMixIn):
-    """Using fieldsets, overrides with optional country, computed (not username), and focus. """
-
-
-class AddressUsernameMixIn(FocusMixIn, FormFieldsetMixIn, OverrideCountryMixIn, ComputedUsernameMixIn):
-    """Using fieldsets, overrides with optional country, computed with optional username, and focus. """
 
 
 class AddressMixIn(FocusMixIn, FormFieldsetMixIn, OverrideCountryMixIn):
     """Using fieldsets, overrides with optional country, and focus. No computed features. """
+
+
+class AddressUsernameMixIn(AddressMixIn, ComputedUsernameMixIn):
+    """Using fieldsets, overrides with optional country, computed with optional username, and focus. """
+
+
+# class AddressComputedMixIn(AddressMixIn, ComputedFieldsMixIn):
+#     """Using fieldsets, overrides with optional country, computed (not username), and focus. """
+
+
+# class FieldsetComputedMixIn(FocusMixIn, FormFieldsetMixIn, ComputedFieldsMixIn):
+#     """Using fieldsets, computed, and focus. No Overrides. """
+
+
+# class FieldsetUsernameMixIn(FocusMixIn, FormFieldsetMixIn, ComputedUsernameMixIn):
+#     """Using fieldsets, computed with optional username, and focus. No Overrides. """
