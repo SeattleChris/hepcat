@@ -86,7 +86,7 @@ class ComputedFieldsMixIn:
 
     def __init__(self, *args, **kwargs):
         print("======================= ComputedFieldsMixIn.__init__ =================================")
-        self.names_for_critical(kwargs)
+        self.critical_names = self.names_for_critical(kwargs)
         computed_field_names = kwargs.pop('computed_fields', [])
         computed_field_names = self.setup_computed_fields(computed_field_names, self.base_fields)
         validator_kwargs = kwargs.pop('validator_kwargs', {})
@@ -98,26 +98,18 @@ class ComputedFieldsMixIn:
 
     def names_for_critical(self, kwargs):
         """Set model properties for 'critical_names' in kwargs, 'user_model', and expected name_for_<variable>s. """
-        critical_names = kwargs.pop('critical_names', [])
-        critical_names = set(critical_names)
-
-        def set_available_values(needed_names):
-            missing_names = []
-            for name in needed_names:
-                value = kwargs.pop(name, getattr(self, name, None))
-                setattr(self, name, value)
-                if value is None:
-                    missing_names.append(name)
-            return missing_names
-
-        missing_names = set_available_values(critical_names)
-        if missing_names and 'user_model' in missing_names:
-            user_model = self.get_form_user_model()
-            self.user_model = user_model
-            self.name_for_user = self.name_for_user or user_model.USERNAME_FIELD
-            self.name_for_email = self.name_for_email or user_model.get_email_field_name()
-            missing_names = set_available_values(missing_names)
-        return missing_names
+        critical_names = kwargs.pop('critical_names', {})
+        missing_names = []
+        for name, value in critical_names.items():
+            if callable(value):
+                value = value()
+            setattr(self, name, value)
+            if value is None:
+                missing_names.append(name)
+        if missing_names:
+            raise ImproperlyConfigured(_("Evaluated as None for critical names: {} ".format(missing_names)))
+        critical_names = list(critical_names.keys())
+        return critical_names
 
     def get_form_user_model(self):
         """Use the model of the ModelForm if it has what is needed. Otherwise assign to the User model. """
@@ -315,8 +307,11 @@ class ComputedUsernameMixIn(ComputedFieldsMixIn):
         computed_field_names = kwargs.get('computed_fields', [])
         computed_field_names.append(self.USERNAME_FLAG_FIELD)
         kwargs['computed_fields'] = computed_field_names
-        critical_names = kwargs.get('critical_names', [])
-        critical_names.extend(('user_model', 'name_for_user', 'name_for_email', ))
+        critical_names = kwargs.get('critical_names', {})
+        user_model = self.get_form_user_model()
+        critical_names['user_model'] = user_model
+        critical_names['name_for_user'] = user_model.USERNAME_FIELD
+        critical_names['name_for_email'] = user_model.get_email_field_name()
         kwargs['critical_names'] = critical_names
         strict_email = kwargs.pop('strict_email', getattr(self, 'strict_email', None))
         strict_username = kwargs.pop('strict_username', getattr(self, 'strict_username', None))
