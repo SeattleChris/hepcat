@@ -682,23 +682,19 @@ class OverrideCountryMixIn(FormOverrideMixIn):
         print("================= OverrideCountryMixIn(FormOverrideMixIn).__init__ ============================")
         country_name = self.country_field_name
         country_field = self.base_fields.get(country_name, None)
-        default = settings.DEFAULT_COUNTRY
         address_display_version = 'local'
+        display = 'NO DISPLAY YET'
+        country_flag = None
         if self.country_optional and country_field:
             needed_names = [nf for nf in ('country_display', 'country_flag') if nf not in self.base_fields]
             computed_field_names = [country_name]
             data = kwargs.get('data', {})
-            display = 'DISPLAY NOT FOUND'
             if data:  # The form has been submitted.
-                display = data.get('country_display', display)
+                display = data.get('country_display', 'NOT FOUND')
                 country_flag = data.get('country_flag', None)
-                val = data.get(country_name, None)
-                if display == 'local' and country_flag:  # self.country_display.initial
+                if country_flag:
                     computed_field_names = []
                     address_display_version = 'foreign'
-                log = f"Displayed {display}, country value {val}, with default {default}. "
-                log += "Checked foreign country. " if country_flag else "Not choosing foreign. "
-                print(log)
             has_computed = issubclass(self.__class__, ComputedFieldsMixIn)
             for name in needed_names:
                 field = self.make_computed_field(name) if has_computed else getattr(self, name, None)
@@ -708,9 +704,13 @@ class OverrideCountryMixIn(FormOverrideMixIn):
                 computed_field_names.extend(kwargs.get('computed_fields', []))
                 kwargs['computed_fields'] = computed_field_names
             elif computed_field_names:
-                self.remove_field_names = computed_field_names
+                self.remove_field_names = getattr(self, 'remove_field_names', [])
+                self.remove_field_names.extend(computed_field_names)
             print("-------------------------------------------------------------")
         # else: Either this form does not have an address, or they don't what the switch functionality.
+        log = f"Displayed - {display}. "
+        log += "Indicated, and will show, foreign addres. " if country_flag else "will show local address. "
+        print(log)
         super().__init__(*args, **kwargs)
         # print("--------------- CountryMixIn back from Super ----------------------")
         name = 'country_display'
