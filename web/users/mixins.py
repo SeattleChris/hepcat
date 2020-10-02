@@ -87,8 +87,7 @@ class ComputedFieldsMixIn:
         critical_fields = self.fields_for_critical(kwargs)
         computed_field_names = kwargs.pop('computed_fields', [])
         computed_field_names = self.setup_computed_fields(computed_field_names, critical_fields, self.base_fields)
-        validator_kwargs = kwargs.pop('validator_kwargs', {})
-        self.attach_critical_validators(**validator_kwargs)
+        self.attach_critical_validators(**critical_fields)
         super().__init__(*args, **kwargs)
         computed_field_names.extend(kwargs.pop('computed_fields', []))
         self.computed_fields = self.get_computed_fields(computed_field_names)
@@ -117,14 +116,14 @@ class ComputedFieldsMixIn:
             computed_field_names.extend(computed_fields)
         elif isinstance(computed_fields, dict):
             computed_field_names.extend(computed_fields.keys())
-        computed_field_names.extend(critical_fields.keys())
-        computed_field_names = set(computed_field_names)
-        for name_for_field in computed_field_names:
-            if name_for_field not in fields:
-                name = crit_fields.get(name_for_field, name_for_field)
-                field = self.make_computed_field(name, name_for_field)
-                fields[name_for_field] = field
-        return list(computed_field_names)
+        computed_field_names.extend([getattr(self, name, None) for name in critical_fields])
+        computed_field_names = [name for name in computed_field_names if name in fields]
+        # for name_for_field in computed_field_names:
+        #     if name_for_field not in fields:
+        #         name = crit_fields.get(name_for_field, name_for_field)
+        #         field = self.make_computed_field(name, name_for_field)
+        #         fields[name_for_field] = field
+        return computed_field_names
 
     def get_computed_fields(self, computed_field_names):
         """Must be called after self.fields constructed. Removes desired fields from self.fields. """
@@ -161,26 +160,26 @@ class ComputedFieldsMixIn:
 
         validator_names = [name for name in fields if hasattr(self, '%s_validators' % name)]
 
-        crit_fields = {'username': 'name_for_user', 'email': 'name_for_email'}
-        for name, name_for_field in crit_fields.items():
-            name_for_field = kwargs.get(name_for_field, getattr(self, name_for_field, name))
-            opts = {'name': name_for_field}
-            if name_for_field in kwargs:
-                opts.update(kwargs[name_for_field])  # possibly passing 'strict' setting.
-            if name_for_field != name and name in kwargs:
-                opts.update(kwargs[name])  # possibly passing 'strict' setting.
-            kwargs[name] = opts
-            if name_for_field != name and name_for_field in fields:
-                validator_names.append(name)
+        # crit_fields = {'username': 'name_for_user', 'email': 'name_for_email'}
+        # for name, name_for_field in crit_fields.items():
+        #     name_for_field = kwargs.get(name_for_field, getattr(self, name_for_field, name))
+        #     opts = {'name': name_for_field}
+        #     if name_for_field in kwargs:
+        #         opts.update(kwargs[name_for_field])  # possibly passing 'strict' setting.
+        #     if name_for_field != name and name in kwargs:
+        #         opts.update(kwargs[name])  # possibly passing 'strict' setting.
+        #     kwargs[name] = opts
+        #     if name_for_field != name and name_for_field in fields:
+        #         validator_names.append(name)
 
         for name in validator_names:
             func = getattr(self, '%s_validators' % name)
-            func(fields[name], **kwargs)
+            func(fields, **kwargs)
         return True
 
-    def username_validators(self, field, **kwargs):
-        opts = kwargs.get('username', {})
-        name_for_user = opts.get('name', getattr(self, 'name_for_user', 'username'))
+    def username_validators(self, fields, **kwargs):
+        field_name = self.name_for_user
+        opts = kwargs.get('name_for_user', {})
         strict_username = opts.get('strict', getattr(self, 'strict_username', None))
         reserved_names = kwargs.get('reserved_name', [])
         username_validators = [
@@ -190,15 +189,15 @@ class ComputedFieldsMixIn:
         if strict_username:
             username_validators.append(
                 validators.CaseInsensitiveUnique(
-                    self.user_model, name_for_user, validators.DUPLICATE_USERNAME
+                    self.user_model, self.user_model.USERNAME_FIELD, validators.DUPLICATE_USERNAME
                 )
             )
-        field.validators.extend(username_validators)
+        fields[field_name].validators.extend(username_validators)
         return True
 
-    def email_validators(self, field, **kwargs):
-        opts = kwargs.get('email', {})
-        name_for_email = opts.get('name', getattr(self, 'name_for_email', 'email'))
+    def email_validators(self, fields, **kwargs):
+        field_name = self.name_for_email
+        opts = kwargs.get('name_for_email', {})
         strict_email = opts.get('strict', getattr(self, 'strict_email', None))
         email_validators = [
             validators.HTML5EmailValidator(),
@@ -207,9 +206,10 @@ class ComputedFieldsMixIn:
         if strict_email:
             email_validators.append(
                 validators.CaseInsensitiveUnique(
-                    self.user_model, name_for_email, validators.DUPLICATE_EMAIL
+                    self.user_model, self.user_model.get_email_field_name(), validators.DUPLICATE_EMAIL
                 )
             )
+        field = fields[field_name]
         field.validators.extend(email_validators)
         field.required = True
         return True
@@ -277,7 +277,7 @@ class ComputedUsernameMixIn(ComputedFieldsMixIn):
     constructor_fields = ('first_name', 'last_name', )
     strict_username = True  # case_insensitive
     strict_email = False  # unique_email and case_insensitive
-    USERNAME_FLAG_FIELD = 'username_flag'  # Expected to be overwritten by parent model Meta
+    USERNAME_FLAG_FIELD = None  # Should be overwritten by parent model, with backup ComputedUsernameMixIn.username_flag
     user_model = None
     name_for_user = None
     name_for_email = None
@@ -288,16 +288,16 @@ class ComputedUsernameMixIn(ComputedFieldsMixIn):
 
     def __init__(self, *args, **kwargs):
         print("======================= ComputedUsernameMixIn(ComputedFieldsMixIn).__init__ ==========================")
+        flag_names = (getattr(self, 'USERNAME_FLAG_FIELD', None), )
         user_model = self.user_model = self.get_form_user_model()
         name_for_email = user_model.get_email_field_name()
         name_for_user = user_model.USERNAME_FIELD
 
-        email_opts = {'names': (name_for_email, 'email'), 'alt_field': 'email_field'}
-        user_opts = {'names': (name_for_user, 'username'), 'alt_field': 'username_field'}
+        flag_opts = {'names': flag_names, 'alt_field': 'username_flag', 'computed': True}
+        email_opts = {'names': (name_for_email, 'email'), 'alt_field': 'email_field', 'computed': False}
+        user_opts = {'names': (name_for_user, 'username'), 'alt_field': 'username_field', 'computed': True}
         email_opts['strict'] = kwargs.pop('strict_email', getattr(self, 'strict_email', None))
         user_opts['strict'] = kwargs.pop('strict_username', getattr(self, 'strict_username', None))
-        flag_opts = {'names': (getattr(self, 'USERNAME_FLAG_FIELD', None), ), 'alt_field': 'username_flag'}
-        # model_opts = {'name': user_model, 'name_for': 'user_model'}
         critical_fields = {'name_for_email': email_opts, 'name_for_user': user_opts, 'USERNAME_FLAG_FIELD': flag_opts}
         kwargs['critical_fields'] = critical_fields
 
