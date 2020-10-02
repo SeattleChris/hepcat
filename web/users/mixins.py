@@ -116,7 +116,8 @@ class ComputedFieldsMixIn:
             computed_field_names.extend(computed_fields)
         elif isinstance(computed_fields, dict):
             computed_field_names.extend(computed_fields.keys())
-        computed_field_names.extend([getattr(self, name, None) for name in critical_fields])
+        critical_computed = [name for name, opts in critical_fields.items() if opts.get('computed', None)]
+        computed_field_names.extend(getattr(self, name, None) for name in critical_computed)
         computed_field_names = [name for name in computed_field_names if name in fields]
         # for name_for_field in computed_field_names:
         #     if name_for_field not in fields:
