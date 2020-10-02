@@ -346,19 +346,18 @@ class ComputedUsernameMixIn(ComputedFieldsMixIn):
 
     def username_from_email_or_names(self, username_field_name=None, email_field_name=None):
         """Initial username field value. Must be evaluated after dependent fields populate cleaned_data. """
-        name_fields = self.constructor_fields
         email_field_name = email_field_name or self.name_for_email
         username_field_name = username_field_name or self.name_for_user
-        normalize = self.user_model.normalize_username
-        result_value = self.normalized_value_from_values(field_names=(email_field_name, ), normalize=normalize)
-        lookup = {"{}__iexact".format(username_field_name): result_value}
+        normalize = self.user_model.normalize_username  # TODO: Fail gracefully version?
+        result = self.normalized_value_from_values(field_names=(email_field_name, ), normalize=normalize)
+        lookup = {"{}__iexact".format(self.user_model.USERNAME_FIELD): result}
         try:
-            if not result_value or self.user_model._default_manager.filter(**lookup).exists():
-                result_value = self.normalized_value_from_values(field_names=name_fields, normalize=normalize)
+            if not result or self.user_model._default_manager.filter(**lookup).exists():
+                result = self.normalized_value_from_values(field_names=self.constructor_fields, normalize=normalize)
         except Exception as e:
             print("Unable to query to lookup if this username exists. ")
             print(e)
-        return result_value
+        return result
 
     def compute_username(self):
         """Can overwrite with new logic. Determine a str, or callable returning one, and update self.initial dict. """
