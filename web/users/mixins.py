@@ -84,18 +84,19 @@ class ComputedFieldsMixIn:
 
     def __init__(self, *args, **kwargs):
         print("======================= ComputedFieldsMixIn.__init__ =================================")
-        critical_fields = self.fields_for_critical(kwargs)
+        critical_fields = self.fields_for_critical(kwargs.pop('critical_fields', {}))
         computed_field_names = kwargs.pop('computed_fields', [])
-        computed_field_names = self.setup_computed_fields(computed_field_names, critical_fields, self.base_fields)
+        critical_names = (getattr(self, name) for name, opts in critical_fields.items() if opts.get('computed', None))
+        computed_field_names.extend(critical_names)
+        computed_field_names = self.setup_computed_fields(computed_field_names, self.base_fields)
         self.attach_critical_validators(**critical_fields)
         super().__init__(*args, **kwargs)
         computed_field_names.extend(kwargs.pop('computed_fields', []))
         self.computed_fields = self.get_computed_fields(computed_field_names)
         print("--------------------- FINISH ComputedFieldsMixIn.__init --------------------")
 
-    def fields_for_critical(self, kwargs):
+    def fields_for_critical(self, critical_fields):
         """Set model properties for 'critical_fields' in kwargs, 'user_model', and expected name_for_<variable>s. """
-        critical_fields = kwargs.pop('critical_fields', {})
         missing_fields = {}
         for label, opts in critical_fields.items():
             names = opts.get('names', label)
@@ -109,15 +110,13 @@ class ComputedFieldsMixIn:
             raise ImproperlyConfigured(_("Could not assign for critical fields: {} ".format(missing_fields)))
         return critical_fields
 
-    def setup_computed_fields(self, computed_field_names, critical_fields, fields):
+    def setup_computed_fields(self, computed_field_names, fields):
         """Modify fields by adding expected fields. Return an updated computed_field_names list. """
         computed_fields = getattr(self, 'computed_fields', [])
         if isinstance(computed_fields, (list, tuple)):
             computed_field_names.extend(computed_fields)
         elif isinstance(computed_fields, dict):
             computed_field_names.extend(computed_fields.keys())
-        critical_computed = [name for name, opts in critical_fields.items() if opts.get('computed', None)]
-        computed_field_names.extend(getattr(self, name, None) for name in critical_computed)
         computed_field_names = [name for name in computed_field_names if name in fields]
         # for name_for_field in computed_field_names:
         #     if name_for_field not in fields:
@@ -134,7 +133,7 @@ class ComputedFieldsMixIn:
         computed_fields = {key: self.fields.pop(key, None) for key in computed_field_names}
         return computed_fields
 
-    def make_computed_field(self, names, alt_name=None):
+    def make_computed_field(self, names, alt_name=''):
         """Returns a form field already created (possibly in a MixIn). Future: may create based on a model. """
         names = names if isinstance(names, tuple) else tuple(names)
         field = None
