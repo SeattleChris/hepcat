@@ -102,7 +102,7 @@ class ComputedFieldsMixIn:
             names = opts.get('names', label)
             name, field = self.make_computed_field(names, opts.get('alt_field', None))
             if name is None or field is None:
-                missing_fields.update(label=opts)
+                missing_fields.update({label: opts})
             else:
                 self.base_fields[name] = field
                 setattr(self, label, name)
@@ -118,11 +118,12 @@ class ComputedFieldsMixIn:
         elif isinstance(computed_fields, dict):
             computed_field_names.extend(computed_fields.keys())
         computed_field_names = [name for name in computed_field_names if name in fields]
-        # for name_for_field in computed_field_names:
-        #     if name_for_field not in fields:
-        #         name = crit_fields.get(name_for_field, name_for_field)
-        #         field = self.make_computed_field(name, name_for_field)
-        #         fields[name_for_field] = field
+        for field_name in computed_field_names:
+            if field_name not in fields:
+                # name = crit_fields.get(field_name, field_name)
+                # field = self.make_computed_field(name, field_name)
+                # fields[field_name] = field
+                pass
         return computed_field_names
 
     def get_computed_fields(self, computed_field_names):
@@ -288,14 +289,14 @@ class ComputedUsernameMixIn(ComputedFieldsMixIn):
 
     def __init__(self, *args, **kwargs):
         print("======================= ComputedUsernameMixIn(ComputedFieldsMixIn).__init__ ==========================")
-        flag_names = (getattr(self, 'USERNAME_FLAG_FIELD', None), )
         user_model = self.user_model = self.get_form_user_model()
         name_for_email = user_model.get_email_field_name()
         name_for_user = user_model.USERNAME_FIELD
+        flag_names = (getattr(self, 'USERNAME_FLAG_FIELD', None), )
 
-        flag_opts = {'names': flag_names, 'alt_field': 'username_flag', 'computed': True}
         email_opts = {'names': (name_for_email, 'email'), 'alt_field': 'email_field', 'computed': False}
         user_opts = {'names': (name_for_user, 'username'), 'alt_field': 'username_field', 'computed': True}
+        flag_opts = {'names': flag_names, 'alt_field': 'username_flag', 'computed': True}
         email_opts['strict'] = kwargs.pop('strict_email', getattr(self, 'strict_email', None))
         user_opts['strict'] = kwargs.pop('strict_username', getattr(self, 'strict_username', None))
         critical_fields = {'name_for_email': email_opts, 'name_for_user': user_opts, 'USERNAME_FLAG_FIELD': flag_opts}
@@ -702,7 +703,7 @@ class OverrideCountryMixIn(FormOverrideMixIn):
                     address_display_version = 'foreign'
             has_computed = issubclass(self.__class__, ComputedFieldsMixIn)
             for name in needed_names:
-                field = self.make_computed_field(name) if has_computed else getattr(self, name, None)
+                name, field = self.make_computed_field(name, name) if has_computed else getattr(self, name, None)
                 if field:
                     self.base_fields[name] = field
             if has_computed and computed_field_names:
