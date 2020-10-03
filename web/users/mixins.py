@@ -224,7 +224,7 @@ class ComputedFieldsMixIn:
         if any(field not in self.cleaned_data for field in field_names):
             if hasattr(self, '_errors') and any(field in self._errors for field in field_names):
                 return None  # Waiting to compute value until source fields have valid inputs.
-            err = "This initial value can only be evaluated after fields it depends on have been cleaned. "
+            err = "This computed value can only be evaluated after fields it depends on have been cleaned. "
             err += "The field order must have the computed field after fields used for its value. "
             raise ImproperlyConfigured(_(err))
         names = (self.cleaned_data[key].strip() for key in field_names if key in self.cleaned_data)
@@ -240,10 +240,10 @@ class ComputedFieldsMixIn:
         compute_errors = ErrorDict()
         # print("=================== ComputedFieldsMixIn._clean_computed_fields ============================")
         for name, field in self.computed_fields.items():
-            if hasattr(self, 'compute_%s' % name):  # calls methods like compute_username
-                field = getattr(self, 'compute_%s' % name)()
-            self.computed_fields[name] = field  # self.fields[name] = field
             value = self.get_initial_for_field(field, name)
+            if hasattr(self, 'compute_%s' % name):  # calls methods like compute_username
+                value = getattr(self, 'compute_%s' % name)()
+            # self.computed_fields[name] = field  # self.fields[name] = field
             try:
                 value = field.clean(value)
                 self.cleaned_data[name] = value
@@ -366,7 +366,7 @@ class ComputedUsernameMixIn(ComputedFieldsMixIn):
         email_field_name = self.name_for_email
         result_value = self.username_from_email_or_names(username_field_name, email_field_name)
         self.initial[username_field_name] = field.initial = result_value
-        return field
+        return result_value
 
     def configure_username_confirmation(self, name_for_user=None, name_for_email=None):
         """Since the username is using the alternative computation, prepare form for user confirmation. """
