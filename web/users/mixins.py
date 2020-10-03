@@ -753,7 +753,9 @@ class OverrideCountryMixIn(FormOverrideMixIn):
         country_flag = self.cleaned_data.get('country_flag', None)
         if country_flag:
             # default = settings.DEFAULT_COUNTRY
-            field = self.fields.get(self.country_field_name, None) or self.computed_fields.get(self.country_field_name)
+            field = self.fields.get(self.country_field_name, None)
+            if not field and hasattr(self, 'computed_fields'):
+                field = self.computed_fields.get(self.country_field_name, None)
             print("Country Flag, Initial Field value, Cleaned Data value: ")
             print(country_flag)
             print(field.initial)
