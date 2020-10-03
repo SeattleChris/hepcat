@@ -110,15 +110,16 @@ class ComputedFieldsMixIn:
             raise ImproperlyConfigured(_("Could not assign for critical fields: {} ".format(missing_fields)))
         return critical_fields
 
-    def setup_computed_fields(self, computed_field_names, fields):
+    def setup_computed_fields(self, field_names, fields):
         """Modify fields by adding expected fields. Return an updated computed_field_names list. """
         computed_fields = getattr(self, 'computed_fields', [])
         if isinstance(computed_fields, (list, tuple)):
-            computed_field_names.extend(computed_fields)
+            field_names.extend(computed_fields)
         elif isinstance(computed_fields, dict):
-            computed_field_names.extend(computed_fields.keys())
-        computed_field_names = [name for name in computed_field_names if name in fields]
-        for field_name in computed_field_names:
+            field_names.extend(computed_fields.keys())
+        field_names = set(field_names)  # Unique field names only.
+        computed_field_names = [name for name in field_names if name in fields]
+        for field_name in field_names:
             if field_name not in fields:
                 # name = crit_fields.get(field_name, field_name)
                 # field = self.make_computed_field(name, field_name)
