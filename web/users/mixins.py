@@ -160,7 +160,8 @@ class ComputedFieldsMixIn:
             reserved_names += validators.DEFAULT_RESERVED_NAMES
         kwargs['reserved_names'] = reserved_names
 
-        validator_names = [name for name in fields if hasattr(self, '%s_validators' % name)]
+        names = list(fields.keys()) + list(self.critical_fields.keys())
+        validator_names = [name for name in names if hasattr(self, '%s_validators' % name)]
 
         # crit_fields = {'username': 'name_for_user', 'email': 'name_for_email'}
         # for name, name_for_field in crit_fields.items():
@@ -179,7 +180,7 @@ class ComputedFieldsMixIn:
             func(fields, **kwargs)
         return True
 
-    def username_validators(self, fields, **kwargs):
+    def name_for_user_validators(self, fields, **kwargs):
         field_name = self.name_for_user
         opts = kwargs.get('name_for_user', {})
         strict_username = opts.get('strict', getattr(self, 'strict_username', None))
@@ -197,7 +198,7 @@ class ComputedFieldsMixIn:
         fields[field_name].validators.extend(username_validators)
         return True
 
-    def email_validators(self, fields, **kwargs):
+    def name_for_email_validators(self, fields, **kwargs):
         field_name = self.name_for_email
         opts = kwargs.get('name_for_email', {})
         strict_email = opts.get('strict', getattr(self, 'strict_email', None))
