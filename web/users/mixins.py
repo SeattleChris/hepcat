@@ -77,7 +77,7 @@ class FocusMixIn:
 
 class ComputedFieldsMixIn:
     """A computed field is initially removed, but if failing desired validation conditions, included for user input. """
-    critical_names = []
+    critical_fields = {}
     reserved_names_replace = False
     # reserved_names = []
     # computed_fields = {}
@@ -85,11 +85,10 @@ class ComputedFieldsMixIn:
     def __init__(self, *args, **kwargs):
         print("======================= ComputedFieldsMixIn.__init__ =================================")
         critical_fields = self.fields_for_critical(kwargs.pop('critical_fields', {}))
-        computed_field_names = kwargs.pop('computed_fields', [])
-        critical_names = (getattr(self, name) for name, opts in critical_fields.items() if opts.get('computed', None))
-        computed_field_names.extend(critical_names)
-        computed_field_names = self.setup_computed_fields(computed_field_names, self.base_fields)
         self.attach_critical_validators(**critical_fields)
+        self.critical_fields = critical_fields
+        computed_field_names = kwargs.pop('computed_fields', [])
+        computed_field_names = self.setup_computed_fields(computed_field_names, self.base_fields)
         super().__init__(*args, **kwargs)
         computed_field_names.extend(kwargs.pop('computed_fields', []))
         self.computed_fields = self.get_computed_fields(computed_field_names)
@@ -101,10 +100,11 @@ class ComputedFieldsMixIn:
         for label, opts in critical_fields.items():
             names = opts.get('names', label)
             name, field = self.make_computed_field(names, opts.get('alt_field', None))
+            opts.update({'name': name, 'field': field})
             if name is None or field is None:
                 missing_fields.update({label: opts})
             else:
-                self.base_fields[name] = field
+                self.base_fields[name] = field  # TODO: Manage the label-name relationship.
                 setattr(self, label, name)
         if missing_fields:
             raise ImproperlyConfigured(_("Could not assign for critical fields: {} ".format(missing_fields)))
@@ -117,14 +117,18 @@ class ComputedFieldsMixIn:
             field_names.extend(computed_fields)
         elif isinstance(computed_fields, dict):
             field_names.extend(computed_fields.keys())
+        else:
+            raise ImproperlyConfigured(_("The Form's computed_fields property is corrupted. "))
+        field_names.extend(getattr(self, name) for name, opts in self.critical_fields.items() if opts.get('computed'))
         field_names = set(field_names)  # Unique field names only.
         computed_field_names = [name for name in field_names if name in fields]
-        for field_name in field_names:
-            if field_name not in fields:
-                # name = crit_fields.get(field_name, field_name)
-                # field = self.make_computed_field(name, field_name)
-                # fields[field_name] = field
-                pass
+        # computed_field_names, missing_fields = {}, {}
+        # for name in field_names:
+        #     if name not in fields:
+        #         # name = crit_fields.get(field_name, field_name)
+        #         # field = self.make_computed_field(name, field_name)
+        #         # fields[field_name] = field
+        #         pass
         return computed_field_names
 
     def get_computed_fields(self, computed_field_names):
@@ -146,6 +150,7 @@ class ComputedFieldsMixIn:
             if isinstance(field, Field):
                 return name, field
         field = getattr(self, alt_name, None)
+        field = field if isinstance(field, Field) else None
         return alt_name, field  # could not find a matching field, use the backup field.
 
     def attach_critical_validators(self, **kwargs):
