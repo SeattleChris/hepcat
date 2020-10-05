@@ -77,10 +77,10 @@ class FocusMixIn:
 
 class ComputedFieldsMixIn:
     """A computed field is initially removed, but if failing desired validation conditions, included for user input. """
+    # computed_fields = {}
     critical_fields = {}
     reserved_names_replace = False
     # reserved_names = []
-    # computed_fields = {}
 
     def __init__(self, *args, **kwargs):
         print("======================= ComputedFieldsMixIn.__init__ =================================")
@@ -122,13 +122,7 @@ class ComputedFieldsMixIn:
         field_names.extend(getattr(self, name) for name, opts in self.critical_fields.items() if opts.get('computed'))
         field_names = set(field_names)  # Unique field names only.
         computed_field_names = [name for name in field_names if name in fields]
-        # computed_field_names, missing_fields = {}, {}
-        # for name in field_names:
-        #     if name not in fields:
-        #         # name = crit_fields.get(field_name, field_name)
-        #         # field = self.make_computed_field(name, field_name)
-        #         # fields[field_name] = field
-        #         pass
+        # TODO: Decide if this method should be able to create missing fields if needed.
         return computed_field_names
 
     def get_computed_fields(self, computed_field_names):
@@ -235,11 +229,10 @@ class ComputedFieldsMixIn:
         # print("=================== ComputedFieldsMixIn._clean_computed_fields ============================")
         critical = {getattr(self, label): label for label, opts in self.critical_fields if opts.get('computed')}
         for name, field in self.computed_fields.items():
-            value = self.get_initial_for_field(field, name)
             compute_name = critical.get(name, name)
             compute_func = getattr(self, 'compute_%s' % compute_name, None)
+            value = self.get_initial_for_field(field, name)
             value = value if not compute_func else compute_func()    # calls methods like compute_name_for_user
-            # self.computed_fields[name] = field  # self.fields[name] = field
             try:
                 value = field.clean(value)
                 self.cleaned_data[name] = value
@@ -296,17 +289,8 @@ class ComputedUsernameMixIn(ComputedFieldsMixIn):
         email_opts['strict'] = kwargs.pop('strict_email', getattr(self, 'strict_email', None))
         user_opts['strict'] = kwargs.pop('strict_username', getattr(self, 'strict_username', None))
         critical_fields = {'name_for_email': email_opts, 'name_for_user': user_opts, 'USERNAME_FLAG_FIELD': flag_opts}
+        critical_fields.update(kwargs.get('critical_fields', {}))
         kwargs['critical_fields'] = critical_fields
-
-        # critical_names = kwargs.get('critical_names', {})
-        # critical_names['user_model'] = self.user_model = user_model
-        # critical_names['name_for_email'] = self.name_for_email = user_model.get_email_field_name()
-        # critical_names['name_for_user'] = self.name_for_user = user_model.USERNAME_FIELD
-        # kwargs['critical_names'] = critical_names
-
-        # computed_field_names = kwargs.get('computed_fields', [])
-        # computed_field_names.append(self.name_for_user, self.USERNAME_FLAG_FIELD)
-        # kwargs['computed_fields'] = computed_field_names
         super().__init__(*args, **kwargs)
         if hasattr(self, 'assign_focus_field'):
             if self.name_for_user in self.data:
@@ -316,11 +300,6 @@ class ComputedUsernameMixIn(ComputedFieldsMixIn):
 
     def get_form_user_model(self):
         """Use the model of the ModelForm if it has what is needed. Otherwise assign to the User model. """
-        # user = kwargs.get('initial', {}).get('user', None) or kwargs.get('instance', None)
-        # user_model = None
-        # if user and not getattr(user, 'is_anonymous', None) and hasattr(user, '_meta'):
-        #     user_model = getattr(user._meta, 'model', None)
-        # user_model = user_model or get_user_model()
         user_model = get_user_model()
         form_model = getattr(self, 'model', getattr(self._meta, 'model', None))
         form_model = None if form_model == user_model else form_model
@@ -616,7 +595,7 @@ class FormOverrideMixIn:
             fields = self.handle_removals(fields)
         overrides = self.get_overrides()  # may have some key names not in self.fields, which will later be ignored.
         DEFAULT = overrides.get('_default_', {})
-        alt_field_info = self.get_alt_field_info()  # condition_<label> methods may modify self.fields
+        alt_field_info = self.get_alt_field_info()  # condition_<label> methods are run.
         new_data = {}
         for name, field in fields.items():
             if name in overrides:
@@ -630,21 +609,18 @@ class FormOverrideMixIn:
                         height = field.widget.attrs.get('rows', None)
                         height = min((DEFAULT['rows'], int(height))) if height else DEFAULT['rows']
                         field.widget.attrs['rows'] = str(height)
-                    if default:
+                    if default:  # For textarea, we always override. The others depend on different conditions.
                         display_size = min((display_size, default))
                 elif issubclass(field.__class__, CharField):
-                    # print("*-*-*-*-*-*-*-*-*-*-*-* CharField *-*-*-*-*-*-*-*-*-*-*-*-")
-                    # Works for type: 'email', 'password', 'text', ... Unsure on 'tel'.
                     width_attr_name = 'size'  # 'size' is only valid for input types: email, password, tel, text
                     default = DEFAULT.get('size', None)  # Cannot use float("inf") as an int.
                     display_size = field.widget.attrs.get('size', None)
                 else:  # This field does not have a size setting.
-                    # print(f"------------ Not CharField: {name} ----------------------")
                     width_attr_name = None
                     default = None
                     display_size = None
                 input_size = field.widget.attrs.get('maxlength', None)
-                possible_size = [int(ea) for ea in (display_size or default, input_size) if ea]
+                possible_size = [int(ea) for ea in (display_size or default, input_size) if ea]  # TODO:  use gen?
                 # field.widget.attrs['size'] = str(int(min(float(display_size), float(input_size))))
                 if possible_size and width_attr_name:
                     field.widget.attrs[width_attr_name] = str(min(possible_size))
@@ -714,7 +690,6 @@ class OverrideCountryMixIn(FormOverrideMixIn):
         log += "Indicated, and will show, foreign addres. " if country_flag else "will show local address. "
         print(log)
         super().__init__(*args, **kwargs)
-        # print("--------------- CountryMixIn back from Super ----------------------")
         name = 'country_display'
         value = self.data.get(name, 'NO DATA VALUE')
         if address_display_version != value:
@@ -748,7 +723,6 @@ class OverrideCountryMixIn(FormOverrideMixIn):
         print("================== Clean Other Country ================================")
         country_flag = self.cleaned_data.get('country_flag', None)
         if country_flag:
-            # default = settings.DEFAULT_COUNTRY
             field = self.fields.get(self.country_field_name, None)
             if not field and hasattr(self, 'computed_fields'):
                 field = self.computed_fields.get(self.country_field_name, None)
