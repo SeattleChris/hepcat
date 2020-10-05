@@ -246,10 +246,12 @@ class ComputedFieldsMixIn:
         """Mimics _clean_fields for computed_fields. Calls compute_<fieldname> and clean_<fieldname> if present. """
         compute_errors = ErrorDict()
         # print("=================== ComputedFieldsMixIn._clean_computed_fields ============================")
+        critical = {getattr(self, label): label for label, opts in self.critical_fields if opts.get('computed')}
         for name, field in self.computed_fields.items():
             value = self.get_initial_for_field(field, name)
-            if hasattr(self, 'compute_%s' % name):  # calls methods like compute_username
-                value = getattr(self, 'compute_%s' % name)()
+            compute_name = critical.get(name, name)
+            compute_func = getattr(self, 'compute_%s' % compute_name, None)
+            value = value if not compute_func else compute_func()    # calls methods like compute_name_for_user
             # self.computed_fields[name] = field  # self.fields[name] = field
             try:
                 value = field.clean(value)
@@ -366,7 +368,7 @@ class ComputedUsernameMixIn(ComputedFieldsMixIn):
             print(e)
         return result
 
-    def compute_username(self):
+    def compute_name_for_user(self):
         """Can overwrite with new logic. Determine a str, or callable returning one, and update self.initial dict. """
         username_field_name = self.name_for_user
         field = self.computed_fields[username_field_name]
