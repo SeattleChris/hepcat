@@ -54,8 +54,6 @@ class RegisterForm(AddressUsernameMixIn, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         print("======================= classwork.RegisterForm.__init__ =================================")
         class_choices = kwargs.pop('class_choices', None)
-        # class_selected_field = getattr(self, 'base_fields', {}).get('class_selected', None)
-        # if class_selected_field:
         self.base_fields['class_selected'].queryset = class_choices
         super(RegisterForm, self).__init__(*args, **kwargs)
         print("--------------------- FINISH RegisterForm.__init__ --------------------")
@@ -63,15 +61,11 @@ class RegisterForm(AddressUsernameMixIn, forms.ModelForm):
     def clean_first_name(self):
         print('======== RegisterForm.clean_first_name =========')
         first_name = self.cleaned_data.get('first_name')
-        # if first_name is None:
-        #     raise forms.ValidationError("First Name is required")
         return first_name.capitalize()
 
     def clean_last_name(self):
         print('======== RegisterForm.clean_last_name =========')
         value = self.cleaned_data.get('last_name')
-        # if value is None:
-        #     raise forms.ValidationError("Last Name is required")
         if value.isupper() or value.islower():  # Some names have mid-capitols, so assume mixed capitals are intended.
             return value.capitalize()  # Assume unintended if it was all caps, or all lowercase.
         return value
@@ -79,9 +73,6 @@ class RegisterForm(AddressUsernameMixIn, forms.ModelForm):
     def clean_email(self):
         print('======== RegisterForm.clean_email =========')
         email = self.cleaned_data.get('email')
-        # if email is None:
-        #     raise forms.ValidationError("Email is required")
-        # While technically capitals are allowed in emails, it is common practice to use lowercase.
         # We are using casefold() to lowercase, which may technically be incorrect for the user's email system.
         return email.casefold()
 
