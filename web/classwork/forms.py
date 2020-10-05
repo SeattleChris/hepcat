@@ -153,19 +153,15 @@ class RegisterForm(AddressUsernameMixIn, forms.ModelForm):
             # Look by email
             same_email = User.objects.filter(email__iexact=input_email)
             if same_email.count():
-                # print('That email is already assigned to a user')
                 found = same_email.filter(first_name__iexact=first_name, last_name__iexact=last_name).count()
                 if found:
-                    message = 'We found a user account with your name and email. '
-                    # print(message)
-                    message += 'Try the login link, or resubmit the form and select you are a returning student'
+                    message = "We found a user account with your name and email. "
+                    message += "Try the login link, or resubmit the form and select you are a returning student. "
                     raise forms.ValidationError(_(message))
                     # If user was found, then we should have them login
                     # TODO: send user to login credentials, keep track of data they have given
                 # TODO: Create a system to deal with matches
                 # TODO: Either pass above queries to that function, or use .count() above.
-            else:
-                print('No other user has that email')
             # Look by name
             same_name = User.objects.filter(first_name=first_name, last_name=last_name)
             if same_name.count():
@@ -177,8 +173,6 @@ class RegisterForm(AddressUsernameMixIn, forms.ModelForm):
                 # TODO: Create a system to deal with matching names, but are unique people
                 message += "extra symbol (such as '.' or '+') at the end of your name to confirm your input"
                 raise forms.ValidationError(_(message))
-            else:
-                print('No user with that name yet')
             # We can create this user
             user = self.create_form_user(data_new_user)
         elif user.is_anonymous:  # new_user is False; User says they have an account, we should use that account.

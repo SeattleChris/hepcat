@@ -1069,10 +1069,7 @@ class FormFieldsetMixIn:
                 row_ender += '</' + row_tag + '>'
                 if last_row.endswith(row_ender):
                     output[-1] = last_row[:-len(row_ender)] + str_hidden + row_ender
-                else:
-                    # This can happen in the as_p() case (and possibly other custom display methods).
-                    # If there are only top errors, we may not be able to conscript the last row for
-                    # our purposes, so insert a new empty row.
+                else:  # We may not be able conscript the last row for our purposes, so insert a new empty row.
                     last_row = self.make_headless_row(html_args, str_hidden, form_col_count)
                     output.append(last_row)
             else:  # If there aren't any rows in the output, just append the hidden fields.
