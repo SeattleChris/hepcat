@@ -165,21 +165,8 @@ class ComputedFieldsMixIn:
             reserved_names += validators.DEFAULT_RESERVED_NAMES
         kwargs['reserved_names'] = reserved_names
 
-        names = list(fields.keys()) + list(self.critical_fields.keys())
-        validator_names = [name for name in names if hasattr(self, '%s_validators' % name)]
-
-        # crit_fields = {'username': 'name_for_user', 'email': 'name_for_email'}
-        # for name, name_for_field in crit_fields.items():
-        #     name_for_field = kwargs.get(name_for_field, getattr(self, name_for_field, name))
-        #     opts = {'name': name_for_field}
-        #     if name_for_field in kwargs:
-        #         opts.update(kwargs[name_for_field])  # possibly passing 'strict' setting.
-        #     if name_for_field != name and name in kwargs:
-        #         opts.update(kwargs[name])  # possibly passing 'strict' setting.
-        #     kwargs[name] = opts
-        #     if name_for_field != name and name_for_field in fields:
-        #         validator_names.append(name)
-
+        names = set(list(fields.keys()) + list(self.critical_fields.keys()))
+        validator_names = (name for name in names if hasattr(self, '%s_validators' % name))
         for name in validator_names:
             func = getattr(self, '%s_validators' % name)
             func(fields, **kwargs)
@@ -222,7 +209,7 @@ class ComputedFieldsMixIn:
         field.required = True
         return True
 
-    def normalized_value_from_values(self, field_names=None, joiner='_', normalize=None):
+    def construct_value_from_values(self, field_names=None, joiner='_', normalize=None):
         """Must be evaluated after cleaned_data has the named field values populated. """
         if not field_names:
             raise ImproperlyConfigured(_("There must me one or more field names to compute a value. "))
@@ -358,11 +345,11 @@ class ComputedUsernameMixIn(ComputedFieldsMixIn):
         email_field_name = email_field_name or self.name_for_email
         username_field_name = username_field_name or self.name_for_user
         normalize = self.user_model.normalize_username  # TODO: Fail gracefully version?
-        result = self.normalized_value_from_values(field_names=(email_field_name, ), normalize=normalize)
+        result = self.construct_value_from_values(field_names=(email_field_name, ), normalize=normalize)
         lookup = {"{}__iexact".format(self.user_model.USERNAME_FIELD): result}
         try:
             if not result or self.user_model._default_manager.filter(**lookup).exists():
-                result = self.normalized_value_from_values(field_names=self.constructor_fields, normalize=normalize)
+                result = self.construct_value_from_values(field_names=self.constructor_fields, normalize=normalize)
         except Exception as e:
             print("Unable to query to lookup if this username exists. ")
             print(e)
