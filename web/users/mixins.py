@@ -77,19 +77,18 @@ class FocusMixIn:
 
 class ComputedFieldsMixIn:
     """A computed field is initially removed, but if failing desired validation conditions, included for user input. """
-    critical_names = []
+    # computed_fields = {}
+    critical_fields = {}
     reserved_names_replace = False
     # reserved_names = []
-    # computed_fields = {}
 
     def __init__(self, *args, **kwargs):
         print("======================= ComputedFieldsMixIn.__init__ =================================")
         critical_fields = self.fields_for_critical(kwargs.pop('critical_fields', {}))
-        computed_field_names = kwargs.pop('computed_fields', [])
-        critical_names = (getattr(self, name) for name, opts in critical_fields.items() if opts.get('computed', None))
-        computed_field_names.extend(critical_names)
-        computed_field_names = self.setup_computed_fields(computed_field_names, self.base_fields)
         self.attach_critical_validators(**critical_fields)
+        self.critical_fields = critical_fields
+        computed_field_names = kwargs.pop('computed_fields', [])
+        computed_field_names = self.setup_computed_fields(computed_field_names, self.base_fields)
         super().__init__(*args, **kwargs)
         computed_field_names.extend(kwargs.pop('computed_fields', []))
         self.computed_fields = self.get_computed_fields(computed_field_names)
@@ -101,29 +100,29 @@ class ComputedFieldsMixIn:
         for label, opts in critical_fields.items():
             names = opts.get('names', label)
             name, field = self.make_computed_field(names, opts.get('alt_field', None))
+            opts.update({'name': name, 'field': field})
             if name is None or field is None:
                 missing_fields.update({label: opts})
             else:
-                self.base_fields[name] = field
+                self.base_fields[name] = field  # TODO: Manage the label-name relationship.
                 setattr(self, label, name)
         if missing_fields:
             raise ImproperlyConfigured(_("Could not assign for critical fields: {} ".format(missing_fields)))
         return critical_fields
 
-    def setup_computed_fields(self, computed_field_names, fields):
+    def setup_computed_fields(self, field_names, fields):
         """Modify fields by adding expected fields. Return an updated computed_field_names list. """
         computed_fields = getattr(self, 'computed_fields', [])
         if isinstance(computed_fields, (list, tuple)):
-            computed_field_names.extend(computed_fields)
+            field_names.extend(computed_fields)
         elif isinstance(computed_fields, dict):
-            computed_field_names.extend(computed_fields.keys())
-        computed_field_names = [name for name in computed_field_names if name in fields]
-        for field_name in computed_field_names:
-            if field_name not in fields:
-                # name = crit_fields.get(field_name, field_name)
-                # field = self.make_computed_field(name, field_name)
-                # fields[field_name] = field
-                pass
+            field_names.extend(computed_fields.keys())
+        else:
+            raise ImproperlyConfigured(_("The Form's computed_fields property is corrupted. "))
+        field_names.extend(getattr(self, name) for name, opts in self.critical_fields.items() if opts.get('computed'))
+        field_names = set(field_names)  # Unique field names only.
+        computed_field_names = [name for name in field_names if name in fields]
+        # TODO: Decide if this method should be able to create missing fields if needed.
         return computed_field_names
 
     def get_computed_fields(self, computed_field_names):
@@ -145,6 +144,7 @@ class ComputedFieldsMixIn:
             if isinstance(field, Field):
                 return name, field
         field = getattr(self, alt_name, None)
+        field = field if isinstance(field, Field) else None
         return alt_name, field  # could not find a matching field, use the backup field.
 
     def attach_critical_validators(self, **kwargs):
@@ -159,26 +159,14 @@ class ComputedFieldsMixIn:
             reserved_names += validators.DEFAULT_RESERVED_NAMES
         kwargs['reserved_names'] = reserved_names
 
-        validator_names = [name for name in fields if hasattr(self, '%s_validators' % name)]
-
-        # crit_fields = {'username': 'name_for_user', 'email': 'name_for_email'}
-        # for name, name_for_field in crit_fields.items():
-        #     name_for_field = kwargs.get(name_for_field, getattr(self, name_for_field, name))
-        #     opts = {'name': name_for_field}
-        #     if name_for_field in kwargs:
-        #         opts.update(kwargs[name_for_field])  # possibly passing 'strict' setting.
-        #     if name_for_field != name and name in kwargs:
-        #         opts.update(kwargs[name])  # possibly passing 'strict' setting.
-        #     kwargs[name] = opts
-        #     if name_for_field != name and name_for_field in fields:
-        #         validator_names.append(name)
-
+        names = set(list(fields.keys()) + list(self.critical_fields.keys()))
+        validator_names = (name for name in names if hasattr(self, '%s_validators' % name))
         for name in validator_names:
             func = getattr(self, '%s_validators' % name)
             func(fields, **kwargs)
         return True
 
-    def username_validators(self, fields, **kwargs):
+    def name_for_user_validators(self, fields, **kwargs):
         field_name = self.name_for_user
         opts = kwargs.get('name_for_user', {})
         strict_username = opts.get('strict', getattr(self, 'strict_username', None))
@@ -196,7 +184,7 @@ class ComputedFieldsMixIn:
         fields[field_name].validators.extend(username_validators)
         return True
 
-    def email_validators(self, fields, **kwargs):
+    def name_for_email_validators(self, fields, **kwargs):
         field_name = self.name_for_email
         opts = kwargs.get('name_for_email', {})
         strict_email = opts.get('strict', getattr(self, 'strict_email', None))
@@ -215,7 +203,7 @@ class ComputedFieldsMixIn:
         field.required = True
         return True
 
-    def normalized_value_from_values(self, field_names=None, joiner='_', normalize=None):
+    def construct_value_from_values(self, field_names=None, joiner='_', normalize=None):
         """Must be evaluated after cleaned_data has the named field values populated. """
         if not field_names:
             raise ImproperlyConfigured(_("There must me one or more field names to compute a value. "))
@@ -239,11 +227,12 @@ class ComputedFieldsMixIn:
         """Mimics _clean_fields for computed_fields. Calls compute_<fieldname> and clean_<fieldname> if present. """
         compute_errors = ErrorDict()
         # print("=================== ComputedFieldsMixIn._clean_computed_fields ============================")
+        critical = {getattr(self, label): label for label, opts in self.critical_fields if opts.get('computed')}
         for name, field in self.computed_fields.items():
+            compute_name = critical.get(name, name)
+            compute_func = getattr(self, 'compute_%s' % compute_name, None)
             value = self.get_initial_for_field(field, name)
-            if hasattr(self, 'compute_%s' % name):  # calls methods like compute_username
-                value = getattr(self, 'compute_%s' % name)()
-            # self.computed_fields[name] = field  # self.fields[name] = field
+            value = value if not compute_func else compute_func()    # calls methods like compute_name_for_user
             try:
                 value = field.clean(value)
                 self.cleaned_data[name] = value
@@ -300,17 +289,8 @@ class ComputedUsernameMixIn(ComputedFieldsMixIn):
         email_opts['strict'] = kwargs.pop('strict_email', getattr(self, 'strict_email', None))
         user_opts['strict'] = kwargs.pop('strict_username', getattr(self, 'strict_username', None))
         critical_fields = {'name_for_email': email_opts, 'name_for_user': user_opts, 'USERNAME_FLAG_FIELD': flag_opts}
+        critical_fields.update(kwargs.get('critical_fields', {}))
         kwargs['critical_fields'] = critical_fields
-
-        # critical_names = kwargs.get('critical_names', {})
-        # critical_names['user_model'] = self.user_model = user_model
-        # critical_names['name_for_email'] = self.name_for_email = user_model.get_email_field_name()
-        # critical_names['name_for_user'] = self.name_for_user = user_model.USERNAME_FIELD
-        # kwargs['critical_names'] = critical_names
-
-        # computed_field_names = kwargs.get('computed_fields', [])
-        # computed_field_names.append(self.name_for_user, self.USERNAME_FLAG_FIELD)
-        # kwargs['computed_fields'] = computed_field_names
         super().__init__(*args, **kwargs)
         if hasattr(self, 'assign_focus_field'):
             if self.name_for_user in self.data:
@@ -320,11 +300,6 @@ class ComputedUsernameMixIn(ComputedFieldsMixIn):
 
     def get_form_user_model(self):
         """Use the model of the ModelForm if it has what is needed. Otherwise assign to the User model. """
-        # user = kwargs.get('initial', {}).get('user', None) or kwargs.get('instance', None)
-        # user_model = None
-        # if user and not getattr(user, 'is_anonymous', None) and hasattr(user, '_meta'):
-        #     user_model = getattr(user._meta, 'model', None)
-        # user_model = user_model or get_user_model()
         user_model = get_user_model()
         form_model = getattr(self, 'model', getattr(self._meta, 'model', None))
         form_model = None if form_model == user_model else form_model
@@ -349,17 +324,17 @@ class ComputedUsernameMixIn(ComputedFieldsMixIn):
         email_field_name = email_field_name or self.name_for_email
         username_field_name = username_field_name or self.name_for_user
         normalize = self.user_model.normalize_username  # TODO: Fail gracefully version?
-        result = self.normalized_value_from_values(field_names=(email_field_name, ), normalize=normalize)
+        result = self.construct_value_from_values(field_names=(email_field_name, ), normalize=normalize)
         lookup = {"{}__iexact".format(self.user_model.USERNAME_FIELD): result}
         try:
             if not result or self.user_model._default_manager.filter(**lookup).exists():
-                result = self.normalized_value_from_values(field_names=self.constructor_fields, normalize=normalize)
+                result = self.construct_value_from_values(field_names=self.constructor_fields, normalize=normalize)
         except Exception as e:
             print("Unable to query to lookup if this username exists. ")
             print(e)
         return result
 
-    def compute_username(self):
+    def compute_name_for_user(self):
         """Can overwrite with new logic. Determine a str, or callable returning one, and update self.initial dict. """
         username_field_name = self.name_for_user
         field = self.computed_fields[username_field_name]
@@ -620,7 +595,7 @@ class FormOverrideMixIn:
             fields = self.handle_removals(fields)
         overrides = self.get_overrides()  # may have some key names not in self.fields, which will later be ignored.
         DEFAULT = overrides.get('_default_', {})
-        alt_field_info = self.get_alt_field_info()  # condition_<label> methods may modify self.fields
+        alt_field_info = self.get_alt_field_info()  # condition_<label> methods are run.
         new_data = {}
         for name, field in fields.items():
             if name in overrides:
@@ -634,21 +609,18 @@ class FormOverrideMixIn:
                         height = field.widget.attrs.get('rows', None)
                         height = min((DEFAULT['rows'], int(height))) if height else DEFAULT['rows']
                         field.widget.attrs['rows'] = str(height)
-                    if default:
+                    if default:  # For textarea, we always override. The others depend on different conditions.
                         display_size = min((display_size, default))
                 elif issubclass(field.__class__, CharField):
-                    # print("*-*-*-*-*-*-*-*-*-*-*-* CharField *-*-*-*-*-*-*-*-*-*-*-*-")
-                    # Works for type: 'email', 'password', 'text', ... Unsure on 'tel'.
                     width_attr_name = 'size'  # 'size' is only valid for input types: email, password, tel, text
                     default = DEFAULT.get('size', None)  # Cannot use float("inf") as an int.
                     display_size = field.widget.attrs.get('size', None)
                 else:  # This field does not have a size setting.
-                    # print(f"------------ Not CharField: {name} ----------------------")
                     width_attr_name = None
                     default = None
                     display_size = None
                 input_size = field.widget.attrs.get('maxlength', None)
-                possible_size = [int(ea) for ea in (display_size or default, input_size) if ea]
+                possible_size = [int(ea) for ea in (display_size or default, input_size) if ea]  # TODO:  use gen?
                 # field.widget.attrs['size'] = str(int(min(float(display_size), float(input_size))))
                 if possible_size and width_attr_name:
                     field.widget.attrs[width_attr_name] = str(min(possible_size))
@@ -718,7 +690,6 @@ class OverrideCountryMixIn(FormOverrideMixIn):
         log += "Indicated, and will show, foreign addres. " if country_flag else "will show local address. "
         print(log)
         super().__init__(*args, **kwargs)
-        # print("--------------- CountryMixIn back from Super ----------------------")
         name = 'country_display'
         value = self.data.get(name, 'NO DATA VALUE')
         if address_display_version != value:
@@ -752,8 +723,9 @@ class OverrideCountryMixIn(FormOverrideMixIn):
         print("================== Clean Other Country ================================")
         country_flag = self.cleaned_data.get('country_flag', None)
         if country_flag:
-            # default = settings.DEFAULT_COUNTRY
-            field = self.fields.get(self.country_field_name, None) or self.computed_fields.get(self.country_field_name)
+            field = self.fields.get(self.country_field_name, None)
+            if not field and hasattr(self, 'computed_fields'):
+                field = self.computed_fields.get(self.country_field_name, None)
             print("Country Flag, Initial Field value, Cleaned Data value: ")
             print(country_flag)
             print(field.initial)
