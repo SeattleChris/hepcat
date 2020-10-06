@@ -226,8 +226,9 @@ class ComputedFieldsMixIn:
     def _clean_computed_fields(self):
         """Mimics _clean_fields for computed_fields. Calls compute_<fieldname> and clean_<fieldname> if present. """
         compute_errors = ErrorDict()
-        # print("=================== ComputedFieldsMixIn._clean_computed_fields ============================")
-        critical = {getattr(self, label): label for label, opts in self.critical_fields if opts.get('computed')}
+        print("=================== ComputedFieldsMixIn._clean_computed_fields ============================")
+        pprint(self.critical_fields)
+        critical = {getattr(self, label): label for label, opts in self.critical_fields.items() if opts.get('computed')}
         for name, field in self.computed_fields.items():
             compute_name = critical.get(name, name)
             compute_func = getattr(self, 'compute_%s' % compute_name, None)
