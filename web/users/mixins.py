@@ -495,10 +495,9 @@ class FormOverrideMixIn:
         }
 
     def __init__(self, *args, **kwargs):
-        print("======================= FormOverrideMixIn.__init__ =================================")
+        # print("======================= FormOverrideMixIn.__init__ =================================")
         super().__init__(*args, **kwargs)
-        self.fields = self.prep_fields()
-        print("--------------------- FINISH FormOverrideMixIn.__init__ --------------------")
+        # print("--------------------- FINISH FormOverrideMixIn.__init__ --------------------")
 
     def set_alt_data(self, data=None, name='', field=None, value=None):
         """Modify the form submitted value if it matches a no longer accurate default value. """
@@ -635,6 +634,12 @@ class FormOverrideMixIn:
         if new_data:
             self.set_alt_data(new_data)
         return fields
+
+
+    def _html_output(self, *args, **kwargs):
+        print("************************** OVERRIDES FOR _HTML_OUTPUT *************************************")
+        self.fields = self.prep_fields()
+        super()._html_output(*args, **kwargs)
 
 
 class OverrideCountryMixIn(FormOverrideMixIn):
@@ -826,13 +831,15 @@ class FormFieldsetMixIn:
     def make_fieldsets(self, *fs_args, **kwargs):
         """Updates the dictionaries of each fieldset with 'rows' of field dicts, and a flattend 'field_names' list. """
         print("======================= FormFieldsetMixIn.make_fieldsets =================================")
+        if hasattr(self, 'prep_fields'):
+            self.prep_fields()
         remaining_fields = self.fields.copy()
         fieldsets = list(getattr(self, 'fieldsets', ((None, {'fields': [], 'position': None}), )))
         assigned_field_names = flatten([flatten(opts['fields']) for fieldset_label, opts in fieldsets])
         unassigned_field_names = [name for name in remaining_fields if name not in assigned_field_names]
         opts = {'modifiers': 'prep_remaining', 'position': 'remaining', 'fields': unassigned_field_names}
         fieldsets.append((None, opts))
-        top_errors = self.non_field_errors().copy()
+        top_errors = self.non_field_errors().copy()  # If data not submitted, this will trigger full_clean method.
         max_position, form_column_count, hidden_fields, remove_idx = 0, 0, [], []
         for index, fieldset in enumerate(fieldsets):
             fieldset_label, opts = fieldset
