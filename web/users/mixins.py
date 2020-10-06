@@ -5,7 +5,8 @@ from django.contrib.admin.utils import flatten
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UsernameField
 from django.forms.fields import Field, CharField
-from django.forms.widgets import Input, CheckboxInput, HiddenInput, Textarea  # TextInput,
+from django.forms.widgets import Input, CheckboxInput, CheckboxSelectMultiple, RadioSelect, HiddenInput, Textarea
+# TextInput,
 from django.forms.utils import ErrorDict  # , ErrorList
 from django.utils.translation import gettext as _
 from django.utils.html import conditional_escape, format_html
@@ -594,13 +595,20 @@ class FormOverrideMixIn:
             args = [opts, None, fields, prep_args]
             kwargs.update(flat_fields=True)
             opts, _ignored, fields, *prep_args, kwargs = self.handle_modifiers(*args, **kwargs)
-        if hasattr(self, 'remove_field_names'):  # TODO: Confirm this works and/or use computed_fields names & technique
+        # TODO: Confirm this works and/or use computed_fields names & technique
+        has_computed = issubclass(self.__class__, ComputedFieldsMixIn)
+        if not has_computed:  # hasattr(self, 'remove_field_names'):
             fields = self.handle_removals(fields)
         overrides = self.get_overrides()  # may have some key names not in self.fields, which will later be ignored.
         DEFAULT = overrides.get('_default_', {})
         alt_field_info = self.get_alt_field_info()  # condition_<label> methods are run.
         new_data = {}
         for name, field in fields.items():
+            if isinstance(field.widget, (RadioSelect, CheckboxSelectMultiple, CheckboxInput, )):
+                initial_value = self.get_initial_for_field(field, name)
+                print(initial_value)
+                # TODO: Manage the initial_value being selected.
+
             if name in overrides:
                 field.widget.attrs.update(overrides[name])
             if not overrides.get(name, {}).get('no_size_override', False):
@@ -635,7 +643,6 @@ class FormOverrideMixIn:
         if new_data:
             self.set_alt_data(new_data)
         return fields
-
 
     def _html_output(self, *args, **kwargs):
         print("************************** OVERRIDES FOR _HTML_OUTPUT *************************************")
