@@ -100,11 +100,11 @@ class RegisterForm(AddressUsernameMixIn, forms.ModelForm):
                 self.add_error(name, e)
 
     def _clean_form(self):
-        print('======== RegisterForm._clean_form =========')
+        print('======== RegisterForm._clean_form =========****************')
         super()._clean_form()
 
     def full_clean(self):
-        print('======== RegisterForm.full_clean =========')
+        print('======== RegisterForm.full_clean =========*****************')
         # Cleaning data is done by:
         # 1) _clean_fields(): for each self.fields, calls field.clean() which will populate cleaned_data, in 3 stages:
         #     a) to_python() to coerce datatype or raise ValidationError if impossible
@@ -123,7 +123,7 @@ class RegisterForm(AddressUsernameMixIn, forms.ModelForm):
         return user
 
     def clean(self):
-        print('======== RegisterForm.clean =========')
+        print('======== RegisterForm.clean =========********************')
         cleaned_data = super().clean()
         input_email = cleaned_data.get('email')
         first_name = cleaned_data.get('first_name')
