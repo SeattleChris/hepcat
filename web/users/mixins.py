@@ -260,10 +260,13 @@ class ComputedFieldsMixIn:
 
 class ComputedUsernameMixIn(ComputedFieldsMixIn):
     """If possible, creates a username according to rules (defaults to email then to name), otherwise set manually. """
+    login_choices = [('use_username', _("provided username")), ('use_email', _("email address")), ]
 
     email_field = forms.CharField(label=_('Email'), max_length='191', widget=forms.EmailInput())
-    username_field = UsernameField(label=_("Username for login"))
-    username_flag = forms.BooleanField(label=_("Login with non-email username"), required=False)
+    username_field = UsernameField(label=_("Username"))
+    # username_flag = forms.BooleanField(label=_("Login with non-email username"), required=False)
+    username_flag = forms.CharField(label=_("Login using"),
+                                    widget=RadioSelect(choices=login_choices), initial='use_email')
     constructor_fields = ('first_name', 'last_name', )
     strict_username = True  # case_insensitive
     strict_email = False  # unique_email and case_insensitive
