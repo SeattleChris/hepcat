@@ -54,8 +54,6 @@ class RegisterForm(AddressUsernameMixIn, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         print("======================= classwork.RegisterForm.__init__ =================================")
         class_choices = kwargs.pop('class_choices', None)
-        # class_selected_field = getattr(self, 'base_fields', {}).get('class_selected', None)
-        # if class_selected_field:
         self.base_fields['class_selected'].queryset = class_choices
         super(RegisterForm, self).__init__(*args, **kwargs)
         print("--------------------- FINISH RegisterForm.__init__ --------------------")
@@ -63,15 +61,11 @@ class RegisterForm(AddressUsernameMixIn, forms.ModelForm):
     def clean_first_name(self):
         print('======== RegisterForm.clean_first_name =========')
         first_name = self.cleaned_data.get('first_name')
-        # if first_name is None:
-        #     raise forms.ValidationError("First Name is required")
         return first_name.capitalize()
 
     def clean_last_name(self):
         print('======== RegisterForm.clean_last_name =========')
         value = self.cleaned_data.get('last_name')
-        # if value is None:
-        #     raise forms.ValidationError("Last Name is required")
         if value.isupper() or value.islower():  # Some names have mid-capitols, so assume mixed capitals are intended.
             return value.capitalize()  # Assume unintended if it was all caps, or all lowercase.
         return value
@@ -79,9 +73,6 @@ class RegisterForm(AddressUsernameMixIn, forms.ModelForm):
     def clean_email(self):
         print('======== RegisterForm.clean_email =========')
         email = self.cleaned_data.get('email')
-        # if email is None:
-        #     raise forms.ValidationError("Email is required")
-        # While technically capitals are allowed in emails, it is common practice to use lowercase.
         # We are using casefold() to lowercase, which may technically be incorrect for the user's email system.
         return email.casefold()
 
@@ -109,11 +100,11 @@ class RegisterForm(AddressUsernameMixIn, forms.ModelForm):
                 self.add_error(name, e)
 
     def _clean_form(self):
-        print('======== RegisterForm._clean_form =========')
+        print('======== RegisterForm._clean_form =========****************')
         super()._clean_form()
 
     def full_clean(self):
-        print('======== RegisterForm.full_clean =========')
+        print('======== RegisterForm.full_clean =========*****************')
         # Cleaning data is done by:
         # 1) _clean_fields(): for each self.fields, calls field.clean() which will populate cleaned_data, in 3 stages:
         #     a) to_python() to coerce datatype or raise ValidationError if impossible
@@ -132,7 +123,7 @@ class RegisterForm(AddressUsernameMixIn, forms.ModelForm):
         return user
 
     def clean(self):
-        print('======== RegisterForm.clean =========')
+        print('======== RegisterForm.clean =========********************')
         cleaned_data = super().clean()
         input_email = cleaned_data.get('email')
         first_name = cleaned_data.get('first_name')
@@ -162,19 +153,15 @@ class RegisterForm(AddressUsernameMixIn, forms.ModelForm):
             # Look by email
             same_email = User.objects.filter(email__iexact=input_email)
             if same_email.count():
-                # print('That email is already assigned to a user')
                 found = same_email.filter(first_name__iexact=first_name, last_name__iexact=last_name).count()
                 if found:
-                    message = 'We found a user account with your name and email. '
-                    # print(message)
-                    message += 'Try the login link, or resubmit the form and select you are a returning student'
+                    message = "We found a user account with your name and email. "
+                    message += "Try the login link, or resubmit the form and select you are a returning student. "
                     raise forms.ValidationError(_(message))
                     # If user was found, then we should have them login
                     # TODO: send user to login credentials, keep track of data they have given
                 # TODO: Create a system to deal with matches
                 # TODO: Either pass above queries to that function, or use .count() above.
-            else:
-                print('No other user has that email')
             # Look by name
             same_name = User.objects.filter(first_name=first_name, last_name=last_name)
             if same_name.count():
@@ -186,8 +173,6 @@ class RegisterForm(AddressUsernameMixIn, forms.ModelForm):
                 # TODO: Create a system to deal with matching names, but are unique people
                 message += "extra symbol (such as '.' or '+') at the end of your name to confirm your input"
                 raise forms.ValidationError(_(message))
-            else:
-                print('No user with that name yet')
             # We can create this user
             user = self.create_form_user(data_new_user)
         elif user.is_anonymous:  # new_user is False; User says they have an account, we should use that account.

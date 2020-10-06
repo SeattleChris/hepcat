@@ -5,7 +5,8 @@ from django.contrib.admin.utils import flatten
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UsernameField
 from django.forms.fields import Field, CharField
-from django.forms.widgets import Input, CheckboxInput, HiddenInput, Textarea  # TextInput,
+from django.forms.widgets import Input, CheckboxInput, CheckboxSelectMultiple, RadioSelect, HiddenInput, Textarea
+# TextInput,
 from django.forms.utils import ErrorDict  # , ErrorList
 from django.utils.translation import gettext as _
 from django.utils.html import conditional_escape, format_html
@@ -20,14 +21,14 @@ class FocusMixIn:
     """Autofocus given to a field not hidden or disabled. Can limit to a fields subset, and prioritize a named one. """
 
     def __init__(self, *args, **kwargs):
-        print("======================= Focus MixIn =================================")
+        # print("======================= Focus MixIn =================================")
         named_focus = kwargs.pop('named_focus', None)
         fields_focus = kwargs.pop('fields_focus', None)
         super().__init__(*args, **kwargs)
         named_focus = kwargs.pop('named_focus', named_focus)
         fields_focus = kwargs.pop('fields_focus', fields_focus)
         self.assign_focus_field(name=named_focus, fields=fields_focus)
-        print("--------------------- Finish Focus MixIn --------------------")
+        # print("--------------------- Finish Focus MixIn --------------------")
 
     def assign_focus_field(self, name=None, fields=None):
         """Autofocus only on the non-hidden, non-disabled named or first form field from the given or self fields. """
@@ -226,8 +227,9 @@ class ComputedFieldsMixIn:
     def _clean_computed_fields(self):
         """Mimics _clean_fields for computed_fields. Calls compute_<fieldname> and clean_<fieldname> if present. """
         compute_errors = ErrorDict()
-        # print("=================== ComputedFieldsMixIn._clean_computed_fields ============================")
-        critical = {getattr(self, label): label for label, opts in self.critical_fields if opts.get('computed')}
+        print("=================== ComputedFieldsMixIn._clean_computed_fields ============================")
+        pprint(self.critical_fields)
+        critical = {getattr(self, label): label for label, opts in self.critical_fields.items() if opts.get('computed')}
         for name, field in self.computed_fields.items():
             compute_name = critical.get(name, name)
             compute_func = getattr(self, 'compute_%s' % compute_name, None)
@@ -260,10 +262,13 @@ class ComputedFieldsMixIn:
 
 class ComputedUsernameMixIn(ComputedFieldsMixIn):
     """If possible, creates a username according to rules (defaults to email then to name), otherwise set manually. """
+    login_choices = [('use_username', _("provided username")), ('use_email', _("email address")), ]
 
     email_field = forms.CharField(label=_('Email'), max_length='191', widget=forms.EmailInput())
-    username_field = UsernameField(label=_("Username for login"))
-    username_flag = forms.BooleanField(label=_("Login with non-email username"), required=False)
+    username_field = UsernameField(label=_("Username"))
+    # username_flag = forms.BooleanField(label=_("Login with non-email username"), required=False)
+    username_flag = forms.CharField(label=_("Login using"),
+                                    widget=RadioSelect(choices=login_choices), initial='use_email')
     constructor_fields = ('first_name', 'last_name', )
     strict_username = True  # case_insensitive
     strict_email = False  # unique_email and case_insensitive
@@ -288,6 +293,7 @@ class ComputedUsernameMixIn(ComputedFieldsMixIn):
         flag_opts = {'names': flag_names, 'alt_field': 'username_flag', 'computed': True}
         email_opts['strict'] = kwargs.pop('strict_email', getattr(self, 'strict_email', None))
         user_opts['strict'] = kwargs.pop('strict_username', getattr(self, 'strict_username', None))
+        # TODO: Add the autocomplete AKA auto_fill lookup value for any appropriate critical_fields.
         critical_fields = {'name_for_email': email_opts, 'name_for_user': user_opts, 'USERNAME_FLAG_FIELD': flag_opts}
         critical_fields.update(kwargs.get('critical_fields', {}))
         kwargs['critical_fields'] = critical_fields
@@ -372,7 +378,7 @@ class ComputedUsernameMixIn(ComputedFieldsMixIn):
         self.attach_critical_validators()
 
         login_link = self.get_login_message(link_text='login to existing account', link_only=True)
-        text = "Use a non-shared email, or set a username below, or {}. ".format(login_link)
+        text = "Use a non-shared email, or {}. ".format(login_link)
         self.add_error(name_for_email, mark_safe(_(text)))
         e_note = "Typically people have their own unique email address, which you can update. "
         e_note += "If you share an email with another user, then you will need to create a username for your login. "
@@ -492,10 +498,9 @@ class FormOverrideMixIn:
         }
 
     def __init__(self, *args, **kwargs):
-        print("======================= FormOverrideMixIn.__init__ =================================")
+        # print("======================= FormOverrideMixIn.__init__ =================================")
         super().__init__(*args, **kwargs)
-        self.fields = self.prep_fields()
-        print("--------------------- FINISH FormOverrideMixIn.__init__ --------------------")
+        # print("--------------------- FINISH FormOverrideMixIn.__init__ --------------------")
 
     def set_alt_data(self, data=None, name='', field=None, value=None):
         """Modify the form submitted value if it matches a no longer accurate default value. """
@@ -591,13 +596,20 @@ class FormOverrideMixIn:
             args = [opts, None, fields, prep_args]
             kwargs.update(flat_fields=True)
             opts, _ignored, fields, *prep_args, kwargs = self.handle_modifiers(*args, **kwargs)
-        if hasattr(self, 'remove_field_names'):  # TODO: Confirm this works and/or use computed_fields names & technique
+        # TODO: Confirm this works and/or use computed_fields names & technique
+        has_computed = issubclass(self.__class__, ComputedFieldsMixIn)
+        if not has_computed:  # hasattr(self, 'remove_field_names'):
             fields = self.handle_removals(fields)
         overrides = self.get_overrides()  # may have some key names not in self.fields, which will later be ignored.
         DEFAULT = overrides.get('_default_', {})
         alt_field_info = self.get_alt_field_info()  # condition_<label> methods are run.
         new_data = {}
         for name, field in fields.items():
+            if isinstance(field.widget, (RadioSelect, CheckboxSelectMultiple, CheckboxInput, )):
+                initial_value = self.get_initial_for_field(field, name)
+                print(initial_value)
+                # TODO: Manage the initial_value being selected.
+
             if name in overrides:
                 field.widget.attrs.update(overrides[name])
             if not overrides.get(name, {}).get('no_size_override', False):
@@ -632,6 +644,11 @@ class FormOverrideMixIn:
         if new_data:
             self.set_alt_data(new_data)
         return fields
+
+    def _html_output(self, *args, **kwargs):
+        print("************************** OVERRIDES FOR _HTML_OUTPUT *************************************")
+        self.fields = self.prep_fields()
+        super()._html_output(*args, **kwargs)
 
 
 class OverrideCountryMixIn(FormOverrideMixIn):
@@ -745,8 +762,8 @@ class FormFieldsetMixIn:
     untitled_fieldset_class = 'noline'
     max_label_width = 12
     adjust_label_width = True
-    label_width_widgets = (Input, Textarea, )  # Base classes for the field.widgets we want.
-    label_exclude_widgets = (CheckboxInput, HiddenInput)  # classes for the field.widgets we do NOT want.
+    label_width_widgets = (Input, Textarea, )  # Base classes for the field.widgets we want to line up their lables.
+    label_exclude_widgets = (CheckboxInput, HiddenInput)  # classes for the field.widgets we do NOT want aligned.
     # ignored_base_widgets: ChoiceWidget, MultiWidget, SelectDateWidget
     # ChoiceWidget is the base for RadioSelect, Select, and variations.
     fieldsets = (
@@ -757,9 +774,8 @@ class FormFieldsetMixIn:
         (None, {
             'position': 2,
             'fields': [
-                'email',
-                '_USERNAME_FLAG_FIELD',
-                'username',
+                '_name_for_email',
+                ('_name_for_user', '_USERNAME_FLAG_FIELD', ),
                 ],
         }),
         (None, {
@@ -776,14 +792,14 @@ class FormFieldsetMixIn:
             'fields': [
                 'billing_address_1',
                 'billing_address_2',
-                ('billing_city', 'billing_country_area', 'billing_postcode', )
+                ('billing_city', 'billing_country_area', 'billing_postcode', ),
                 ],
         }), )
 
     def __init__(self, *args, **kwargs):
-        print("======================= FormFieldsetMixIn.__init__ =================================")
+        # print("======================= FormFieldsetMixIn.__init__ =================================")
         super().__init__(*args, **kwargs)
-        print("--------------------- FINISH FormFieldsetMixIn.__init__ --------------------")
+        # print("--------------------- FINISH FormFieldsetMixIn.__init__ --------------------")
 
     def prep_remaining(self, opts, field_rows, remaining_fields, *args, **kwargs):
         """This can be updated for any additional processing of fields not in any other fieldsets. """
@@ -823,13 +839,15 @@ class FormFieldsetMixIn:
     def make_fieldsets(self, *fs_args, **kwargs):
         """Updates the dictionaries of each fieldset with 'rows' of field dicts, and a flattend 'field_names' list. """
         print("======================= FormFieldsetMixIn.make_fieldsets =================================")
+        if hasattr(self, 'prep_fields'):
+            self.prep_fields()
         remaining_fields = self.fields.copy()
         fieldsets = list(getattr(self, 'fieldsets', ((None, {'fields': [], 'position': None}), )))
         assigned_field_names = flatten([flatten(opts['fields']) for fieldset_label, opts in fieldsets])
         unassigned_field_names = [name for name in remaining_fields if name not in assigned_field_names]
         opts = {'modifiers': 'prep_remaining', 'position': 'remaining', 'fields': unassigned_field_names}
         fieldsets.append((None, opts))
-        top_errors = self.non_field_errors().copy()
+        top_errors = self.non_field_errors().copy()  # If data not submitted, this will trigger full_clean method.
         max_position, form_column_count, hidden_fields, remove_idx = 0, 0, [], []
         for index, fieldset in enumerate(fieldsets):
             fieldset_label, opts = fieldset
@@ -957,6 +975,7 @@ class FormFieldsetMixIn:
     def _html_output(self, row_tag, col_head_tag, col_tag, single_col_tag, col_head_data, col_data,
                      help_text_br, errors_on_separate_row, as_type=None, strict_columns=False):
         """Overriding BaseForm._html_output. Output HTML. Used by as_table(), as_ul(), as_p(), etc. """
+        print("************************** FormFieldsMixIn _html_output *************************************")
         help_tag = 'span'
         allow_colspan = not strict_columns and as_type == 'table'
         adjust_label_width = getattr(self, 'adjust_label_width', True) and hasattr(self, 'determine_label_width')
@@ -1069,10 +1088,7 @@ class FormFieldsetMixIn:
                 row_ender += '</' + row_tag + '>'
                 if last_row.endswith(row_ender):
                     output[-1] = last_row[:-len(row_ender)] + str_hidden + row_ender
-                else:
-                    # This can happen in the as_p() case (and possibly other custom display methods).
-                    # If there are only top errors, we may not be able to conscript the last row for
-                    # our purposes, so insert a new empty row.
+                else:  # We may not be able conscript the last row for our purposes, so insert a new empty row.
                     last_row = self.make_headless_row(html_args, str_hidden, form_col_count)
                     output.append(last_row)
             else:  # If there aren't any rows in the output, just append the hidden fields.
