@@ -6,7 +6,6 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UsernameField
 from django.forms.fields import Field, CharField
 from django.forms.widgets import Input, CheckboxInput, CheckboxSelectMultiple, RadioSelect, HiddenInput, Textarea
-# TextInput,
 from django.forms.utils import ErrorDict  # , ErrorList
 from django.utils.translation import gettext as _
 from django.utils.html import conditional_escape, format_html
@@ -692,7 +691,10 @@ class OverrideCountryMixIn(FormOverrideMixIn):
                     address_display_version = 'foreign'
             has_computed = issubclass(self.__class__, ComputedFieldsMixIn)
             for name in needed_names:
-                name, field = self.make_computed_field(name, name) if has_computed else getattr(self, name, None)
+                if has_computed:
+                    name, field = self.make_computed_field(name, name)
+                else:
+                    field = getattr(self, name, None)
                 if field:
                     self.base_fields[name] = field
             if has_computed and computed_field_names:
@@ -708,8 +710,8 @@ class OverrideCountryMixIn(FormOverrideMixIn):
         print(log)
         super().__init__(*args, **kwargs)
         name = 'country_display'
-        value = self.data.get(name, 'NO DATA VALUE')
-        if address_display_version != value:
+        value = self.data.get(name, None)
+        if value and address_display_version != value:
             self.set_alt_data(name=name, field=self.fields[name], value=address_display_version)
         print("------------- FINISH OverrideCountryMixIn(FormOverrideMixIn).__init__ FINISH ------------------")
 
