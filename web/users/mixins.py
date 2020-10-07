@@ -358,29 +358,29 @@ class ComputedUsernameMixIn(ComputedFieldsMixIn):
     def configure_username_confirmation(self, name_for_user=None, name_for_email=None):
         """Since the username is using the alternative computation, prepare form for user confirmation. """
         name_for_user = name_for_user or self.name_for_user
-        field = self.computed_fields.pop(name_for_user, None) or self.fields.pop(name_for_user, None)
-        field.initial = self.cleaned_data.get(name_for_user, field.initial)
+        username_field = self.computed_fields.pop(name_for_user, None) or self.fields.pop(name_for_user, None)
+        user_value = self.cleaned_data.get(name_for_user, username_field.initial)
         name_for_email = name_for_email or self.name_for_email
         email_field = self.fields.pop(name_for_email, None) or self.computed_fields.pop(name_for_email, None)
-        email_field.initial = self.cleaned_data.get(name_for_email, email_field.initial)
+        email_value = self.cleaned_data.get(name_for_email, email_field.initial)
         flag_name = self.USERNAME_FLAG_FIELD
         flag_field = self.computed_fields.pop(flag_name, None) or self.fields.pop(flag_name, None)
         if not flag_field:
             raise ImproperlyConfigured(_("Expected flag_field from either the main Form or from MixIn. "))
-        flag_field.initial = 'False'
+        flag_value = 'False'
 
         data = self.data.copy()  # QueryDict datastructure, the copy is mutable. Has getlist and appendlist methods.
-        data.appendlist(name_for_email, email_field.initial)
-        data.appendlist(flag_name, flag_field.initial)
-        data.appendlist(name_for_user, field.initial)
+        data.appendlist(name_for_email, email_value)
+        data.appendlist(flag_name, flag_value)
+        data.appendlist(name_for_user, user_value)
         data._mutable = False
         self.data = data
 
         self.fields[name_for_email] = email_field
         self.fields[flag_name] = flag_field
-        self.fields[name_for_user] = field
+        self.fields[name_for_user] = username_field
         if hasattr(self, 'assign_focus_field'):
-            self.named_focus = self.assign_focus_field(name=name_for_email, fields=self.fields_focus)
+            self.named_focus = self.assign_focus_field(name=name_for_email, fields=self.fields)
         # self.attach_critical_validators()
 
         login_link = self.get_login_message(link_text='login to existing account', link_only=True)
