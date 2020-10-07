@@ -18,15 +18,14 @@ from pprint import pprint
 
 class FocusMixIn:
     """Autofocus given to a field not hidden or disabled. Can limit to a fields subset, and prioritize a named one. """
+    named_focus = None
+    fields_focus = None
 
     def __init__(self, *args, **kwargs):
         # print("======================= Focus MixIn =================================")
-        named_focus = kwargs.pop('named_focus', None)
-        fields_focus = kwargs.pop('fields_focus', None)
+        self.named_focus = kwargs.pop('named_focus', None)
+        self.fields_focus = kwargs.pop('fields_focus', None)
         super().__init__(*args, **kwargs)
-        named_focus = kwargs.pop('named_focus', named_focus)
-        fields_focus = kwargs.pop('fields_focus', fields_focus)
-        self.assign_focus_field(name=named_focus, fields=fields_focus)
         # print("--------------------- Finish Focus MixIn --------------------")
 
     def assign_focus_field(self, name=None, fields=None):
@@ -34,16 +33,24 @@ class FocusMixIn:
         name = name() if callable(name) else name
         fields = fields or self.fields
         found = fields.get(name, None) if name else None
+        found_name = name if found else None
         if found and (getattr(found, 'disabled', False) or getattr(found, 'is_hidden', False)):
-            found = None
+            found, found_name = None, None
         for field_name, field in fields.items():
             if not found and not field.disabled and not getattr(field, 'is_hidden', False):
-                found = field
+                found_name, found = field_name, field
             else:
                 field.widget.attrs.pop('autofocus', None)
         if found:
             found.widget.attrs['autofocus'] = True
-        return found
+        return found_name
+
+    def _html_output(self, *args, **kwargs):
+        print("************************** Autofocus FOR _HTML_OUTPUT *************************************")
+        content = super()._html_output(*args, **kwargs)
+        print("--------- GIVE FOCUS ----------------")
+        self.named_focus = self.assign_focus_field(name=self.named_focus, fields=self.fields_focus)
+        return content
 
     def as_test(self):
         """Prepares and calls different 'as_<variation>' method variations. """
@@ -297,9 +304,9 @@ class ComputedUsernameMixIn(ComputedFieldsMixIn):
         critical_fields.update(kwargs.get('critical_fields', {}))
         kwargs['critical_fields'] = critical_fields
         super().__init__(*args, **kwargs)
-        if hasattr(self, 'assign_focus_field'):
-            if self.name_for_user in self.data:
-                kwargs['named_focus'] = self.name_for_email
+        # if hasattr(self, 'assign_focus_field'):
+        #     if self.name_for_user in self.data:
+        #         self.assign_focus_field(name=name_for_email)
         self.confirm_required_fields()
         print("--------------------- FINISH ComputedUsernameMixIn(ComputedFieldsMixIn).__init__ --------------------")
 
@@ -373,8 +380,8 @@ class ComputedUsernameMixIn(ComputedFieldsMixIn):
         self.fields[flag_name] = flag_field
         self.fields[name_for_user] = field
         if hasattr(self, 'assign_focus_field'):
-            self.assign_focus_field(name=name_for_email)
-        self.attach_critical_validators()
+            self.named_focus = self.assign_focus_field(name=name_for_email, fields=self.fields_focus)
+        # self.attach_critical_validators()
 
         login_link = self.get_login_message(link_text='login to existing account', link_only=True)
         text = "Use a non-shared email, or {}. ".format(login_link)
@@ -647,7 +654,7 @@ class FormOverrideMixIn:
     def _html_output(self, *args, **kwargs):
         print("************************** OVERRIDES FOR _HTML_OUTPUT *************************************")
         self.fields = self.prep_fields()
-        super()._html_output(*args, **kwargs)
+        return super()._html_output(*args, **kwargs)
 
 
 class OverrideCountryMixIn(FormOverrideMixIn):
@@ -843,6 +850,8 @@ class FormFieldsetMixIn:
         print("======================= FormFieldsetMixIn.make_fieldsets =================================")
         if hasattr(self, 'prep_fields'):
             self.prep_fields()
+        if hasattr(self, 'assign_focus_field'):
+            self.named_focus = self.assign_focus_field(name=self.named_focus, fields=self.fields_focus)
         remaining_fields = self.fields.copy()
         fieldsets = list(getattr(self, 'fieldsets', ((None, {'fields': [], 'position': None}), )))
         assigned_field_names = flatten([flatten(opts['fields']) for fieldset_label, opts in fieldsets])
