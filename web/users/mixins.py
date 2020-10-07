@@ -349,10 +349,8 @@ class ComputedUsernameMixIn(ComputedFieldsMixIn):
     def compute_name_for_user(self):
         """Can overwrite with new logic. Determine a str, or callable returning one, and update self.initial dict. """
         username_field_name = self.name_for_user
-        field = self.computed_fields[username_field_name]
         email_field_name = self.name_for_email
         result_value = self.username_from_email_or_names(username_field_name, email_field_name)
-        self.initial[username_field_name] = field.initial = result_value
         return result_value
 
     def configure_username_confirmation(self, name_for_user=None, name_for_email=None):
