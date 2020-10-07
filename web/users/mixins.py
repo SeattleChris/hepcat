@@ -62,8 +62,12 @@ class FocusMixIn:
         print("==================== Final Stage!=================================")
         pprint(self._meta.model)
         print("----------------------- self.data ------------------------------")
-        data = getattr(self, 'data', {"NO DATA PRESENT": None})
-        pprint(data)
+        data = getattr(self, 'data', None)
+        if data:
+            for key in data:
+                print(f"{key} : {data.getlist(key)}")
+        else:
+            print("NO DATA PRESENT")
         print("----------------------- self.fields ------------------------------")
         pprint(self.fields)
         print("--------------------- computed fields ----------------------------")
@@ -268,23 +272,23 @@ class ComputedFieldsMixIn:
 
 class ComputedUsernameMixIn(ComputedFieldsMixIn):
     """If possible, creates a username according to rules (defaults to email then to name), otherwise set manually. """
-    login_choices = [('use_username', _("provided username")), ('use_email', _("email address")), ]
+    # login_choices = [('use_username', _("provided username")), ('use_email', _("email address")), ]
 
     email_field = forms.CharField(label=_('Email'), max_length='191', widget=forms.EmailInput())
     username_field = UsernameField(label=_("Username"))
-    # username_flag = forms.BooleanField(label=_("Login with non-email username"), required=False)
-    username_flag = forms.CharField(label=_("Login using"),
-                                    widget=RadioSelect(choices=login_choices), initial='use_email')
+    username_flag = forms.BooleanField(label=_("Login with username, not email address"), required=False)
+    # username_flag = forms.CharField(label=_("Login using"),
+    #                                 widget=RadioSelect(choices=login_choices), initial='use_email')
     constructor_fields = ('first_name', 'last_name', )
     strict_username = True  # case_insensitive
     strict_email = False  # unique_email and case_insensitive
-    USERNAME_FLAG_FIELD = None  # Should be overwritten by parent model, with backup ComputedUsernameMixIn.username_flag
+    USERNAME_FLAG_FIELD = None  # Should be overwritten by parent model, or backup ComputedUsernameMixIn.username_flag
     user_model = None
     name_for_user = None
     name_for_email = None
     help_texts = {
-        'username': _("Without a unique email, a username is needed. Use suggested or create one."),
-        'email': _("Used for confirmation and typically for login"),
+        'username': _("Without a unique email, a username is needed. Use suggested or create one. "),
+        'email': _("Used for confirmation and typically for login. "),
     }
 
     def __init__(self, *args, **kwargs):
@@ -419,19 +423,16 @@ class ComputedUsernameMixIn(ComputedFieldsMixIn):
             print("No flag field")
             return
         flag_value = self.cleaned_data[flag_name]
-        flag_prev = self.data.getlist(flag_name, [flag_field.initial])
-        flag_changed = flag_field.has_changed(flag_prev[-1], flag_value)
+        flag_changed = flag_field.has_changed(flag_field.initial, flag_value)
         email_field = self.fields[email_field_name]
         email_value = self.cleaned_data[email_field_name]
-        email_prev = self.data.getlist(email_field_name, [email_field.initial])
-        email_changed = email_field.has_changed(email_prev[-1], email_value)
+        email_changed = email_field.has_changed(email_field.initial, email_value)
         user_field = self.fields[user_field_name]
         user_value = self.cleaned_data[user_field_name]
-        user_prev = self.data.getlist(user_field_name, [user_field.initial])
-        user_changed = user_field.has_changed(user_prev[-1], user_value)
-        flag_data = f"Init: {flag_field.initial} | Prev: {flag_prev} | Clean: {flag_value} | New: {flag_changed} "
-        email_data = f"Init: {email_field.initial} | Prev: {email_prev} | Clean: {email_value} | New: {email_changed} "
-        user_data = f"Init: {user_field.initial} | Prev: {user_prev} | Clean: {user_value} | New: {user_changed} "
+        user_changed = user_field.has_changed(user_field.initial, user_value)
+        flag_data = f"Init: {flag_field.initial} | Clean: {flag_value} | New: {flag_changed} "
+        email_data = f"Init: {email_field.initial} | Clean: {email_value} | New: {email_changed} "
+        user_data = f"Init: {user_field.initial} | Clean: {user_value} | New: {user_changed} "
         pprint(flag_data)
         pprint(email_data)
         pprint(user_data)
@@ -439,7 +440,7 @@ class ComputedUsernameMixIn(ComputedFieldsMixIn):
         if not flag_value:  # Using email as username, confirm it is unique.
             lookup = {"{}__iexact".format(self.user_model.USERNAME_FIELD): email_value}
             try:
-                if not email_changed or self.user_model._default_manager.filter(**lookup).exists():
+                if self.user_model._default_manager.filter(**lookup).exists():  # not email_changed or
                     message = "You must give a unique email not shared with other users (or create a username). "
                     error_collected[email_field_name] = _(message)
             except Exception as e:
@@ -610,10 +611,10 @@ class FormOverrideMixIn:
         new_data = {}
         for name, field in fields.items():
             if isinstance(field.widget, (RadioSelect, CheckboxSelectMultiple, CheckboxInput, )):
-                initial_value = self.get_initial_for_field(field, name)
-                print(initial_value)
+                # initial_value = self.get_initial_for_field(field, name)
+                # print(initial_value)
                 # TODO: Manage the initial_value being selected.
-
+                pass
             if name in overrides:
                 field.widget.attrs.update(overrides[name])
             if not overrides.get(name, {}).get('no_size_override', False):
@@ -1102,6 +1103,7 @@ class FormFieldsetMixIn:
                     output.append(last_row)
             else:  # If there aren't any rows in the output, just append the hidden fields.
                 output.append(str_hidden)
+        print("---------- RETURN CONTENT FROM FormFieldsetMixIn -------------------------")
         return mark_safe('\n'.join(output))
 
     def as_table(self):
