@@ -119,7 +119,6 @@ class RegisterForm(AddressUsernameMixIn, forms.ModelForm):
         user = User.objects.create_user(
             **kwargs
             )
-
         return user
 
     def clean(self):
@@ -148,7 +147,7 @@ class RegisterForm(AddressUsernameMixIn, forms.ModelForm):
             username = cleaned_data.get(self.name_for_user)
             if username_expected and username:
                 data_new_user.update(username=username, username_not_email=True,)
-                user = self.create_form_user(data_new_user)
+                user = self.create_form_user(**data_new_user)
         if user.is_anonymous and new_user:  # They say they are new, but check to avoid collisions
             # Look by email
             same_email = User.objects.filter(email__iexact=input_email)
@@ -174,7 +173,7 @@ class RegisterForm(AddressUsernameMixIn, forms.ModelForm):
                 message += "extra symbol (such as '.' or '+') at the end of your name to confirm your input"
                 raise forms.ValidationError(_(message))
             # We can create this user
-            user = self.create_form_user(data_new_user)
+            user = self.create_form_user(**data_new_user)
         elif user.is_anonymous:  # new_user is False; User says they have an account, we should use that account.
             print('User says they are returning. They should login!')
             query_user = User.objects.filter(
