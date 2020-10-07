@@ -6,7 +6,6 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UsernameField
 from django.forms.fields import Field, CharField
 from django.forms.widgets import Input, CheckboxInput, CheckboxSelectMultiple, RadioSelect, HiddenInput, Textarea
-# TextInput,
 from django.forms.utils import ErrorDict  # , ErrorList
 from django.utils.translation import gettext as _
 from django.utils.html import conditional_escape, format_html
@@ -19,15 +18,14 @@ from pprint import pprint
 
 class FocusMixIn:
     """Autofocus given to a field not hidden or disabled. Can limit to a fields subset, and prioritize a named one. """
+    named_focus = None
+    fields_focus = None
 
     def __init__(self, *args, **kwargs):
         # print("======================= Focus MixIn =================================")
-        named_focus = kwargs.pop('named_focus', None)
-        fields_focus = kwargs.pop('fields_focus', None)
+        self.named_focus = kwargs.pop('named_focus', None)
+        self.fields_focus = kwargs.pop('fields_focus', None)
         super().__init__(*args, **kwargs)
-        named_focus = kwargs.pop('named_focus', named_focus)
-        fields_focus = kwargs.pop('fields_focus', fields_focus)
-        self.assign_focus_field(name=named_focus, fields=fields_focus)
         # print("--------------------- Finish Focus MixIn --------------------")
 
     def assign_focus_field(self, name=None, fields=None):
@@ -35,16 +33,24 @@ class FocusMixIn:
         name = name() if callable(name) else name
         fields = fields or self.fields
         found = fields.get(name, None) if name else None
+        found_name = name if found else None
         if found and (getattr(found, 'disabled', False) or getattr(found, 'is_hidden', False)):
-            found = None
+            found, found_name = None, None
         for field_name, field in fields.items():
             if not found and not field.disabled and not getattr(field, 'is_hidden', False):
-                found = field
+                found_name, found = field_name, field
             else:
                 field.widget.attrs.pop('autofocus', None)
         if found:
             found.widget.attrs['autofocus'] = True
-        return found
+        return found_name
+
+    def _html_output(self, *args, **kwargs):
+        print("************************** Autofocus FOR _HTML_OUTPUT *************************************")
+        content = super()._html_output(*args, **kwargs)
+        print("--------- GIVE FOCUS ----------------")
+        self.named_focus = self.assign_focus_field(name=self.named_focus, fields=self.fields_focus)
+        return content
 
     def as_test(self):
         """Prepares and calls different 'as_<variation>' method variations. """
@@ -56,8 +62,12 @@ class FocusMixIn:
         print("==================== Final Stage!=================================")
         pprint(self._meta.model)
         print("----------------------- self.data ------------------------------")
-        data = getattr(self, 'data', {"NO DATA PRESENT": None})
-        pprint(data)
+        data = getattr(self, 'data', None)
+        if data:
+            for key in data:
+                print(f"{key} : {data.getlist(key)}")
+        else:
+            print("NO DATA PRESENT")
         print("----------------------- self.fields ------------------------------")
         pprint(self.fields)
         print("--------------------- computed fields ----------------------------")
@@ -262,23 +272,23 @@ class ComputedFieldsMixIn:
 
 class ComputedUsernameMixIn(ComputedFieldsMixIn):
     """If possible, creates a username according to rules (defaults to email then to name), otherwise set manually. """
-    login_choices = [('use_username', _("provided username")), ('use_email', _("email address")), ]
+    # login_choices = [('use_username', _("provided username")), ('use_email', _("email address")), ]
 
     email_field = forms.CharField(label=_('Email'), max_length='191', widget=forms.EmailInput())
     username_field = UsernameField(label=_("Username"))
-    # username_flag = forms.BooleanField(label=_("Login with non-email username"), required=False)
-    username_flag = forms.CharField(label=_("Login using"),
-                                    widget=RadioSelect(choices=login_choices), initial='use_email')
+    username_flag = forms.BooleanField(label=_("Login with username, not email address"), required=False)
+    # username_flag = forms.CharField(label=_("Login using"),
+    #                                 widget=RadioSelect(choices=login_choices), initial='use_email')
     constructor_fields = ('first_name', 'last_name', )
     strict_username = True  # case_insensitive
     strict_email = False  # unique_email and case_insensitive
-    USERNAME_FLAG_FIELD = None  # Should be overwritten by parent model, with backup ComputedUsernameMixIn.username_flag
+    USERNAME_FLAG_FIELD = None  # Should be overwritten by parent model, or backup ComputedUsernameMixIn.username_flag
     user_model = None
     name_for_user = None
     name_for_email = None
     help_texts = {
-        'username': _("Without a unique email, a username is needed. Use suggested or create one."),
-        'email': _("Used for confirmation and typically for login"),
+        'username': _("Without a unique email, a username is needed. Use suggested or create one. "),
+        'email': _("Used for confirmation and typically for login. "),
     }
 
     def __init__(self, *args, **kwargs):
@@ -298,9 +308,9 @@ class ComputedUsernameMixIn(ComputedFieldsMixIn):
         critical_fields.update(kwargs.get('critical_fields', {}))
         kwargs['critical_fields'] = critical_fields
         super().__init__(*args, **kwargs)
-        if hasattr(self, 'assign_focus_field'):
-            if self.name_for_user in self.data:
-                kwargs['named_focus'] = self.name_for_email
+        # if hasattr(self, 'assign_focus_field'):
+        #     if self.name_for_user in self.data:
+        #         self.assign_focus_field(name=name_for_email)
         self.confirm_required_fields()
         print("--------------------- FINISH ComputedUsernameMixIn(ComputedFieldsMixIn).__init__ --------------------")
 
@@ -343,39 +353,37 @@ class ComputedUsernameMixIn(ComputedFieldsMixIn):
     def compute_name_for_user(self):
         """Can overwrite with new logic. Determine a str, or callable returning one, and update self.initial dict. """
         username_field_name = self.name_for_user
-        field = self.computed_fields[username_field_name]
         email_field_name = self.name_for_email
         result_value = self.username_from_email_or_names(username_field_name, email_field_name)
-        self.initial[username_field_name] = field.initial = result_value
         return result_value
 
     def configure_username_confirmation(self, name_for_user=None, name_for_email=None):
         """Since the username is using the alternative computation, prepare form for user confirmation. """
         name_for_user = name_for_user or self.name_for_user
-        field = self.computed_fields.pop(name_for_user, None) or self.fields.pop(name_for_user, None)
-        field.initial = self.cleaned_data.get(name_for_user, field.initial)
+        username_field = self.computed_fields.pop(name_for_user, None) or self.fields.pop(name_for_user, None)
+        user_value = self.cleaned_data.get(name_for_user, username_field.initial)
         name_for_email = name_for_email or self.name_for_email
         email_field = self.fields.pop(name_for_email, None) or self.computed_fields.pop(name_for_email, None)
-        email_field.initial = self.cleaned_data.get(name_for_email, email_field.initial)
+        email_value = self.cleaned_data.get(name_for_email, email_field.initial)
         flag_name = self.USERNAME_FLAG_FIELD
         flag_field = self.computed_fields.pop(flag_name, None) or self.fields.pop(flag_name, None)
         if not flag_field:
             raise ImproperlyConfigured(_("Expected flag_field from either the main Form or from MixIn. "))
-        flag_field.initial = 'False'
+        flag_value = 'False'
 
         data = self.data.copy()  # QueryDict datastructure, the copy is mutable. Has getlist and appendlist methods.
-        data.appendlist(name_for_email, email_field.initial)
-        data.appendlist(flag_name, flag_field.initial)
-        data.appendlist(name_for_user, field.initial)
+        data.appendlist(name_for_email, email_value)
+        data.appendlist(flag_name, flag_value)
+        data.appendlist(name_for_user, user_value)
         data._mutable = False
         self.data = data
 
         self.fields[name_for_email] = email_field
         self.fields[flag_name] = flag_field
-        self.fields[name_for_user] = field
+        self.fields[name_for_user] = username_field
         if hasattr(self, 'assign_focus_field'):
-            self.assign_focus_field(name=name_for_email)
-        self.attach_critical_validators()
+            self.named_focus = self.assign_focus_field(name=name_for_email, fields=self.fields)
+        # self.attach_critical_validators()
 
         login_link = self.get_login_message(link_text='login to existing account', link_only=True)
         text = "Use a non-shared email, or {}. ".format(login_link)
@@ -415,27 +423,24 @@ class ComputedUsernameMixIn(ComputedFieldsMixIn):
             print("No flag field")
             return
         flag_value = self.cleaned_data[flag_name]
-        flag_prev = self.data.getlist(flag_name, [flag_field.initial])
-        flag_changed = flag_field.has_changed(flag_prev[-1], flag_value)
+        flag_changed = flag_field.has_changed(flag_field.initial, flag_value)
         email_field = self.fields[email_field_name]
         email_value = self.cleaned_data[email_field_name]
-        email_prev = self.data.getlist(email_field_name, [email_field.initial])
-        email_changed = email_field.has_changed(email_prev[-1], email_value)
+        email_changed = email_field.has_changed(email_field.initial, email_value)
         user_field = self.fields[user_field_name]
         user_value = self.cleaned_data[user_field_name]
-        user_prev = self.data.getlist(user_field_name, [user_field.initial])
-        user_changed = user_field.has_changed(user_prev[-1], user_value)
-        flag_data = f"Init: {flag_field.initial} | Prev: {flag_prev} | Clean: {flag_value} | New: {flag_changed} "
-        email_data = f"Init: {email_field.initial} | Prev: {email_prev} | Clean: {email_value} | New: {email_changed} "
-        user_data = f"Init: {user_field.initial} | Prev: {user_prev} | Clean: {user_value} | New: {user_changed} "
+        user_changed = user_field.has_changed(user_field.initial, user_value)
+        flag_data = f"Init: {flag_field.initial} | Clean: {flag_value} | New: {flag_changed} "
+        email_data = f"Init: {email_field.initial} | Clean: {email_value} | New: {email_changed} "
+        user_data = f"Init: {user_field.initial} | Clean: {user_value} | New: {user_changed} "
         pprint(flag_data)
         pprint(email_data)
         pprint(user_data)
         error_collected = {}
-        if not flag_value:
-            lookup = {"{}__iexact".format(user_field_name): email_value}
+        if not flag_value:  # Using email as username, confirm it is unique.
+            lookup = {"{}__iexact".format(self.user_model.USERNAME_FIELD): email_value}
             try:
-                if not email_changed or self.user_model._default_manager.filter(**lookup).exists():
+                if self.user_model._default_manager.filter(**lookup).exists():  # not email_changed or
                     message = "You must give a unique email not shared with other users (or create a username). "
                     error_collected[email_field_name] = _(message)
             except Exception as e:
@@ -606,10 +611,10 @@ class FormOverrideMixIn:
         new_data = {}
         for name, field in fields.items():
             if isinstance(field.widget, (RadioSelect, CheckboxSelectMultiple, CheckboxInput, )):
-                initial_value = self.get_initial_for_field(field, name)
-                print(initial_value)
+                # initial_value = self.get_initial_for_field(field, name)
+                # print(initial_value)
                 # TODO: Manage the initial_value being selected.
-
+                pass
             if name in overrides:
                 field.widget.attrs.update(overrides[name])
             if not overrides.get(name, {}).get('no_size_override', False):
@@ -648,7 +653,7 @@ class FormOverrideMixIn:
     def _html_output(self, *args, **kwargs):
         print("************************** OVERRIDES FOR _HTML_OUTPUT *************************************")
         self.fields = self.prep_fields()
-        super()._html_output(*args, **kwargs)
+        return super()._html_output(*args, **kwargs)
 
 
 class OverrideCountryMixIn(FormOverrideMixIn):
@@ -692,7 +697,10 @@ class OverrideCountryMixIn(FormOverrideMixIn):
                     address_display_version = 'foreign'
             has_computed = issubclass(self.__class__, ComputedFieldsMixIn)
             for name in needed_names:
-                name, field = self.make_computed_field(name, name) if has_computed else getattr(self, name, None)
+                if has_computed:
+                    name, field = self.make_computed_field(name, name)
+                else:
+                    field = getattr(self, name, None)
                 if field:
                     self.base_fields[name] = field
             if has_computed and computed_field_names:
@@ -708,8 +716,8 @@ class OverrideCountryMixIn(FormOverrideMixIn):
         print(log)
         super().__init__(*args, **kwargs)
         name = 'country_display'
-        value = self.data.get(name, 'NO DATA VALUE')
-        if address_display_version != value:
+        value = self.data.get(name, None)
+        if value and address_display_version != value:
             self.set_alt_data(name=name, field=self.fields[name], value=address_display_version)
         print("------------- FINISH OverrideCountryMixIn(FormOverrideMixIn).__init__ FINISH ------------------")
 
@@ -841,6 +849,8 @@ class FormFieldsetMixIn:
         print("======================= FormFieldsetMixIn.make_fieldsets =================================")
         if hasattr(self, 'prep_fields'):
             self.prep_fields()
+        if hasattr(self, 'assign_focus_field'):
+            self.named_focus = self.assign_focus_field(name=self.named_focus, fields=self.fields_focus)
         remaining_fields = self.fields.copy()
         fieldsets = list(getattr(self, 'fieldsets', ((None, {'fields': [], 'position': None}), )))
         assigned_field_names = flatten([flatten(opts['fields']) for fieldset_label, opts in fieldsets])
@@ -1093,6 +1103,7 @@ class FormFieldsetMixIn:
                     output.append(last_row)
             else:  # If there aren't any rows in the output, just append the hidden fields.
                 output.append(str_hidden)
+        print("---------- RETURN CONTENT FROM FormFieldsetMixIn -------------------------")
         return mark_safe('\n'.join(output))
 
     def as_table(self):

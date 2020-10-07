@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser, UserManager, Group
 from django.db import models
 from django.db.utils import IntegrityError
+from django.core.exceptions import ValidationError
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
@@ -56,7 +57,7 @@ class UserManagerHC(UserManager):
             message += "but we can create an account without one. "
             if not extra_fields.setdefault('username_not_email', True):
                 message += "You requested to use email as your login username, but did not provide an email address. "
-                raise ValueError(_(message))
+                raise ValidationError(_(message))
         else:
             email = self.normalize_email(email)
 
@@ -72,14 +73,14 @@ class UserManagerHC(UserManager):
             if not username:
                 message += "If you are not using your email as your username/login, "
                 message += "then you must either set a username or provide a first and/or last name. "
-                raise ValueError(_(message))
+                raise ValidationError(_(message))
             username = username.casefold()
             try:
                 user = self._create_user(username, email, password, **extra_fields)
             except IntegrityError:
                 message += "A user already exists with that username, or matching first and last name. "
                 message += "Please provide some form of unique user information (email address, username, or name). "
-                raise ValueError(_(message))
+                raise ValidationError(_(message))
         return user
 
     def create_user(self, username=None, email=None, password=None, **extra_fields):
@@ -104,11 +105,11 @@ class UserManagerHC(UserManager):
         """
         # print('================== UserManagerHC.create_superuser ========================')
         if not extra_fields.setdefault('is_staff', True):
-            raise ValueError(_('Superuser must have is_staff=True.'))
+            raise ValidationError(_('Superuser must have is_staff=True.'))
         if not extra_fields.setdefault('is_superuser', True):
-            raise ValueError(_('Superuser must have is_superuser=True.'))
+            raise ValidationError(_('Superuser must have is_superuser=True.'))
         if not extra_fields.setdefault('is_admin', True):
-            raise ValueError(_('Superuser must have is_admin=True.'))
+            raise ValidationError(_('Superuser must have is_admin=True.'))
         if not any([username, 'first_name' in extra_fields, 'last_name' in extra_fields]):
             username = email
         return self.set_user(username, email, password, **extra_fields)
