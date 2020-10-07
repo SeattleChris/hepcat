@@ -1035,7 +1035,7 @@ class PaymentManager(models.Manager):
         # print('----------')
         # print(pre_total)
         # print('-=-=-=-=-=-=-=-=-=-=-=-')
-        payment = self.create(
+        payment_kwargs = dict(
             student=student,
             paid_by=paid_by,
             description=description,
@@ -1054,8 +1054,9 @@ class PaymentManager(models.Manager):
             variant='paypal',
             currency='USD',
             # items_list=register,
-            **extra_fields
             )
+        payment_kwargs.update(extra_fields)
+        payment = self.create(payment_kwargs)
         # TODO; Do we really feel safe passing forward the extra_fields?
         # TODO: Do we need customer_ip_address, and if yes, need to populate now?
         print(payment)
