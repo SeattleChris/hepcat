@@ -93,7 +93,7 @@ WSGI_APPLICATION = 'hepcat.wsgi.application' if LOCAL else os.environ.get('LIVE_
 DB_LOOKUP = {
     'postgres': 'django.db.backends.postgresql_psycopg2',
     'mysql': 'django.db.backends.mysql',  # Support for MySQL 5.6+
-    None: 'django.db.backends.postgresql_psycopg2'
+    None: 'django.db.backends.sqlite3'
     }
 DATABASES = {
     'default': {

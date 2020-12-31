@@ -187,7 +187,7 @@ class CaseInsensitiveUnique:
 
     def __call__(self, value):
         if not isinstance(value, str):
-            return
+            raise ValidationError(_("Expected a string"), code="unique")
         value = unicodedata.normalize("NFKC", value)
         if hasattr(value, "casefold"):
             value = value.casefold()  # pragma: no cover
