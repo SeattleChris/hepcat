@@ -3,6 +3,7 @@ from django.db.models import Q, F, Func, Case, When, Count, Max, OuterRef, DateF
 # , Avg, Sum, Min, Value, Subquery
 from django.db.models.functions import Least, Extract  # , ExtractWeek, ExtractIsoYear, Trunc, Now,
 # from .transforms import AddDate, DateDiff, DayYear, NumDay, DateFromNum, MakeDate, DateToday
+# from django.contrib.admin.views.decorators import staff_member_required  # TODO: Add decorator to needed views.
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
