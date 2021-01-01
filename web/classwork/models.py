@@ -1048,7 +1048,7 @@ class PaymentManager(models.Manager):
             tax=Decimal(0),
             billing_first_name=user.first_name,
             billing_last_name=user.last_name,
-            billing_country_code='US',
+            billing_country_code=settings.DEFAULT_COUNTRY,
             billing_email=user.email,
             # customer_ip_address='127.0.0.1',
             # TODO: Capture and use _ip_address

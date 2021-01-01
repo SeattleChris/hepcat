@@ -183,16 +183,17 @@ class UserHC(AbstractUser):
     # is_superuser, is_staff, is_active exist from inherited models.
     username_not_email = models.BooleanField(_('login type'), choices=USERNAME_CHOICES, default=False,
                                              help_text=_('Typically left empty to use email as your login. '), )
-    billing_address_1 = models.CharField(_('street address (line 1)'), max_length=191, blank=True, )
-    billing_address_2 = models.CharField(_('street address (continued)'), max_length=191, blank=True, )
-    billing_city = models.CharField(_('city'), max_length=191, default=settings.DEFAULT_CITY, blank=True, )
+    billing_address_1 = models.CharField(_('street address (line 1)'), max_length=95, blank=True, )
+    billing_address_2 = models.CharField(_('street address (continued)'), max_length=95, blank=True, )
+    billing_city = models.CharField(_('city'), max_length=95, default=settings.DEFAULT_CITY, blank=True, )
     billing_country_area = models.CharField(_('state'), max_length=2, default=settings.DEFAULT_COUNTRY_AREA_STATE,
                                             # help_text=_('Territory, or Province'),
                                             blank=True, )
     billing_postcode = models.CharField(_('zipcode'), max_length=10, blank=True,
                                         # help_text=_('Postal Code'),
                                         )
-    billing_country_code = models.CharField(_('country'), default=settings.DEFAULT_COUNTRY, max_length=191, blank=True,)
+    billing_country_code = models.CharField(_('country'), default=settings.DEFAULT_COUNTRY, max_length=2, blank=True,)
+    # billing_country_code = CountryField(_('country'), default=settings.DEFAULT_COUNTRY, max_length=2, blank=True,)
     # # # user.student or user.staff holds the linked profile for this user.
     objects = UserManagerHC()
 
