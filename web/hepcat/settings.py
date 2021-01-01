@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_registration',  # CUSTOM for User creation
     'payments',  # CUSTOM for payment processing
+    'django_countries',  # CUSTOM Package that provides 2-letter code for country (when needed).
     # 'django.contrib.sites',  # CUSTOM added for django-newsletter
     # 'imperavi',  # Imperavi (or tinymce) rich text editor is optional for newsletter
     # 'sorl.thumbnail',  # CUSTOM required for newsletter
@@ -143,7 +144,7 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 # Static files (CSS, JavaScript, Images) https://docs.djangoproject.com/en/3.0/howto/static-files/
-USE_S3 = strtobool(os.environ.get('USE_S3', 'False'))
+USE_S3 = strtobool(os.environ.get('USE_S3', 'False')) and not HOSTED_PYTHONANYWHERE  # avoid for PythonAnywhere on AWS
 if USE_S3:  # pragma: no cover
     AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
     AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
