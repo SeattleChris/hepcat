@@ -2,9 +2,10 @@ from django import forms
 from django.core.exceptions import ValidationError  # NON_FIELD_ERRORS,
 from django.contrib.auth import get_user_model
 from django.forms.fields import FileField  # Field,
+from django.utils.translation import gettext_lazy as _
+from django_countries.widgets import CountrySelectWidget
 from .models import Student, Payment, Registration, Notify  # , Staff, Session, ClassOffer
 from users.mixins import FocusMixIn, AddressUsernameMixIn  # AddressMixIn,
-from django.utils.translation import gettext_lazy as _
 # from django.urls import reverse_lazy
 # from django.shortcuts import render
 # TODO: should we be using datetime.datetime or datetime.today ?
@@ -48,6 +49,7 @@ class RegisterForm(AddressUsernameMixIn, forms.ModelForm):
             'billing_postcode': _('Zipcode'),
             'billing_country_code': _('Country'),
         }
+        widgets = {'billing_country_code': CountrySelectWidget()}  # Adds the flag image.
 
     field_order = [*new_fields, *Meta.fields]
 

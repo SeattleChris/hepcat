@@ -4,6 +4,7 @@ from django.db.utils import IntegrityError
 from django.core.exceptions import ValidationError
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
+from django_countries.fields import CountryField
 
 # TODO: Move some of the student vs staff logic to Group
 teacher_group, created_teacher = Group.objects.get_or_create(name='teacher')
@@ -192,8 +193,8 @@ class UserHC(AbstractUser):
     billing_postcode = models.CharField(_('zipcode'), max_length=10, blank=True,
                                         # help_text=_('Postal Code'),
                                         )
-    billing_country_code = models.CharField(_('country'), default=settings.DEFAULT_COUNTRY, max_length=2, blank=True,)
-    # billing_country_code = CountryField(_('country'), default=settings.DEFAULT_COUNTRY, max_length=2, blank=True,)
+    # billing_country_code = models.CharField(_('country'), default=settings.DEFAULT_COUNTRY, max_length=2, blank=True,)
+    billing_country_code = CountryField(_('country'), default=settings.DEFAULT_COUNTRY, max_length=2, blank=True,)
     # # # user.student or user.staff holds the linked profile for this user.
     objects = UserManagerHC()
 

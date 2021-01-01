@@ -10,6 +10,7 @@ from django.utils.translation import gettext_lazy as _
 from django.core.mail import EmailMessage
 from django.conf import settings
 from django.urls import reverse
+from django_countries.fields import CountryField
 from decimal import Decimal  # used for Payments
 from payments import PurchasedItem
 from payments.models import BasePayment
@@ -1076,6 +1077,7 @@ class Payment(BasePayment):
     pre_pay_discount = models.DecimalField(max_digits=6, decimal_places=2, default='0.0', )
     multiple_purchase_discount = models.DecimalField(max_digits=6, decimal_places=2, default='0.0', )
     credit_applied = models.DecimalField(max_digits=6, decimal_places=2, default='0.0', )
+    billing_country_code = CountryField(_('country'), default=settings.DEFAULT_COUNTRY, max_length=2, blank=True,)
     # items = models.ManyToManyField(ClassOffer, related_name='payments', through='Registration', )
 
     # def __init__(self, *args, **kwargs):

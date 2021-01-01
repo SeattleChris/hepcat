@@ -3,6 +3,7 @@ from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.utils.translation import gettext as _
 from django_registration.forms import RegistrationForm
 from django_registration import validators
+from django_countries.widgets import CountrySelectWidget
 from .models import UserHC
 from .mixins import AddressMixIn, AddressUsernameMixIn
 
@@ -52,3 +53,4 @@ class CustomUserChangeForm(AddressMixIn, UserChangeForm):
             'billing_city', 'billing_country_area', 'billing_postcode',
             'billing_country_code',
             )
+        widgets = {'billing_country_code': CountrySelectWidget()}  # Adds the flag image.
