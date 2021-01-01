@@ -15,6 +15,7 @@ django-ses = "*"
 mysqlclient = "*"
 coverage = "*"
 python-dotenv = "*"
+django-countries = "*"
 
 [dev-packages]
 django-sass-processor = "*"
