@@ -26,7 +26,9 @@ DEBUG = strtobool(os.environ.get('DEBUG', 'False'))
 # Update LIVE_ALLOWED_HOSTS in ENV settings if adding another environment.
 ALLOWED_HOSTS = os.environ.get('LOCAL_ALLOWED_HOSTS' if LOCAL else 'LIVE_ALLOWED_HOSTS',
                                os.environ.get('ALLOWED_HOSTS', '')).split(',')
-if not DEBUG:
+if DEBUG:
+    INTERNAL_IPS = ALLOWED_HOSTS
+else:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
 # Application definition
@@ -40,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'debug_toolbar',
     'django_registration',  # CUSTOM for User creation
     'payments',  # CUSTOM for payment processing
     'django_countries',  # CUSTOM Package that provides 2-letter code for country (when needed).
@@ -54,6 +57,7 @@ INSTALLED_APPS = [
 ]
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',

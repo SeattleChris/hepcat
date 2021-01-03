@@ -20,6 +20,7 @@ django-countries = "*"
 [dev-packages]
 django-sass-processor = "*"
 libsass = "*"
+django-debug-toolbar = "*"
 
 [requires]
 python_version = "3.7"
