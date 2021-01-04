@@ -87,8 +87,8 @@ Each organization installing this app while have some unique settings. Some of t
 * PAYPAL_SECRET: As given from PayPal developer dashboard credentials
 * PAYPAL_CLIENT_ID: As given from PayPal developer dashboard credentials
 * PAYPAL_URL: something like:
-  * https://api.sandbox.paypal.com for development or
-  * https://api.paypal.com for production
+  * [Sandbox PayPal API](https://api.sandbox.paypal.com) for development or
+  * [Live Paypal API](https://api.paypal.com) for production
 * BUSINESS_NAME: Optional - Can be used for templates in Admin site as well as main site.
 * SUPERUSER_FIRST_NAME: used for creating superuser as first account
 * SUPERUSER_LAST_NAME: used for creating superuser as first account
@@ -209,7 +209,7 @@ There are a low-cost and free tier options on [PythonAnywhere](https://www.pytho
     * Under 'Reload', click the 'Reload ...' button.
     * Go to the site url:
       * Link at the top of the Web tab of the Dashboard.
-      * <username>.pythonanywhere.com
+      * < username >.pythonanywhere.com
       * or custom domain.
 * [Deployment checklist](https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/)
 

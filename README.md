@@ -154,8 +154,8 @@ The following routes have been made or scaffolded (mostly in classwork app):
 | /payment/fail/<int:id> | [payment_fail]    | PaymentProcessView| /payment/fail.html     |
 | /payment/done/<int:id> | [payment_success] | PaymentProcessView| /payment/success.html  |
 | /payments/             | -                        | (payments.urls)  | -                |
-|  " process/<token>/    | [process_data]           | (payments.urls)  | -                |
-|  " process/<variant>/  | [static_process_payment] | (payments.urls)  | -                |
+|  " process/<token:>/   | [process_data]           | (payments.urls)  | -                |
+|  " process/<variant:>  | [static_process_payment] | (payments.urls)  | -                |
 | /admin/                | -                        |(admin.site.urls) | -                |
 | **From our users app:**                                                                 |
 | /user/signup/                 | ['signup']           | SignUp | signup.html             |
@@ -165,7 +165,7 @@ The following routes have been made or scaffolded (mostly in classwork app):
 | /user/password_change/done/   | ['password_change_done']    |-| /django_registration/ ? |
 | /user/password_reset/         | ['password_reset']          |-| /django_registration/ ? |
 | /user/password_reset/done/    | ['password_reset_done']     |-| /django_registration/ ? |
-| /user/reset/<uidb64>/<token>/ | ['password_reset_confirm']  |-| /django_registration/ ? |
+| /user/reset/<uidb64:>/<token:>/ | ['password_reset_confirm']  |-| /django_registration/ ? |
 | /user/reset/done/             | ['password_reset_complete'] |-| /django_registration/ ? |
 
 <!-- /user/register/         django_registration one_step.urls -->
@@ -195,14 +195,14 @@ The following routes have been made or scaffolded (mostly in classwork app):
 | password_change_done         | ['/user/password_change/done/']           | auth.views.PasswordChangeDoneView     |
 | password_reset               | ['/user/password_reset/']                 | auth.views.PasswordResetView          |
 | password_reset_complete      | ['/user/reset/done/']                     | auth.views.PasswordResetCompleteView  |
-| password_reset_confirm       | ['/user/reset/<uidb64>/<token>/']         | auth.views.PasswordResetConfirmView   |
+| password_reset_confirm       | ['/user/reset/< uidb64 >/< token> /']         | auth.views.PasswordResetConfirmView |
 | password_reset_done          | ['/user/password_reset/done/']            | auth.views.PasswordResetDoneView      |
 | payment                      | ['/payment/<int:id>']                     | classwork.views.payment_details       |
 | payment_done                 | ['/payment/done/<int:id>']                | classwork.views.PaymentProcessView    |
 | payment_fail                 | ['/payment/fail/<int:id>']                | classwork.views.PaymentProcessView    |
 | payment_success              | ['/payment/success/<int:id>']             | classwork.views.PaymentProcessView    |
-| process_payment              | ['/payments/^process/(?P<token><regex>']  | payments.urls.process_data            |
-| static_process_payment       | ['/payments/process/(?P<variant><regex>'] | payments.urls.static_callback         |
+| process_payment              | ['/payments/^process/(?P< token >< regex >']  | payments.urls.process_data        |
+| static_process_payment       | ['/payments/process/(?P< variant >< regex >'] | payments.urls.static_callback     |
 | profile_page                 | ['/profile/']                             | classwork.views.ProfileView           |
 | profile_staff                | ['/staff/<int:id>']                       | classwork.views.ProfileView           |
 | profile_student              | ['/student/<int:id>']                     | classwork.views.ProfileView           |
