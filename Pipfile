@@ -16,10 +16,12 @@ mysqlclient = "*"
 coverage = "*"
 python-dotenv = "*"
 django-countries = "*"
+python-memcached = "*"
 
 [dev-packages]
 django-sass-processor = "*"
 libsass = "*"
+django-debug-toolbar = "*"
 
 [requires]
 python_version = "3.7"

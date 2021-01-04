@@ -22,8 +22,8 @@ def decide_session(sess=None, display_date=None):
         Returns a iterable of zero or more (typically one) Session instances. The iterable may be a Query.
     """
     query = Session.objects
+    target = display_date or dt.now().date()
     if sess is None:
-        target = display_date or dt.now().date()
         query = query.filter(publish_date__lte=target, expire_date__gte=target)
     elif display_date:
         raise SyntaxError(_("You can't filter by both Session and Display Date"))
@@ -33,7 +33,7 @@ def decide_session(sess=None, display_date=None):
         sess = sess.split(',')
         query = query.filter(name__in=sess)
     sess_data = query.all()
-    if not sess_data and not sess:
+    if not sess_data and not sess:  # No upcoming published sessions, return most recent previous session.
         try:
             result = Session.objects.filter(publish_date__lte=target).latest('key_day_date')
         except Session.DoesNotExist:
