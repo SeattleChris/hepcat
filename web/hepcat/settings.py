@@ -26,12 +26,12 @@ DEBUG = strtobool(os.environ.get('DEBUG', 'False'))
 # Update LIVE_ALLOWED_HOSTS in ENV settings if adding another environment.
 ALLOWED_HOSTS = os.environ.get('LOCAL_ALLOWED_HOSTS' if LOCAL else 'LIVE_ALLOWED_HOSTS',
                                os.environ.get('ALLOWED_HOSTS', '')).split(',')
-if DEBUG:
-    INTERNAL_IPS = ALLOWED_HOSTS
-else:
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
+MAIL_TOOLBAR = False
 # Application definition
+DEV_APPS = [
+    'debug_toolbar',
+    # 'mail_panel',  # TODO: install django-mail-panel
+]
 INSTALLED_APPS = [
     'hepcat',  # CUSTOM: Project name
     'classwork',  # CUSTOM: App name
@@ -42,7 +42,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'debug_toolbar',
     'django_registration',  # CUSTOM for User creation
     'payments',  # CUSTOM for payment processing
     'django_countries',  # CUSTOM Package that provides 2-letter code for country (when needed).
@@ -55,9 +54,11 @@ INSTALLED_APPS = [
     # 'storages',  # CUSTOM django-storages - static files on AWS S3, or Google Cloud Storage, etc.
     'coverage',  # CUSTOM: For tests
 ]
+DEV_MIDDLEWARE = [
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
+]
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -65,6 +66,32 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+if DEBUG:
+    INTERNAL_IPS = ALLOWED_HOSTS
+    INSTALLED_APPS = DEV_APPS + INSTALLED_APPS
+    MIDDLEWARE = DEV_MIDDLEWARE + MIDDLEWARE
+    if MAIL_TOOLBAR:
+        DEBUG_TOOLBAR_PANELS = ('mail_panel.panels.MailToolbarPanel', )
+        # DEBUG_TOOLBAR_PANELS = [  # TODO: Should actually add it to panels?
+        #     'debug_toolbar.panels.versions.VersionsPanel',
+        #     'debug_toolbar.panels.timer.TimerPanel',
+        #     'debug_toolbar.panels.settings.SettingsPanel',
+        #     'debug_toolbar.panels.headers.HeadersPanel',
+        #     'debug_toolbar.panels.request.RequestPanel',
+        #     'debug_toolbar.panels.sql.SQLPanel',
+        #     'debug_toolbar.panels.staticfiles.StaticFilesPanel',
+        #     'debug_toolbar.panels.templates.TemplatesPanel',
+        #     'debug_toolbar.panels.cache.CachePanel',
+        #     'debug_toolbar.panels.signals.SignalsPanel',
+        #     'debug_toolbar.panels.logging.LoggingPanel',
+        #     'debug_toolbar.panels.redirects.RedirectsPanel',
+        #     'mail_panel.panels.MailToolbarPanel',
+        # ]
+else:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
+
 ROOT_URLCONF = 'hepcat.urls'
 TEMPLATES = [
     {
@@ -198,6 +225,8 @@ EMAIL_USE_SSL = strtobool(os.environ.get('EMAIL_USE_SSL', 'False'))
 EMAIL_SUBJECT_PREFIX = '[' + os.environ.get('EMAIL_ADMIN_PREFIX', 'Django') + '] '
 if DEBUG or HOSTED_PYTHONANYWHERE:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    if MAIL_TOOLBAR:
+        EMAIL_BACKEND = 'mail_panel.backend.MailToolbarBackend'
 elif USE_S3:  # pragma: no cover
     # TODO: Choose appropriate Email backend
     EMAIL_BACKEND = 'django_ses.SESBackend'
