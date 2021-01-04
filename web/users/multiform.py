@@ -1,8 +1,8 @@
 """
 Not yet implemented classes and factories for FormSets of mixed forms and models.
 """
-from django.forms import ModelForm, modelform_factory, BaseFormSet,  DEFAULT_MIN_NUM, DEFAULT_MAX_NUM
-from django.core.exceptions import ImproperlyConfigured, ValidationError
+from django.forms import ModelForm, ModelChoiceField, modelform_factory, BaseFormSet,  DEFAULT_MIN_NUM, DEFAULT_MAX_NUM
+from django.core.exceptions import ImproperlyConfigured, ValidationError, NON_FIELD_ERRORS
 from django.forms.widgets import HiddenInput
 from django.utils.text import get_text_list
 from django.utils.translation import gettext, gettext_lazy as _
@@ -208,7 +208,7 @@ class BaseMultiModelFormSet(BaseMultiFormSet):
 
         errors = []
         # Do each of the unique checks (unique and unique_together)
-        for uclass, unique_check in all_unique_checks:
+        for _unused_, unique_check in all_unique_checks:
             seen_data = set()
             for form in valid_forms:
                 # Get the data for the set of fields that must be unique among the forms.
@@ -239,7 +239,7 @@ class BaseMultiModelFormSet(BaseMultiFormSet):
         # iterate over each of the date checks now
         for date_check in all_date_checks:
             seen_data = set()
-            uclass, lookup, field, unique_for = date_check
+            _unused_, lookup, field, unique_for = date_check
             for form in valid_forms:
                 # see if we have data for both fields
                 if (form.cleaned_data and form.cleaned_data[field] is not None and

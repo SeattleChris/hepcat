@@ -170,8 +170,8 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator', },
 ]  # from earlier Django version.
 # PASSWORD_HASHERS = [
-#     'django.contrib.auth.hashers.PBKDF2PasswordHasher',
-#     'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
+#     'django.contrib.auth.hashers.PBKDF2PasswordHasher',  # cspell:disable-line
+#     'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',  # cspell:disable-line
 #     'django.contrib.auth.hashers.Argon2PasswordHasher',
 #     'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
 # ]  # default for Django 3.1
