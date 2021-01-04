@@ -59,12 +59,14 @@ DEV_MIDDLEWARE = [
 ]
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
+    # 'django.middleware.cache.UpdateCacheMiddleware',  # CUSTOM: Add for full-site Cache
     'django.middleware.common.CommonMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # 'django.middleware.cache.FetchFromCacheMiddleware',  # CUSTOM: Add for full-site Cache
 ]
 if DEBUG:
     INTERNAL_IPS = ALLOWED_HOSTS
@@ -91,6 +93,13 @@ else:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
 
+CACHES = {
+    'default': {  # Max 250 characters with no whitespace or control characters.
+        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+        'LOCATION': '127.0.0.1:11211',
+        # 'LOCATION': 'unix:/tmp/memcached.sock',
+    }
+}
 
 ROOT_URLCONF = 'hepcat.urls'
 TEMPLATES = [
