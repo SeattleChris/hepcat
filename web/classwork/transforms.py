@@ -1,5 +1,5 @@
 from django.db.models import DateField, DateTimeField, SmallIntegerField, PositiveIntegerField, IntegerField, Transform
-from django.db.models import F, Func
+# from django.db.models import F, Func
 
 
 class AddDate(Transform):

@@ -13,7 +13,6 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-import debug_toolbar
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
@@ -23,7 +22,6 @@ from .views import home_view
 urlpatterns = [
     path('', home_view, name='home'),
     path('', include('classwork.urls')),
-    path('__debug__/', include(debug_toolbar.urls)),
     path('user/', include('django.contrib.auth.urls')),
     path('user/', include('users.urls')),
     path('admin/', admin.site.urls),
@@ -31,12 +29,18 @@ urlpatterns = [
     # path('newsletter/', include('newsletter.urls')),  # subscribe, unsubscribe, archive features
 ]
 
-if settings.DEBUG is True:  # pragma: no cover
+if settings.DEBUG:
+    import debug_toolbar
+    urlpatterns = [path('__debug__/', include(debug_toolbar.urls)), ] + urlpatterns
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# if settings.DEBUG is True:  # pragma: no cover
+#     import debug_toolbar
+#     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+#     urlpatterns += [path('__debug__/', include(debug_toolbar.urls), namespace='djdt'), ]  # , namespace='djdt'
 
 # Thanks to django-newsletter, the following paths are set:
 # newsletter/ ???
-
 # Thanks to django-payments, the following paths are set:
 # payments/process/<token-regex>/ [name=process_data]
 # payments/process/<variant-regex>/ [static_process_payment]

@@ -22,14 +22,17 @@ These are some notes from reading the flow from PayPal documentation. I believe 
 Use PAYPAL_CLIENT_ID and PAYPAL_SECRET (Note: may need set the Accept header to application/x-www-form-urlencoded)
 with following command:
 
+```Bash
 curl -v https://api.sandbox.paypal.com/v1/oauth2/token \
    -H "Accept: application/json" \
    -H "Accept-Language: en_US" \
    -u "client_id:secret" \
    -d "grant_type=client_credentials"
+```
 
 PayPal will return `access_token` field within JSON response formatted as:
 
+```Python
 {
   "scope": "scope",
   "access_token": "Access-Token",
@@ -38,13 +41,16 @@ PayPal will return `access_token` field within JSON response formatted as:
   "expires_in": 31349,
   "nonce": "nonce"
 }
+```
 
 Include this bearer token in the `Authorization` header with the `Bearer` authentication scheme in REST API calls,
 such as:
 
+```Bash
 curl -v -X GET https://api.sandbox.paypal.com/v1/invoicing/invoices?page=3&page_size=4&total_count_required=true \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <Access-Token>"
+```
 
 To detect when an access token expires, write code to either by 1) Keep track of the expires_in value in the token response or 2) Handle the HTTP 401 Unauthorized status code. The API endpoint issues this status code when it detects an expired token.
 
@@ -52,6 +58,7 @@ To detect when an access token expires, write code to either by 1) Keep track of
 
 Use PAYPAL_URL and the access token from above.
 
+```Bash
 curl -v -X GET PAYPAL_URL/v1/payment-experience/web-profiles/XP-8YTH-NNP3-WSVN-3C76 \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <Access-Token>"
@@ -73,6 +80,7 @@ With expected result format:
     "logo_image": "https://example.com/logo_image/"
   }
 }
+```
 
 [Orders API](https://developer.paypal.com/docs/api/orders/v2/)
 create, update, retrieve, authorize, and capture payments between parties >=2
@@ -98,7 +106,6 @@ PayPal does use the [Authorize & Capture](https://django-payments.readthedocs.io
 
 After we get confirmation we are Authorized for a payment amount, we need to issue a capture request `payment.capture()` (if payment was the instance we just received authorization).
 
-
 ## Scratch Notes
 
  id                         | integer                  |           | not null |
@@ -123,7 +130,7 @@ After we get confirmation we are Authorized for a payment amount, we need to iss
  billing_country_code       | character varying(2)     |           | not null |
  billing_country_area       | character varying(256)   |           | not null |
  billing_email              | character varying(254)   |           | not null |
- customer_ip_address        | inet                     |           |          |
+ customer_ip_address        | int                      |           |          |
  extra_data                 | text                     |           | not null |
  message                    | text                     |           | not null |
  token                      | character varying(36)    |           | not null |

@@ -334,6 +334,7 @@ class Session(models.Model):
         if field not in allowed_fields:
             raise ValueError(_("Not a valid field parameter: {} ".format(field)))
         now = date.today()
+        new_date = None
         final_session = cls.last_session(since=since)
         while final_session is not None and final_session.num_weeks < settings.SESSION_LOW_WEEKS:
             final_session = final_session.prev_session
@@ -918,6 +919,7 @@ class Student(AbstractProfile):
             for key, params in ver_map.items():
                 key = _clean(key)
                 goal[key] = goal.get(key, each_ver)
+                q_full = None
                 if isinstance(params, (list, tuple)):
                     params = map(_clean, params)
                     q_full = Q(subject__version__in=params, subject__level=level)
