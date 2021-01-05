@@ -137,7 +137,7 @@ class ClassOfferListView(ListView):
         kwargs['object_list'] = kwargs.get('object_list', self.get_queryset())
         context = super().get_context_data(**kwargs)
         sessions = self.kwargs.pop('sessions', None)
-        context['sessions'] = ', '.join([ea.name for ea in sessions])
+        context['sessions'] = ', '.join([ea.name for ea in sessions])  # TODO: Check if there should be NO space.
         context['display_session'] = self.kwargs.pop('display_session', None)
         context['display_date'] = self.kwargs.pop('display_date', None)
         return context
@@ -168,7 +168,7 @@ class Checkin(ViewOnlyForTeacherOrAdminMixin, ListView):
         """Determine Session filter parameters. Reference to previous and next Session if feasible. """
         context = super().get_context_data(**kwargs)
         sessions = self.kwargs.pop('sessions', [])
-        context['sessions'] = ', '.join([ea.name for ea in sessions])
+        context['sessions'] = ', '.join([ea.name for ea in sessions])  # TODO: Check if there should be NO space.
         context['display_session'] = self.kwargs.pop('display_session', None)
         context['display_date'] = self.kwargs.pop('display_date', None)
         earliest, latest = None, None
