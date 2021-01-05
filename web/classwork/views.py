@@ -148,7 +148,6 @@ class ClassOfferListView(ListView):
         # else:
         #     cache.set('test', 'add-this-value')
         #     print("Added a value")
-        kwargs['object_list'] = kwargs.get('object_list', self.get_queryset())
         context = super().get_context_data(**kwargs)
         sessions = self.kwargs.pop('sessions', None)
         context['sessions'] = ', '.join([ea.name for ea in sessions])  # TODO: Check if there should be NO space.
