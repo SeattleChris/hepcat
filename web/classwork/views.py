@@ -7,12 +7,16 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist  # , PermissionDenied
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import UserPassesTestMixin  # , LoginRequiredMixin
+# from django.views.decorators.cache import cache_page
+# from django.core.cache import caches  # This is not correct.
+# from django.core.cache import cache
 # from django.contrib.admin.views.decorators import staff_member_required  # TODO: Add decorator to needed views.
 from payments import get_payment_model, RedirectNeeded  # used for Payments
 from .forms import RegisterForm, PaymentForm
 from .models import (SiteContent, Resource, Location, ClassOffer, Subject,  # ? Session, Student
                      Staff, Payment, Registration, Session)
 from datetime import datetime as dt
+# from pprint import pprint
 User = get_user_model()
 
 
@@ -124,6 +128,7 @@ class ClassOfferListView(ListView):
 
     def get_queryset(self):
         """We can limit the classes list by session, what is published on a given date, or currently published. """
+        print("=============== ClassOfferListView.get_queryset ===============")
         display_session = self.kwargs.get('display_session', None)
         display_date = self.kwargs.get('display_date', None)
         sessions = decide_session(sess=display_session, display_date=display_date)
@@ -134,6 +139,15 @@ class ClassOfferListView(ListView):
 
     def get_context_data(self, **kwargs):
         """Get context of class list we are showing, typically currently published or modified by URL parameters """
+        print("=============== ClassOfferListView.get_context_data ===============")
+        # pprint(cache)
+        # print("----------------------------------------------------------------")
+        # test_val = cache.get('test')
+        # if test_val:
+        #     print(f"Found the test val: {test_val} ")
+        # else:
+        #     cache.set('test', 'add-this-value')
+        #     print("Added a value")
         kwargs['object_list'] = kwargs.get('object_list', self.get_queryset())
         context = super().get_context_data(**kwargs)
         sessions = self.kwargs.pop('sessions', None)
