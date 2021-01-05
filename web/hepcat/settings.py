@@ -30,7 +30,7 @@ MAIL_TOOLBAR = False
 # Application definition
 DEV_APPS = [
     'debug_toolbar',
-    'memcache_toolbar',
+    # 'memcache_toolbar',  # Out-of-date. No longer functional.
     # 'mail_panel',  # TODO: install django-mail-panel
 ]
 INSTALLED_APPS = [
@@ -70,31 +70,30 @@ MIDDLEWARE = [
     # 'django.middleware.cache.FetchFromCacheMiddleware',  # CUSTOM: Add for full-site Cache
 ]
 if DEBUG:
-    # import memcache_toolbar.panels.memcache
-
     INTERNAL_IPS = ALLOWED_HOSTS
     INSTALLED_APPS = INSTALLED_APPS + DEV_APPS
     MIDDLEWARE = DEV_MIDDLEWARE + MIDDLEWARE
-    # DEBUG_TOOLBAR_PANELS = (
-    #     'memcache_toolbar.panels.memcache.MemcachePanel',  # For pylibmc: 'memcache_toolbar.panels.pylibmc.PylibmcPanel'
-    # )
-    if MAIL_TOOLBAR:
-        DEBUG_TOOLBAR_PANELS = ('mail_panel.panels.MailToolbarPanel', )
-        # DEBUG_TOOLBAR_PANELS = [  # TODO: Should actually add it to panels?
-        #     'debug_toolbar.panels.versions.VersionsPanel',
-        #     'debug_toolbar.panels.timer.TimerPanel',
-        #     'debug_toolbar.panels.settings.SettingsPanel',
-        #     'debug_toolbar.panels.headers.HeadersPanel',
-        #     'debug_toolbar.panels.request.RequestPanel',
-        #     'debug_toolbar.panels.sql.SQLPanel',
-        #     'debug_toolbar.panels.staticfiles.StaticFilesPanel',
-        #     'debug_toolbar.panels.templates.TemplatesPanel',
-        #     'debug_toolbar.panels.cache.CachePanel',
-        #     'debug_toolbar.panels.signals.SignalsPanel',
-        #     'debug_toolbar.panels.logging.LoggingPanel',
-        #     'debug_toolbar.panels.redirects.RedirectsPanel',
-        #     'mail_panel.panels.MailToolbarPanel',
-        # ]
+    TOOLBAR_DEFAULT = [
+        'debug_toolbar.panels.history.HistoryPanel',
+        'debug_toolbar.panels.versions.VersionsPanel',
+        'debug_toolbar.panels.timer.TimerPanel',
+        'debug_toolbar.panels.settings.SettingsPanel',
+        'debug_toolbar.panels.headers.HeadersPanel',
+        'debug_toolbar.panels.request.RequestPanel',
+        'debug_toolbar.panels.sql.SQLPanel',
+        'debug_toolbar.panels.staticfiles.StaticFilesPanel',
+        'debug_toolbar.panels.templates.TemplatesPanel',
+        'debug_toolbar.panels.cache.CachePanel',
+        'debug_toolbar.panels.signals.SignalsPanel',
+        'debug_toolbar.panels.logging.LoggingPanel',
+        'debug_toolbar.panels.redirects.RedirectsPanel',
+        'debug_toolbar.panels.profiling.ProfilingPanel',
+        ]
+    DEBUG_TOOLBAR_PANELS = TOOLBAR_DEFAULT + [
+        # 'mail_panel.panels.MailToolbarPanel',  # If MAIL_TOOLBAR installed
+        # 'memcache_toolbar.panels.memcache.MemcachePanel',  # For memcache and memcache_toolbar
+        # 'memcache_toolbar.panels.pylibmc.PylibmcPanel'  # For pylibmc and memcache_toolbar
+        ]
 else:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
