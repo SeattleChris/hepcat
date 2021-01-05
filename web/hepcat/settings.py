@@ -30,6 +30,7 @@ MAIL_TOOLBAR = False
 # Application definition
 DEV_APPS = [
     'debug_toolbar',
+    'memcache_toolbar',
     # 'mail_panel',  # TODO: install django-mail-panel
 ]
 INSTALLED_APPS = [
@@ -69,9 +70,14 @@ MIDDLEWARE = [
     # 'django.middleware.cache.FetchFromCacheMiddleware',  # CUSTOM: Add for full-site Cache
 ]
 if DEBUG:
+    # import memcache_toolbar.panels.memcache
+
     INTERNAL_IPS = ALLOWED_HOSTS
-    INSTALLED_APPS = DEV_APPS + INSTALLED_APPS
+    INSTALLED_APPS = INSTALLED_APPS + DEV_APPS
     MIDDLEWARE = DEV_MIDDLEWARE + MIDDLEWARE
+    # DEBUG_TOOLBAR_PANELS = (
+    #     'memcache_toolbar.panels.memcache.MemcachePanel',  # For pylibmc: 'memcache_toolbar.panels.pylibmc.PylibmcPanel'
+    # )
     if MAIL_TOOLBAR:
         DEBUG_TOOLBAR_PANELS = ('mail_panel.panels.MailToolbarPanel', )
         # DEBUG_TOOLBAR_PANELS = [  # TODO: Should actually add it to panels?
@@ -262,6 +268,10 @@ PAYPAL_EMAIL = os.environ.get('PAYPAL_EMAIL', None)
 PAYPAL_CLIENT_ID = os.environ.get('PAYPAL_CLIENT_ID', None)
 PAYPAL_SECRET = os.environ.get('PAYPAL_SECRET', None)
 PAYMENT_HOST = os.environ.get('PAYMENT_HOST', ALLOWED_HOSTS[0])
+# PAYMENT_HOST = 'localhost:8000'
+# PAYMENT_USES_SSL = False
+# PAYMENT_MODEL = 'mypaymentapp.Payment'
+# PAYMENT_VARIANTS = {'default': ('payments.dummy.DummyProvider', {})}
 PAYPAL_LIVE_EMAIL = os.environ.get('PAYPAL_LIVE_EMAIL', PAYPAL_EMAIL)
 PAYPAL_LIVE_CLIENT_ID = os.environ.get('PAYPAL_LIVE_CLIENT_ID', PAYPAL_CLIENT_ID)
 PAYPAL_LIVE_SECRET = os.environ.get('PAYPAL_LIVE_SECRET', PAYPAL_SECRET)

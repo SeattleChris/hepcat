@@ -6,7 +6,7 @@ from .views import (AboutUsListView, ResourceDetailView,
                     Checkin, RegisterView, ProfileView,
                     PaymentProcessView, payment_details,
                     )
-minute = 2  # Number of seconds in a minute.
+minute = 3  # Number of seconds in a minute.
 # SubjectCreateView, SessionCreateView, ClassOfferCreateView,
 urlpatterns = [  # All following are in root
      path('aboutus', AboutUsListView.as_view(), name='aboutus'),
