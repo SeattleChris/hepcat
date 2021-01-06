@@ -154,10 +154,10 @@ class ClassOfferListView(ListView):
         #     cache.set('test', 'add-this-value')
         #     print("Added a value")
         context = super().get_context_data(**kwargs)
-        sessions = self.kwargs.pop('sessions', None)
-        context['sessions'] = ', '.join([ea.name for ea in sessions])  # TODO: Check if there should be NO space.
-        context['display_session'] = self.kwargs.pop('display_session', None)
-        context['display_date'] = self.kwargs.pop('display_date', None)
+        sessions = self.kwargs.pop('sessions', '')
+        sessions = ', '.join(ea.name for ea in sessions)
+        admin_log = [sessions, self.kwargs.pop('display_session', 'None'), self.kwargs.pop('display_date', 'None')]
+        context['admin_log'] = ' | '.join(admin_log)
         return context
 
 
