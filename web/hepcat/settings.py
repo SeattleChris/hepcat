@@ -94,6 +94,9 @@ if DEBUG:
         # 'memcache_toolbar.panels.memcache.MemcachePanel',  # For memcache and memcache_toolbar
         # 'memcache_toolbar.panels.pylibmc.PylibmcPanel'  # For pylibmc and memcache_toolbar
         ]
+    # DEBUG_TOOLBAR_CONFIG = {
+    #     'ENABLE_STACKTRACES': True,
+    # }
 else:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True

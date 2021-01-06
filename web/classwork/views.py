@@ -186,9 +186,9 @@ class Checkin(ViewOnlyForTeacherOrAdminMixin, ListView):
         """Determine Session filter parameters. Reference to previous and next Session if feasible. """
         context = super().get_context_data(**kwargs)
         sessions = self.kwargs.pop('sessions', [])
-        context['sessions'] = ', '.join([ea.name for ea in sessions])  # TODO: Check if there should be NO space.
-        context['display_session'] = self.kwargs.pop('display_session', None)
-        context['display_date'] = self.kwargs.pop('display_date', None)
+        context['sessions'] = ', '.join(ea.name for ea in sessions)
+        context['display_session'] = self.kwargs.pop('display_session', None)  # Currently not used in webpage
+        context['display_date'] = self.kwargs.pop('display_date', None)  # Currently not used
         earliest, latest = None, None
         if context['display_session'] != 'all':
             if isinstance(sessions, list) and len(sessions):  # TODO: Find Django function to order model instances.

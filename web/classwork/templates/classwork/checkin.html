@@ -23,9 +23,9 @@
       {% endif %}
       {% if reg.owed is None %}
         Unpaid |
-        {% elif reg.owed == 0 %}
+      {% elif reg.owed == 0 %}
         Paid |
-        {% else %}
+      {% else %}
         {{ reg.owed }} |
       {% endif %}
       </li>

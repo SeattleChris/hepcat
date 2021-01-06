@@ -34,15 +34,5 @@ if settings.DEBUG:
     urlpatterns = [path('__debug__/', include(debug_toolbar.urls)), ] + urlpatterns
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-# if settings.DEBUG is True:  # pragma: no cover
-#     import debug_toolbar
-#     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-#     urlpatterns += [path('__debug__/', include(debug_toolbar.urls), namespace='djdt'), ]  # , namespace='djdt'
-
-# Thanks to django-newsletter, the following paths are set:
-# newsletter/ ???
-# Thanks to django-payments, the following paths are set:
-# payments/process/<token-regex>/ [name=process_data]
-# payments/process/<variant-regex>/ [static_process_payment]
-
 # See users.urls for notes on URLs for auth and django-registration.
+# See classwork.urls for notes on URLs for most of the app.
