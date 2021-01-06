@@ -23,7 +23,12 @@ User = get_user_model()
 def decide_session(sess=None, display_date=None):
     """Typically we want to see the current session (default values), sometimes we want to see different session(s).
         Used chiefly by ClassOfferListView, CheckIn, and RegisterView, but could be used elsewhere for session context.
-        Returns a iterable of zero or more (typically one) Session instances. The iterable may be a Query.
+        Return if 'display_date' is set:
+        Query of zero or more Sessions that were live on that given date.
+        Return if 'sess' is a provided string:
+        Query of Session(s) matching the one name given, or any names given in a comma-seperated list.
+        Return if 'sess' and 'display_date' are None:
+        Query of (typically only one) currently live Sessions if any, or a list with only the most recently expired one.
     """
     query = Session.objects
     target = display_date or dt.now().date()
@@ -31,12 +36,12 @@ def decide_session(sess=None, display_date=None):
         query = query.filter(publish_date__lte=target, expire_date__gte=target)
     elif display_date:
         raise SyntaxError(_("You can't filter by both Session and Display Date"))
-    elif sess != 'all':
+    elif sess != 'all':  # the query will be for all if sess == 'all'.
         if not isinstance(sess, str):
             raise TypeError(_("Parameter 'sess' expected a string with possible comma-seperated values. "))
         sess = sess.split(',')
         query = query.filter(name__in=sess)
-    sess_data = query.all()
+    sess_data = query if query.exists() else None  # Check exists() better only if query is modified before evaluated.
     if not sess_data and not sess:  # No upcoming published sessions, return most recent previous session.
         try:
             result = Session.objects.filter(publish_date__lte=target).latest('key_day_date')
