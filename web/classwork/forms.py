@@ -153,8 +153,8 @@ class RegisterForm(AddressUsernameMixIn, forms.ModelForm):
         if user.is_anonymous and new_user:  # They say they are new, but check to avoid collisions
             # Look by email
             same_email = User.objects.filter(email__iexact=input_email)
-            if same_email.count():
-                found = same_email.filter(first_name__iexact=first_name, last_name__iexact=last_name).count()
+            if same_email.count():  # TODO: Change to .exists()
+                found = same_email.filter(first_name__iexact=first_name, last_name__iexact=last_name).count()  # TODO: Change to .exists()
                 if found:
                     message = "We found a user account with your name and email. "
                     message += "Try the login link, or resubmit the form and select you are a returning student. "
@@ -164,8 +164,8 @@ class RegisterForm(AddressUsernameMixIn, forms.ModelForm):
                 # TODO: Create a system to deal with matches
                 # TODO: Either pass above queries to that function, or use .count() above.
             # Look by name
-            same_name = User.objects.filter(first_name=first_name, last_name=last_name)
-            if same_name.count():
+            same_name = User.objects.filter(first_name__iexact=first_name, last_name__iexact=last_name)
+            if same_name.count():  # TODO: Change to .exists()
                 print('We found user(s) with that same name')
                 message = "Are you sure you have not had classes with us? "
                 message += "We have someone with that name already in our records. "

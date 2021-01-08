@@ -22,7 +22,6 @@ python-memcached = "*"
 django-sass-processor = "*"
 libsass = "*"
 django-debug-toolbar = "*"
-memcache-toolbar = "*"
 
 [requires]
 python_version = "3.7"
