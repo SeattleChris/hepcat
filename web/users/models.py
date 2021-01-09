@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser, UserManager, Group
 from django.db import models
 from django.db.utils import IntegrityError
+from django.utils.functional import cached_property
 from django.core.exceptions import ValidationError
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
@@ -215,6 +216,13 @@ class UserHC(AbstractUser):
     def full_name(self):
         return self.get_full_name() or _("Name Not Found")
 
+    @cached_property
+    def display_name(self):
+        name = self.get_full_name()
+        if not name:
+            name = self.get_username()
+        return name
+
     @property
     def user_roles(self):
         user_val, typelist = 0, []
@@ -248,7 +256,7 @@ class UserHC(AbstractUser):
                 self.groups.remove(group)
 
     def __str__(self):
-        return self.full_name
+        return self.display_name
 
     def __repr__(self):
         return '<UserHC: {} >'.format(self.full_name)
