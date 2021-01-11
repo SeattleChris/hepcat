@@ -73,6 +73,21 @@ if DEBUG:
     INTERNAL_IPS = ALLOWED_HOSTS
     INSTALLED_APPS = INSTALLED_APPS + DEV_APPS
     MIDDLEWARE = DEV_MIDDLEWARE + MIDDLEWARE
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'handlers': {
+            'console': {
+                'class': 'logging.StreamHandler',
+                },
+            },
+        'loggers': {
+            'django.db.backends': {
+                'level': 'DEBUG',
+                'handlers': ['console'],
+                }
+            },
+        }
     TOOLBAR_DEFAULT = [
         'debug_toolbar.panels.history.HistoryPanel',
         'debug_toolbar.panels.versions.VersionsPanel',
