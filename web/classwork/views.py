@@ -1,8 +1,9 @@
 from django.views.generic import ListView, CreateView, DetailView, UpdateView
 # from django.core.cache import caches  # This is not correct.
 # from django.core.cache import cache
-from django.views.decorators.cache import cache_page
-from django.views.decorators.vary import vary_on_cookie, vary_on_headers
+# from django.views.decorators.cache import cache_page
+# from django.views.decorators.vary import vary_on_cookie, vary_on_headers
+# from django.utils.decorators import method_decorator
 from django.template.response import TemplateResponse  # used for Payments
 from django.urls import reverse_lazy
 from django.shortcuts import get_object_or_404, redirect  # used for Payments
@@ -141,6 +142,7 @@ class ClassOfferListView(ListView):
         self.kwargs['sessions'] = sessions
         q = ClassOffer.objects.filter(session__in=sessions)
         q = q.order_by(*self.query_order_by) if getattr(self, 'query_order_by', None) else q
+        q = q.select_related('subject', 'session', 'location').prefetch_related('teachers')
         return q
 
     def get_context_data(self, **kwargs):
