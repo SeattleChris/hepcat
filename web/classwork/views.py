@@ -141,6 +141,7 @@ class ClassOfferListView(ListView):
         self.kwargs['sessions'] = sessions
         q = ClassOffer.objects.filter(session__in=sessions)
         q = q.order_by(*self.query_order_by) if getattr(self, 'query_order_by', None) else q
+        q = q.select_related('subject', 'session', 'location').prefetch_related('teachers')
         return q
 
     def get_context_data(self, **kwargs):
