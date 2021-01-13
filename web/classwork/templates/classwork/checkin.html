@@ -6,7 +6,7 @@
   <article>
     <h2>{{ sessions }}</h2>
 
-    {% regroup class_list by classoffer as classes_list %}
+    {% regroup object_list by classoffer as classes_list %}
 
     {% for co, reg_list in classes_list %}
     <h3>{{ co.subject }}: {{ co.subject.name }} </h3>

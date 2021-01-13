@@ -167,9 +167,8 @@ class ClassOfferListView(ListView):
 class Checkin(ViewOnlyForTeacherOrAdminMixin, ListView):
     """This is a report for which students are in which classes. """
     group_required = ('teacher', 'admin', )
-    model = Registration
+    model = Registration  # context_object_name = 'object_list'
     template_name = 'classwork/checkin.html'
-    context_object_name = 'class_list'
     display_session = None  # 'all' or <start_month>_<year> as stored in DB Session.name
     query_order_by = ('classoffer__session__key_day_date', '-classoffer__class_day', 'classoffer__start_time', )
     # TODO: ? Refactor to Meta: ordering(...) ?
