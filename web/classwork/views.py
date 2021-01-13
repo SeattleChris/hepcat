@@ -181,10 +181,14 @@ class Checkin(ViewOnlyForTeacherOrAdminMixin, ListView):
         display_date = self.kwargs.get('display_date', None)
         sessions = decide_session(sess=display_session, display_date=display_date)
         self.kwargs['sessions'] = sessions
-        selected_classes = ClassOffer.objects.filter(session__in=sessions)
-        selected_classes = selected_classes.order_by(*self.query_order_by)
-        selected_classes = selected_classes.select_related('subject').prefetch_related('registration_set')
-        return selected_classes
+        q = Registration.objects.filter(classoffer__session__in=sessions)
+        q = q.order_by('classoffer__session', '-classoffer__class_day', 'classoffer__start_time')
+        q = q.select_related('classoffer__subject', 'student', 'student__user', 'payment')
+        # selected_classes = ClassOffer.objects.filter(session__in=sessions)
+        # selected_classes = selected_classes.order_by(*self.query_order_by)
+        # selected_classes = selected_classes.select_related('subject').prefetch_related('registration_set')
+        # return selected_classes
+        return q
 
     def get_context_data(self, **kwargs):
         """Determine Session filter parameters. Reference to previous and next Session if feasible. """

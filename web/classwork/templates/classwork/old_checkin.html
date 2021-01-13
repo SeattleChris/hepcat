@@ -5,13 +5,10 @@
 <section>
   <article>
     <h2>{{ sessions }}</h2>
-
-    {% regroup class_list by classoffer as classes_list %}
-
-    {% for co, reg_list in classes_list %}
-    <h3>{{ co.subject }}: {{ co.subject.name }} </h3>
+    {% for ea in class_list %}
+    <h3>{{ ea.subject }}: {{ ea.subject.name }} </h3>
     <ul>
-    {% for reg in reg_list %}
+    {% for reg in ea.registration_set.all %}
       <li>
         {{reg.student}} |
       {% if reg.student.l2_finished %}
