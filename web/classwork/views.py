@@ -167,11 +167,12 @@ class ClassOfferListView(ListView):
 class Checkin(ViewOnlyForTeacherOrAdminMixin, ListView):
     """This is a report for which students are in which classes. """
     group_required = ('teacher', 'admin', )
-    model = Registration  # Not really.
+    model = Registration
     template_name = 'classwork/checkin.html'
     context_object_name = 'class_list'
     display_session = None  # 'all' or <start_month>_<year> as stored in DB Session.name
-    query_order_by = ('-class_day', 'start_time', )  # TODO: ? Refactor to Meta: ordering(...) ?
+    query_order_by = ('classoffer__session__key_day_date', '-classoffer__class_day', 'classoffer__start_time', )
+    # TODO: ? Refactor to Meta: ordering(...) ?
 
     def get_queryset(self):
         """List all the students from all the classes sorted according to the class property query_order_by.
@@ -181,13 +182,9 @@ class Checkin(ViewOnlyForTeacherOrAdminMixin, ListView):
         display_date = self.kwargs.get('display_date', None)
         sessions = decide_session(sess=display_session, display_date=display_date)
         self.kwargs['sessions'] = sessions
-        q = Registration.objects.filter(classoffer__session__in=sessions)
-        q = q.order_by('classoffer__session', '-classoffer__class_day', 'classoffer__start_time')
+        q = self.model.objects.filter(classoffer__session__in=sessions)
+        q = q.order_by(*self.query_order_by)
         q = q.select_related('classoffer__subject', 'student', 'student__user', 'payment')
-        # selected_classes = ClassOffer.objects.filter(session__in=sessions)
-        # selected_classes = selected_classes.order_by(*self.query_order_by)
-        # selected_classes = selected_classes.select_related('subject').prefetch_related('registration_set')
-        # return selected_classes
         return q
 
     def get_context_data(self, **kwargs):
