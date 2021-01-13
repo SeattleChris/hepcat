@@ -167,7 +167,7 @@ class ClassOfferListView(ListView):
 class Checkin(ViewOnlyForTeacherOrAdminMixin, ListView):
     """This is a report for which students are in which classes. """
     group_required = ('teacher', 'admin', )
-    model = Registration
+    model = Registration  # Not really.
     template_name = 'classwork/checkin.html'
     context_object_name = 'class_list'
     display_session = None  # 'all' or <start_month>_<year> as stored in DB Session.name
@@ -183,6 +183,7 @@ class Checkin(ViewOnlyForTeacherOrAdminMixin, ListView):
         self.kwargs['sessions'] = sessions
         selected_classes = ClassOffer.objects.filter(session__in=sessions)
         selected_classes = selected_classes.order_by(*self.query_order_by)
+        selected_classes = selected_classes.select_related('subject').prefetch_related('registration_set')
         return selected_classes
 
     def get_context_data(self, **kwargs):

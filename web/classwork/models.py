@@ -631,7 +631,6 @@ class ClassOffer(models.Model):
         (5, _('Saturday')),
         (6, _('Sunday')))
     # id = auto-created
-    # students exists as the students signed up for this ClassOffer
     subject = models.ForeignKey('Subject', on_delete=models.SET_NULL, null=True, )
     session = models.ForeignKey('Session', on_delete=models.SET_NULL, null=True, )
     _num_level = models.IntegerField(default=0, editable=False, )
@@ -642,6 +641,7 @@ class ClassOffer(models.Model):
     start_time = models.TimeField()
     skip_weeks = models.PositiveSmallIntegerField(_('skipped mid-session class weeks'), default=0, )
     skip_tagline = models.CharField(max_length=46, blank=True, )
+    # students exists from Student.taken for users who are signed up for this ClassOffer.
     # resources exits, but only directly connected Resources, not those connected through Subject.
     # # future: class_resources exists, but only includes directly connected Resources, but not those through Subject.
 
