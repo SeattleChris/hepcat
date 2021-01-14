@@ -3,7 +3,7 @@ from django.template.response import TemplateResponse  # used for Payments
 from django.shortcuts import get_object_or_404, redirect  # used for Payments
 from payments import get_payment_model, RedirectNeeded  # used for Payments
 # from django.core.cache import caches  # This is not correct.
-# from django.core.cache import cache
+from django.core.cache import cache
 # from django.views.decorators.cache import cache_page
 # from django.views.decorators.vary import vary_on_cookie, vary_on_headers
 # from django.utils.decorators import method_decorator
@@ -32,24 +32,41 @@ def decide_session(sess=None, display_date=None):
         Return if 'sess' and 'display_date' are None:
         Query of (typically only one) currently live Sessions if any, or a list with only the most recently expired one.
     """
+    if display_date and sess:
+        raise SyntaxError(_("You can't filter by both Session and Display Date"))
+    key_cache = 'current_session' if not sess and not display_date else sess
+    data_cache = None if not key_cache else cache.get(key_cache)
+    if data_cache:
+        return data_cache
+    # Otherwise not in cache. Find it, add to cache (except if determining by display_date), and return the session.
     query = Session.objects
     target = display_date or dt.now().date()
     if sess is None:
         query = query.filter(publish_date__lte=target, expire_date__gte=target)
-    elif display_date:
-        raise SyntaxError(_("You can't filter by both Session and Display Date"))
     elif sess != 'all':  # the query will be for all if sess == 'all'.
         if not isinstance(sess, str):
             raise TypeError(_("Parameter 'sess' expected a string with possible comma-seperated values. "))
         sess = sess.split(',')
         query = query.filter(name__in=sess)
-    sess_data = query if query.exists() else None  # Check exists() better only if query is modified before evaluated.
+    # sess_data = query if query.exists() else None  # Check exists() better only if query is modified before evaluated.
+    sess_data = query.all()
     if not sess_data and not sess:  # No upcoming published sessions, return most recent previous session.
+        key_cache = None  # Turns off storing this in the cache. Allows a new 'current_session' if a session is added.
         try:
-            result = Session.objects.filter(publish_date__lte=target).latest('key_day_date')
+            result = Session.objects.filter(publish_date__lte=target).latest('key_day_date')  # TODO: Ensure full sess?
         except Session.DoesNotExist:
             result = None
         sess_data = [result] if result else Session.objects.none()
+    if key_cache and sess_data:  # Add to cache with expiration depending on session.
+        end_date = sess_data[0].expire_date  # Note: target is always today if we are adding to the cache.
+        if key_cache == 'current_session':
+            expire_in = end_date - target  # end when the session expires.
+            expire_in = int(expire_in.total_seconds())
+        elif end_date and end_date < target:
+            expire_in = 60 * 60 * 24 * 7  # one week
+        else:  # end_date >= today or end_date is None.
+            expire_in = 60 * 15  # 15 minutes
+        cache.set(key_cache, sess_data, expire_in)
     return sess_data  # a list of Session records, even if only 0-1 session
 
 
