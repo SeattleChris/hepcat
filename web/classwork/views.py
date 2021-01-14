@@ -156,11 +156,32 @@ class ClassOfferListView(ListView):
         print("=============== ClassOfferListView.get_queryset ===============")
         display_session = self.kwargs.get('display_session', None)
         display_date = self.kwargs.get('display_date', None)
-        sessions = decide_session(sess=display_session, display_date=display_date)
+        if display_date and display_session:
+            raise SyntaxError(_("You can't filter by both Session and Display Date"))
+        key_cache = 'current_session' if not display_session and not display_date else display_session
+        sessions, data_cache = None, None
+        if key_cache:
+            sessions, data_cache = cache.get(f"{key_cache}_classes", (None, None))
+        if not sessions:
+            sessions = decide_session(sess=display_session, display_date=display_date)
         self.kwargs['sessions'] = sessions
+        if data_cache:
+            return data_cache
         q = ClassOffer.objects.filter(session__in=sessions)
         q = q.order_by(*self.query_order_by) if getattr(self, 'query_order_by', None) else q
         q = q.select_related('subject', 'session', 'location').prefetch_related('teachers')
+        if key_cache and sessions and sessions == cache.get(key_cache):  # False if query by date or no current session,
+            end_date = sessions[0].expire_date
+            today = dt.now().date()
+            if key_cache == 'current_session':
+                expire_in = end_date - today  # end when the session expires.
+                expire_in = int(expire_in.total_seconds())
+            elif end_date and end_date < today:
+                expire_in = 60 * 60 * 24 * 7  # one week
+            else:  # end_date >= today or end_date is None.
+                expire_in = 60 * 15  # 15 minutes
+            q = q.all()
+            cache.set(f"{key_cache}_classes", (sessions, q), expire_in)
         return q
 
     def get_context_data(self, **kwargs):
