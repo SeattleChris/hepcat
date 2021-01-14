@@ -1,0 +1,122 @@
+{% extends "generic/base.html" %}
+
+{% block head %}
+<title>Swing Dance - Lindy Hop Classes</title>
+{% endblock head %}
+
+
+{% block content %}
+<section>
+
+  <header>
+    <h1>Swing Dance - Lindy Hop Classes</h1>
+    <p>Registration is open for these scheduled classes.</p>
+    {% if admin_log %} <p>{{ admin_log }}</p> {% endif %}
+  </header>
+
+  {% for classoffer in classoffers %}
+  <article class="classoffer">
+    <h2>{{ classoffer.subject.name }}</h2>
+    {% if admin_log %}
+    <p>
+      dif, shifted: {{classoffer.dif}}, {{classoffer.shifted}}
+      | dates: {{classoffer.start_date}} - {{classoffer.end_date}}
+    </p>
+    {% endif %}
+    <ul>
+      {% if classoffer.subject.tagline_1 %}<li>{{classoffer.subject.tagline_1}}</li>{% endif %}
+      {% if classoffer.subject.tagline_2 %}<li>{{classoffer.subject.tagline_2}}</li>{% endif %}
+      {% if classoffer.subject.tagline_3 %}<li>{{classoffer.subject.tagline_3}}</li>{% endif %}
+      <li>&nbsp;</li>
+      <li>
+        <span class="shorten2" data-text="{{classoffer.day_short}}, ">
+          {{ classoffer.day }},
+        </span>
+        <span class="nowrap shorten"
+              data-text="{{classoffer.start_time|date:'g'}} - {{classoffer.end_time|date:'gA'|lower}}">
+          {{ classoffer.start_time|date:"g:i" }} - {{ classoffer.end_time|date:"g:iA"|lower }}
+        </span>
+      </li>
+      {% if classoffer.skip_weeks > 0 %}
+      <li>
+        <span class="shorten" data-text="{{classoffer.start_date|date:'M j'}} - {{classoffer.end_date|date:'M j'}}">
+          {{ classoffer.start_date|date:"M jS" }} - {{ classoffer.end_date|date:"F jS" }}
+        </span>
+      </li>
+      <li>{{ classoffer.skip_tagline }}</li>
+      <li>{{ classoffer.skip_week_explain }}</li>
+      {% else %}
+      <li>
+        <span class="shorten" data-text="Starts {{classoffer.start_date|date:'M d'}}">
+          Starts {{ classoffer.start_date|date:"F jS" }}
+        </span>
+      </li>
+      <li>&nbsp;</li>
+      {% endif %}
+      {% if classoffer.session.num_weeks > 1 %}
+      <li>{{ classoffer.session.num_weeks }} week class series</li>
+      {% else %}
+      <li>One Day Workshop</li>
+      {% endif %}
+      {% if classoffer.location.id %}
+      <li>at <a href="{{ classoffer.location.get_absolute_url }}">{{ classoffer.location }}</a></li>
+      {% else %}
+      <li>at location TBA</li>
+      {% endif %}
+      <li>&nbsp;</li>
+      <li class="nowrap"><a href="{% url 'register' %}">Sign Up Now!</a></li>
+    </ul>
+    <p class="description">
+      Taught by: {{ classoffer.teachers.all|join:", " }} <br />
+      {{ classoffer.subject.description }}
+    </p>
+    <p class="description">
+    {% if classoffer.session.num_weeks > 1 %}
+      {{ classoffer.session.num_weeks }} weeks of classes for {{self.full_price}}
+      {% else %}
+      One Day Workshop for {{self.full_price}}
+      {% endif %}
+      {% if self.pre_price %}
+      at first class or {{self.pre_price}} if <a href="{% url 'register' %}">Paid in Advance</a>.
+      {% else %}
+      - <a href="{% url 'register' %}">Sign Up Now!</a>
+      {% endif %}
+    </p>
+    <p>
+      <a href="{{ classoffer.get_absolute_url }}">More Details</a> |
+      <a href="{% url 'register' %}">Sign Up Now!</a>
+    </p>
+  </article>
+  <hr />
+  {% endfor %}
+
+  <footer>
+    <p>
+      Generally a new session of classes will start after these classes are finished.
+      Check back for an updated schedule.
+    </p>
+  </footer>
+
+</section>
+
+<aside id="levels">
+  <h3>What is covered in our beginning class?</h3>
+  <p>
+    Lindy Hop (Swing Dance) has 8-count moves, 6-count moves, Charleston moves, and a variety of other elements.
+    You can just <a href="{% url 'register' %}" title="Register for Swing Dance Class">sign-up to join the class</a> and
+    we'll explain the basic moves and technique in the progression of the 5 weeks of class. If you are unsure if
+    your experience is above this level then <a href="#"
+    title="Beginning Swing Dance - Lindy Hop Class Details">click this link for a more details of our Beginning
+    class material.</a>
+  </p>
+  <h3>After Beginning, What Now?</h3>
+  <p>
+    After taking both versions of our Beginning class, or if you are already familiar with
+   <a href="#" title="Beginning Swing Dance - Lindy Hop Class Details">our Beginning
+   class material.</a>, you'll want to check out our Lindy 2 classes. There are four independent versions of
+   Lindy 2, with each 5-week series covering different material and addressing different challenges.
+   You can start with any of them, and the next one offered is listed below.
+  </p>
+</aside>
+
+{% endblock content %}

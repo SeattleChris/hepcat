@@ -144,6 +144,7 @@ class ClassOfferDetailView(DetailView):
 class ClassOfferListView(ListView):
     """We will want to list the classes that are scheduled to be offered. """
     template_name = 'classwork/classoffer_list.html'
+    template_admin = 'classwork/classoffer_list_admin.html'
     model = ClassOffer
     context_object_name = 'classoffers'
     display_session = None  # 'all' or <start_month>_<year> as stored in DB Session.name
@@ -181,6 +182,11 @@ class ClassOfferListView(ListView):
             admin_log = [sessions, self.kwargs.pop('display_session', 'None'), self.kwargs.pop('display_date', 'None')]
             context['admin_log'] = ' | '.join(admin_log)
         return context
+
+    def get_template_names(self):
+        if self.template_admin and self.request.user.is_staff:
+            return [self.template_admin]
+        return super().get_template_names()
 
 
 class Checkin(ViewOnlyForTeacherOrAdminMixin, ListView):
