@@ -11,7 +11,7 @@
   <header>
     <h1>Swing Dance - Lindy Hop Classes</h1>
     <p>Registration is open for these scheduled classes.</p>
-    {% if user.is_staff %} <p>{{ admin_log }}</p> {% endif %}
+    {% if user.is_staff and admin_log %} <p>{{ admin_log }}</p> {% endif %}
   </header>
 
   {% for classoffer in classoffers %}

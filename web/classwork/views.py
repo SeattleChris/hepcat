@@ -159,8 +159,10 @@ class ClassOfferListView(ListView):
         context = super().get_context_data(**kwargs)
         sessions = self.kwargs.pop('sessions', '')
         sessions = ', '.join(ea.name for ea in sessions)
-        admin_log = [sessions, self.kwargs.pop('display_session', 'None'), self.kwargs.pop('display_date', 'None')]
-        context['admin_log'] = ' | '.join(admin_log)
+        context['sessions'] = sessions
+        if self.request.user.is_staff:
+            admin_log = [sessions, self.kwargs.pop('display_session', 'None'), self.kwargs.pop('display_date', 'None')]
+            context['admin_log'] = ' | '.join(admin_log)
         return context
 
 
