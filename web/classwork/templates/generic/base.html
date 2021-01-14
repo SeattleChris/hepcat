@@ -18,6 +18,9 @@
   {% endblock super_head %}
 </head>
 <body>
+
+{% load cache %}
+{% cache 500 'header' user %}
 <header>
   <h1>
     <a href="{% url 'home' %}" title="Swing Dance - Lindy Hop Classes">
@@ -60,6 +63,7 @@
     </ul>
   </nav>
 </header>
+{% endcache %}
 
 {% block super_content %}
 <main>
