@@ -1,19 +1,19 @@
 from django.views.generic import ListView, CreateView, DetailView, UpdateView
+from django.template.response import TemplateResponse  # used for Payments
+from django.shortcuts import get_object_or_404, redirect  # used for Payments
+from payments import get_payment_model, RedirectNeeded  # used for Payments
 # from django.core.cache import caches  # This is not correct.
 # from django.core.cache import cache
 # from django.views.decorators.cache import cache_page
 # from django.views.decorators.vary import vary_on_cookie, vary_on_headers
 # from django.utils.decorators import method_decorator
-from django.template.response import TemplateResponse  # used for Payments
 from django.urls import reverse_lazy
-from django.shortcuts import get_object_or_404, redirect  # used for Payments
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist  # , PermissionDenied
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import UserPassesTestMixin  # , LoginRequiredMixin
 # from django.contrib.admin.views.decorators import staff_member_required  # TODO: Add decorator to needed views.
-from payments import get_payment_model, RedirectNeeded  # used for Payments
 from .forms import RegisterForm, PaymentForm
 from .models import (SiteContent, Resource, Location, ClassOffer, Subject,  # ? Session, Student
                      Staff, Payment, Registration, Session)
