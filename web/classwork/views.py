@@ -22,7 +22,7 @@ from datetime import datetime as dt
 User = get_user_model()
 
 
-def decide_session(sess=None, display_date=None):
+def decide_session(sess=None, display_date=None, return_key=False):
     """Typically we want to see the current session (default values), sometimes we want to see different session(s).
         Used chiefly by ClassOfferListView, CheckIn, and RegisterView, but could be used elsewhere for session context.
         Return if 'display_date' is set:
@@ -67,6 +67,8 @@ def decide_session(sess=None, display_date=None):
         else:  # end_date >= today or end_date is None.
             expire_in = 60 * 15  # 15 minutes
         cache.set(key_cache, sess_data, expire_in)
+    if return_key:
+        return sess_data, key_cache
     return sess_data  # a list of Session records, even if only 0-1 session
 
 
@@ -159,18 +161,18 @@ class ClassOfferListView(ListView):
         if display_date and display_session:
             raise SyntaxError(_("You can't filter by both Session and Display Date"))
         key_cache = 'current_session' if not display_session and not display_date else display_session
-        sessions, data_cache = None, None
+        sessions, data_cache, sess_key = None, None, None
         if key_cache:
             sessions, data_cache = cache.get(f"{key_cache}_classes", (None, None))
         if not sessions:
-            sessions = decide_session(sess=display_session, display_date=display_date)
+            sessions, sess_key = decide_session(sess=display_session, display_date=display_date, return_key=True)
         self.kwargs['sessions'] = sessions
         if data_cache:
             return data_cache
         q = ClassOffer.objects.filter(session__in=sessions)
         q = q.order_by(*self.query_order_by) if getattr(self, 'query_order_by', None) else q
         q = q.select_related('subject', 'session', 'location').prefetch_related('teachers')
-        if key_cache and sessions and sessions == cache.get(key_cache):  # False if query by date or no current session,
+        if sess_key and key_cache and sessions:  # False if query by date or no current session,
             end_date = sessions[0].expire_date
             today = dt.now().date()
             if key_cache == 'current_session':
