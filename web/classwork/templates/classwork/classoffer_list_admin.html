@@ -11,11 +11,18 @@
   <header>
     <h1>Swing Dance - Lindy Hop Classes</h1>
     <p>Registration is open for these scheduled classes.</p>
+    {% if admin_log %} <p>{{ admin_log }}</p> {% endif %}
   </header>
 
   {% for classoffer in classoffers %}
   <article class="classoffer">
     <h2>{{ classoffer.subject.name }}</h2>
+    {% if admin_log %}
+    <p>
+      dif, shifted: {{classoffer.dif}}, {{classoffer.shifted}}
+      | dates: {{classoffer.start_date}} - {{classoffer.end_date}}
+    </p>
+    {% endif %}
     <ul>
       {% if classoffer.subject.tagline_1 %}<li>{{classoffer.subject.tagline_1}}</li>{% endif %}
       {% if classoffer.subject.tagline_2 %}<li>{{classoffer.subject.tagline_2}}</li>{% endif %}

@@ -1,19 +1,19 @@
 from django.views.generic import ListView, CreateView, DetailView, UpdateView
+from django.template.response import TemplateResponse  # used for Payments
+from django.shortcuts import get_object_or_404, redirect  # used for Payments
+from payments import get_payment_model, RedirectNeeded  # used for Payments
 # from django.core.cache import caches  # This is not correct.
-# from django.core.cache import cache
+from django.core.cache import cache
 # from django.views.decorators.cache import cache_page
 # from django.views.decorators.vary import vary_on_cookie, vary_on_headers
 # from django.utils.decorators import method_decorator
-from django.template.response import TemplateResponse  # used for Payments
 from django.urls import reverse_lazy
-from django.shortcuts import get_object_or_404, redirect  # used for Payments
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist  # , PermissionDenied
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import UserPassesTestMixin  # , LoginRequiredMixin
 # from django.contrib.admin.views.decorators import staff_member_required  # TODO: Add decorator to needed views.
-from payments import get_payment_model, RedirectNeeded  # used for Payments
 from .forms import RegisterForm, PaymentForm
 from .models import (SiteContent, Resource, Location, ClassOffer, Subject,  # ? Session, Student
                      Staff, Payment, Registration, Session)
@@ -22,7 +22,7 @@ from datetime import datetime as dt
 User = get_user_model()
 
 
-def decide_session(sess=None, display_date=None):
+def decide_session(sess=None, display_date=None, return_key=False):
     """Typically we want to see the current session (default values), sometimes we want to see different session(s).
         Used chiefly by ClassOfferListView, CheckIn, and RegisterView, but could be used elsewhere for session context.
         Return if 'display_date' is set:
@@ -32,24 +32,43 @@ def decide_session(sess=None, display_date=None):
         Return if 'sess' and 'display_date' are None:
         Query of (typically only one) currently live Sessions if any, or a list with only the most recently expired one.
     """
+    if display_date and sess:
+        raise SyntaxError(_("You can't filter by both Session and Display Date"))
+    key_cache = 'current_session' if not sess and not display_date else sess
+    data_cache = None if not key_cache else cache.get(key_cache)
+    if data_cache:
+        return data_cache
+    # Otherwise not in cache. Find it, add to cache (except if determining by display_date), and return the session.
     query = Session.objects
     target = display_date or dt.now().date()
     if sess is None:
         query = query.filter(publish_date__lte=target, expire_date__gte=target)
-    elif display_date:
-        raise SyntaxError(_("You can't filter by both Session and Display Date"))
     elif sess != 'all':  # the query will be for all if sess == 'all'.
         if not isinstance(sess, str):
             raise TypeError(_("Parameter 'sess' expected a string with possible comma-seperated values. "))
         sess = sess.split(',')
         query = query.filter(name__in=sess)
-    sess_data = query if query.exists() else None  # Check exists() better only if query is modified before evaluated.
+    # sess_data = query if query.exists() else None  # Check exists() better only if query is modified before evaluated.
+    sess_data = query.all()
     if not sess_data and not sess:  # No upcoming published sessions, return most recent previous session.
+        key_cache = None  # Turns off storing this in the cache. Allows a new 'current_session' if a session is added.
         try:
-            result = Session.objects.filter(publish_date__lte=target).latest('key_day_date')
+            result = Session.objects.filter(publish_date__lte=target).latest('key_day_date')  # TODO: Ensure full sess?
         except Session.DoesNotExist:
             result = None
         sess_data = [result] if result else Session.objects.none()
+    if key_cache and sess_data:  # Add to cache with expiration depending on session.
+        end_date = sess_data[0].expire_date  # Note: target is always today if we are adding to the cache.
+        if key_cache == 'current_session':
+            expire_in = end_date - target  # end when the session expires.
+            expire_in = int(expire_in.total_seconds())
+        elif end_date and end_date < target:
+            expire_in = 60 * 60 * 24 * 7  # one week
+        else:  # end_date >= today or end_date is None.
+            expire_in = 60 * 15  # 15 minutes
+        cache.set(key_cache, sess_data, expire_in)
+    if return_key:
+        return sess_data, key_cache
     return sess_data  # a list of Session records, even if only 0-1 session
 
 
@@ -127,6 +146,7 @@ class ClassOfferDetailView(DetailView):
 class ClassOfferListView(ListView):
     """We will want to list the classes that are scheduled to be offered. """
     template_name = 'classwork/classoffer_list.html'
+    template_admin = 'classwork/classoffer_list_admin.html'
     model = ClassOffer
     context_object_name = 'classoffers'
     display_session = None  # 'all' or <start_month>_<year> as stored in DB Session.name
@@ -138,11 +158,32 @@ class ClassOfferListView(ListView):
         print("=============== ClassOfferListView.get_queryset ===============")
         display_session = self.kwargs.get('display_session', None)
         display_date = self.kwargs.get('display_date', None)
-        sessions = decide_session(sess=display_session, display_date=display_date)
+        if display_date and display_session:
+            raise SyntaxError(_("You can't filter by both Session and Display Date"))
+        key_cache = 'current_session' if not display_session and not display_date else display_session
+        sessions, data_cache, sess_key = None, None, None
+        if key_cache:
+            sessions, data_cache = cache.get(f"{key_cache}_classes", (None, None))
+        if not sessions:
+            sessions, sess_key = decide_session(sess=display_session, display_date=display_date, return_key=True)
         self.kwargs['sessions'] = sessions
+        if data_cache:
+            return data_cache
         q = ClassOffer.objects.filter(session__in=sessions)
         q = q.order_by(*self.query_order_by) if getattr(self, 'query_order_by', None) else q
         q = q.select_related('subject', 'session', 'location').prefetch_related('teachers')
+        if sess_key and key_cache and sessions:  # False if query by date or no current session,
+            end_date = sessions[0].expire_date
+            today = dt.now().date()
+            if key_cache == 'current_session':
+                expire_in = end_date - today  # end when the session expires.
+                expire_in = int(expire_in.total_seconds())
+            elif end_date and end_date < today:
+                expire_in = 60 * 60 * 24 * 7  # one week
+            else:  # end_date >= today or end_date is None.
+                expire_in = 60 * 15  # 15 minutes
+            q = q.all()
+            cache.set(f"{key_cache}_classes", (sessions, q), expire_in)
         return q
 
     def get_context_data(self, **kwargs):
@@ -159,17 +200,23 @@ class ClassOfferListView(ListView):
         context = super().get_context_data(**kwargs)
         sessions = self.kwargs.pop('sessions', '')
         sessions = ', '.join(ea.name for ea in sessions)
-        admin_log = [sessions, self.kwargs.pop('display_session', 'None'), self.kwargs.pop('display_date', 'None')]
-        context['admin_log'] = ' | '.join(admin_log)
+        context['sessions'] = sessions
+        if self.request.user.is_staff:
+            admin_log = [sessions, self.kwargs.pop('display_session', 'None'), self.kwargs.pop('display_date', 'None')]
+            context['admin_log'] = ' | '.join(admin_log)
         return context
+
+    def get_template_names(self):
+        if self.template_admin and self.request.user.is_staff:
+            return [self.template_admin]
+        return super().get_template_names()
 
 
 class Checkin(ViewOnlyForTeacherOrAdminMixin, ListView):
     """This is a report for which students are in which classes. """
     group_required = ('teacher', 'admin', )
-    model = Registration
+    model = Registration  # context_object_name = 'object_list'
     template_name = 'classwork/checkin.html'
-    context_object_name = 'class_list'
     display_session = None  # 'all' or <start_month>_<year> as stored in DB Session.name
     query_order_by = ('classoffer__session__key_day_date', '-classoffer__class_day', 'classoffer__start_time', )
     # TODO: ? Refactor to Meta: ordering(...) ?
