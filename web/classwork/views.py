@@ -37,7 +37,7 @@ def decide_session(sess=None, display_date=None, return_key=False):
     key_cache = 'current_session' if not sess and not display_date else sess
     data_cache = None if not key_cache else cache.get(key_cache)
     if data_cache:
-        return data_cache
+        return (data_cache, key_cache) if return_key else data_cache
     # Otherwise not in cache. Find it, add to cache (except if determining by display_date), and return the session.
     query = Session.objects
     target = display_date or dt.now().date()
