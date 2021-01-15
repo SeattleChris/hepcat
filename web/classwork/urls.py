@@ -1,5 +1,5 @@
 from django.urls import path
-from django.views.decorators.cache import cache_page
+# from django.views.decorators.cache import cache_page
 from .views import (AboutUsListView, ResourceDetailView,
                     ClassOfferDetailView, ClassOfferListView,
                     LocationDetailView, LocationListView,
@@ -11,7 +11,7 @@ minute = 3  # Number of seconds in a minute.
 urlpatterns = [  # All following are in root
      path('aboutus', AboutUsListView.as_view(), name='aboutus'),
      path('classes/<int:id>', ClassOfferDetailView.as_view(), name='classoffer_detail'),
-     path('classes/', cache_page(minute * 15)(ClassOfferListView.as_view()), name='classoffer_list'),
+     path('classes/', ClassOfferListView.as_view(), name='classoffer_list'),
      path('classes/sess/<str:display_session>', ClassOfferListView.as_view(), name='classoffer_display_session'),
      path('classes/date/<str:display_date>', ClassOfferListView.as_view(), name='classoffer_display_date'),
      path('location/<int:id>', LocationDetailView.as_view(), name='location_detail'),
