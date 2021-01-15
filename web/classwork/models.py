@@ -637,6 +637,8 @@ class ClassOffer(models.Model):
     manager_approved = models.BooleanField(default=settings.ASSUME_CLASS_APPROVE, )
     location = models.ForeignKey('Location', on_delete=models.SET_NULL, null=True, )
     teachers = models.ManyToManyField('Staff', related_name='taught', limit_choices_to={'user__is_active': True}, )
+    # teachers = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='taught',
+    #                                   limit_choices_to={'is_active': True, 'is_teacher': True}, )
     class_day = models.SmallIntegerField(choices=DOW_CHOICES, default=settings.DEFAULT_KEY_DAY, )
     start_time = models.TimeField()
     skip_weeks = models.PositiveSmallIntegerField(_('skipped mid-session class weeks'), default=0, )
@@ -753,6 +755,9 @@ class AbstractProfile(models.Model):
                                 limit_choices_to={}, )  # May modify the limit_choices_to value in child classes.
     # display_name = models.CharField(max_length=192, default='')
     # custom_display_name = models.BooleanField(default=False, )
+    # primary_dance_role = models.CharField or models.Choices
+    # default_dance_role = models.Choices  # What they typically select when attending. Default to primary_dance_role.
+    # dance_roles = models.CharField  # Which of the dance role have they done?
     bio = models.TextField(max_length=760, blank=True, )  # Staff will override max_length to be bigger.
     date_added = models.DateField(auto_now_add=True, )
     date_modified = models.DateField(auto_now=True, )
@@ -1207,10 +1212,11 @@ class Payment(BasePayment):
 
 class Registration(models.Model):
     """This is an intermediary model between a user Student profile and the ClassOffers they are enrolled in.
-        Also used to create the class check-in view for the staff.
+        Used to create the class check-in view for the staff.
     """
     student = models.ForeignKey(Student, on_delete=models.SET_NULL, null=True, )
     classoffer = models.ForeignKey(ClassOffer, on_delete=models.SET_NULL, null=True, )
+    # dance_role = models.Choices  # For this given attendance, select from Abstract Profile options.
     payment = models.ForeignKey(Payment, on_delete=models.SET_NULL, null=True, blank=True, )
     paid = models.BooleanField(default=False, )
 
@@ -1263,6 +1269,15 @@ class Registration(models.Model):
     @property
     def _pay_report(self):
         return 'Paid' if self.paid else str(self.owed)
+
+    def clean(self):
+        # TODO: If dance_role not set, use default/primary from their profile.
+        # TODO: Decide if this should be handled by clean in form, or clean in model.
+        return super().clean()
+
+    def save(self, *args, **kwargs):
+        # If current manually selected role is not in their profile existing dance_roles, update the profile.
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self._get_full_name} - {self.classoffer} - {self._pay_report}"
