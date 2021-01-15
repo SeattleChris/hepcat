@@ -750,7 +750,9 @@ class AbstractProfile(models.Model):
     """Extending user model to have profile fields as appropriate as either a student or a staff member. """
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True,
-                                limit_choices_to={}, )
+                                limit_choices_to={}, )  # May modify the limit_choices_to value in child classes.
+    # display_name = models.CharField(max_length=192, default='')
+    # custom_display_name = models.BooleanField(default=False, )
     bio = models.TextField(max_length=760, blank=True, )  # Staff will override max_length to be bigger.
     date_added = models.DateField(auto_now_add=True, )
     date_modified = models.DateField(auto_now=True, )
@@ -768,6 +770,14 @@ class AbstractProfile(models.Model):
 
     def get_full_name(self):
         return self.user.get_full_name()
+
+    # def save(self, *args, **kwargs):
+    #     if self.custom_display_name is False:
+    #         name = self.user.get_full_name()
+    #         if not name:
+    #             name = self.user.get_username()
+    #         self.display_name = name
+    #     return super().save(*args, **kwargs)
 
     def get_absolute_url(self):
         # Usually overwritten by concrete class url name, but this is available as a backup.
