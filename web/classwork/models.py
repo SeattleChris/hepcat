@@ -748,6 +748,29 @@ class ClassOffer(models.Model):
         return '<Class Id: {} | Subject: {} | Session: {} >'.format(self.id, self.subject, self.session)
 
 
+class RoleActivity(models.TextChoices):
+    """Students and Staff may participate as identified roles for a given ClassOffer, event, or in general. """
+    LEAD = 'L'
+    FOLLOW = 'F'
+    BOTH = 'B'
+    SOLO = 'S'
+    __empty__ = ''
+    __normal__ = {LEAD, FOLLOW, None}
+
+    @staticmethod
+    def order(value):
+        """Given a string of RoleActivity values, return a string in a useful consistant sorted order. """
+        pos = {char: p for p, char in enumerate('LFBS')}
+        arr = list(value)
+        arr.sort(key=pos.get)
+        return ''.join(arr)
+
+    @classmethod
+    def typical(cls):
+        """Usually a student must chose only one of these roles. """
+        return [ea for ea in cls.choices if ea[0] in cls.__normal__]
+
+
 class AbstractProfile(models.Model):
     """Extending user model to have profile fields as appropriate as either a student or a staff member. """
 
