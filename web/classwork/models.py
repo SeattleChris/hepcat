@@ -778,9 +778,9 @@ class AbstractProfile(models.Model):
                                 limit_choices_to={}, )  # May modify the limit_choices_to value in child classes.
     # display_name = models.CharField(max_length=192, default='')
     # custom_display_name = models.BooleanField(default=False, )
-    # primary_dance_role = models.CharField or models.Choices
-    # default_dance_role = models.Choices  # What they typically select when attending. Default to primary_dance_role.
-    # dance_roles = models.CharField  # Which of the dance role have they done?
+    # dance_role = models.CharField(max_length=1, choices=RoleActivity.choices, default=RoleActivity.__empty__)
+    # lesson_dance_role = models.CharField(max_length=1, choices=RoleActivity.choices, default=RoleActivity.__empty__)
+    # all_dance_roles = models.CharField  # Which of the dance role have they done?
     bio = models.TextField(max_length=760, blank=True, )  # Staff will override max_length to be bigger.
     date_added = models.DateField(auto_now_add=True, )
     date_modified = models.DateField(auto_now=True, )
@@ -805,6 +805,10 @@ class AbstractProfile(models.Model):
     #         if not name:
     #             name = self.user.get_username()
     #         self.display_name = name
+    #     if not self.dance_role:
+    #         self.dance_role = self.lesson_dance_role
+    #     if self.lesson_dance_role not in self.all_dance_roles:
+    #         self.all_dance_roles = RoleActivity.order(self.all_dance_roles + self.lesson_dance_role)
     #     return super().save(*args, **kwargs)
 
     def get_absolute_url(self):
