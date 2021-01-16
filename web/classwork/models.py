@@ -799,6 +799,27 @@ class AbstractProfile(models.Model):
     def get_full_name(self):
         return self.user.get_full_name()
 
+    def compute_lesson_role(self, new_lesson=None):
+        """When it is not immediately apparent, the appropriate lesson_dance_role can be computed. """
+        # if new_lesson and not self.lesson_dance_role:
+        #     if new_lesson != self.dance_role:
+        #         self.lesson_dance_role = new_lesson
+        #     return new_lesson
+        # if hasattr(self, 'taken'):
+        #     taken_roles = Registration.objects.filter(student=self)
+        #     taken_roles = taken_roles.aggregate(
+        #         num_lead=Count(Case(When(dance_role='L', then=1))),
+        #         num_follow=Count(Case(When(dance_role='F', then=1))),
+        #     )
+        #     # num_lead = taken_roles.get('num_lead')
+        #     # num_follow = taken_roles.get('num_follow')
+        #     if new_lesson:
+        #         # add to appropriate lead or follow count.
+        #         pass
+        #     # determine which is greater, and apply that one.
+        # return self.lesson_dance_role
+        raise NotImplementedError("The compute lesson role method has not yet been tested. ")
+
     # def save(self, *args, **kwargs):
     #     if self.custom_display_name is False:
     #         name = self.user.get_full_name()
@@ -1243,7 +1264,7 @@ class Registration(models.Model):
     """
     student = models.ForeignKey(Student, on_delete=models.SET_NULL, null=True, )
     classoffer = models.ForeignKey(ClassOffer, on_delete=models.SET_NULL, null=True, )
-    # dance_role = models.Choices  # For this given attendance, select from Abstract Profile options.
+    # dance_role = models.CharField(max_length=1, choices=RoleActivity.typical, default=RoleActivity.__empty__)
     payment = models.ForeignKey(Payment, on_delete=models.SET_NULL, null=True, blank=True, )
     paid = models.BooleanField(default=False, )
 
@@ -1300,10 +1321,17 @@ class Registration(models.Model):
     def clean(self):
         # TODO: If dance_role not set, use default/primary from their profile.
         # TODO: Decide if this should be handled by clean in form, or clean in model.
+        # if not self.dance_role:
+        #     self.dance_role = self.student.lesson_dance_role or self.student.dance_role
         return super().clean()
 
     def save(self, *args, **kwargs):
         # If current manually selected role is not in their profile existing dance_roles, update the profile.
+        # if self.dance_role != self.student.dance_role:
+        #     if not self.student.lesson_dance_role:
+        #         self.student.lesson_dance_role = self.dance_role
+        #     else:
+        #         self.student.lesson_dance_role = self.student.compute_lesson_role
         super().save(*args, **kwargs)
 
     def __str__(self):
