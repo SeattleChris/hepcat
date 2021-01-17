@@ -822,6 +822,8 @@ class AbstractProfile(models.Model):
 
     def update_lesson_role(self, new_lesson=None):
         """Assigns either the immediately apparent value, or assigns the result of compute_lesson_role. """
+        # if new_lesson and new_lesson not in self.all_dance_roles:
+        #     self.all_dance_roles = RoleActivity.order(self.all_dance_roles + self.lesson_dance_role)
         # if new_lesson and not self.lesson_dance_role:
         #     if new_lesson != self.dance_role:
         #         self.lesson_dance_role = new_lesson
