@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import Q, F, Func, Case, When, Count, Max, OuterRef, DateField, ExpressionWrapper as EW
+from django.db.models import Q, F, Func, Case, When, Count, Sum, Max, OuterRef, DateField, ExpressionWrapper as EW
 # , Avg, Sum, Min, Value, Subquery
 from django.db.models.functions import Least, Extract  # , ExtractWeek, ExtractIsoYear, Trunc, Now,
 # from .transforms import AddDate, DateDiff, DayYear, NumDay, DateFromNum, MakeDate, DateToday
@@ -800,37 +800,47 @@ class AbstractProfile(models.Model):
         return self.user.get_full_name()
 
     def compute_lesson_role(self, new_lesson=None):
-        """When it is not immediately apparent, the appropriate lesson_dance_role can be computed. """
+        """Algorithm determining lesson_dance_role. Overwrite if the default does not meet the needed structure. """
+        result = getattr(self, 'lesson_dance_role', RoleActivity.__empty__)
+        if hasattr(self, 'taken'):
+            taken_roles = Registration.objects.filter(student=self)
+            taken_roles = taken_roles.aggregate(f_diff=Sum(Case(
+                When(dance_role=RoleActivity.LEAD.value, then=-1),
+                When(dance_role=RoleActivity.FOLLOW.value, then=1),
+                default=0, output_field=models.IntegerField,
+            )))
+            f_diff = taken_roles['f_diff']
+            if new_lesson == RoleActivity.LEAD:
+                f_diff -= 1
+            elif new_lesson == RoleActivity.FOLLOW:
+                f_diff += 1
+            if f_diff < 0:
+                result = RoleActivity.LEAD.value
+            elif f_diff > 0:
+                result = RoleActivity.FOLLOW.value
+        return result
+
+    def update_lesson_role(self, new_lesson=None):
+        """Assigns either the immediately apparent value, or assigns the result of compute_lesson_role. """
         # if new_lesson and not self.lesson_dance_role:
         #     if new_lesson != self.dance_role:
         #         self.lesson_dance_role = new_lesson
         #     return new_lesson
-        # if hasattr(self, 'taken'):
-        #     taken_roles = Registration.objects.filter(student=self)
-        #     taken_roles = taken_roles.aggregate(
-        #         num_lead=Count(Case(When(dance_role='L', then=1))),
-        #         num_follow=Count(Case(When(dance_role='F', then=1))),
-        #     )
-        #     # num_lead = taken_roles.get('num_lead')
-        #     # num_follow = taken_roles.get('num_follow')
-        #     if new_lesson:
-        #         # add to appropriate lead or follow count.
-        #         pass
-        #     # determine which is greater, and apply that one.
+        # self.lesson_dance_role = self.compute_lesson_role(new_lesson=new_lesson)
         # return self.lesson_dance_role
         raise NotImplementedError("The compute lesson role method has not yet been tested. ")
 
-    # def save(self, *args, **kwargs):
-    #     if self.custom_display_name is False:
-    #         name = self.user.get_full_name()
-    #         if not name:
-    #             name = self.user.get_username()
-    #         self.display_name = name
-    #     if not self.dance_role:
-    #         self.dance_role = self.lesson_dance_role
-    #     if self.lesson_dance_role not in self.all_dance_roles:
-    #         self.all_dance_roles = RoleActivity.order(self.all_dance_roles + self.lesson_dance_role)
-    #     return super().save(*args, **kwargs)
+    def save(self, *args, **kwargs):
+        # if self.custom_display_name is False:
+        #     name = self.user.get_full_name()
+        #     if not name:
+        #         name = self.user.get_username()
+        #     self.display_name = name
+        # if not self.dance_role:
+        #     self.dance_role = self.lesson_dance_role
+        # if self.lesson_dance_role not in self.all_dance_roles:
+        #     self.all_dance_roles = RoleActivity.order(self.all_dance_roles + self.lesson_dance_role)
+        return super().save(*args, **kwargs)
 
     def get_absolute_url(self):
         # Usually overwritten by concrete class url name, but this is available as a backup.
@@ -1327,11 +1337,10 @@ class Registration(models.Model):
 
     def save(self, *args, **kwargs):
         # If current manually selected role is not in their profile existing dance_roles, update the profile.
-        # if self.dance_role != self.student.dance_role:
-        #     if not self.student.lesson_dance_role:
-        #         self.student.lesson_dance_role = self.dance_role
-        #     else:
-        #         self.student.lesson_dance_role = self.student.compute_lesson_role
+        # if not self.dance_role:
+        #     self.dance_role = self.student.lesson_dance_role or self.student.dance_role
+        # else:
+        #     self.student.update_lesson_role()
         super().save(*args, **kwargs)
 
     def __str__(self):
