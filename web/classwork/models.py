@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import Q, F, Func, Case, When, Count, Max, OuterRef, DateField, ExpressionWrapper as EW
+from django.db.models import Q, F, Func, Case, When, Count, Sum, Max, OuterRef, DateField, ExpressionWrapper as EW
 # , Avg, Sum, Min, Value, Subquery
 from django.db.models.functions import Least, Extract  # , ExtractWeek, ExtractIsoYear, Trunc, Now,
 # from .transforms import AddDate, DateDiff, DayYear, NumDay, DateFromNum, MakeDate, DateToday
@@ -748,6 +748,29 @@ class ClassOffer(models.Model):
         return '<Class Id: {} | Subject: {} | Session: {} >'.format(self.id, self.subject, self.session)
 
 
+class RoleActivity(models.TextChoices):
+    """Students and Staff may participate as identified roles for a given ClassOffer, event, or in general. """
+    LEAD = 'L'
+    FOLLOW = 'F'
+    BOTH = 'B'
+    SOLO = 'S'
+    __empty__ = ''
+    __normal__ = {LEAD, FOLLOW, None}
+
+    @staticmethod
+    def order(value):
+        """Given a string of RoleActivity values, return a string in a useful consistant sorted order. """
+        pos = {char: p for p, char in enumerate('LFBS')}
+        arr = list(value)
+        arr.sort(key=pos.get)
+        return ''.join(arr)
+
+    @classmethod
+    def typical(cls):
+        """Usually a student must chose only one of these roles. """
+        return [ea for ea in cls.choices if ea[0] in cls.__normal__]
+
+
 class AbstractProfile(models.Model):
     """Extending user model to have profile fields as appropriate as either a student or a staff member. """
 
@@ -755,9 +778,9 @@ class AbstractProfile(models.Model):
                                 limit_choices_to={}, )  # May modify the limit_choices_to value in child classes.
     # display_name = models.CharField(max_length=192, default='')
     # custom_display_name = models.BooleanField(default=False, )
-    # primary_dance_role = models.CharField or models.Choices
-    # default_dance_role = models.Choices  # What they typically select when attending. Default to primary_dance_role.
-    # dance_roles = models.CharField  # Which of the dance role have they done?
+    # dance_role = models.CharField(max_length=1, choices=RoleActivity.choices, default=RoleActivity.__empty__)
+    # lesson_dance_role = models.CharField(max_length=1, choices=RoleActivity.choices, default=RoleActivity.__empty__)
+    # all_dance_roles = models.CharField  # Which of the dance role have they done?
     bio = models.TextField(max_length=760, blank=True, )  # Staff will override max_length to be bigger.
     date_added = models.DateField(auto_now_add=True, )
     date_modified = models.DateField(auto_now=True, )
@@ -776,13 +799,50 @@ class AbstractProfile(models.Model):
     def get_full_name(self):
         return self.user.get_full_name()
 
-    # def save(self, *args, **kwargs):
-    #     if self.custom_display_name is False:
-    #         name = self.user.get_full_name()
-    #         if not name:
-    #             name = self.user.get_username()
-    #         self.display_name = name
-    #     return super().save(*args, **kwargs)
+    def compute_lesson_role(self, new_lesson=None):
+        """Algorithm determining lesson_dance_role. Overwrite if the default does not meet the needed structure. """
+        result = getattr(self, 'lesson_dance_role', RoleActivity.__empty__)
+        if hasattr(self, 'taken'):
+            taken_roles = Registration.objects.filter(student=self)
+            taken_roles = taken_roles.aggregate(f_diff=Sum(Case(
+                When(dance_role=RoleActivity.LEAD.value, then=-1),
+                When(dance_role=RoleActivity.FOLLOW.value, then=1),
+                default=0, output_field=models.IntegerField,
+            )))
+            f_diff = taken_roles['f_diff']
+            if new_lesson == RoleActivity.LEAD:
+                f_diff -= 1
+            elif new_lesson == RoleActivity.FOLLOW:
+                f_diff += 1
+            if f_diff < 0:
+                result = RoleActivity.LEAD.value
+            elif f_diff > 0:
+                result = RoleActivity.FOLLOW.value
+        return result
+
+    def update_lesson_role(self, new_lesson=None):
+        """Assigns either the immediately apparent value, or assigns the result of compute_lesson_role. """
+        # if new_lesson and new_lesson not in self.all_dance_roles:
+        #     self.all_dance_roles = RoleActivity.order(self.all_dance_roles + self.lesson_dance_role)
+        # if new_lesson and not self.lesson_dance_role:
+        #     if new_lesson != self.dance_role:
+        #         self.lesson_dance_role = new_lesson
+        #     return new_lesson
+        # self.lesson_dance_role = self.compute_lesson_role(new_lesson=new_lesson)
+        # return self.lesson_dance_role
+        raise NotImplementedError("The compute lesson role method has not yet been tested. ")
+
+    def save(self, *args, **kwargs):
+        # if self.custom_display_name is False:
+        #     name = self.user.get_full_name()
+        #     if not name:
+        #         name = self.user.get_username()
+        #     self.display_name = name
+        # if not self.dance_role:
+        #     self.dance_role = self.lesson_dance_role
+        # if self.lesson_dance_role not in self.all_dance_roles:
+        #     self.all_dance_roles = RoleActivity.order(self.all_dance_roles + self.lesson_dance_role)
+        return super().save(*args, **kwargs)
 
     def get_absolute_url(self):
         # Usually overwritten by concrete class url name, but this is available as a backup.
@@ -1216,7 +1276,7 @@ class Registration(models.Model):
     """
     student = models.ForeignKey(Student, on_delete=models.SET_NULL, null=True, )
     classoffer = models.ForeignKey(ClassOffer, on_delete=models.SET_NULL, null=True, )
-    # dance_role = models.Choices  # For this given attendance, select from Abstract Profile options.
+    # dance_role = models.CharField(max_length=1, choices=RoleActivity.typical, default=RoleActivity.__empty__)
     payment = models.ForeignKey(Payment, on_delete=models.SET_NULL, null=True, blank=True, )
     paid = models.BooleanField(default=False, )
 
@@ -1273,10 +1333,16 @@ class Registration(models.Model):
     def clean(self):
         # TODO: If dance_role not set, use default/primary from their profile.
         # TODO: Decide if this should be handled by clean in form, or clean in model.
+        # if not self.dance_role:
+        #     self.dance_role = self.student.lesson_dance_role or self.student.dance_role
         return super().clean()
 
     def save(self, *args, **kwargs):
         # If current manually selected role is not in their profile existing dance_roles, update the profile.
+        # if not self.dance_role:
+        #     self.dance_role = self.student.lesson_dance_role or self.student.dance_role
+        # else:
+        #     self.student.update_lesson_role()
         super().save(*args, **kwargs)
 
     def __str__(self):
