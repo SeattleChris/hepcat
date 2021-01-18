@@ -273,7 +273,7 @@ class StaffAdmin(admin.ModelAdmin):
 class StudentAdmin(admin.ModelAdmin):
     """Admin can modify and view Student user profiles. """
     model = Student
-    list_display = ('username', '__str__', 'max_subject', 'max_level', 'level', 'beg_done', 'l2_done', 'l3_done', )
+    list_display = ('username', '__str__', 'max_subj', 'level', 'beg', 'l2', 'l3', )  # 'max_level',
     list_display_links = ('__str__', )
     list_filter = ('user__is_staff', 'taken__session', 'taken__subject__level', 'level', )    # , 'taken__subject',
     list_select_related = True
@@ -282,14 +282,14 @@ class StudentAdmin(admin.ModelAdmin):
     inlines = (StudentClassInline, )
     fields = (('user', 'level', 'credit'), 'bio', )
 
-    def max_subject(self, obj): return list(obj.highest_subject.get('subjects', ['Unknown']))
-    def max_level(self, obj): return obj.highest_subject.get('level_num__max', 0)
-    def beg_done(self, obj): return obj.beg.get('done')
-    def l2_done(self, obj): return obj.l2.get('done')
-    def l3_done(self, obj): return obj.l3.get('done')
-    beg_done.boolean = True
-    l2_done.boolean = True
-    l3_done.boolean = True
+    def max_subj(self, obj): return list(obj.highest_subject.get('subjects', ['Unknown']))
+    # def max_level(self, obj): return obj.highest_subject.get('level_num__max', 0)
+    def beg(self, obj): return obj.beg.get('done')
+    def l2(self, obj): return obj.l2.get('done')
+    def l3(self, obj): return obj.l3.get('done')
+    beg.boolean = True
+    l2.boolean = True
+    l3.boolean = True
 
     # def message_user(self, request, message, level=messages.INFO, extra_tags='', fail_silently=False):
     #     # TODO: Look into ModelAdmin.message_user

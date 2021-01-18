@@ -9,8 +9,8 @@ from .models import UserHC, StaffUser, StudentUser
 
 class CustomUserAdmin(UserAdmin):
     model = UserHC
-    list_display = ('username', 'not_email', 'first_name', 'last_name', 'is_student', 'is_teacher', 'is_admin',
-                    'is_active', 'grp', 'perm', 'date_joined', )
+    list_display = ('username', 'use_email', 'first_name', 'last_name', 'is_student', 'is_teacher', 'is_admin',
+                    'is_active', 'grp', 'date_joined', )  # 'perm',
     list_display_links = ('first_name', 'last_name', )
     list_filter = ('is_student', 'is_teacher', 'is_admin', 'is_staff', 'is_active', 'groups', )  # , 'is_superuser',
     ordering = ('first_name', )
@@ -57,11 +57,11 @@ class CustomUserAdmin(UserAdmin):
         'billing_address_2': {'size': 20},
     }
 
-    def not_email(self, obj): return getattr(obj, 'username_not_email', None)
+    def use_email(self, obj): return not getattr(obj, 'username_not_email', None)
     def grp(self, obj): return ', '.join(str(ea) for ea in obj.groups.all())
-    def perm(self, obj): return ', '.join(str(ea) for ea in obj.user_permissions.all())
-    not_email.boolean = True
-    not_email.short_name = 'not email'
+    # def perm(self, obj): return ', '.join(str(ea) for ea in obj.user_permissions.all())
+    use_email.boolean = True
+    use_email.short_name = 'use e'
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)

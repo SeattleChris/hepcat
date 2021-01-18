@@ -882,7 +882,7 @@ class Student(AbstractProfile):
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True,
                                 limit_choices_to={'is_student': True})
-    level = models.IntegerField(_('skill level'), default=0, blank=True, )
+    level = models.IntegerField(_('level'), default=0, blank=True, )
     taken = models.ManyToManyField(ClassOffer, related_name='students', through='Registration', )
     # interest = models.ManyToManyField(Subject, related_names='interests', through='Requests', )
     credit = models.DecimalField(max_digits=6, decimal_places=2, default=0.0, )
