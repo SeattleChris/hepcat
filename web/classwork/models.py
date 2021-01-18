@@ -7,6 +7,7 @@ from django.db.models.functions import Least, Extract  # , ExtractWeek, ExtractI
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
+from django.utils.functional import classproperty  # cached_property
 from django.core.mail import EmailMessage
 from django.conf import settings
 from django.urls import reverse
@@ -765,7 +766,7 @@ class RoleActivity(models.TextChoices):
         arr.sort(key=pos.get)
         return ''.join(arr)
 
-    @classmethod
+    @classproperty
     def typical(cls):
         """Usually a student must chose only one of these roles. """
         return [ea for ea in cls.choices if ea[0] in cls.__normal__]
