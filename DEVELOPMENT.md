@@ -238,6 +238,18 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'hepcat.settings'
 application = get_wsgi_application()
 ```
 
+#### Updating on PythonAnywhere
+
+Visit [Host](https://www.pythonanywhere.com/), login, open a console. Navigate to where the code - repository is stored.
+
+* In browser, open a console and navigate to the code repository directory.
+* restart env: `workon myvirtualenv`
+* Update from Repo: `git pull origin master`
+* install packages: `pip install -r requirements.txt`
+* In browser on PythonAnywhere Dashboard, open Web apps.
+* Click the 'Reload ...' button near the top.
+* Revisit the site to check if all is working.
+
 ### Other Common Deployment Hosts & Platforms
 
 Check to see if [django-storages](https://django-storages.readthedocs.io/en/latest/index.html) has support for hosting static files for your deployment host. If the host is built on top of AWS, there may be insights from the AWS deployment notes above.
