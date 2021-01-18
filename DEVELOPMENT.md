@@ -201,7 +201,7 @@ There are a low-cost and free tier options on [PythonAnywhere](https://www.pytho
     * Using the values in the '.env', via our custom command file: `./manage.py createsu`
       * Or manually input email and password, using the default command: `./manage.py createsuperuser`
   * Prepare Static files and Media files:
-    * Open a bash console, start virtualenv, and navigate to the directory with the 'manage.py' file.
+    * Open a bash console, start virtualenv, and navigate to the directory with the 'manage.py' file: probably at `web/`.
     * Collect static files: `./manage.py collectstatic`
     * Collect media files: ???
   * View the site!
@@ -246,6 +246,9 @@ Visit [Host](https://www.pythonanywhere.com/), login, open a console. Navigate t
 * restart env: `workon myvirtualenv`
 * Update from Repo: `git pull origin master`
 * install packages: `pip install -r requirements.txt`
+* Update static files if needed:
+  * Navigate to the directory with `manage.py` file (probably `web/`)
+  * Collect static files: `./manage.py collectstatic`
 * In browser on PythonAnywhere Dashboard, open Web apps.
 * Click the 'Reload ...' button near the top.
 * Revisit the site to check if all is working.
